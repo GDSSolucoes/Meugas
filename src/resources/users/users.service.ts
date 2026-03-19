@@ -6,6 +6,8 @@ import * as bcrypt from 'bcrypt'
 import { v4 as uuidv4 } from 'uuid'
 import { UsersPostDto } from './dto/users.post.dto'
 import { UsersUpdateDto } from './dto/users.update.dto'
+import { UserRoleEnum } from './enums/userRole.enum'
+import { UserTypeEnum } from './enums/userType.enum'
 
 @Injectable()
 export class UsersService {
@@ -31,8 +33,11 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(data.password, 10)
     await db.insert(users).values({
       id,
+      ...data,
+      role: data.role || UserRoleEnum.USER,
+      user_type: data.user_type || UserTypeEnum.ATENDENTE,
       passwordHash,
-      ...data
+      active: true,
     })
     const rows = await db.select().from(users).where(eq(users.id, id))
     return rows[0]

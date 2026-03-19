@@ -1,22 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { PeopleType } from '../enums/peopleType.enum'
+import { PersonAddressDto } from './peopleAddres.dto'
 
 export class PeoplePostDto {
-  @ApiProperty()
-  name!: string
-  @ApiProperty({ required: false })
-  document?: string
-  @ApiProperty({ required: false })
-  street?: string
-  @ApiProperty({ required: false })
-  number?: string
-  @ApiProperty({ required: false })
-  neighborhood?: string
-  @ApiProperty({ required: false })
-  city?: string
-  @ApiProperty({ required: false })
-  state?: string
-  @ApiProperty({ required: false })
-  zipcode?: string
-  @ApiProperty({ required: false })
-  phone?: string
+    companyId!: number
+    personNumber?: string
+    name!: string
+    document?: string
+    email?: string
+    phone?: string[]
+    type!: PeopleType
+    address?: PersonAddressDto
+    glpConsumptionDays?: number
+    birthday?: Date
+    conveniadaId?: string
+    conveniadaName?: string
+    companyName?: string
+    createdByName?: string
 }

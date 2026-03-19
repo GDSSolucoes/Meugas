@@ -1,18 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { UserRoleEnum } from '../enums/userRole.enum'
+import { UserTypeEnum } from '../enums/userType.enum'
 
 export class UsersPostDto {
   @ApiProperty()
-  email!: string
-  @ApiProperty()
   name!: string
   @ApiProperty()
-  password!: string
+  email!: string
   @ApiProperty({ required: false })
   cpf?: string
+  @ApiProperty({ required: false })
+  phone?: string
+  @ApiProperty()
+  password!: string
   @ApiProperty()
   companyId!: number
-  @ApiProperty()
-  role!: string
-  @ApiProperty({ required: false })
-  active?: boolean
+
+  role?: UserRoleEnum
+  user_type?: UserTypeEnum
 }

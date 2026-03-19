@@ -9,6 +9,8 @@ import { CurrentUser } from '../../auth/current-user.decorator'
 import { UsersPostDto } from './dto/users.post.dto'
 import { UsersBootstrapPostDto } from './dto/users.bootstrap.post.dto'
 import { RlsService } from '../../database/rls/rls.service'
+import { UserRoleEnum } from './enums/userRole.enum'
+import { UserTypeEnum } from './enums/userType.enum'
 
 @ApiTags('Users')
 @Controller('users')
@@ -32,8 +34,8 @@ export class UsersController {
   async bootstrapAdmin(@Body() body: UsersBootstrapPostDto) {
     const count = await this.users.countAll()
     if (count > 0) return { error: 'already_initialized' }
-    const created = await this.rls.withCompany(body.companyId, () => this.users.create({ ...body, role: 'admin', active: true }))
-    return { id: created.id, email: created.email, name: created.name, companyId: created.companyId, role: 'admin' }
+    const created = await this.rls.withCompany(body.companyId, () => this.users.create({ ...body, role: UserRoleEnum.ADMIN, user_type: UserTypeEnum.SUPER_ADMIN }))
+    return { id: created.id, email: created.email, name: created.name, companyId: created.companyId, role: created.role }
   }
 
   @Get()

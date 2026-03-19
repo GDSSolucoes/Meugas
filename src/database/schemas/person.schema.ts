@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, json, date, numeric } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, integer, json, date, numeric, pgEnum } from 'drizzle-orm/pg-core'
 import { companies } from './company.schema'
 
 export type PersonAddress = {
@@ -12,6 +12,7 @@ export type PersonAddress = {
   zipcode?: string
 }
 
+export const peopleType = pgEnum('people_type', ['cliente', 'fornecedor', 'ponto_venda', 'conveniada'])
 
 export const people = pgTable('people', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -21,7 +22,7 @@ export const people = pgTable('people', {
   document: text('document'),
   email: text('email'),
   phone: json('phone').$type<string[]>(),
-  type: text('type').notNull(),
+  type: peopleType('type').notNull(),
   address: json('address').$type<PersonAddress>(),
   glpConsumptionDays: numeric('glp_consumption_days'),
   birthday: date('birthday'),
