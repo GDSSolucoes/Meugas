@@ -1,13 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { eq } from 'drizzle-orm'
-import { users } from '../../database/schemas'
+import { userRoleEnum, users, userTypeEnum } from '../../database/schemas'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import * as bcrypt from 'bcrypt'
 import { v4 as uuidv4 } from 'uuid'
 import { UsersPostDto } from './dto/users.post.dto'
 import { UsersUpdateDto } from './dto/users.update.dto'
-import { UserRoleEnum } from './enums/userRole.enum'
-import { UserTypeEnum } from './enums/userType.enum'
 
 @Injectable()
 export class UsersService {
@@ -34,8 +32,8 @@ export class UsersService {
     await db.insert(users).values({
       id,
       ...data,
-      role: data.role || UserRoleEnum.USER,
-      user_type: data.user_type || UserTypeEnum.ATENDENTE,
+      role: data.role || userRoleEnum.USER,
+      user_type: data.user_type || userTypeEnum.ATENDENTE,
       passwordHash,
       active: true,
     })

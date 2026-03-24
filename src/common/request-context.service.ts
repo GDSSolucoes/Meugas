@@ -6,7 +6,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 type Ctx = {
   client: PoolClient
   db: NodePgDatabase
-  companyId: number
+  companyId: string
 }
 
 @Injectable()
@@ -22,7 +22,7 @@ export class RequestContextService {
     return store?.db
   }
 
-  getCompanyId(): number | undefined {
+  getCompanyId(): string | undefined {
     const store = this.als.getStore()
     return store?.companyId
   }

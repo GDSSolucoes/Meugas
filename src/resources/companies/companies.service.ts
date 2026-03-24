@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { companies } from '../../database/schemas'
 import { eq } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
 import { CompanyPostDto } from './dto/company.post.dto'
 import { CompanyUpdateDto } from './dto/company.update.dto'
 
@@ -10,17 +9,17 @@ import { CompanyUpdateDto } from './dto/company.update.dto'
 export class CompaniesService {
   constructor(@Inject('DB') private readonly db: NodePgDatabase) {}
 
-  async listByIds(ids: number[]) {
+  async listByIds(ids: string[]) {
     const rows = await this.db.select().from(companies)
     return rows.filter(r => ids.includes(r.id))
   }
 
-  async get(id: number) {
+  async get(id: string) {
     const rows = await this.db.select().from(companies).where(eq(companies.id, id))
     return rows[0] || null
   }
 
-  async update(id: number, data: Partial<CompanyUpdateDto>) {
+  async update(id: string, data: Partial<CompanyUpdateDto>) {
     await this.db.update(companies).set({
       ...data
     }).where(eq(companies.id, id))

@@ -10,7 +10,7 @@ import { ProductsUpdateDto } from './dto/products.update.dto'
 export class ProductsService {
   constructor(@Inject('DB') private readonly db: NodePgDatabase) {}
 
-  async list(companyId: number, q?: string) {
+  async list(companyId: string, q?: string) {
     const db = this.db
     const where = q
       ? and(eq(products.companyId, companyId), ilike(products.name, `%${q}%`))
@@ -18,13 +18,13 @@ export class ProductsService {
     return db.select().from(products).where(where)
   }
 
-  async get(companyId: number, id: string) {
+  async get(companyId: string, id: string) {
     const db = this.db
     const rows = await db.select().from(products).where(and(eq(products.companyId, companyId), eq(products.id, id)))
     return rows[0] || null
   }
 
-  async create(companyId: number, data: ProductsPostDto) {
+  async create(companyId: string, data: ProductsPostDto) {
     const db = this.db
     const id = uuidv4()
     await db.insert(products).values({
@@ -37,7 +37,7 @@ export class ProductsService {
     return this.get(companyId, id)
   }
 
-  async update(companyId: number, id: string, data: Partial<ProductsUpdateDto>) {
+  async update(companyId: string, id: string, data: Partial<ProductsUpdateDto>) {
     const db = this.db
     await db.update(products).set({
       ...data,

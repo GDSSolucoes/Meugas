@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { ProductCategoriesEnum } from '../../../database/schemas'
 
 export class ProductsPostDto {
   @ApiProperty()
   name!: string
   @ApiProperty({ required: false })
   code?: string
-  @ApiProperty({ required: false })
-  category?: string
+  @ApiProperty({ required: false, enum: ProductCategoriesEnum })
+  category?: ProductCategoriesEnum
   @ApiProperty({ required: false })
   unitPrice?: number
   @ApiProperty({ required: false })

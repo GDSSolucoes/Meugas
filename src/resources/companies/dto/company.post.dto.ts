@@ -1,18 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { CompanyAddress, CompanyParametrosFiscais, CompanyStatusEnum, PlanTypeEnum } from '../../../database/schemas'
 
 export class CompanyPostDto {
   @ApiProperty()
   name!: string
+  @ApiProperty()
+  document!: string
+  @ApiProperty()
+  email!: string
   @ApiProperty({ required: false })
-  cnpj?: string
+  phone?: string
   @ApiProperty({ required: false })
-  street?: string
+  address?: CompanyAddress
   @ApiProperty({ required: false })
-  number?: string
-  @ApiProperty({ required: false })
-  neighborhood?: string
-  @ApiProperty({ required: false })
-  city?: string
-  @ApiProperty({ required: false })
-  state?: string
+  parametros_fiscais?: CompanyParametrosFiscais
+  @ApiProperty({ enum: PlanTypeEnum, default: PlanTypeEnum.BASIC, required: false })
+  plano?: PlanTypeEnum
+  @ApiProperty({ required: false, enum: CompanyStatusEnum, default: CompanyStatusEnum.ATIVA })
+  status?: CompanyStatusEnum
+  @ApiProperty()
+  admin_name!: string
+  @ApiProperty()
+  admin_email!: string
 }

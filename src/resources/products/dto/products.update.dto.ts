@@ -1,26 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { ProductCategoriesEnum } from '../../../database/schemas'
 
 export class ProductsUpdateDto {
   @ApiProperty({ required: false })
   name?: string
   @ApiProperty({ required: false })
-  code?: string | null
+  code?: string
+  @ApiProperty({ required: false, enum: ProductCategoriesEnum })
+  category?:ProductCategoriesEnum  
   @ApiProperty({ required: false })
-  category?: string | null
+  unitPrice?: number
   @ApiProperty({ required: false })
-  unitPrice?: number | null
+  costPrice?: number
   @ApiProperty({ required: false })
-  costPrice?: number | null
+  minStock?: number
   @ApiProperty({ required: false })
-  minStock?: number | null
+  vasilhameId?: string
   @ApiProperty({ required: false })
-  vasilhameId?: string | null
+  vasilhameName?: string
   @ApiProperty({ required: false })
-  vasilhameName?: string | null
+  ncm?: string
   @ApiProperty({ required: false })
-  ncm?: string | null
-  @ApiProperty({ required: false })
-  cest?: string | null
-  @ApiProperty({ required: false })
-  active?: boolean
+  cest?: string
 }

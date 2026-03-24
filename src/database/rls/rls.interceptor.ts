@@ -17,12 +17,12 @@ export class RlsInterceptor implements NestInterceptor {
     return from(this.execute(companyId, next))
   }
 
-  private async execute(companyId: number, next: CallHandler) {
+  private async execute(companyId: string, next: CallHandler) {
     const client = await this.pool.connect()
     
     try {
       await client.query('BEGIN')
-      await client.query(`SELECT set_config('app.current_company_id', $1, true)`, [String(companyId)])
+      await client.query(`SELECT set_config('app.current_company_id', $1, true)`, [companyId])
       const db = drizzle(client)
       const result = await this.ctx.run({ client, db, companyId }, async () => {
         return await next.handle().toPromise()

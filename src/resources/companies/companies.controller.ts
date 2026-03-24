@@ -15,7 +15,7 @@ export class CompaniesController {
   constructor(private readonly service: CompaniesService) {}
 
   @Get(':id')
-  async get(@Param('id') id: number) {
+  async get(@Param('id') id: string) {
     return this.service.get(id)
   }
 
@@ -29,7 +29,7 @@ export class CompaniesController {
   @Put(':id')
   @Roles('admin')
   @ApiBody({ type: CompanyUpdateDto })
-  async update(@Param('id') id: number, @Body() body: CompanyUpdateDto) {
+  async update(@Param('id') id: string, @Body() body: CompanyUpdateDto) {
     return this.service.update(id, body)
   }
 }
