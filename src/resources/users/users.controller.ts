@@ -10,12 +10,14 @@ import { UsersPostDto } from "./dto/users.post.dto";
 import { UsersBootstrapPostDto } from "./dto/users.bootstrap.post.dto";
 import { RlsService } from "../../database/rls/rls.service";
 import { userRoleEnum, userTypeEnum } from "../../database/schemas";
+import { CompaniesService } from "../companies/companies.service";
 
 @ApiTags("Users")
 @Controller("users")
 export class UsersController {
   constructor(
     private readonly users: UsersService,
+    private readonly companies: CompaniesService,
     private readonly jwt: JwtService,
     private readonly rls: RlsService,
   ) {}
@@ -43,9 +45,17 @@ export class UsersController {
   async bootstrapAdmin(@Body() body: UsersBootstrapPostDto) {
     const count = await this.users.countAll();
     if (count > 0) return { error: "already_initialized" };
-    const created = await this.rls.withCompany(body.companyId, () =>
+    const company = await this.companies.create({
+      name: `GDS Meu Gás`,
+      document: `00000000000000`,
+      email: body.email,
+      admin_name: body.name,
+      admin_email: body.email,
+    });
+    const created = await this.rls.withCompany(company.id, () =>
       this.users.create({
         ...body,
+        companyId: company.id,
         role: userRoleEnum.ADMIN,
         user_type: userTypeEnum.SUPER_ADMIN,
       }),

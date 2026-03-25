@@ -7,6 +7,4 @@ export class UsersBootstrapPostDto {
   name!: string
   @ApiProperty()
   password!: string
-  @ApiProperty()
-  companyId!: string
 }
