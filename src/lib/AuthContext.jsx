@@ -25,8 +25,8 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
       if (apiEnabled) {
         setAppPublicSettings(null);
-        await checkUserAuth();
         setIsLoadingPublicSettings(false);
+        await checkUserAuth();
         return;
       }
       const appClient = createAxiosClient({

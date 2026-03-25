@@ -45,6 +45,9 @@ api.interceptors.response.use(
           pending.forEach(fn => fn(r.data.access_token))
           pending = []
           return api(original)
+        } catch (error) {
+          console.error('Error refreshing token:', error)
+          throw error
         } finally {
           isRefreshing = false
         }
@@ -59,7 +62,10 @@ api.interceptors.response.use(
     try {
       const msg = err?.response?.data?.error || err.message
       window.dispatchEvent(new CustomEvent('api-error', { detail: { message: msg } }))
-    } catch {}
+    } catch (error) {
+      console.error('Error dispatching API error event:', error)
+      throw error;
+    }
     return Promise.reject(err)
   }
 )
