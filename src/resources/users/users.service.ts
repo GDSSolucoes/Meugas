@@ -21,6 +21,11 @@ export class UsersService {
     return rows[0] || null
   }
 
+  async findById(id: string) {
+    const rows = await this.db.select().from(users).where(eq(users.id, id))
+    return rows[0] || null
+  }
+
   async validatePassword(hash: string, password: string) {
     return bcrypt.compare(password, hash)
   }

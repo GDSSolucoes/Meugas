@@ -1,8 +1,6 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { JwtService } from "@nestjs/jwt";
 import { ApiTags, ApiBearerAuth, ApiBody } from "@nestjs/swagger";
-import { AuthGuard } from "@nestjs/passport";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { CurrentUser } from "../../auth/current-user.decorator";
@@ -11,6 +9,7 @@ import { UsersBootstrapPostDto } from "./dto/users.bootstrap.post.dto";
 import { RlsService } from "../../database/rls/rls.service";
 import { userRoleEnum, userTypeEnum } from "../../database/schemas";
 import { CompaniesService } from "../companies/companies.service";
+import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 
 @ApiTags("Users")
 @Controller("users")
@@ -18,13 +17,12 @@ export class UsersController {
   constructor(
     private readonly users: UsersService,
     private readonly companies: CompaniesService,
-    private readonly jwt: JwtService,
     private readonly rls: RlsService,
   ) {}
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("admin")
   @ApiBody({ type: UsersPostDto })
   async create(@CurrentUser() user: any, @Body() body: UsersPostDto) {
@@ -71,7 +69,7 @@ export class UsersController {
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard("jwt"), RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("admin")
   async list(@CurrentUser() user: any) {
     const rows = await this.users.listAll();
