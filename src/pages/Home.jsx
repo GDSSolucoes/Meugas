@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Settings, ClipboardList, ArrowRight, LogOut, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    ;
     const loadUser = async () => {
       try {
         const user = await User.me();
@@ -66,7 +67,7 @@ export default function Home() {
               />
             </div>
             <div className="absolute right-6">
-              <Button 
+              <Button
                 variant="outline" 
                 size="sm" 
                 onClick={handleLogout}

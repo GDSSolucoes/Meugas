@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FileText, DollarSign, AlertTriangle, CheckCircle, Filter } from "lucide-react";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 
 export default function ReceivableReport() {
   const [allReceivables, setAllReceivables] = useState([]);

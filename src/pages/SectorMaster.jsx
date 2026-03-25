@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Warehouse } from "lucide-react";
 import { SectorMaster } from "@/entities/SectorMaster";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function SectorMasterPage() {

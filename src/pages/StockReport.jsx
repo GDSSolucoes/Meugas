@@ -16,7 +16,7 @@ import { StockTransfer } from "@/entities/StockTransfer";
 import { VasilhameLoan } from "@/entities/VasilhameLoan";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, startOfDay, endOfDay, isBefore } from 'date-fns';
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 
 export default function StockReport() {
   const { toast } = useToast();

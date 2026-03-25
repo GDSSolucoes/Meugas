@@ -7,7 +7,7 @@ import { Order } from "@/entities/Order";
 import { Product } from "@/entities/Product";
 import { Employee } from "@/entities/Employee";
 import { PaymentType } from "@/entities/PaymentType";
-import { User } from "@/entities/User"; 
+import  User  from "@/lib/providers/user"; 
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Building2, Edit, Trash2, Ban, CheckCircle, AlertCircle, Users, DollarSign, Home, Database } from "lucide-react";
 import { Company } from "@/entities/Company";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";

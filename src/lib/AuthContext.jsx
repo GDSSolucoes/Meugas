@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAppState = async () => {
-    debugger;
+    ;
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);

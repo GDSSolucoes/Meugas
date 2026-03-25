@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api, apiEnabled } from '@/lib/apiClient'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function Login() {
   const [mode, setMode] = useState('email')
@@ -9,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const {checkAppState} = useAuth();
   const navigate = useNavigate()
 
   const submit = async e => {
@@ -21,7 +23,7 @@ export default function Login() {
       const r = await api.post('/api/auth/login', payload)
       localStorage.setItem('access_token', r.data.access_token)
       localStorage.setItem('refresh_token', r.data.refresh_token)
-      navigate('/')
+      checkAppState();
     } catch (err) {
       setError(err.response?.data?.message || 'Falha ao autenticar')
     } finally {

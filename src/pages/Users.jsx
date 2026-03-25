@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Users, Edit, Info } from "lucide-react";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { Company } from "@/entities/Company"; // Importar a entidade Company
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast"; // Importar useToast

@@ -13,7 +13,7 @@ import { Order } from "@/entities/Order";
 import { Product } from "@/entities/Product";
 import { Person } from "@/entities/Person";
 import { Sale } from "@/entities/Sale";
-import { User } from "@/entities/User"; // Added User import
+import  User  from "@/lib/providers/user"; // Added User import
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -32,6 +32,7 @@ export default function Dashboard() {
   }, []);
 
   const loadStats = async () => {
+    ;
     try {
       const user = await User.me();
       setCurrentUser(user);

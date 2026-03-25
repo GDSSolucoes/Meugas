@@ -12,7 +12,7 @@ import { StockTransfer } from "@/entities/StockTransfer";
 import { ProductStock } from "@/entities/ProductStock";
 import { Product } from "@/entities/Product";
 import { Sector } from "@/entities/Sector";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 import { Sale } from "@/entities/Sale";
 import { Purchase } from "@/entities/Purchase";

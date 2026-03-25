@@ -10,7 +10,7 @@ import { ClipboardList, TrendingUp, CheckCircle, Clock, Filter } from "lucide-re
 import { Order } from "@/entities/Order";
 import { Employee } from "@/entities/Employee";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 
 export default function OrdersReport() {
   const [allOrders, setAllOrders] = useState([]);

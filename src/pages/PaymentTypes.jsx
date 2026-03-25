@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, CreditCard, Edit, Trash2 } from "lucide-react";
 import { PaymentType } from "@/entities/PaymentType";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 
 export default function PaymentTypes() {
   const [paymentTypes, setPaymentTypes] = useState([]);

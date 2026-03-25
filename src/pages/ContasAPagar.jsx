@@ -20,7 +20,7 @@ import { PaymentType } from "@/entities/PaymentType";
 import { Sector } from "@/entities/Sector";
 import { SectorMaster } from "@/entities/SectorMaster";
 import { Person } from "@/entities/Person";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, differenceInDays } from "date-fns";
 import { createPageUrl } from "@/utils";

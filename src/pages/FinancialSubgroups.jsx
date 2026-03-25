@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Folder, X } from "lucide-react";
 import { FinancialSubgroup } from "@/entities/FinancialSubgroup";
 import { FinancialGroup } from "@/entities/FinancialGroup";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function FinancialSubgroups() {

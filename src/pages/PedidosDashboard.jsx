@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Order } from "@/entities/Order";
 import { Person } from "@/entities/Person";
-import { User } from "@/entities/User";
+import  User  from "@/lib/providers/user";
 import { Employee } from "@/entities/Employee"; // New import
 import { Product } from "@/entities/Product"; // New import, implied by outline usage
 import { Link } from "react-router-dom";
