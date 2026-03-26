@@ -68,7 +68,8 @@ export const products = pgTable("products", {
   pesoBruto: numeric("peso_bruto").default("0"),
   informacoesAdicionaisNfe: text("informacoes_adicionais_nfe"),
   companyName: text("company_name"),
-  createdByName: text("created_by_name"),
+    deleted: boolean("deleted").default(false),
+    createdByName: text("created_by_name"),
   active: boolean("active").default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 },
@@ -84,3 +85,4 @@ export const products = pgTable("products", {
     index("products_category_index").on(table.category),
   ],
 );
+

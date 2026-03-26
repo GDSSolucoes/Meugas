@@ -1,0 +1,26 @@
+ALTER TABLE "accountsReceivables" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "acquirers" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "budgets" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "cashAccounts" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "cashMovements" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "companies" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "contasAPagar" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "employees" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "facilitadores" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "financialGroups" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "financialSubgroups" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "fuelings" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "orders" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "paymentTypes" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "persons" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "products" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "productPickups" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "productStocks" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "purchases" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "sales" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "sectors" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "sectorMasters" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "stockTransfers" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "vasilhameLoans" ADD COLUMN "deleted" boolean DEFAULT false;--> statement-breakpoint
+ALTER TABLE "vehicles" ADD COLUMN "deleted" boolean DEFAULT false;

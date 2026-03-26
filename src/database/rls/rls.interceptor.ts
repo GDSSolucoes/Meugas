@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor, Inject } from '@nestjs/common'
 import { Pool } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { RequestContextService } from '../../common/request-context.service'
+import { RequestContextService } from '../request-context.service'
 import { from } from 'rxjs'
 
 @Injectable()
@@ -10,7 +10,7 @@ export class RlsInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const req = context.switchToHttp().getRequest()
-    const companyId = req?.user?.company_id
+    const companyId = req?.user?.companyId
     if (!companyId) {
       return next.handle()
     }

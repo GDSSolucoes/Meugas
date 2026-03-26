@@ -7,6 +7,7 @@ import {
   uuid,
   pgPolicy,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
@@ -27,6 +28,7 @@ export const productStocks = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
+    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
@@ -43,3 +45,4 @@ export const productStocks = pgTable(
     index("productStocks_sector_id_index").on(table.sectorId),
   ],
 );
+

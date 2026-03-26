@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Pool } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { RequestContextService } from '../../common/request-context.service'
+import { RequestContextService } from '../request-context.service'
 
 @Injectable()
 export class RlsService {

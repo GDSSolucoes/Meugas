@@ -60,6 +60,7 @@ export const facilitadores = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
+    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
@@ -78,3 +79,4 @@ export const facilitadores = pgTable(
     index("facilitadores_empresa_id_index").on(table.empresaId),
   ],
 );
+

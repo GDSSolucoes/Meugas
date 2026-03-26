@@ -34,7 +34,8 @@ export const paymentTypes = pgTable("paymentTypes", {
     .notNull()
     .references(() => companies.id, { onDelete: "cascade" }),
   companyName: text("company_name"),
-  createdByName: text("created_by_name"),
+    deleted: boolean("deleted").default(false),
+    createdByName: text("created_by_name"),
   active: boolean("active").default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 },
@@ -49,3 +50,4 @@ export const paymentTypes = pgTable("paymentTypes", {
     index("paymentTypes_company_id_index").on(table.companyId),
     index("paymentTypes_type_index").on(table.type),
   ],);
+

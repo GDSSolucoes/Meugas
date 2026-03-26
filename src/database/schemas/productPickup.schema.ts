@@ -8,6 +8,7 @@ import {
   pgEnum,
   pgPolicy,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { persons } from "./person.schema";
@@ -50,6 +51,7 @@ export const productPickups = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
+    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
@@ -65,3 +67,4 @@ export const productPickups = pgTable(
     index("productPickups_status_index").on(table.status),
   ],
 );
+

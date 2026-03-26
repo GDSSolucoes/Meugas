@@ -39,6 +39,7 @@ export const users = pgTable(
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
+    deleted: boolean("deleted").default(false),
     active: boolean("active").default(true),
     passwordHash: text("password_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -62,3 +63,4 @@ export const users = pgTable(
     index("cpf_index").on(table.cpf),
   ],
 );
+

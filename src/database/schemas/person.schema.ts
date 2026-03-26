@@ -53,6 +53,7 @@ export const persons = pgTable(
     conveniadaId: text("conveniada_id"),
     conveniadaName: text("conveniada_name"),
     companyName: text("company_name"),
+    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     active: boolean("active").default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -69,3 +70,4 @@ export const persons = pgTable(
     index("persons_type_index").on(table.type),
   ],
 );
+

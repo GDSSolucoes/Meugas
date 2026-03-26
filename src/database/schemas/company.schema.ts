@@ -9,6 +9,7 @@ import {
   pgPolicy,
   index,
   pgEnum,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm/sql/sql";
 
@@ -76,6 +77,7 @@ export const companies = pgTable(
     suspension_reason: text("suspension_reason"),
     admin_name: text("admin_name").notNull(),
     admin_email: text("admin_email").notNull(),
+    deleted: boolean("deleted").default(false),
     created_by_name: text("created_by_name"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -91,3 +93,4 @@ export const companies = pgTable(
     index("companies_status_index").on(table.status),
   ],
 );
+

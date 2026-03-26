@@ -2,7 +2,7 @@ import { Module, Global, Scope } from '@nestjs/common'
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { RlsService } from './rls/rls.service'
-import { RequestContextService } from '../common/request-context.service'
+import { RequestContextService } from './request-context.service'
 import { RlsInterceptor } from './rls/rls.interceptor'
 
 @Global()

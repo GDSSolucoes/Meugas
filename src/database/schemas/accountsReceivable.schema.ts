@@ -1,4 +1,4 @@
-import { pgTable, date, numeric, text, timestamp, uuid, index, pgEnum, pgPolicy } from 'drizzle-orm/pg-core'
+import { pgTable, date, numeric, text, timestamp, uuid, index, pgEnum, pgPolicy, boolean } from 'drizzle-orm/pg-core'
 import { companies } from './company.schema'
 import { sales } from './sale.schema'
 import { sql } from 'drizzle-orm'
@@ -26,6 +26,7 @@ export const accountsReceivables = pgTable('accountsReceivables', {
   paymentDate: date('payment_date'),
   companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
   companyName: text('company_name'),
+  deleted: boolean('deleted').default(false),
   createdByName: text('created_by_name'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 },
@@ -43,3 +44,4 @@ export const accountsReceivables = pgTable('accountsReceivables', {
     index("accountsReceivables_status_index").on(table.status),
   ]
 )
+

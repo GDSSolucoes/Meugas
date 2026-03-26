@@ -33,6 +33,7 @@ export const cashAccounts = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
+    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     active: boolean("active").default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -49,3 +50,4 @@ export const cashAccounts = pgTable(
     index("cashAccounts_type_index").on(table.type),
   ],
 );
+

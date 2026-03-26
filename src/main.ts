@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { RlsInterceptor } from './database/rls/rls.interceptor'
-import { HttpErrorInterceptor } from './common/http-error.interceptor'
+import { HttpErrorInterceptor } from './interceptors/http-error.interceptor'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true })

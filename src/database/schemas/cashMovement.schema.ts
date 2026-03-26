@@ -8,6 +8,7 @@ import {
   pgPolicy,
   index,
   pgEnum,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
@@ -44,6 +45,7 @@ export const cashMovements = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
+    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
@@ -62,3 +64,4 @@ export const cashMovements = pgTable(
     index("cashMovements_group_id_index").on(table.groupId),
   ],
 );
+
