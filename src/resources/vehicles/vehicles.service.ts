@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { BaseCrudService } from '../../common/base-crud.service'
 import { RequestContextService } from '../../database/request-context.service'
 import { vehicles } from '../../database/schemas'
-import { VehiclePostDto } from './dto/vehicle.post.dto'
+import { VehicleCreateDto } from './dto/vehicle.post.dto'
 import { VehicleUpdateDto } from './dto/vehicle.update.dto'
 
 @Injectable()
@@ -12,7 +12,7 @@ export class VehiclesService extends BaseCrudService<typeof vehicles> {
   }
 
   // Override if needed for custom logic
-  async create(data: VehiclePostDto) {
+  async create(data: VehicleCreateDto) {
     return super.create(data)
   }
 
