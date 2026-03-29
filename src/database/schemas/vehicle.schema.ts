@@ -1,7 +1,6 @@
 import {
   pgTable,
   boolean,
-  integer,
   numeric,
   text,
   timestamp,

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, ilike, or, sql, desc, SQL, Table, TableConfig } from "drizzle-orm";
+import { and, eq, ilike, or, sql, desc, SQL } from "drizzle-orm";
 import { RequestContextService } from "../database/request-context.service";
 import { BaseCreateDto } from "./dto/base-create.dto";
 import { BaseUpdateDto } from "./dto/base-update.dto";
