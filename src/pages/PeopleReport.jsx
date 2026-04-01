@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Users, UserCheck, Phone, MapPin, Gift } from "lucide-react";
 import { Person } from "@/entities/Person";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { format, parseISO } from 'date-fns';
 
 export default function PeopleReport() {

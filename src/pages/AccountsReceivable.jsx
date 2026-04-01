@@ -32,7 +32,7 @@ import { PaymentType } from "@/entities/PaymentType";
 import { Sector } from "@/entities/Sector";
 import { Person } from "@/entities/Person";
 import { Employee } from "@/entities/Employee";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
 import { createPageUrl } from "@/utils";

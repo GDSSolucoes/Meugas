@@ -8,7 +8,7 @@ import { UserPlus, Plus, Trash2, Loader2 } from "lucide-react";
 import { Person } from "@/entities/Person";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { searchAddressByStreet } from "@/functions/searchAddressByStreet";
 
 const initialPersonState = {

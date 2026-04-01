@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import Login from '@/pages/Login';
-import { apiEnabled } from '@/lib/apiClient';
+import { apiEnabled } from '@/api/apiClient';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ApiErrorToaster from '@/lib/ApiErrorToaster';
 

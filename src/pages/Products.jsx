@@ -12,7 +12,7 @@ import { Plus, Package, AlertTriangle, Edit, Trash2, PackageOpen, Receipt, Info 
 import { Product } from "@/entities/Product";
 import { ProductStock } from "@/entities/ProductStock";
 import { Order } from "@/entities/Order";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Products() {

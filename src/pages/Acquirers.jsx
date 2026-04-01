@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, CreditCard } from "lucide-react";
 import { Acquirer } from "@/entities/Acquirer";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Acquirers() {

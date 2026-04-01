@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { api, apiEnabled } from '@/lib/apiClient'
+import { api, apiEnabled } from '@/api/apiClient'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/AuthContext'
 

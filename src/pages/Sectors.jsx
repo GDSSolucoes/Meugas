@@ -11,7 +11,7 @@ import { Plus, Edit, Trash2, Warehouse } from "lucide-react";
 import { Sector } from "@/entities/Sector";
 import { Employee } from "@/entities/Employee";
 import { SectorMaster } from "@/entities/SectorMaster"; // Importar SectorMaster
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Sectors() {

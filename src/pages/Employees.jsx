@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, UserCheck, Edit, Trash2 } from "lucide-react";
 import { Employee } from "@/entities/Employee";
 import { format, parseISO } from "date-fns";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Employees() {

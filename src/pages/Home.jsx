@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, ClipboardList, ArrowRight, LogOut, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);

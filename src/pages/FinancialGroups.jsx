@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, FolderKanban } from "lucide-react";
 import { FinancialGroup } from "@/entities/FinancialGroup";
-import  User  from "@/lib/providers/user";
+import  User  from "@/api/providers/user";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function FinancialGroups() {
