@@ -1,5 +1,5 @@
-import 'dotenv/config'
-import 'reflect-metadata'
+import * as dotenv from 'dotenv/config'
+import * as metadata from 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'

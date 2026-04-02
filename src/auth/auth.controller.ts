@@ -30,12 +30,12 @@ export class AuthController {
   @ApiBody({
     schema: {
       type: 'object',
-      properties: { refresh_token: { type: 'string' } },
-      required: ['refresh_token']
+      properties: { refreshToken: { type: 'string' } },
+      required: ['refreshToken']
     }
   })
-  async refresh(@Body() body: { refresh_token: string }) {
-    return this.service.refresh(body.refresh_token)
+  async refresh(@Body() body: { refreshToken: string }) {
+    return this.service.refresh(body.refreshToken)
   }
 
   @Get('me')

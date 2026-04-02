@@ -11,7 +11,7 @@ export class UsersUpdateDto {
   @ApiProperty({ required: false })
   cpf?: string
   @ApiProperty({ required: false, enum: userTypeEnum })
-  user_type?: userTypeEnum
+  userType?: userTypeEnum
   @ApiProperty({ required: false })
   phone?: string
   @ApiProperty({ required: false })

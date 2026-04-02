@@ -33,7 +33,7 @@ export const users = pgTable(
     role: userRolePGEnum("role").notNull(),
     email: text("email").unique().notNull(),
     cpf: text("cpf").unique(),
-    user_type: userTypePGEnum("user_type").notNull(),
+    userType: userTypePGEnum("user_type").notNull(),
     phone: text("phone"),
     department: text("department"),
     companyId: uuid("company_id")

@@ -21,15 +21,15 @@ export class AuthService {
     }
     const accessToken = await this.jwt.signAsync(payload, { secret: process.env.JWT_SECRET!, expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
     const refreshToken = await this.jwt.signAsync(payload, { secret: process.env.REFRESH_SECRET!, expiresIn: process.env.REFRESH_EXPIRES_IN || '7d' })
-    return { access_token: accessToken, refresh_token: refreshToken }
+    return { accessToken, refreshToken }
   }
 
   async refresh(token: string) {
     try {
       const decoded = await this.jwt.verifyAsync(token, { secret: process.env.REFRESH_SECRET! })
-      const payload = { sub: decoded.sub, company_id: decoded.company_id, role: decoded.role }
+      const payload = { ...decoded }
       const accessToken = await this.jwt.signAsync(payload, { secret: process.env.JWT_SECRET!, expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
-      return { access_token: accessToken }
+      return { accessToken }
     } catch {
       throw new UnauthorizedException()
     }

@@ -13,13 +13,13 @@ export class CompanyPostDto {
   @ApiProperty({ required: false })
   address?: CompanyAddress
   @ApiProperty({ required: false })
-  parametros_fiscais?: CompanyParametrosFiscais
+  parametrosFiscais?: CompanyParametrosFiscais
   @ApiProperty({ enum: PlanTypeEnum, default: PlanTypeEnum.BASIC, required: false })
   plano?: PlanTypeEnum
   @ApiProperty({ required: false, enum: CompanyStatusEnum, default: CompanyStatusEnum.ATIVA })
   status?: CompanyStatusEnum
   @ApiProperty()
-  admin_name!: string
+  adminName!: string
   @ApiProperty()
-  admin_email!: string
+  adminEmail!: string
 }

@@ -47,15 +47,15 @@ export class UsersController {
       name: `GDS Meu Gás`,
       document: `00000000000000`,
       email: body.email,
-      admin_name: body.name,
-      admin_email: body.email,
+      adminName: body.name,
+      adminEmail: body.email,
     });
     const created = await this.rls.withCompany(company.id, () =>
       this.users.create({
         ...body,
         companyId: company.id,
         role: userRoleEnum.ADMIN,
-        user_type: userTypeEnum.SUPER_ADMIN,
+        userType: userTypeEnum.SUPER_ADMIN,
       }),
     );
     return {

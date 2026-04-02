@@ -19,7 +19,7 @@ export type PersonAddress = {
   number?: string;
   complement?: string;
   neighborhood?: string;
-  reference_point?: string;
+  referencePoint?: string;
   city?: string;
   state?: string;
   zipcode?: string;

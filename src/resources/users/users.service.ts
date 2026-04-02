@@ -38,7 +38,7 @@ export class UsersService {
       id,
       ...data,
       role: data.role || userRoleEnum.USER,
-      user_type: data.user_type || userTypeEnum.ATENDENTE,
+      userType: data.userType || userTypeEnum.ATENDENTE,
       passwordHash,
       active: true,
     })

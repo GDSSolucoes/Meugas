@@ -21,27 +21,27 @@ export type CompanyAddress = {
   city?: string;
   state?: string;
   zipcode?: string;
-  codigo_municipio?: string;
+  codigoMunicipio?: string;
 };
 
 export type CompanyParametrosFiscais = {
   cnpj?: string;
-  razao_social?: string;
-  inscricao_estadual?: string;
-  regime_tributario?:
-    | "simples_nacional"
-    | "lucro_presumido"
-    | "lucro_real"
+  razaoSocial?: string;
+  inscricaoEstadual?: string;
+  regimeTributario?:
+    | "simplesNacional"
+    | "lucroPresumido"
+    | "lucroReal"
     | "mei";
-  ambiente_nfe?: "homologacao" | "producao";
-  emitir_nfe?: boolean;
-  emitir_nfce?: boolean;
-  serie_nfe?: number;
-  serie_nfce?: number;
-  numero_inicial_nfe?: number;
-  numero_inicial_nfce?: number;
-  observacoes_nfe?: string;
-  observacoes_nfce?: string;
+  ambienteNfe?: "homologacao" | "producao";
+  emitirNfe?: boolean;
+  emitirNfce?: boolean;
+  serieNfe?: number;
+  serieNfce?: number;
+  numeroInicialNfe?: number;
+  numeroInicialNfce?: number;
+  observacoesNfe?: string;
+  observacoesNfce?: string;
 };
 
 export enum CompanyStatusEnum {

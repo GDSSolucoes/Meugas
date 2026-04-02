@@ -16,23 +16,23 @@ export class ProductsController {
 
   @Get()
   async list(@CurrentUser() user: any, @Query('q') q?: string) {
-    return this.service.list(user.company_id, q)
+    return this.service.list(user.companyId, q)
   }
 
   @Get(':id')
   async get(@CurrentUser() user: any, @Param('id') id: string) {
-    return this.service.get(user.company_id, id)
+    return this.service.get(user.companyId, id)
   }
 
   @Post()
   @ApiBody({ type: ProductsPostDto })
   async create(@CurrentUser() user: any, @Body() body: ProductsPostDto) {
-    return this.service.create(user.company_id, body)
+    return this.service.create(user.companyId, body)
   }
 
   @Put(':id')
   @ApiBody({ type: ProductsUpdateDto })
   async update(@CurrentUser() user: any, @Param('id') id: string, @Body() body: ProductsUpdateDto) {
-    return this.service.update(user.company_id, id, body)
+    return this.service.update(user.companyId, id, body)
   }
 }

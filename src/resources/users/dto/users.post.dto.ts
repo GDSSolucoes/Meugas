@@ -16,5 +16,5 @@ export class UsersPostDto {
   companyId!: string
 
   role?: userRoleEnum
-  user_type?: userTypeEnum
+  userType?: userTypeEnum
 }
