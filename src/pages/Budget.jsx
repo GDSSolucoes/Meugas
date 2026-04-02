@@ -8,10 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { 
   Edit, Trash2, Search, Save, X, LogOut, Printer, Plus
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { User } from "@/entities";
+import * as entities from "@/entities";
 
 export default function Budget() {
   const { toast } = useToast();
@@ -57,12 +58,12 @@ export default function Budget() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       const [budgetsData, productsData] = await Promise.all([
-        base44.entities.Budget.filter({ company_id: user.company_id }),
-        base44.entities.Product.filter({ company_id: user.company_id, active: true })
+        entities.Budget.filter({ companyId: user.companyId }),
+        entities.Product.filter({ companyId: user.companyId, active: true })
       ]);
       
       setBudgets(budgetsData);
@@ -109,19 +110,19 @@ export default function Budget() {
       return;
     }
     
-    const orcamento = budgets.find(b => b.budget_number === codigo);
+    const orcamento = budgets.find(b => b.budgetNumber === codigo);
     
     if (orcamento) {
-      setNome(orcamento.customer_data?.name || '');
-      setRua(orcamento.customer_data?.street || '');
-      setNumero(orcamento.customer_data?.number || '');
-      setComplemento(orcamento.customer_data?.complement || '');
-      setBairro(orcamento.customer_data?.neighborhood || '');
-      setCidade(orcamento.customer_data?.city || '');
-      setUf(orcamento.customer_data?.state || 'PR');
+      setNome(orcamento.customerData?.name || '');
+      setRua(orcamento.customerData?.street || '');
+      setNumero(orcamento.customerData?.number || '');
+      setComplemento(orcamento.customerData?.complement || '');
+      setBairro(orcamento.customerData?.neighborhood || '');
+      setCidade(orcamento.customerData?.city || '');
+      setUf(orcamento.customerData?.state || 'PR');
       setItems(orcamento.items || []);
       setIsEditingCustomer(false);
-      toast({ title: "Orçamento encontrado", description: `Orçamento #${orcamento.budget_number} carregado com sucesso.` });
+      toast({ title: "Orçamento encontrado", description: `Orçamento #${orcamento.budgetNumber} carregado com sucesso.` });
     } else {
       setShowErrorModal(true);
     }
@@ -157,7 +158,7 @@ export default function Budget() {
       return;
     }
     
-    const orcamento = budgets.find(b => b.budget_number === codigo);
+    const orcamento = budgets.find(b => b.budgetNumber === codigo);
     if (!orcamento) {
       toast({ title: "Erro", description: "Orçamento não encontrado.", variant: "destructive" });
       return;
@@ -168,7 +169,7 @@ export default function Budget() {
     }
     
     try {
-      await base44.entities.Budget.delete(orcamento.id);
+      await entities.Budget.delete(orcamento.id);
       toast({ title: "Sucesso", description: "Orçamento excluído com sucesso." });
       await loadData();
       limparCampos();
@@ -209,11 +210,11 @@ export default function Budget() {
     }
     
     const novoItem = {
-      product_id: selectedProduct.id,
-      product_code: selectedProduct.code || '',
-      product_name: selectedProduct.name,
+      productId: selectedProduct.id,
+      productCode: selectedProduct.code || '',
+      productName: selectedProduct.name,
       quantity: qtd,
-      unit_price: valor,
+      unitPrice: valor,
       total: qtd * valor
     };
     
@@ -253,36 +254,36 @@ export default function Budget() {
 
       // Se tem código, é edição
       if (codigo) {
-        const orcamento = budgets.find(b => b.budget_number === codigo);
+        const orcamento = budgets.find(b => b.budgetNumber === codigo);
         if (orcamento) {
-          await base44.entities.Budget.update(orcamento.id, {
-            customer_data: customerData,
+          await entities.Budget.update(orcamento.id, {
+            customerData: customerData,
             items: items,
-            total_amount: totalAmount,
-            company_id: currentUser.company_id,
-            company_name: currentUser.company_name,
-            created_by_name: currentUser.full_name
+            totalAmount: totalAmount,
+            companyId: currentUser.companyId,
+            companyName: currentUser.companyName,
+            createdByName: currentUser.fullName
           });
           
           toast({ title: "Sucesso", description: `Orçamento #${codigo} atualizado com sucesso!` });
         }
       } else {
         // Novo orçamento - gerar código sequencial
-        const allBudgets = await base44.entities.Budget.filter({ company_id: currentUser.company_id });
+        const allBudgets = await entities.Budget.filter({ companyId: currentUser.companyId });
         const maxBudgetNumber = allBudgets.reduce((max, budget) => {
-          const currentNum = parseInt(budget.budget_number, 10);
+          const currentNum = parseInt(budget.budgetNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
         }, 0);
         const newBudgetNumber = String(maxBudgetNumber + 1);
         
-        await base44.entities.Budget.create({
-          budget_number: newBudgetNumber,
-          customer_data: customerData,
+        await entities.Budget.create({
+          budgetNumber: newBudgetNumber,
+          customerData: customerData,
           items: items,
-          total_amount: totalAmount,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name
+          totalAmount: totalAmount,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName
         });
         
         setCodigo(newBudgetNumber);
@@ -357,10 +358,10 @@ export default function Budget() {
             <tbody>
               ${items.map(item => `
                 <tr>
-                  <td>${item.product_code}</td>
-                  <td>${item.product_name}</td>
+                  <td>${item.productCode}</td>
+                  <td>${item.productName}</td>
                   <td>${item.quantity}</td>
-                  <td>R$ ${item.unit_price.toFixed(2)}</td>
+                  <td>R$ ${item.unitPrice.toFixed(2)}</td>
                   <td>R$ ${item.total.toFixed(2)}</td>
                 </tr>
               `).join('')}
@@ -384,14 +385,14 @@ export default function Budget() {
   };
 
   const handleSelectBudget = (budget) => {
-    setCodigo(budget.budget_number);
-    setNome(budget.customer_data?.name || '');
-    setRua(budget.customer_data?.street || '');
-    setNumero(budget.customer_data?.number || '');
-    setComplemento(budget.customer_data?.complement || '');
-    setBairro(budget.customer_data?.neighborhood || '');
-    setCidade(budget.customer_data?.city || '');
-    setUf(budget.customer_data?.state || 'PR');
+    setCodigo(budget.budgetNumber);
+    setNome(budget.customerData?.name || '');
+    setRua(budget.customerData?.street || '');
+    setNumero(budget.customerData?.number || '');
+    setComplemento(budget.customerData?.complement || '');
+    setBairro(budget.customerData?.neighborhood || '');
+    setCidade(budget.customerData?.city || '');
+    setUf(budget.customerData?.state || 'PR');
     setItems(budget.items || []);
     setIsEditingCustomer(false);
     setShowSearchModal(false);
@@ -401,7 +402,7 @@ export default function Budget() {
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
     setCodigoProduto(product.code || product.id?.slice(-6) || '');
-    setValorUnitario(product.unit_price?.toString() || '0');
+    setValorUnitario(product.unitPrice?.toString() || '0');
     setShowProductSearch(false);
     setSearchTerm('');
   };
@@ -576,10 +577,10 @@ export default function Budget() {
                     <TableBody>
                       {items.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell className="text-xs">{item.product_code}</TableCell>
-                          <TableCell className="text-xs">{item.product_name}</TableCell>
+                          <TableCell className="text-xs">{item.productCode}</TableCell>
+                          <TableCell className="text-xs">{item.productName}</TableCell>
                           <TableCell className="text-xs text-right">{item.quantity}</TableCell>
-                          <TableCell className="text-xs text-right">R$ {item.unit_price.toFixed(2)}</TableCell>
+                          <TableCell className="text-xs text-right">R$ {item.unitPrice.toFixed(2)}</TableCell>
                           <TableCell className="text-xs text-right font-semibold">R$ {item.total.toFixed(2)}</TableCell>
                           <TableCell className="text-center">
                             <Button
@@ -719,8 +720,8 @@ export default function Budget() {
                     .filter(b => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return b.budget_number?.toLowerCase().includes(term) || 
-                             b.customer_data?.name?.toLowerCase().includes(term);
+                      return b.budgetNumber?.toLowerCase().includes(term) || 
+                             b.customerData?.name?.toLowerCase().includes(term);
                     })
                     .map(b => (
                       <TableRow 
@@ -728,10 +729,10 @@ export default function Budget() {
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => handleSelectBudget(b)}
                       >
-                        <TableCell className="text-xs font-mono">{b.budget_number}</TableCell>
-                        <TableCell className="text-xs">{b.customer_data?.name || '-'}</TableCell>
-                        <TableCell className="text-xs">{b.created_date ? new Date(b.created_date).toLocaleDateString('pt-BR') : '-'}</TableCell>
-                        <TableCell className="text-xs text-right">R$ {(b.total_amount || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs font-mono">{b.budgetNumber}</TableCell>
+                        <TableCell className="text-xs">{b.customerData?.name || '-'}</TableCell>
+                        <TableCell className="text-xs">{b.createdDate ? new Date(b.createdDate).toLocaleDateString('pt-BR') : '-'}</TableCell>
+                        <TableCell className="text-xs text-right">R$ {(b.totalAmount || 0).toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
@@ -786,7 +787,7 @@ export default function Budget() {
                         <TableCell className="text-xs font-mono">{prod.code || prod.id?.slice(-6)}</TableCell>
                         <TableCell className="text-xs">{prod.name}</TableCell>
                         <TableCell className="text-xs">{prod.category || '-'}</TableCell>
-                        <TableCell className="text-xs text-right">R$ {(prod.unit_price || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs text-right">R$ {(prod.unitPrice || 0).toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                 </TableBody>

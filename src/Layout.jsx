@@ -50,7 +50,7 @@ import { Toaster } from "@/components/ui/toaster"; // Importar o Toaster
 import  User  from "@/api/providers/user";
 import { Company } from "@/entities/Company"; // Import correto da entidade Company
 
-const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165f_logo5.png";
+const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165fLogo5.png";
 
 const modulePedidos = [
   { title: "Pedidos", url: createPageUrl("Orders"), icon: ClipboardList },
@@ -138,20 +138,20 @@ export default function Layout({ children, currentPageName }) {
       try {
         const user = await User.me();
         
-        // LÓGICA DE AUTO-VÍNCULO: Se o usuário não tem company_id, tentar encontrar uma empresa pelo email
-        if (!user.company_id && user.email) {
+        // LÓGICA DE AUTO-VÍNCULO: Se o usuário não tem companyId, tentar encontrar uma empresa pelo email
+        if (!user.companyId && user.email) {
           try {
             const companies = await Company.list();
             const matchingCompany = companies.find(company => 
-              company.admin_email === user.email && company.status === 'ativa'
+              company.adminEmail === user.email && company.status === 'ativa'
             );
             
             if (matchingCompany) {
               // Auto-vincular usuário à empresa encontrada
               await User.updateMyUserData({
-                company_id: matchingCompany.id,
-                company_name: matchingCompany.name,
-                user_type: 'admin'
+                companyId: matchingCompany.id,
+                companyName: matchingCompany.name,
+                userType: 'admin'
               });
               
               console.log(`✅ Usuário ${user.email} vinculado automaticamente à empresa ${matchingCompany.name}`);
@@ -169,8 +169,8 @@ export default function Layout({ children, currentPageName }) {
         // DEBUG: Vamos ver exatamente o que está vindo do usuário
         console.log('=== DEBUG USUÁRIO ===');
         console.log('Dados completos do usuário:', user);
-        console.log('company_id:', user.company_id);
-        console.log('company_name:', user.company_name);
+        console.log('companyId:', user.companyId);
+        console.log('companyName:', user.companyName);
         console.log('====================');
         
         setCurrentUser(user);
@@ -228,8 +228,8 @@ export default function Layout({ children, currentPageName }) {
   }
 
   // Verificar permissões de acesso
-  const isAtendente = currentUser?.user_type === 'atendente';
-  const isAdmin = currentUser?.user_type === 'admin';
+  const isAtendente = currentUser?.userType === 'atendente';
+  const isAdmin = currentUser?.userType === 'admin';
   const isSuperAdmin = currentUser?.email === 'brasileirosilvia@gmail.com';
 
   // Se é atendente e está tentando acessar módulo gerencial, redirecionar
@@ -323,16 +323,16 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-r from-slate-400 to-slate-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium text-sm">
-                  {currentUser?.full_name?.charAt(0).toUpperCase() || 'U'}
+                  {currentUser?.fullName?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-slate-700 text-sm truncate">
-                  {currentUser?.full_name || 'Usuário'}
+                  {currentUser?.fullName || 'Usuário'}
                 </p>
                 <p className="text-xs text-slate-500 truncate">
-                  {currentUser?.user_type === 'admin' ? 'Administrador' : (currentUser?.user_type === 'atendente' ? 'Atendente' : 'Carregando...')}
-                  {currentUser?.company_name && ` - ${currentUser.company_name}`}
+                  {currentUser?.userType === 'admin' ? 'Administrador' : (currentUser?.userType === 'atendente' ? 'Atendente' : 'Carregando...')}
+                  {currentUser?.companyName && ` - ${currentUser.companyName}`}
                 </p>
             </div>
             </div>
@@ -353,10 +353,10 @@ export default function Layout({ children, currentPageName }) {
               <div className="flex items-center gap-6 ml-auto">
                 <div className="text-right hidden sm:block">
                   <p className="font-semibold text-slate-700 text-sm truncate">
-                    {currentUser?.full_name || 'Usuário'}
+                    {currentUser?.fullName || 'Usuário'}
                   </p>
                   <p className="text-xs text-slate-500 truncate">
-                    {currentUser?.company_name || 'Empresa não definida'}
+                    {currentUser?.companyName || 'Empresa não definida'}
                   </p>
                 </div>
                 

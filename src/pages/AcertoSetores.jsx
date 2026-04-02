@@ -30,13 +30,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { format, parseISO } from "date-fns";
-import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { createPageUrl } from "@/utils";
 import Sales from "./Sales";
 import AccountsReceivable from "./AccountsReceivable";
 import CashMovements from "./CashMovements";
 import PaymentModal from "@/components/acerto/PaymentModal";
+import * as entities from "@/entities";
 
 export default function AcertoSetores() {
   const { toast } = useToast();
@@ -53,7 +53,7 @@ export default function AcertoSetores() {
   // Carregar filtros salvos do localStorage
   const getStoredFilters = () => {
     try {
-      const stored = localStorage.getItem('acertoSetores_filters');
+      const stored = localStorage.getItem('acertoSetoresFilters');
       if (stored) {
         return JSON.parse(stored);
       }
@@ -107,7 +107,7 @@ export default function AcertoSetores() {
       horaFinal,
       mostrarLancados
     };
-    localStorage.setItem('acertoSetores_filters', JSON.stringify(filters));
+    localStorage.setItem('acertoSetoresFilters', JSON.stringify(filters));
   }, [lancamento, mostrarEntregues, mostrarNaoEntregues, dataInicial, horaInicial, dataFinal, horaFinal, mostrarLancados]);
 
   // Carregar dados iniciais
@@ -117,23 +117,23 @@ export default function AcertoSetores() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       const [ordersData, setoresData, paymentTypesData, cashAccountsData] = await Promise.all([
-        base44.entities.Order.filter({ 
-          company_id: user.company_id 
-        }, '-created_date', 500),
-        base44.entities.Sector.filter({ 
-          company_id: user.company_id,
+        entities.Order.filter({ 
+          companyId: user.companyId 
+        }, '-createdDate', 500),
+        entities.Sector.filter({ 
+          companyId: user.companyId,
           active: true 
         }),
-        base44.entities.PaymentType.filter({ 
-          company_id: user.company_id,
+        entities.PaymentType.filter({ 
+          companyId: user.companyId,
           active: true 
         }),
-        base44.entities.CashAccount.filter({ 
-          company_id: user.company_id,
+        entities.CashAccount.filter({ 
+          companyId: user.companyId,
           active: true 
         })
       ]);
@@ -184,7 +184,7 @@ export default function AcertoSetores() {
     console.log('Período:', dataHoraInicio, 'até', dataHoraFim);
 
     filtered = filtered.filter(pedido => {
-      const dataParaComparar = pedido.delivery_date || pedido.created_date;
+      const dataParaComparar = pedido.deliveryDate || pedido.createdDate;
       if (!dataParaComparar) return false;
       
       const pedidoDate = new Date(dataParaComparar);
@@ -231,7 +231,7 @@ export default function AcertoSetores() {
     };
 
     pedidosFiltrados.forEach(pedido => {
-      resumoCalculado.total.valor += pedido.total_amount || 0;
+      resumoCalculado.total.valor += pedido.totalAmount || 0;
     });
 
     setResumo(resumoCalculado);
@@ -247,105 +247,105 @@ export default function AcertoSetores() {
 
   const handlePaymentConfirm = async (paymentData) => {
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
       const { pedido, payments, parcelas, totalVenda, desconto, acrescimo, totalAReceber } = paymentData;
       
       // 1. Criar a venda
       const saleData = {
-        sale_number: `V-${Date.now()}`,
-        person_id: pedido.person_id,
-        person_name: pedido.person_name,
-        sector_id: pedido.sector_id || '',
-        sector_name: pedido.sector_name || '',
+        saleNumber: `V-${Date.now()}`,
+        personId: pedido.personId,
+        personName: pedido.personName,
+        sectorId: pedido.sectorId || '',
+        sectorName: pedido.sectorName || '',
         status: 'concluida',
-        sale_date: format(new Date(), 'yyyy-MM-dd'),
+        saleDate: format(new Date(), 'yyyy-MM-dd'),
         items: pedido.items || [],
-        payment_methods: payments.map(p => {
+        paymentMethods: payments.map(p => {
           const paymentType = paymentTypes.find(pt => pt.id === p.tipo);
           return {
-            payment_type_id: p.tipo,
-            payment_type_name: paymentType?.name || '',
+            paymentTypeId: p.tipo,
+            paymentTypeName: paymentType?.name || '',
             amount: p.valor,
-            installments: parcelas.filter(parc => parc.payment_id === p.id).length || 1
+            installments: parcelas.filter(parc => parc.paymentId === p.id).length || 1
           };
         }),
-        total_amount: totalAReceber,
+        totalAmount: totalAReceber,
         notes: pedido.notes || '',
-        order_id: pedido.id,
-        order_number: pedido.order_number,
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        orderId: pedido.id,
+        orderNumber: pedido.orderNumber,
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
-      const newSale = await base44.entities.Sale.create(saleData);
+      const newSale = await entities.Sale.create(saleData);
 
       // 2. Processar pagamentos
       for (const payment of payments) {
         const paymentType = paymentTypes.find(pt => pt.id === payment.tipo);
         const isCard = paymentType?.type?.includes('cartao');
-        const isPrazo = parcelas.filter(p => p.payment_id === payment.id).length > 1 || isCard;
+        const isPrazo = parcelas.filter(p => p.paymentId === payment.id).length > 1 || isCard;
 
         if (isCard) {
           // Cartões: criar em Contas a Receber com dados do cartão
-          const parcelasDoCartao = parcelas.filter(p => p.payment_id === payment.id);
+          const parcelasDoCartao = parcelas.filter(p => p.paymentId === payment.id);
           for (const parcela of parcelasDoCartao) {
-            await base44.entities.AccountsReceivable.create({
-              person_id: pedido.person_id,
-              person_name: pedido.person_name,
-              sale_id: newSale.id,
-              installment_number: parcela.numero,
+            await entities.AccountsReceivable.create({
+              personId: pedido.personId,
+              personName: pedido.personName,
+              saleId: newSale.id,
+              installmentNumber: parcela.numero,
               description: `${paymentType.name} - Parcela ${parcela.numero}/${parcelasDoCartao.length}`,
-              due_date: parcela.vencimento,
+              dueDate: parcela.vencimento,
               amount: parcela.valor,
               status: 'pendente',
-              company_id: user.company_id,
-              company_name: user.company_name,
-              created_by_name: user.full_name
+              companyId: user.companyId,
+              companyName: user.companyName,
+              createdByName: user.fullName
             });
           }
         } else if (isPrazo) {
           // A PRAZO (boleto, cheque, etc): criar em Contas a Receber
-          const parcelasDoPayment = parcelas.filter(p => p.payment_id === payment.id);
+          const parcelasDoPayment = parcelas.filter(p => p.paymentId === payment.id);
           for (const parcela of parcelasDoPayment) {
-            await base44.entities.AccountsReceivable.create({
-              person_id: pedido.person_id,
-              person_name: pedido.person_name,
-              sale_id: newSale.id,
-              installment_number: parcela.numero,
+            await entities.AccountsReceivable.create({
+              personId: pedido.personId,
+              personName: pedido.personName,
+              saleId: newSale.id,
+              installmentNumber: parcela.numero,
               description: `${paymentType.name} - Parcela ${parcela.numero}/${parcelasDoPayment.length}`,
-              due_date: parcela.vencimento,
+              dueDate: parcela.vencimento,
               amount: parcela.valor,
               status: 'pendente',
-              company_id: user.company_id,
-              company_name: user.company_name,
-              created_by_name: user.full_name
+              companyId: user.companyId,
+              companyName: user.companyName,
+              createdByName: user.fullName
             });
           }
         } else {
           // À VISTA: lançar no caixa
-          const cashAccount = cashAccounts.find(ca => ca.id === payment.caixa_id);
-          await base44.entities.CashMovement.create({
-            cash_account_id: payment.caixa_id,
-            cash_account_name: cashAccount?.name || '',
+          const cashAccount = cashAccounts.find(ca => ca.id === payment.caixaId);
+          await entities.CashMovement.create({
+            cashAccountId: payment.caixaId,
+            cashAccountName: cashAccount?.name || '',
             type: 'receita',
             amount: payment.valor,
-            description: `Venda ${newSale.sale_number} - ${paymentType.name}`,
-            movement_date: format(new Date(), 'yyyy-MM-dd'),
-            person_id: pedido.person_id,
-            person_name: pedido.person_name,
-            related_doc_id: newSale.id,
-            company_id: user.company_id,
-            company_name: user.company_name,
-            created_by_name: user.full_name
+            description: `Venda ${newSale.saleNumber} - ${paymentType.name}`,
+            movementDate: format(new Date(), 'yyyy-MM-dd'),
+            personId: pedido.personId,
+            personName: pedido.personName,
+            relatedDocId: newSale.id,
+            companyId: user.companyId,
+            companyName: user.companyName,
+            createdByName: user.fullName
           });
         }
       }
 
       // 3. Atualizar status do pedido para finalizado
-      await base44.entities.Order.update(pedido.id, {
+      await entities.Order.update(pedido.id, {
         status: 'finalizado',
-        finalized_at: new Date().toISOString()
+        finalizedAt: new Date().toISOString()
       });
 
       toast({ 
@@ -450,17 +450,17 @@ export default function AcertoSetores() {
                               handleTransformToSale();
                             }}
                           >
-                            <TableCell className="text-center">{pedido.order_number}</TableCell>
-                            <TableCell>{pedido.person_name}</TableCell>
+                            <TableCell className="text-center">{pedido.orderNumber}</TableCell>
+                            <TableCell>{pedido.personName}</TableCell>
                             <TableCell className="text-center">
-                              {pedido.delivery_date ? format(parseISO(pedido.delivery_date), 'dd/MM/yyyy') : '-'}
+                              {pedido.deliveryDate ? format(parseISO(pedido.deliveryDate), 'dd/MM/yyyy') : '-'}
                             </TableCell>
                             <TableCell className="text-center">-</TableCell>
                             <TableCell className="text-center">
                               {pedido.status === 'finalizado' ? '✓' : '-'}
                             </TableCell>
                             <TableCell className="text-right">
-                              R$ {pedido.total_amount?.toFixed(2) || '0,00'}
+                              R$ {pedido.totalAmount?.toFixed(2) || '0,00'}
                             </TableCell>
                           </TableRow>
                         ))
@@ -506,9 +506,9 @@ export default function AcertoSetores() {
                       ) : (
                         itensPedido.map((item, index) => (
                           <TableRow key={index}>
-                            <TableCell>{item.product_name}</TableCell>
+                            <TableCell>{item.productName}</TableCell>
                             <TableCell className="text-center">{item.quantity}</TableCell>
-                            <TableCell className="text-right">R$ {item.unit_price?.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">R$ {item.unitPrice?.toFixed(2)}</TableCell>
                             <TableCell className="text-right">R$ {item.discount?.toFixed(2) || '0,00'}</TableCell>
                             <TableCell className="text-center">-</TableCell>
                           </TableRow>
@@ -525,7 +525,7 @@ export default function AcertoSetores() {
                       type="text" 
                       readOnly 
                       className="w-40 text-right" 
-                      value={selectedPedido ? `R$ ${selectedPedido.total_amount?.toFixed(2)}` : '0,00'} 
+                      value={selectedPedido ? `R$ ${selectedPedido.totalAmount?.toFixed(2)}` : '0,00'} 
                     />
                   </div>
 
@@ -565,11 +565,11 @@ export default function AcertoSetores() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="nao_entregues"
+                        id="naoEntregues"
                         checked={mostrarNaoEntregues}
                         onCheckedChange={setMostrarNaoEntregues}
                       />
-                      <Label htmlFor="nao_entregues" className="text-sm cursor-pointer">Não Entregues</Label>
+                      <Label htmlFor="naoEntregues" className="text-sm cursor-pointer">Não Entregues</Label>
                     </div>
                   </div>
                 </div>
@@ -707,7 +707,7 @@ export default function AcertoSetores() {
                 <Tabs value={selectedTab} onValueChange={setSelectedTab}>
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="venda">Venda</TabsTrigger>
-                    <TabsTrigger value="bx_cartao">Bx. Cartão</TabsTrigger>
+                    <TabsTrigger value="bxCartao">Bx. Cartão</TabsTrigger>
                     <TabsTrigger value="cancelamento">Cancelamento</TabsTrigger>
                   </TabsList>
 
@@ -763,7 +763,7 @@ export default function AcertoSetores() {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="bx_cartao" className="mt-4">
+                  <TabsContent value="bxCartao" className="mt-4">
                     <p className="text-sm text-gray-500">Informações de baixa de cartão</p>
                   </TabsContent>
 
@@ -904,7 +904,7 @@ export default function AcertoSetores() {
         {/* Modal de Contas a Receber */}
         <Dialog open={showAccountsReceivableModal} onOpenChange={setShowAccountsReceivableModal}>
           <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-            <AccountsReceivable onComplete={() => {
+            <AccountsReceivablePage onComplete={() => {
               setShowAccountsReceivableModal(false);
               loadData();
             }} />

@@ -33,14 +33,14 @@ export default function StockMovement() {
       try {
         const user = await User.me();
         setCurrentUser(user);
-        setCompanyId(user.company_id);
+        setCompanyId(user.companyId);
 
-        const sectorData = await Sector.filter({ company_id: user.company_id, active: true }); // Filter sectors by company
+        const sectorData = await Sector.filter({ companyId: user.companyId, active: true }); // Filter sectors by company
         setSectors(sectorData);
 
         // Define main sector as default or first available
         if (sectorData.length > 0) {
-          const mainSector = sectorData.find(s => s.is_main) || sectorData[0];
+          const mainSector = sectorData.find(s => s.isMain) || sectorData[0];
           setSelectedSectorId(mainSector.id);
         } else {
             setSelectedSectorId(''); // No sectors available
@@ -71,9 +71,9 @@ export default function StockMovement() {
     setIsLoading(true);
     try {
       const [allProducts, existingStocksForSector, allSectors] = await Promise.all([
-        Product.filter({ company_id: companyId, active: true }), // Get only active products for the company
-        ProductStock.filter({ sector_id: selectedSectorId, company_id: companyId }), // Get stocks specifically for the selected sector and company
-        Sector.filter({ company_id: companyId }) // Re-fetch sectors to ensure up-to-date names, filtered by company
+        Product.filter({ companyId: companyId, active: true }), // Get only active products for the company
+        ProductStock.filter({ sectorId: selectedSectorId, companyId: companyId }), // Get stocks specifically for the selected sector and company
+        Sector.filter({ companyId: companyId }) // Re-fetch sectors to ensure up-to-date names, filtered by company
       ]);
 
       const currentSector = allSectors.find(s => s.id === selectedSectorId);
@@ -87,21 +87,21 @@ export default function StockMovement() {
       
       const newStockEntries = [];
       // Use a Set for efficient lookup of product IDs that already have stock in this sector
-      const existingProductIdsInSector = new Set(existingStocksForSector.map(s => s.product_id));
+      const existingProductIdsInSector = new Set(existingStocksForSector.map(s => s.productId));
 
       for (const product of allProducts) {
         // If an active product does not have an existing stock entry in the current sector, create one
         if (!existingProductIdsInSector.has(product.id)) {
           const newStock = await ProductStock.create({
-            product_id: product.id,
-            product_name: product.name,
-            sector_id: selectedSectorId,
-            sector_name: currentSector.name,
+            productId: product.id,
+            productName: product.name,
+            sectorId: selectedSectorId,
+            sectorName: currentSector.name,
             quantity: 0,
-            initial_date: format(new Date(), 'yyyy-MM-dd'),
-            company_id: companyId, // Add company_id
-            company_name: currentUser.company_name, // Add company_name
-            created_by_name: currentUser.full_name
+            initialDate: format(new Date(), 'yyyy-MM-dd'),
+            companyId: companyId, // Add companyId
+            companyName: currentUser.companyName, // Add companyName
+            createdByName: currentUser.fullName
           });
           newStockEntries.push(newStock);
         }
@@ -144,7 +144,7 @@ export default function StockMovement() {
       const updatedQuantity = Number(stock.quantity) || 0;
       await ProductStock.update(stock.id, {
         quantity: updatedQuantity,
-        initial_date: stock.initial_date
+        initialDate: stock.initialDate
       });
       toast({ title: "Sucesso", description: "Estoque atualizado com sucesso." });
     } catch (error) {
@@ -179,7 +179,7 @@ export default function StockMovement() {
                             <SelectContent>
                                 {sectors.map(sector => (
                                     <SelectItem key={sector.id} value={sector.id}>
-                                        {sector.name} {sector.is_main ? '(Principal)' : ''}
+                                        {sector.name} {sector.isMain ? '(Principal)' : ''}
                                     </SelectItem>
                                 ))}
                                 {sectors.length === 0 && (
@@ -233,13 +233,13 @@ export default function StockMovement() {
                   ) : (
                     filteredStocks.map(stock => (
                       <TableRow key={stock.id}>
-                        <TableCell className="font-medium">{stock.product_name}</TableCell>
-                        <TableCell>{stock.sector_name}</TableCell>
+                        <TableCell className="font-medium">{stock.productName}</TableCell>
+                        <TableCell>{stock.sectorName}</TableCell>
                         <TableCell>
                           <Input
                             type="date"
-                            value={stock.initial_date ? format(parseISO(stock.initial_date), 'yyyy-MM-dd') : ''}
-                            onChange={(e) => handleInputChange(stock.id, 'initial_date', e.target.value)}
+                            value={stock.initialDate ? format(parseISO(stock.initialDate), 'yyyy-MM-dd') : ''}
+                            onChange={(e) => handleInputChange(stock.id, 'initialDate', e.target.value)}
                             className="bg-white/80"
                           />
                         </TableCell>

@@ -49,8 +49,8 @@ export default function Home() {
     );
   }
 
-  const isAtendente = currentUser?.user_type === 'atendente';
-  const isAdmin = currentUser?.user_type === 'admin';
+  const isAtendente = currentUser?.userType === 'atendente';
+  const isAdmin = currentUser?.userType === 'admin';
   const isSuperAdmin = currentUser?.email === 'brasileirosilvia@gmail.com';
 
   return (
@@ -61,7 +61,7 @@ export default function Home() {
           <div className="flex justify-between items-center relative">
             <div className="text-center flex-1">
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165f_logo5.png" 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165fLogo5.png" 
                 alt="MeuGás Logo" 
                 className="mx-auto w-32 h-32 object-contain"
               />
@@ -88,7 +88,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <p className="text-xl text-slate-300">Sistema de Gestão Completo para Distribuidoras</p>
             <p className="text-lg text-slate-400 mt-2">
-              Bem-vindo, {currentUser?.full_name} - {isSuperAdmin ? 'Proprietário(a)' : (isAdmin ? 'Administrador' : 'Atendente')}
+              Bem-vindo, {currentUser?.fullName} - {isSuperAdmin ? 'Proprietário(a)' : (isAdmin ? 'Administrador' : 'Atendente')}
             </p>
             <p className="text-lg text-slate-400 mt-1">
               {isAtendente ? 'Acesse o módulo de pedidos' : 'Selecione o módulo que deseja acessar'}

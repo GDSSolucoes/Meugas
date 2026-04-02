@@ -3,8 +3,8 @@ import { BaseEntity } from './BaseEntity';
 
 export enum ProductPickupStatusEnum {
   PENDENTE = "pendente",
-  RETIRADO_PARCIAL = "retirado_parcial",
-  RETIRADO_TOTAL = "retirado_total",
+  RETIRADO_PARCIAL = "retiradoParcial",
+  RETIRADO_TOTAL = "retiradoTotal",
 }
 
 /**

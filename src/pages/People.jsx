@@ -30,7 +30,7 @@ export default function People() {
     setIsLoading(true);
     try {
       const user = await User.me();
-      const data = await Person.filter({ company_id: user.company_id }, '-created_date');
+      const data = await Person.filter({ companyId: user.companyId }, '-createdDate');
       setPeople(data);
       setFilteredPeople(data);
     } catch (error) {
@@ -55,7 +55,7 @@ export default function People() {
         person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         person.document?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         person.phone?.some(phone => phone.includes(searchTerm)) ||
-        String(person.person_number).includes(searchTerm)
+        String(person.personNumber).includes(searchTerm)
       );
       setFilteredPeople(filtered);
     }
@@ -64,9 +64,9 @@ export default function People() {
   const checkPersonMovements = async (personId) => {
     try {
       const [orders, sales, receivables] = await Promise.all([
-        Order.list().then(orders => orders.filter(o => o.person_id === personId)),
-        Sale.list().then(sales => sales.filter(s => s.person_id === personId)),
-        AccountsReceivable.list().then(acc => acc.filter(a => a.person_id === personId))
+        Order.list().then(orders => orders.filter(o => o.personId === personId)),
+        Sale.list().then(sales => sales.filter(s => s.personId === personId)),
+        AccountsReceivable.list().then(acc => acc.filter(a => a.personId === personId))
       ]);
 
       return {
@@ -113,13 +113,13 @@ export default function People() {
     const colors = {
       cliente: "bg-blue-100 text-blue-800",
       fornecedor: "bg-green-100 text-green-800",
-      ponto_venda: "bg-purple-100 text-purple-800",
+      pontoVenda: "bg-purple-100 text-purple-800",
       conveniada: "bg-amber-100 text-amber-800"
     };
     const labels = {
       cliente: "Cliente",
       fornecedor: "Fornecedor", 
-      ponto_venda: "Ponto de Venda",
+      pontoVenda: "Ponto de Venda",
       conveniada: "Conveniada"
     };
     return <Badge className={colors[type]}>{labels[type]}</Badge>;
@@ -134,7 +134,7 @@ export default function People() {
   // Contadores por tipo
   const clientes = people.filter(p => p.type === 'cliente').length;
   const fornecedores = people.filter(p => p.type === 'fornecedor').length;
-  const pontosVenda = people.filter(p => p.type === 'ponto_venda').length;
+  const pontosVenda = people.filter(p => p.type === 'pontoVenda').length;
   const conveniadas = people.filter(p => p.type === 'conveniada').length;
 
   return (
@@ -248,7 +248,7 @@ export default function People() {
                       <TableRow key={person.id}>
                         <TableCell className="font-medium">
                           {person.name}
-                          <div className="text-xs text-slate-500">Cód: {person.person_number || person.id.substring(0, 6)}</div>
+                          <div className="text-xs text-slate-500">Cód: {person.personNumber || person.id.substring(0, 6)}</div>
                         </TableCell>
                         <TableCell>{getTypeBadge(person.type)}</TableCell>
                         <TableCell>

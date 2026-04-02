@@ -37,16 +37,16 @@ export default function Dashboard() {
       const user = await User.me();
       setCurrentUser(user);
       
-      // DEBUG: Verificar company_id do usuário
+      // DEBUG: Verificar companyId do usuário
       console.log('=== DEBUG DASHBOARD ===');
-      console.log('User company_id:', user.company_id);
-      console.log('User company_name:', user.company_name);
+      console.log('User companyId:', user.companyId);
+      console.log('User companyName:', user.companyName);
       
       const [orders, products, people, sales] = await Promise.all([
-        Order.filter({ company_id: user.company_id }).catch(() => []),
-        Product.filter({ company_id: user.company_id }).catch(() => []),
-        Person.filter({ company_id: user.company_id, type: 'cliente' }).catch(() => []),
-        Sale.filter({ company_id: user.company_id }).catch(() => [])
+        Order.filter({ companyId: user.companyId }).catch(() => []),
+        Product.filter({ companyId: user.companyId }).catch(() => []),
+        Person.filter({ companyId: user.companyId, type: 'cliente' }).catch(() => []),
+        Sale.filter({ companyId: user.companyId }).catch(() => [])
       ]);
 
       console.log('Dados filtrados:');
@@ -56,7 +56,7 @@ export default function Dashboard() {
       console.log('- Sales:', sales.length);
       console.log('=====================');
 
-      const lowStock = products.filter(p => (p.stock_quantity || 0) <= (p.min_stock || 0));
+      const lowStock = products.filter(p => (p.stockQuantity || 0) <= (p.minStock || 0));
 
       setStats({
         totalOrders: orders.length,

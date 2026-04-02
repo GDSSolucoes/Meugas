@@ -9,7 +9,7 @@ export enum userRoleEnum {
 export enum userTypeEnum {
   ATENDENTE = "atendente",
   ADMIN = "admin",
-  SUPER_ADMIN = "super_admin",
+  SUPER_ADMIN = "superAdmin",
 }
 
 export class User extends BaseEntity {
@@ -19,7 +19,7 @@ export class User extends BaseEntity {
   companyId!: number;
   role!: string;
   active!: boolean;
-  user_type!: userTypeEnum;
+  userType!: userTypeEnum;
   phone?: string;
   department?: string;
   deleted?: boolean;

@@ -29,31 +29,31 @@ export default function Products() {
     name: '',
     code: '',
     category: '',
-    unit_price: 0,
-    cost_price: 0,
-    min_stock: 10,
-    vasilhame_id: '',
-    vasilhame_name: '',
+    unitPrice: 0,
+    costPrice: 0,
+    minStock: 10,
+    vasilhameId: '',
+    vasilhameName: '',
     ncm: '',
     cest: '',
     // Removed cfop from currentProduct state
-    unidade_tributavel: 'UN',
-    icms_origem: '0',
-    beneficio_fiscal: '',
-    anp_codigo: '',
-    anp_descricao: '',
-    valor_sem_icms_kg: 0,
-    kg_por_unidade_glp: 0,
-    percentual_glp: 0,
-    percentual_gn_nacional: 0,
-    percentual_gn_importado: 0,
+    unidadeTributavel: 'UN',
+    icmsOrigem: '0',
+    beneficioFiscal: '',
+    anpCodigo: '',
+    anpDescricao: '',
+    valorSemIcmsKg: 0,
+    kgPorUnidadeGlp: 0,
+    percentualGlp: 0,
+    percentualGnNacional: 0,
+    percentualGnImportado: 0,
     codif: '',
-    peso_liquido: 0,
-    peso_bruto: 0,
-    informacoes_adicionais_nfe: '',
-    company_id: '',
-    company_name: '',
-    created_by_name: '',
+    pesoLiquido: 0,
+    pesoBruto: 0,
+    informacoesAdicionaisNfe: '',
+    companyId: '',
+    companyName: '',
+    createdByName: '',
     active: true
   });
 
@@ -63,8 +63,8 @@ export default function Products() {
       setCurrentUser(user);
       
       const [productsData, stocksData] = await Promise.all([
-        Product.filter({ company_id: user.company_id }).catch(() => []),
-        ProductStock.filter({ company_id: user.company_id }).catch(() => [])
+        Product.filter({ companyId: user.companyId }).catch(() => []),
+        ProductStock.filter({ companyId: user.companyId }).catch(() => [])
       ]);
       
       setProducts(productsData);
@@ -83,7 +83,7 @@ export default function Products() {
 
   const getProductTotalStock = (productId) => {
     return productStocks
-      .filter(stock => stock.product_id === productId)
+      .filter(stock => stock.productId === productId)
       .reduce((total, stock) => total + (stock.quantity || 0), 0);
   };
 
@@ -91,37 +91,37 @@ export default function Products() {
     setIsEditing(true);
     setCurrentProduct({
       ...product,
-      icms_origem: product.icms_origem || '0',
+      icmsOrigem: product.icmsOrigem || '0',
       ncm: product.ncm || '',
       cest: product.cest || '',
       // Removed cfop from handleEdit
-      unidade_tributavel: product.unidade_tributavel || 'UN',
-      beneficio_fiscal: product.beneficio_fiscal || '',
-      anp_codigo: product.anp_codigo || '',
-      anp_descricao: product.anp_descricao || '',
-      valor_sem_icms_kg: product.valor_sem_icms_kg || 0,
-      kg_por_unidade_glp: product.kg_por_unidade_glp || 0,
-      percentual_glp: product.percentual_glp || 0,
-      percentual_gn_nacional: product.percentual_gn_nacional || 0,
-      percentual_gn_importado: product.percentual_gn_importado || 0,
+      unidadeTributavel: product.unidadeTributavel || 'UN',
+      beneficioFiscal: product.beneficioFiscal || '',
+      anpCodigo: product.anpCodigo || '',
+      anpDescricao: product.anpDescricao || '',
+      valorSemIcmsKg: product.valorSemIcmsKg || 0,
+      kgPorUnidadeGlp: product.kgPorUnidadeGlp || 0,
+      percentualGlp: product.percentualGlp || 0,
+      percentualGnNacional: product.percentualGnNacional || 0,
+      percentualGnImportado: product.percentualGnImportado || 0,
       codif: product.codif || '',
-      peso_liquido: product.peso_liquido || 0,
-      peso_bruto: product.peso_bruto || 0,
-      informacoes_adicionais_nfe: product.informacoes_adicionais_nfe || ''
+      pesoLiquido: product.pesoLiquido || 0,
+      pesoBruto: product.pesoBruto || 0,
+      informacoesAdicionaisNfe: product.informacoesAdicionaisNfe || ''
     });
     setShowForm(true);
   };
 
   const handleDelete = async (productId) => {
     try {
-      if (!currentUser || !currentUser.company_id) {
+      if (!currentUser || !currentUser.companyId) {
         toast({ title: "Erro", description: "Não foi possível identificar a empresa do usuário para a exclusão.", variant: "destructive" });
         return;
       }
 
-      const orders = await Order.filter({ company_id: currentUser.company_id }).catch(() => []);
+      const orders = await Order.filter({ companyId: currentUser.companyId }).catch(() => []);
       const hasOrders = orders.some(order => 
-        order.items && order.items.some(item => item.product_id === productId)
+        order.items && order.items.some(item => item.productId === productId)
       );
       
       if (hasOrders) {
@@ -131,7 +131,7 @@ export default function Products() {
 
       if (window.confirm("Tem certeza que deseja excluir este produto?")) {
         await Product.delete(productId);
-        const stocksToDelete = productStocks.filter(stock => stock.product_id === productId);
+        const stocksToDelete = productStocks.filter(stock => stock.productId === productId);
         for (const stock of stocksToDelete) {
           await ProductStock.delete(stock.id);
         }
@@ -152,9 +152,9 @@ export default function Products() {
       
       const productData = {
         ...currentProduct,
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
       if (isEditing) {
@@ -183,31 +183,31 @@ export default function Products() {
       name: '',
       code: '',
       category: '',
-      unit_price: 0,
-      cost_price: 0,
-      min_stock: 10,
-      vasilhame_id: '',
-      vasilhame_name: '',
+      unitPrice: 0,
+      costPrice: 0,
+      minStock: 10,
+      vasilhameId: '',
+      vasilhameName: '',
       ncm: '',
       cest: '',
       // Removed cfop from resetForm
-      unidade_tributavel: 'UN',
-      icms_origem: '0',
-      beneficio_fiscal: '',
-      anp_codigo: '',
-      anp_descricao: '',
-      valor_sem_icms_kg: 0,
-      kg_por_unidade_glp: 0,
-      percentual_glp: 0,
-      percentual_gn_nacional: 0,
-      percentual_gn_importado: 0,
+      unidadeTributavel: 'UN',
+      icmsOrigem: '0',
+      beneficioFiscal: '',
+      anpCodigo: '',
+      anpDescricao: '',
+      valorSemIcmsKg: 0,
+      kgPorUnidadeGlp: 0,
+      percentualGlp: 0,
+      percentualGnNacional: 0,
+      percentualGnImportado: 0,
       codif: '',
-      peso_liquido: 0,
-      peso_bruto: 0,
-      informacoes_adicionais_nfe: '',
-      company_id: '',
-      company_name: '',
-      created_by_name: '',
+      pesoLiquido: 0,
+      pesoBruto: 0,
+      informacoesAdicionaisNfe: '',
+      companyId: '',
+      companyName: '',
+      createdByName: '',
       active: true
     });
     setIsEditing(false);
@@ -222,8 +222,8 @@ export default function Products() {
     setCurrentProduct(prev => ({ 
       ...prev, 
       category: value,
-      vasilhame_id: (value === 'glp' || value === 'agua') ? prev.vasilhame_id : '',
-      vasilhame_name: (value === 'glp' || value === 'agua') ? prev.vasilhame_name : ''
+      vasilhameId: (value === 'glp' || value === 'agua') ? prev.vasilhameId : '',
+      vasilhameName: (value === 'glp' || value === 'agua') ? prev.vasilhameName : ''
     }));
   };
 
@@ -231,8 +231,8 @@ export default function Products() {
     const vasilhame = vasilhames.find(v => v.id === vasilhameId);
     setCurrentProduct(prev => ({
       ...prev,
-      vasilhame_id: vasilhameId,
-      vasilhame_name: vasilhame ? vasilhame.name : ''
+      vasilhameId: vasilhameId,
+      vasilhameName: vasilhame ? vasilhame.name : ''
     }));
   };
 
@@ -348,7 +348,7 @@ export default function Products() {
                           <div>
                             <Label htmlFor="vasilhame">Vasilhame *</Label>
                             <Select
-                              value={currentProduct.vasilhame_id}
+                              value={currentProduct.vasilhameId}
                               onValueChange={handleVasilhameChange}
                             >
                               <SelectTrigger id="vasilhame" className="bg-white/80">
@@ -377,36 +377,36 @@ export default function Products() {
                         )}
 
                         <div>
-                          <Label htmlFor="cost_price">Preço de Custo</Label>
+                          <Label htmlFor="costPrice">Preço de Custo</Label>
                           <Input
-                            id="cost_price"
+                            id="costPrice"
                             type="number"
                             step="0.01"
-                            value={currentProduct.cost_price}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, cost_price: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.costPrice}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, costPrice: parseFloat(e.target.value) || 0 }))}
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="unit_price">Preço de Venda *</Label>
+                          <Label htmlFor="unitPrice">Preço de Venda *</Label>
                           <Input
-                            id="unit_price"
+                            id="unitPrice"
                             type="number"
                             step="0.01"
-                            value={currentProduct.unit_price}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, unit_price: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.unitPrice}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
                             required
                             className="bg-white/80"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="min_stock">Estoque Mínimo</Label>
+                          <Label htmlFor="minStock">Estoque Mínimo</Label>
                           <Input
-                            id="min_stock"
+                            id="minStock"
                             type="number"
-                            value={currentProduct.min_stock}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, min_stock: parseInt(e.target.value) }))}
+                            value={currentProduct.minStock}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, minStock: parseInt(e.target.value) }))}
                             className="bg-white/80"
                           />
                         </div>
@@ -447,12 +447,12 @@ export default function Products() {
                         {/* Removed CFOP input field entirely */}
 
                         <div>
-                          <Label htmlFor="icms_origem">Origem *</Label>
+                          <Label htmlFor="icmsOrigem">Origem *</Label>
                           <Select
-                            value={currentProduct.icms_origem}
-                            onValueChange={(value) => setCurrentProduct(prev => ({ ...prev, icms_origem: value }))}
+                            value={currentProduct.icmsOrigem}
+                            onValueChange={(value) => setCurrentProduct(prev => ({ ...prev, icmsOrigem: value }))}
                           >
-                            <SelectTrigger id="icms_origem" className="bg-white/80">
+                            <SelectTrigger id="icmsOrigem" className="bg-white/80">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -470,11 +470,11 @@ export default function Products() {
                         </div>
 
                         <div>
-                          <Label htmlFor="unidade_tributavel">Unidade Tributável</Label>
+                          <Label htmlFor="unidadeTributavel">Unidade Tributável</Label>
                           <Input
-                            id="unidade_tributavel"
-                            value={currentProduct.unidade_tributavel}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, unidade_tributavel: e.target.value.toUpperCase() }))}
+                            id="unidadeTributavel"
+                            value={currentProduct.unidadeTributavel}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, unidadeTributavel: e.target.value.toUpperCase() }))}
                             placeholder="UN"
                             maxLength={6}
                             className="bg-white/80"
@@ -482,11 +482,11 @@ export default function Products() {
                         </div>
 
                         <div className="md:col-span-1"> {/* Changed to md:col-span-1 */}
-                          <Label htmlFor="beneficio_fiscal">Benefício Fiscal</Label>
+                          <Label htmlFor="beneficioFiscal">Benefício Fiscal</Label>
                           <Input
-                            id="beneficio_fiscal"
-                            value={currentProduct.beneficio_fiscal}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, beneficio_fiscal: e.target.value.toUpperCase() }))}
+                            id="beneficioFiscal"
+                            value={currentProduct.beneficioFiscal}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, beneficioFiscal: e.target.value.toUpperCase() }))}
                             placeholder="Ex: PR123456"
                             className="bg-white/80"
                           />
@@ -512,87 +512,87 @@ export default function Products() {
                       <h3 className="text-sm font-semibold text-slate-700 mb-3 border-b pb-2">Derivados de Petróleo</h3>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                          <Label htmlFor="anp_codigo">Código ANP</Label>
+                          <Label htmlFor="anpCodigo">Código ANP</Label>
                           <Input
-                            id="anp_codigo"
-                            value={currentProduct.anp_codigo}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, anp_codigo: e.target.value }))}
+                            id="anpCodigo"
+                            value={currentProduct.anpCodigo}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, anpCodigo: e.target.value }))}
                             placeholder="Ex: 210203001"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="anp_descricao">Descrição ANP</Label>
+                          <Label htmlFor="anpDescricao">Descrição ANP</Label>
                           <Input
-                            id="anp_descricao"
-                            value={currentProduct.anp_descricao}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, anp_descricao: e.target.value }))}
+                            id="anpDescricao"
+                            value={currentProduct.anpDescricao}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, anpDescricao: e.target.value }))}
                             placeholder="Descrição do produto ANP"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="valor_sem_icms_kg">R$/KG sem ICMS</Label>
+                          <Label htmlFor="valorSemIcmsKg">R$/KG sem ICMS</Label>
                           <Input
-                            id="valor_sem_icms_kg"
+                            id="valorSemIcmsKg"
                             type="number"
                             step="0.001"
-                            value={currentProduct.valor_sem_icms_kg}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, valor_sem_icms_kg: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.valorSemIcmsKg}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, valorSemIcmsKg: parseFloat(e.target.value) || 0 }))}
                             placeholder="R$ 0,00"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="kg_por_unidade_glp">KG/UN GLP</Label>
+                          <Label htmlFor="kgPorUnidadeGlp">KG/UN GLP</Label>
                           <Input
-                            id="kg_por_unidade_glp"
+                            id="kgPorUnidadeGlp"
                             type="number"
                             step="0.001"
-                            value={currentProduct.kg_por_unidade_glp}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, kg_por_unidade_glp: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.kgPorUnidadeGlp}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, kgPorUnidadeGlp: parseFloat(e.target.value) || 0 }))}
                             placeholder="0,000 KG"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="percentual_glp">% de GLP</Label>
+                          <Label htmlFor="percentualGlp">% de GLP</Label>
                           <Input
-                            id="percentual_glp"
+                            id="percentualGlp"
                             type="number"
                             step="0.01"
-                            value={currentProduct.percentual_glp}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, percentual_glp: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.percentualGlp}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, percentualGlp: parseFloat(e.target.value) || 0 }))}
                             placeholder="0,00 %"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="percentual_gn_nacional">% GN Nacional</Label>
+                          <Label htmlFor="percentualGnNacional">% GN Nacional</Label>
                           <Input
-                            id="percentual_gn_nacional"
+                            id="percentualGnNacional"
                             type="number"
                             step="0.01"
-                            value={currentProduct.percentual_gn_nacional}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, percentual_gn_nacional: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.percentualGnNacional}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, percentualGnNacional: parseFloat(e.target.value) || 0 }))}
                             placeholder="0,00 %"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="percentual_gn_importado">% GN Importado</Label>
+                          <Label htmlFor="percentualGnImportado">% GN Importado</Label>
                           <Input
-                            id="percentual_gn_importado"
+                            id="percentualGnImportado"
                             type="number"
                             step="0.01"
-                            value={currentProduct.percentual_gn_importado}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, percentual_gn_importado: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.percentualGnImportado}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, percentualGnImportado: parseFloat(e.target.value) || 0 }))}
                             placeholder="0,00 %"
                             className="bg-white/80"
                           />
@@ -616,37 +616,37 @@ export default function Products() {
                       <h3 className="text-sm font-semibold text-slate-700 mb-3 border-b pb-2">Outras Informações</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="peso_liquido">Peso Líquido (KG)</Label>
+                          <Label htmlFor="pesoLiquido">Peso Líquido (KG)</Label>
                           <Input
-                            id="peso_liquido"
+                            id="pesoLiquido"
                             type="number"
                             step="0.001"
-                            value={currentProduct.peso_liquido}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, peso_liquido: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.pesoLiquido}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, pesoLiquido: parseFloat(e.target.value) || 0 }))}
                             placeholder="0,000 KG"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div>
-                          <Label htmlFor="peso_bruto">Peso Bruto (KG)</Label>
+                          <Label htmlFor="pesoBruto">Peso Bruto (KG)</Label>
                           <Input
-                            id="peso_bruto"
+                            id="pesoBruto"
                             type="number"
                             step="0.001"
-                            value={currentProduct.peso_bruto}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, peso_bruto: parseFloat(e.target.value) || 0 }))}
+                            value={currentProduct.pesoBruto}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, pesoBruto: parseFloat(e.target.value) || 0 }))}
                             placeholder="0,000 KG"
                             className="bg-white/80"
                           />
                         </div>
 
                         <div className="md:col-span-2">
-                          <Label htmlFor="informacoes_adicionais_nfe">Informações adicionais (NFe)</Label>
+                          <Label htmlFor="informacoesAdicionaisNfe">Informações adicionais (NFe)</Label>
                           <Textarea
-                            id="informacoes_adicionais_nfe"
-                            value={currentProduct.informacoes_adicionais_nfe}
-                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, informacoes_adicionais_nfe: e.target.value }))}
+                            id="informacoesAdicionaisNfe"
+                            value={currentProduct.informacoesAdicionaisNfe}
+                            onChange={(e) => setCurrentProduct(prev => ({ ...prev, informacoesAdicionaisNfe: e.target.value }))}
                             rows={4}
                             placeholder="Digite informações adicionais que devem constar na nota fiscal..."
                             className="bg-white/80"
@@ -697,7 +697,7 @@ export default function Products() {
                 <TableBody>
                   {products.map(product => {
                     const totalStock = getProductTotalStock(product.id);
-                    const isLowStock = totalStock <= product.min_stock;
+                    const isLowStock = totalStock <= product.minStock;
                     
                     return (
                       <TableRow key={product.id} className={isLowStock ? 'bg-red-50' : ''}>
@@ -712,14 +712,14 @@ export default function Products() {
                         <TableCell>{product.code}</TableCell>
                         <TableCell>{getCategoryBadge(product.category)}</TableCell>
                         <TableCell>
-                          {(product.category === 'glp' || product.category === 'agua') && product.vasilhame_name ? (
-                            <span className="text-sm text-slate-600">{product.vasilhame_name}</span>
+                          {(product.category === 'glp' || product.category === 'agua') && product.vasilhameName ? (
+                            <span className="text-sm text-slate-600">{product.vasilhameName}</span>
                           ) : (
                             <span className="text-sm text-slate-400">-</span>
                           )}
                         </TableCell>
-                        <TableCell>R$ {product.cost_price?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>R$ {product.unit_price?.toFixed(2)}</TableCell>
+                        <TableCell>R$ {product.costPrice?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>R$ {product.unitPrice?.toFixed(2)}</TableCell>
                         <TableCell>
                           <span className={isLowStock ? 'text-red-600 font-semibold' : ''}>
                             {totalStock}
@@ -730,7 +730,7 @@ export default function Products() {
                             {product.active ? "Ativo" : "Inativo"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500">{product.created_by_name}</TableCell>
+                        <TableCell className="text-xs text-slate-500">{product.createdByName}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(product)} className="mr-2 hover:bg-blue-100">
                             <Edit className="w-4 h-4 text-blue-600" />

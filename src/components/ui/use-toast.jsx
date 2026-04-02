@@ -36,7 +36,7 @@ const addToRemoveQueue = (toastId) => {
   toastTimeouts.set(toastId, timeout);
 };
 
-const _clearFromRemoveQueue = (toastId) => {
+const clearFromRemoveQueue = (toastId) => {
   const timeout = toastTimeouts.get(toastId);
   if (timeout) {
     clearTimeout(timeout);

@@ -37,9 +37,9 @@ export default function PedidosDashboard() {
     try {
       const user = await User.me();
       setCurrentUser(user);
-      const company_id = user.company_id;
+      const companyId = user.companyId;
 
-      if (!company_id) {
+      if (!companyId) {
         toast({ title: "Erro", description: "Usuário não está vinculado a uma empresa.", variant: "destructive" });
         setIsLoading(false);
         return;
@@ -47,16 +47,16 @@ export default function PedidosDashboard() {
 
       // Fetch all necessary data for the dashboard
       const [ordersData, productsData, employeesData, peopleData] = await Promise.all([
-        Order.filter({ company_id }).catch(() => []), // Ensure robustness with .catch
-        Product.filter({ company_id }).catch(() => []),
-        Employee.filter({ company_id, position: 'entregador', active: true }).catch(() => []),
-        Person.filter({ company_id, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
+        Order.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
+        Product.filter({ companyId }).catch(() => []),
+        Employee.filter({ companyId, position: 'entregador', active: true }).catch(() => []),
+        Person.filter({ companyId, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
       ]);
 
       setRecentOrders(ordersData.slice(0, 5)); // Set recent orders, taking the first 5
 
       const pending = ordersData.filter(o => o.status === 'pendente').length;
-      const inProgress = ordersData.filter(o => o.status === 'em_atendimento').length;
+      const inProgress = ordersData.filter(o => o.status === 'emAtendimento').length;
       const completed = ordersData.filter(o => o.status === 'finalizado').length;
 
       setStats({
@@ -87,9 +87,9 @@ export default function PedidosDashboard() {
     try {
       await Order.create({
         ...order,
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       });
       toast({ title: "Sucesso", description: "Pedido rápido salvo com sucesso!" });
       loadData(); // Reload data after saving
@@ -213,10 +213,10 @@ export default function PedidosDashboard() {
                  <ul className="mt-4 space-y-2">
                    {recentOrders.map(order => (
                      <li key={order.id} className="flex justify-between items-center text-sm">
-                       <span>Pedido #{order.id} - {order.customer_name}</span>
+                       <span>Pedido #{order.id} - {order.customerName}</span>
                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                          order.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
-                         order.status === 'em_atendimento' ? 'bg-blue-100 text-blue-800' :
+                         order.status === 'emAtendimento' ? 'bg-blue-100 text-blue-800' :
                          'bg-green-100 text-green-800'
                        }`}>
                          {order.status.replace('_', ' ').toUpperCase()}

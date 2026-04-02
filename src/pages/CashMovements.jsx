@@ -88,47 +88,47 @@ export default function CashMovements({ onComplete }) {
   
   // Transfer form states
   const [transferData, setTransferData] = useState({
-    from_account_id: '',
-    to_account_id: '',
+    fromAccountId: '',
+    toAccountId: '',
     amount: 0,
-    sector_id: '',
-    sector_name: '',
-    subgroup_id: '',
-    subgroup_name: '',
-    subgroup_code: '',
-    subgroup_error: '',
-    group_id: '',
-    group_name: '',
-    transfer_date: format(new Date(), 'yyyy-MM-dd'),
+    sectorId: '',
+    sectorName: '',
+    subgroupId: '',
+    subgroupName: '',
+    subgroupCode: '',
+    subgroupError: '',
+    groupId: '',
+    groupName: '',
+    transferDate: format(new Date(), 'yyyy-MM-dd'),
     notes: ''
   });
   
   const [formData, setFormData] = useState({
-    sector_id: '',
-    sector_name: '',
+    sectorId: '',
+    sectorName: '',
     description: '',
-    subgroup_id: '',
-    subgroup_name: '',
-    group_id: '',
-    group_name: '',
-    person_id: '',
-    person_name: '',
-    document_number: '',
-    competence_month: format(new Date(), 'MM/yyyy'),
-    movement_date: format(new Date(), 'yyyy-MM-dd'),
+    subgroupId: '',
+    subgroupName: '',
+    groupId: '',
+    groupName: '',
+    personId: '',
+    personName: '',
+    documentNumber: '',
+    competenceMonth: format(new Date(), 'MM/yyyy'),
+    movementDate: format(new Date(), 'yyyy-MM-dd'),
     amount: 0,
-    payment_type_id: '',
-    payment_type_name: '',
-    is_accounting: false,
-    first_due_date: '',
-    entry_value: 0,
+    paymentTypeId: '',
+    paymentTypeName: '',
+    isAccounting: false,
+    firstDueDate: '',
+    entryValue: 0,
     installments: 1,
-    interest_rate: 0
+    interestRate: 0
   });
 
   // Check if form has been modified
-  const isFormDirty = formData.description || formData.amount > 0 || formData.movement_date || 
-                      transferData.amount > 0 || transferData.to_account_id;
+  const isFormDirty = formData.description || formData.amount > 0 || formData.movementDate || 
+                      transferData.amount > 0 || transferData.toAccountId;
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -161,21 +161,21 @@ export default function CashMovements({ onComplete }) {
     try {
       const user = await UserEntity.me();
       setCurrentUser(user);
-      const company_id = user.company_id;
+      const companyId = user.companyId;
 
-      if (!company_id) {
+      if (!companyId) {
         toast({ title: "Atenção", description: "Usuário não vinculado a uma empresa.", variant: "destructive"});
         return;
       }
 
       const [accountsData, sectorsData, sectorMastersData, peopleData, groupsData, subgroupsData, paymentTypesData] = await Promise.all([
-        CashAccount.filter({ company_id, active: true }),
-        Sector.filter({ company_id, active: true }),
-        SectorMaster.filter({ company_id }),
-        Person.filter({ company_id }),
-        FinancialGroup.filter({ company_id, active: true }),
-        FinancialSubgroup.filter({ company_id, active: true }),
-        PaymentType.filter({ company_id, active: true }),
+        CashAccount.filter({ companyId, active: true }),
+        Sector.filter({ companyId, active: true }),
+        SectorMaster.filter({ companyId }),
+        Person.filter({ companyId }),
+        FinancialGroup.filter({ companyId, active: true }),
+        FinancialSubgroup.filter({ companyId, active: true }),
+        PaymentType.filter({ companyId, active: true }),
       ]);
       
       setCashAccounts(accountsData);
@@ -195,8 +195,8 @@ export default function CashMovements({ onComplete }) {
       if (dinheiroPt) {
         setFormData(prev => ({
           ...prev,
-          payment_type_id: dinheiroPt.id,
-          payment_type_name: dinheiroPt.name
+          paymentTypeId: dinheiroPt.id,
+          paymentTypeName: dinheiroPt.name
         }));
       }
     } catch (error) {
@@ -209,18 +209,18 @@ export default function CashMovements({ onComplete }) {
     loadData();
   }, [loadData]);
 
-  // Verificar se voltou do cadastro de pessoa com person_id
+  // Verificar se voltou do cadastro de pessoa com personId
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const personId = urlParams.get('person_id');
+    const personId = urlParams.get('personId');
     
     if (personId && people.length > 0) {
       const person = people.find(p => p.id === personId);
       if (person) {
         setFormData(prev => ({
           ...prev,
-          person_id: person.id,
-          person_name: person.name
+          personId: person.id,
+          personName: person.name
         }));
         window.history.replaceState({}, document.title, window.location.pathname);
         setEditMode('incluir');
@@ -242,16 +242,16 @@ export default function CashMovements({ onComplete }) {
         if (!account) return;
 
         const allMovements = await CashMovement.filter({ 
-          company_id: currentUser.company_id, 
-          cash_account_id: selectedAccount 
+          companyId: currentUser.companyId, 
+          cashAccountId: selectedAccount 
         });
         
         const periodStart = startOfDay(new Date(startDate + 'T00:00:00'));
         const periodEnd = endOfDay(new Date(endDate + 'T23:59:59'));
         
-        let opening = account.initial_balance || 0;
+        let opening = account.initialBalance || 0;
         allMovements
-          .filter(m => startOfDay(parseISO(m.movement_date)) < periodStart)
+          .filter(m => startOfDay(parseISO(m.movementDate)) < periodStart)
           .forEach(m => {
             opening += m.type === 'receita' ? m.amount : -m.amount;
           });
@@ -259,10 +259,10 @@ export default function CashMovements({ onComplete }) {
         
         const periodMovements = allMovements
           .filter(m => {
-            const movDate = parseISO(m.movement_date);
+            const movDate = parseISO(m.movementDate);
             return movDate >= periodStart && movDate <= periodEnd;
           })
-          .sort((a, b) => parseISO(a.movement_date) - parseISO(b.movement_date));
+          .sort((a, b) => parseISO(a.movementDate) - parseISO(b.movementDate));
         
         setMovements(periodMovements);
         
@@ -287,26 +287,26 @@ export default function CashMovements({ onComplete }) {
   const handleRowClick = (movement) => {
     setSelectedMovement(movement);
     setFormData({
-      sector_id: movement.sector_id || '',
-      sector_name: movement.sector_name || '',
+      sectorId: movement.sectorId || '',
+      sectorName: movement.sectorName || '',
       description: movement.description || '',
-      subgroup_id: movement.subgroup_id || '',
-      subgroup_name: movement.subgroup_name || '',
-      group_id: movement.group_id || '',
-      group_name: movement.group_name || '',
-      person_id: movement.person_id || '',
-      person_name: movement.person_name || '',
-      document_number: movement.document_number || '',
-      competence_month: movement.competence_month || format(new Date(), 'MM/yyyy'),
-      movement_date: movement.movement_date || format(new Date(), 'yyyy-MM-dd'),
+      subgroupId: movement.subgroupId || '',
+      subgroupName: movement.subgroupName || '',
+      groupId: movement.groupId || '',
+      groupName: movement.groupName || '',
+      personId: movement.personId || '',
+      personName: movement.personName || '',
+      documentNumber: movement.documentNumber || '',
+      competenceMonth: movement.competenceMonth || format(new Date(), 'MM/yyyy'),
+      movementDate: movement.movementDate || format(new Date(), 'yyyy-MM-dd'),
       amount: movement.amount || 0,
-      payment_type_id: movement.payment_type_id || '',
-      payment_type_name: movement.payment_type_name || '',
-      is_accounting: movement.is_accounting || false,
-      first_due_date: '',
-      entry_value: 0,
+      paymentTypeId: movement.paymentTypeId || '',
+      paymentTypeName: movement.paymentTypeName || '',
+      isAccounting: movement.isAccounting || false,
+      firstDueDate: '',
+      entryValue: 0,
       installments: 1,
-      interest_rate: 0
+      interestRate: 0
     });
   };
 
@@ -314,8 +314,8 @@ export default function CashMovements({ onComplete }) {
     const sector = sectors.find(s => s.id === sectorId);
     setFormData(prev => ({
       ...prev,
-      sector_id: sectorId,
-      sector_name: sector?.name || ''
+      sectorId: sectorId,
+      sectorName: sector?.name || ''
     }));
   };
 
@@ -323,22 +323,22 @@ export default function CashMovements({ onComplete }) {
     const group = groups.find(g => g.id === groupId);
     setFormData(prev => ({
       ...prev,
-      group_id: groupId,
-      group_name: group?.name || '',
-      subgroup_id: '',
-      subgroup_name: ''
+      groupId: groupId,
+      groupName: group?.name || '',
+      subgroupId: '',
+      subgroupName: ''
     }));
   };
 
   const handleSubgroupChange = (subgroupId) => {
     const subgroup = subgroups.find(sg => sg.id === subgroupId);
-    const group = subgroup ? groups.find(g => g.id === subgroup.financial_group_id) : null;
+    const group = subgroup ? groups.find(g => g.id === subgroup.financialGroupId) : null;
     setFormData(prev => ({
       ...prev,
-      subgroup_id: subgroupId,
-      subgroup_name: subgroup?.name || '',
-      group_id: group?.id || prev.group_id,
-      group_name: group?.name || prev.group_name
+      subgroupId: subgroupId,
+      subgroupName: subgroup?.name || '',
+      groupId: group?.id || prev.groupId,
+      groupName: group?.name || prev.groupName
     }));
   };
 
@@ -346,25 +346,25 @@ export default function CashMovements({ onComplete }) {
     const person = people.find(p => p.id === personId);
     setFormData(prev => ({
       ...prev,
-      person_id: personId,
-      person_name: person?.name || ''
+      personId: personId,
+      personName: person?.name || ''
     }));
   };
 
   const resetTransferForm = () => {
     setTransferData({
-      from_account_id: cashAccounts.length > 0 ? cashAccounts[0].id : '',
-      to_account_id: '',
+      fromAccountId: cashAccounts.length > 0 ? cashAccounts[0].id : '',
+      toAccountId: '',
       amount: 0,
-      sector_id: '',
-      sector_name: '',
-      subgroup_id: '',
-      subgroup_name: '',
-      subgroup_code: '',
-      subgroup_error: '',
-      group_id: '',
-      group_name: '',
-      transfer_date: format(new Date(), 'yyyy-MM-dd'),
+      sectorId: '',
+      sectorName: '',
+      subgroupId: '',
+      subgroupName: '',
+      subgroupCode: '',
+      subgroupError: '',
+      groupId: '',
+      groupName: '',
+      transferDate: format(new Date(), 'yyyy-MM-dd'),
       notes: ''
     });
   };
@@ -377,26 +377,26 @@ export default function CashMovements({ onComplete }) {
     resetTransferForm();
     const dinheiroPt = paymentTypes.find(pt => pt.type === 'dinheiro' || pt.name?.toLowerCase().includes('dinheiro'));
     setFormData({
-      sector_id: '',
-      sector_name: '',
+      sectorId: '',
+      sectorName: '',
       description: '',
-      subgroup_id: '',
-      subgroup_name: '',
-      group_id: '',
-      group_name: '',
-      person_id: '',
-      person_name: '',
-      document_number: '',
-      competence_month: format(new Date(), 'MM/yyyy'),
-      movement_date: format(new Date(), 'yyyy-MM-dd'),
+      subgroupId: '',
+      subgroupName: '',
+      groupId: '',
+      groupName: '',
+      personId: '',
+      personName: '',
+      documentNumber: '',
+      competenceMonth: format(new Date(), 'MM/yyyy'),
+      movementDate: format(new Date(), 'yyyy-MM-dd'),
       amount: 0,
-      payment_type_id: dinheiroPt?.id || '',
-      payment_type_name: dinheiroPt?.name || '',
-      is_accounting: false,
-      first_due_date: '',
-      entry_value: 0,
+      paymentTypeId: dinheiroPt?.id || '',
+      paymentTypeName: dinheiroPt?.name || '',
+      isAccounting: false,
+      firstDueDate: '',
+      entryValue: 0,
       installments: 1,
-      interest_rate: 0
+      interestRate: 0
     });
   };
   
@@ -460,20 +460,20 @@ export default function CashMovements({ onComplete }) {
     const pt = paymentTypes.find(p => p.id === paymentTypeId);
     setFormData(prev => ({
       ...prev,
-      payment_type_id: paymentTypeId,
-      payment_type_name: pt?.name || '',
-      installments: pt?.max_installments > 1 ? prev.installments : 1,
-      first_due_date: pt?.max_installments > 1 ? prev.first_due_date : ''
+      paymentTypeId: paymentTypeId,
+      paymentTypeName: pt?.name || '',
+      installments: pt?.maxInstallments > 1 ? prev.installments : 1,
+      firstDueDate: pt?.maxInstallments > 1 ? prev.firstDueDate : ''
     }));
   };
 
-  const selectedPaymentType = paymentTypes.find(p => p.id === formData.payment_type_id);
-  const isInstallmentPayment = selectedPaymentType?.max_installments > 1;
+  const selectedPaymentType = paymentTypes.find(p => p.id === formData.paymentTypeId);
+  const isInstallmentPayment = selectedPaymentType?.maxInstallments > 1;
 
   const handleSubmit = async () => {
     if (isSaving) return; // Evita duplo clique
     
-    if (!formData.movement_date) {
+    if (!formData.movementDate) {
       toast({ title: "Erro", description: "Data é obrigatória.", variant: "destructive" });
       return;
     }
@@ -485,19 +485,19 @@ export default function CashMovements({ onComplete }) {
       toast({ title: "Erro", description: "Selecione uma conta.", variant: "destructive" });
       return;
     }
-    if (!formData.payment_type_id) {
+    if (!formData.paymentTypeId) {
       toast({ title: "Erro", description: "Selecione uma forma de pagamento.", variant: "destructive" });
       return;
     }
-    if (!formData.subgroup_id) {
+    if (!formData.subgroupId) {
       toast({ title: "Erro", description: "Selecione um sub grupo.", variant: "destructive" });
       return;
     }
-    if (!formData.group_id) {
+    if (!formData.groupId) {
       toast({ title: "Erro", description: "Selecione um grupo.", variant: "destructive" });
       return;
     }
-    if (!formData.sector_id) {
+    if (!formData.sectorId) {
       toast({ title: "Erro", description: "Selecione um setor.", variant: "destructive" });
       return;
     }
@@ -518,22 +518,22 @@ export default function CashMovements({ onComplete }) {
       if (movementType === 'despesa' && isInstallmentPayment) {
         // Registrar em Contas a Pagar
         await ContasAPagar.create({
-          supplier_id: formData.person_id,
-          supplier_name: formData.person_name,
+          supplierId: formData.personId,
+          supplierName: formData.personName,
           description: formData.description,
-          due_date: formData.first_due_date || formData.movement_date,
+          dueDate: formData.firstDueDate || formData.movementDate,
           amount: Number(formData.amount),
           status: 'aberto',
-          payment_type_id: formData.payment_type_id,
-          payment_type_name: formData.payment_type_name,
-          group_id: formData.group_id,
-          group_name: formData.group_name,
-          subgroup_id: formData.subgroup_id,
-          subgroup_name: formData.subgroup_name,
-          document_number: formData.document_number,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name
+          paymentTypeId: formData.paymentTypeId,
+          paymentTypeName: formData.paymentTypeName,
+          groupId: formData.groupId,
+          groupName: formData.groupName,
+          subgroupId: formData.subgroupId,
+          subgroupName: formData.subgroupName,
+          documentNumber: formData.documentNumber,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName
         });
 
         toast({ title: "Sucesso", description: "Despesa registrada em Contas a Pagar!" });
@@ -546,28 +546,28 @@ export default function CashMovements({ onComplete }) {
 
       // Fluxo normal para pagamentos à vista
       const movementData = {
-        cash_account_id: selectedAccount,
-        cash_account_name: account?.name || '',
+        cashAccountId: selectedAccount,
+        cashAccountName: account?.name || '',
         type: movementType,
         description: formData.description,
         amount: Number(formData.amount),
-        movement_date: formData.movement_date,
-        sector_id: formData.sector_id,
-        sector_name: formData.sector_name,
-        person_id: formData.person_id,
-        person_name: formData.person_name,
-        group_id: formData.group_id,
-        group_name: formData.group_name,
-        subgroup_id: formData.subgroup_id,
-        subgroup_name: formData.subgroup_name,
-        document_number: formData.document_number,
-        competence_month: formData.competence_month,
-        payment_type_id: formData.payment_type_id,
-        payment_type_name: formData.payment_type_name,
-        is_accounting: formData.is_accounting,
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        movementDate: formData.movementDate,
+        sectorId: formData.sectorId,
+        sectorName: formData.sectorName,
+        personId: formData.personId,
+        personName: formData.personName,
+        groupId: formData.groupId,
+        groupName: formData.groupName,
+        subgroupId: formData.subgroupId,
+        subgroupName: formData.subgroupName,
+        documentNumber: formData.documentNumber,
+        competenceMonth: formData.competenceMonth,
+        paymentTypeId: formData.paymentTypeId,
+        paymentTypeName: formData.paymentTypeName,
+        isAccounting: formData.isAccounting,
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       };
 
       if (selectedMovement) {
@@ -596,22 +596,22 @@ export default function CashMovements({ onComplete }) {
 
   const handleCalculateInstallments = () => {
     if (formData.installments <= 0 || formData.amount <= 0) return;
-    if (!formData.first_due_date) {
+    if (!formData.firstDueDate) {
       toast({ title: "Erro", description: "Informe a data do 1º vencimento.", variant: "destructive" });
       return;
     }
 
-    const entryValue = Number(formData.entry_value) || 0;
+    const entryValue = Number(formData.entryValue) || 0;
     const totalAmount = Number(formData.amount);
     const remainingValue = totalAmount - entryValue;
-    const interestRate = Number(formData.interest_rate) || 0;
+    const interestRate = Number(formData.interestRate) || 0;
     const totalWithInterest = remainingValue * (1 + interestRate / 100);
     const installmentValue = totalWithInterest / formData.installments;
 
     const installments = [];
 
     // Data base para todas as parcelas (incluindo entrada)
-    const baseDueDate = new Date(formData.first_due_date + 'T12:00:00');
+    const baseDueDate = new Date(formData.firstDueDate + 'T12:00:00');
     const dayOfMonth = baseDueDate.getDate();
 
     // Adiciona entrada se houver - usa a mesma data informada pelo usuário
@@ -619,9 +619,9 @@ export default function CashMovements({ onComplete }) {
       installments.push({
         number: 0,
         description: 'Entrada',
-        due_date: formData.first_due_date, // Usa a data informada no campo VCTO ENTRADA
+        dueDate: formData.firstDueDate, // Usa a data informada no campo VCTO ENTRADA
         amount: entryValue,
-        is_entry: true
+        isEntry: true
       });
     }
 
@@ -646,9 +646,9 @@ export default function CashMovements({ onComplete }) {
       installments.push({
         number: i + 1,
         description: `Parcela ${i + 1}/${formData.installments}`,
-        due_date: format(dueDate, 'yyyy-MM-dd'),
+        dueDate: format(dueDate, 'yyyy-MM-dd'),
         amount: Math.round(installmentValue * 100) / 100,
-        is_entry: false
+        isEntry: false
       });
     }
 
@@ -675,30 +675,30 @@ export default function CashMovements({ onComplete }) {
       
       // Processa cada parcela/entrada
       for (const installment of calculatedInstallments) {
-        if (installment.is_entry && installment.amount > 0) {
+        if (installment.isEntry && installment.amount > 0) {
           // Entrada vai direto para o caixa
           await CashMovement.create({
-            cash_account_id: selectedAccount,
-            cash_account_name: account?.name || '',
+            cashAccountId: selectedAccount,
+            cashAccountName: account?.name || '',
             type: movementType,
             description: `${formData.description} (Entrada)`,
             amount: Number(installment.amount),
-            movement_date: installment.due_date,
-            sector_id: formData.sector_id,
-            sector_name: formData.sector_name,
-            person_id: formData.person_id,
-            person_name: formData.person_name,
-            group_id: formData.group_id,
-            group_name: formData.group_name,
-            subgroup_id: formData.subgroup_id,
-            subgroup_name: formData.subgroup_name,
-            document_number: formData.document_number,
-            competence_month: formData.competence_month,
-            payment_type_id: formData.payment_type_id,
-            payment_type_name: formData.payment_type_name,
-            company_id: currentUser.company_id,
-            company_name: currentUser.company_name,
-            created_by_name: currentUser.full_name
+            movementDate: installment.dueDate,
+            sectorId: formData.sectorId,
+            sectorName: formData.sectorName,
+            personId: formData.personId,
+            personName: formData.personName,
+            groupId: formData.groupId,
+            groupName: formData.groupName,
+            subgroupId: formData.subgroupId,
+            subgroupName: formData.subgroupName,
+            documentNumber: formData.documentNumber,
+            competenceMonth: formData.competenceMonth,
+            paymentTypeId: formData.paymentTypeId,
+            paymentTypeName: formData.paymentTypeName,
+            companyId: currentUser.companyId,
+            companyName: currentUser.companyName,
+            createdByName: currentUser.fullName
           });
           
           // Atualiza saldo da conta
@@ -706,44 +706,44 @@ export default function CashMovements({ onComplete }) {
           await CashAccount.update(selectedAccount, { 
             balance: (account?.balance || 0) + balanceChange 
           });
-        } else if (!installment.is_entry) {
+        } else if (!installment.isEntry) {
           // Parcelas vão para contas a pagar/receber
           if (activeTab === 'receber') {
             await AccountsReceivable.create({
-              person_id: formData.person_id,
-              person_name: formData.person_name,
+              personId: formData.personId,
+              personName: formData.personName,
               description: `${formData.description} - ${installment.description}`,
-              due_date: installment.due_date,
+              dueDate: installment.dueDate,
               amount: Number(installment.amount),
-              installment_number: installment.number,
+              installmentNumber: installment.number,
               status: 'pendente',
-              payment_type_id: formData.payment_type_id,
-              payment_type_name: formData.payment_type_name,
-              company_id: currentUser.company_id,
-              company_name: currentUser.company_name,
-              created_by_name: currentUser.full_name
+              paymentTypeId: formData.paymentTypeId,
+              paymentTypeName: formData.paymentTypeName,
+              companyId: currentUser.companyId,
+              companyName: currentUser.companyName,
+              createdByName: currentUser.fullName
             });
           } else {
             await ContasAPagar.create({
-              supplier_id: formData.person_id,
-              supplier_name: formData.person_name,
+              supplierId: formData.personId,
+              supplierName: formData.personName,
               description: `${formData.description} - ${installment.description}`,
-              due_date: installment.due_date,
+              dueDate: installment.dueDate,
               amount: Number(installment.amount),
-              installment_number: installment.number,
+              installmentNumber: installment.number,
               status: 'aberto',
-              payment_type_id: formData.payment_type_id,
-              payment_type_name: formData.payment_type_name,
-              company_id: currentUser.company_id,
-              company_name: currentUser.company_name,
-              created_by_name: currentUser.full_name
+              paymentTypeId: formData.paymentTypeId,
+              paymentTypeName: formData.paymentTypeName,
+              companyId: currentUser.companyId,
+              companyName: currentUser.companyName,
+              createdByName: currentUser.fullName
             });
           }
         }
       }
       
-      const entryAmount = calculatedInstallments.find(i => i.is_entry)?.amount || 0;
-      const parcelsCount = calculatedInstallments.filter(i => !i.is_entry).length;
+      const entryAmount = calculatedInstallments.find(i => i.isEntry)?.amount || 0;
+      const parcelsCount = calculatedInstallments.filter(i => !i.isEntry).length;
       
       toast({ 
         title: "Sucesso", 
@@ -764,15 +764,15 @@ export default function CashMovements({ onComplete }) {
       };
 
   const validateTransfer = () => {
-    if (!transferData.from_account_id) {
+    if (!transferData.fromAccountId) {
       toast({ title: "Erro", description: "Selecione a conta de origem.", variant: "destructive" });
       return false;
     }
-    if (!transferData.to_account_id) {
+    if (!transferData.toAccountId) {
       toast({ title: "Erro", description: "Selecione a conta de destino.", variant: "destructive" });
       return false;
     }
-    if (transferData.from_account_id === transferData.to_account_id) {
+    if (transferData.fromAccountId === transferData.toAccountId) {
       toast({ title: "Erro", description: "Conta de origem e destino não podem ser iguais.", variant: "destructive" });
       return false;
     }
@@ -780,20 +780,20 @@ export default function CashMovements({ onComplete }) {
       toast({ title: "Erro", description: "Valor deve ser maior que zero.", variant: "destructive" });
       return false;
     }
-    if (!transferData.transfer_date) {
+    if (!transferData.transferDate) {
       toast({ title: "Erro", description: "Data é obrigatória.", variant: "destructive" });
       return false;
     }
-    if (!transferData.group_id) {
+    if (!transferData.groupId) {
       toast({ title: "Erro", description: "Selecione um grupo.", variant: "destructive" });
       return false;
     }
-    if (!transferData.subgroup_id) {
+    if (!transferData.subgroupId) {
       toast({ title: "Erro", description: "Selecione um sub-grupo.", variant: "destructive" });
       return false;
     }
     
-    const fromAccount = cashAccounts.find(a => a.id === transferData.from_account_id);
+    const fromAccount = cashAccounts.find(a => a.id === transferData.fromAccountId);
     if (fromAccount && (fromAccount.balance || 0) < transferData.amount) {
       toast({ title: "Erro", description: "Saldo insuficiente na conta de origem.", variant: "destructive" });
       return false;
@@ -812,55 +812,55 @@ export default function CashMovements({ onComplete }) {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const fromAccount = cashAccounts.find(a => a.id === transferData.from_account_id);
-      const toAccount = cashAccounts.find(a => a.id === transferData.to_account_id);
+      const fromAccount = cashAccounts.find(a => a.id === transferData.fromAccountId);
+      const toAccount = cashAccounts.find(a => a.id === transferData.toAccountId);
 
       await CashMovement.create({
-        cash_account_id: transferData.from_account_id,
-        cash_account_name: fromAccount?.name || '',
+        cashAccountId: transferData.fromAccountId,
+        cashAccountName: fromAccount?.name || '',
         type: 'despesa',
         description: `Transferência para ${toAccount?.name}`,
         amount: Number(transferData.amount),
-        movement_date: transferData.transfer_date,
-        sector_id: transferData.sector_id,
-        sector_name: transferData.sector_name || 'TRANSFERÊNCIA',
-        group_id: transferData.group_id,
-        group_name: transferData.group_name,
-        subgroup_id: transferData.subgroup_id,
-        subgroup_name: transferData.subgroup_name,
-        is_transfer: true,
-        transfer_to_account_id: transferData.to_account_id,
+        movementDate: transferData.transferDate,
+        sectorId: transferData.sectorId,
+        sectorName: transferData.sectorName || 'TRANSFERÊNCIA',
+        groupId: transferData.groupId,
+        groupName: transferData.groupName,
+        subgroupId: transferData.subgroupId,
+        subgroupName: transferData.subgroupName,
+        isTransfer: true,
+        transferToAccountId: transferData.toAccountId,
         notes: transferData.notes,
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       });
 
       await CashMovement.create({
-        cash_account_id: transferData.to_account_id,
-        cash_account_name: toAccount?.name || '',
+        cashAccountId: transferData.toAccountId,
+        cashAccountName: toAccount?.name || '',
         type: 'receita',
         description: `Transferência de ${fromAccount?.name}`,
         amount: Number(transferData.amount),
-        movement_date: transferData.transfer_date,
-        sector_id: transferData.sector_id,
-        sector_name: transferData.sector_name || 'TRANSFERÊNCIA',
-        group_id: transferData.group_id,
-        group_name: transferData.group_name,
-        subgroup_id: transferData.subgroup_id,
-        subgroup_name: transferData.subgroup_name,
-        is_transfer: true,
-        transfer_from_account_id: transferData.from_account_id,
+        movementDate: transferData.transferDate,
+        sectorId: transferData.sectorId,
+        sectorName: transferData.sectorName || 'TRANSFERÊNCIA',
+        groupId: transferData.groupId,
+        groupName: transferData.groupName,
+        subgroupId: transferData.subgroupId,
+        subgroupName: transferData.subgroupName,
+        isTransfer: true,
+        transferFromAccountId: transferData.fromAccountId,
         notes: transferData.notes,
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       });
 
-      await CashAccount.update(transferData.from_account_id, {
+      await CashAccount.update(transferData.fromAccountId, {
         balance: (fromAccount?.balance || 0) - Number(transferData.amount)
       });
-      await CashAccount.update(transferData.to_account_id, {
+      await CashAccount.update(transferData.toAccountId, {
         balance: (toAccount?.balance || 0) + Number(transferData.amount)
       });
 
@@ -877,7 +877,7 @@ export default function CashMovements({ onComplete }) {
       }
       };
 
-  const masterSector = sectors.find(s => s.is_own_stock);
+  const masterSector = sectors.find(s => s.isOwnStock);
   
   const isFormDisabled = editMode === 'none';
   const disabledInputClass = isFormDisabled ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white';
@@ -976,10 +976,10 @@ export default function CashMovements({ onComplete }) {
                             onClick={() => handleRowClick(mov)}
                           >
                             <TableCell className="text-xs font-mono">{String(idx + 1).padStart(4, '0')}</TableCell>
-                            <TableCell className="text-xs">{mov.installment_number || '-'}</TableCell>
-                            <TableCell className="text-xs">{format(parseISO(mov.movement_date), 'dd/MM/yy')}</TableCell>
-                            <TableCell className="text-xs">{mov.sector_name || '-'}</TableCell>
-                            <TableCell className="text-xs">{mov.person_name || mov.description}</TableCell>
+                            <TableCell className="text-xs">{mov.installmentNumber || '-'}</TableCell>
+                            <TableCell className="text-xs">{format(parseISO(mov.movementDate), 'dd/MM/yy')}</TableCell>
+                            <TableCell className="text-xs">{mov.sectorName || '-'}</TableCell>
+                            <TableCell className="text-xs">{mov.personName || mov.description}</TableCell>
                             <TableCell className="text-right text-xs font-mono text-red-600">
                               {mov.type === 'despesa' ? formatCurrency(mov.amount) : '-'}
                             </TableCell>
@@ -1034,11 +1034,11 @@ export default function CashMovements({ onComplete }) {
                         <Upload className="w-3 h-3" /> De: <span className="text-red-500">*</span>
                       </Label>
                       <Select 
-                        value={transferData.from_account_id} 
+                        value={transferData.fromAccountId} 
                         onValueChange={(v) => setTransferData(prev => ({ 
                           ...prev, 
-                          from_account_id: v,
-                          to_account_id: prev.to_account_id === v ? '' : prev.to_account_id
+                          fromAccountId: v,
+                          toAccountId: prev.toAccountId === v ? '' : prev.toAccountId
                         }))}
                         disabled={isFormDisabled}
                       >
@@ -1058,8 +1058,8 @@ export default function CashMovements({ onComplete }) {
                       </Label>
                       <Input 
                         type="date"
-                        value={transferData.transfer_date}
-                        onChange={(e) => setTransferData(prev => ({ ...prev, transfer_date: e.target.value }))}
+                        value={transferData.transferDate}
+                        onChange={(e) => setTransferData(prev => ({ ...prev, transferDate: e.target.value }))}
                         className={`h-8 border-slate-300 ${disabledInputClass}`}
                         disabled={isFormDisabled}
                       />
@@ -1073,8 +1073,8 @@ export default function CashMovements({ onComplete }) {
                         <Download className="w-3 h-3" /> Para: <span className="text-red-500">*</span>
                       </Label>
                       <Select 
-                        value={transferData.to_account_id} 
-                        onValueChange={(v) => setTransferData(prev => ({ ...prev, to_account_id: v }))}
+                        value={transferData.toAccountId} 
+                        onValueChange={(v) => setTransferData(prev => ({ ...prev, toAccountId: v }))}
                         disabled={isFormDisabled}
                       >
                         <SelectTrigger className={`h-8 border-slate-300 ${disabledInputClass}`}>
@@ -1082,7 +1082,7 @@ export default function CashMovements({ onComplete }) {
                         </SelectTrigger>
                         <SelectContent>
                           {cashAccounts
-                            .filter(acc => acc.id !== transferData.from_account_id)
+                            .filter(acc => acc.id !== transferData.fromAccountId)
                             .map(acc => (
                               <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
                             ))}
@@ -1094,18 +1094,18 @@ export default function CashMovements({ onComplete }) {
                         Sub-Grupo <span className="text-red-500">*</span>
                       </Label>
                       <Select 
-                        value={transferData.subgroup_id} 
+                        value={transferData.subgroupId} 
                         onValueChange={(v) => {
                           const sg = subgroups.find(s => s.id === v);
-                          const group = sg ? groups.find(g => g.id === sg.financial_group_id) : null;
+                          const group = sg ? groups.find(g => g.id === sg.financialGroupId) : null;
                           setTransferData(prev => ({ 
                             ...prev, 
-                            subgroup_id: v,
-                            subgroup_name: sg?.name || '',
-                            subgroup_code: sg?.id.slice(-6) || '',
-                            subgroup_error: '',
-                            group_id: group?.id || prev.group_id,
-                            group_name: group?.name || prev.group_name
+                            subgroupId: v,
+                            subgroupName: sg?.name || '',
+                            subgroupCode: sg?.id.slice(-6) || '',
+                            subgroupError: '',
+                            groupId: group?.id || prev.groupId,
+                            groupName: group?.name || prev.groupName
                           }));
                         }}
                         disabled={isFormDisabled}
@@ -1115,7 +1115,7 @@ export default function CashMovements({ onComplete }) {
                         </SelectTrigger>
                         <SelectContent>
                           {subgroups
-                            .filter(sg => !transferData.group_id || sg.financial_group_id === transferData.group_id)
+                            .filter(sg => !transferData.groupId || sg.financialGroupId === transferData.groupId)
                             .map(sg => (
                               <SelectItem key={sg.id} value={sg.id}>{sg.name}</SelectItem>
                             ))}
@@ -1131,15 +1131,15 @@ export default function CashMovements({ onComplete }) {
                         Grupo <span className="text-red-500">*</span>
                       </Label>
                       <Select 
-                        value={transferData.group_id} 
+                        value={transferData.groupId} 
                         onValueChange={(v) => {
                           const g = groups.find(gr => gr.id === v);
                           setTransferData(prev => ({ 
                             ...prev, 
-                            group_id: v,
-                            group_name: g?.name || '',
-                            subgroup_id: '',
-                            subgroup_name: ''
+                            groupId: v,
+                            groupName: g?.name || '',
+                            subgroupId: '',
+                            subgroupName: ''
                           }));
                         }}
                         disabled={isFormDisabled}
@@ -1159,14 +1159,14 @@ export default function CashMovements({ onComplete }) {
                         Setor <span className="text-red-500">*</span>
                       </Label>
                       <Select 
-                        value={transferData.sector_id} 
+                        value={transferData.sectorId} 
                         onValueChange={(v) => {
                           const sector = sectors.find(s => s.id === v);
                           const sectorMaster = sectorMasters.find(sm => sm.id === v);
                           setTransferData(prev => ({ 
                             ...prev, 
-                            sector_id: v,
-                            sector_name: sector?.name || sectorMaster?.name || ''
+                            sectorId: v,
+                            sectorName: sector?.name || sectorMaster?.name || ''
                           }));
                         }}
                         disabled={isFormDisabled}
@@ -1225,7 +1225,7 @@ export default function CashMovements({ onComplete }) {
                         Setor <span className="text-red-500">*</span>
                       </Label>
                       <div className="flex gap-2 items-center">
-                        <Select value={formData.sector_id} onValueChange={handleSectorChange} disabled={isFormDisabled}>
+                        <Select value={formData.sectorId} onValueChange={handleSectorChange} disabled={isFormDisabled}>
                           <SelectTrigger className={`h-8 border-slate-300 flex-1 ${disabledInputClass}`}>
                             <SelectValue placeholder="Selecione..." />
                           </SelectTrigger>
@@ -1242,7 +1242,7 @@ export default function CashMovements({ onComplete }) {
                             ))}
                           </SelectContent>
                         </Select>
-                        {masterSector && formData.sector_id === masterSector.id && (
+                        {masterSector && formData.sectorId === masterSector.id && (
                           <Badge variant="secondary" className="text-xs">(Master)</Badge>
                         )}
                       </div>
@@ -1263,13 +1263,13 @@ export default function CashMovements({ onComplete }) {
                       <Label className="text-xs font-medium">
                         Sub Grupo <span className="text-red-500">*</span>
                       </Label>
-                      <Select value={formData.subgroup_id} onValueChange={handleSubgroupChange} disabled={isFormDisabled}>
+                      <Select value={formData.subgroupId} onValueChange={handleSubgroupChange} disabled={isFormDisabled}>
                         <SelectTrigger className={`h-8 border-slate-300 ${disabledInputClass}`}>
                           <SelectValue placeholder="Selecionar sub grupo" />
                         </SelectTrigger>
                         <SelectContent>
                           {subgroups
-                            .filter(sg => !formData.group_id || sg.financial_group_id === formData.group_id)
+                            .filter(sg => !formData.groupId || sg.financialGroupId === formData.groupId)
                             .map(sg => (
                               <SelectItem key={sg.id} value={sg.id}>{sg.name}</SelectItem>
                             ))}
@@ -1281,7 +1281,7 @@ export default function CashMovements({ onComplete }) {
                       <Label className="text-xs font-medium">
                         Grupo <span className="text-red-500">*</span>
                       </Label>
-                      <Select value={formData.group_id} onValueChange={handleGroupChange} disabled={isFormDisabled}>
+                      <Select value={formData.groupId} onValueChange={handleGroupChange} disabled={isFormDisabled}>
                         <SelectTrigger className={`h-8 border-slate-300 ${disabledInputClass}`}>
                           <SelectValue placeholder="Selecionar grupo" />
                         </SelectTrigger>
@@ -1316,19 +1316,19 @@ export default function CashMovements({ onComplete }) {
                           value={sacadoType} 
                           onValueChange={(v) => {
                             setSacadoType(v);
-                            setFormData(prev => ({ ...prev, person_id: '', person_name: '' }));
+                            setFormData(prev => ({ ...prev, personId: '', personName: '' }));
                             setSacadoError('');
                           }}
                           className="flex gap-4 mt-1"
                           disabled={isFormDisabled}
                         >
                           <div className="flex items-center space-x-1">
-                            <RadioGroupItem value="cliente" id="sacado_cliente" disabled={isFormDisabled} />
-                            <Label htmlFor="sacado_cliente" className="text-xs">Cliente</Label>
+                            <RadioGroupItem value="cliente" id="sacadoCliente" disabled={isFormDisabled} />
+                            <Label htmlFor="sacadoCliente" className="text-xs">Cliente</Label>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <RadioGroupItem value="ponto_venda" id="sacado_pdv" disabled={isFormDisabled} />
-                            <Label htmlFor="sacado_pdv" className="text-xs">Pto. Venda</Label>
+                            <RadioGroupItem value="pontoVenda" id="sacadoPdv" disabled={isFormDisabled} />
+                            <Label htmlFor="sacadoPdv" className="text-xs">Pto. Venda</Label>
                           </div>
                         </RadioGroup>
                       </div>
@@ -1346,8 +1346,8 @@ export default function CashMovements({ onComplete }) {
                     <div>
                       <Label className="text-xs font-medium">Doc.</Label>
                       <Input 
-                        value={formData.document_number}
-                        onChange={(e) => setFormData(prev => ({ ...prev, document_number: e.target.value }))}
+                        value={formData.documentNumber}
+                        onChange={(e) => setFormData(prev => ({ ...prev, documentNumber: e.target.value }))}
                         placeholder="Número do documento"
                         className={`h-8 border-slate-300 ${disabledInputClass}`}
                         disabled={isFormDisabled}
@@ -1357,8 +1357,8 @@ export default function CashMovements({ onComplete }) {
                     <div>
                       <Label className="text-xs font-medium">Mês de Competência</Label>
                       <Input 
-                        value={formData.competence_month}
-                        onChange={(e) => setFormData(prev => ({ ...prev, competence_month: e.target.value }))}
+                        value={formData.competenceMonth}
+                        onChange={(e) => setFormData(prev => ({ ...prev, competenceMonth: e.target.value }))}
                         placeholder="MM/AAAA"
                         className={`h-8 border-slate-300 ${disabledInputClass}`}
                         disabled={isFormDisabled}
@@ -1371,8 +1371,8 @@ export default function CashMovements({ onComplete }) {
                       </Label>
                       <Input 
                         type="date"
-                        value={formData.movement_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, movement_date: e.target.value }))}
+                        value={formData.movementDate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, movementDate: e.target.value }))}
                         className={`h-8 border-slate-300 ${disabledInputClass}`}
                         disabled={isFormDisabled}
                       />
@@ -1382,14 +1382,14 @@ export default function CashMovements({ onComplete }) {
                       <Label className="text-xs font-medium">
                         Forma de Pagamento <span className="text-red-500">*</span>
                       </Label>
-                      <Select value={formData.payment_type_id} onValueChange={handlePaymentTypeChange} disabled={isFormDisabled}>
+                      <Select value={formData.paymentTypeId} onValueChange={handlePaymentTypeChange} disabled={isFormDisabled}>
                         <SelectTrigger className={`h-8 border-slate-300 ${disabledInputClass}`}>
                           <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
                         <SelectContent>
                           {paymentTypes.map(pt => (
                             <SelectItem key={pt.id} value={pt.id}>
-                              {pt.name} {pt.max_installments > 1 ? `(até ${pt.max_installments}x)` : ''}
+                              {pt.name} {pt.maxInstallments > 1 ? `(até ${pt.maxInstallments}x)` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1402,30 +1402,30 @@ export default function CashMovements({ onComplete }) {
                           {sacadoType === 'cliente' ? 'Cliente' : 'Pto. Venda'}
                         </Label>
                         <Input 
-                          value={formData.person_id ? `${formData.person_name}` : formData.sacado_input || ''}
+                          value={formData.personId ? `${formData.personName}` : formData.sacadoInput || ''}
                           onFocus={() => setSacadoFieldFocused(true)}
                           onBlur={() => setTimeout(() => setSacadoFieldFocused(false), 200)}
                           onChange={(e) => {
-                            setFormData(prev => ({ ...prev, sacado_input: e.target.value, person_id: '', person_name: '' }));
+                            setFormData(prev => ({ ...prev, sacadoInput: e.target.value, personId: '', personName: '' }));
                             setSacadoError('');
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              const code = formData.sacado_input?.trim();
+                              const code = formData.sacadoInput?.trim();
                               if (!code) return;
                               
                               const found = people.find(p => 
                                 p.type === sacadoType && 
-                                (p.person_number === code || p.id.endsWith(code))
+                                (p.personNumber === code || p.id.endsWith(code))
                               );
                               
                               if (found) {
                                 setFormData(prev => ({
                                   ...prev,
-                                  person_id: found.id,
-                                  person_name: found.name,
-                                  sacado_input: ''
+                                  personId: found.id,
+                                  personName: found.name,
+                                  sacadoInput: ''
                                 }));
                                 setSacadoError('');
                               } else {
@@ -1455,30 +1455,30 @@ export default function CashMovements({ onComplete }) {
                       <div className="mb-4">
                         <Label className="text-xs font-medium">Fornecedor</Label>
                         <Input 
-                          value={formData.person_id ? `${formData.person_name}` : formData.fornecedor_input || ''}
+                          value={formData.personId ? `${formData.personName}` : formData.fornecedorInput || ''}
                           onFocus={() => setSacadoFieldFocused(true)}
                           onBlur={() => setTimeout(() => setSacadoFieldFocused(false), 200)}
                           onChange={(e) => {
-                            setFormData(prev => ({ ...prev, fornecedor_input: e.target.value, person_id: '', person_name: '' }));
+                            setFormData(prev => ({ ...prev, fornecedorInput: e.target.value, personId: '', personName: '' }));
                             setSacadoError('');
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              const code = formData.fornecedor_input?.trim();
+                              const code = formData.fornecedorInput?.trim();
                               if (!code) return;
                               
                               const found = people.find(p => 
                                 p.type === 'fornecedor' && 
-                                (p.person_number === code || p.id.endsWith(code))
+                                (p.personNumber === code || p.id.endsWith(code))
                               );
                               
                               if (found) {
                                 setFormData(prev => ({
                                   ...prev,
-                                  person_id: found.id,
-                                  person_name: found.name,
-                                  fornecedor_input: ''
+                                  personId: found.id,
+                                  personName: found.name,
+                                  fornecedorInput: ''
                                 }));
                                 setSacadoError('');
                               } else {
@@ -1499,7 +1499,7 @@ export default function CashMovements({ onComplete }) {
                     )}
 
                     <h3 className="text-sm font-semibold text-slate-700 mb-3">
-                      Parcelamento {selectedPaymentType ? `(até ${selectedPaymentType.max_installments}x)` : ''}
+                      Parcelamento {selectedPaymentType ? `(até ${selectedPaymentType.maxInstallments}x)` : ''}
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1509,8 +1509,8 @@ export default function CashMovements({ onComplete }) {
                         </Label>
                         <Input 
                           type="date"
-                          value={formData.first_due_date}
-                          onChange={(e) => setFormData(prev => ({ ...prev, first_due_date: e.target.value }))}
+                          value={formData.firstDueDate}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstDueDate: e.target.value }))}
                           className={`h-8 border-slate-300 ${disabledInputClass}`}
                           disabled={isFormDisabled}
                         />
@@ -1522,9 +1522,9 @@ export default function CashMovements({ onComplete }) {
                           <Input 
                             type="text"
                             inputMode="decimal"
-                            value={typeof formData.entry_value === 'number' ? formatMoneyDisplay(formData.entry_value) : formData.entry_value}
-                            onChange={(e) => handleMoneyChange(e, 'entry_value', setFormData)}
-                            onBlur={() => handleMoneyBlur('entry_value', setFormData, formData.entry_value)}
+                            value={typeof formData.entryValue === 'number' ? formatMoneyDisplay(formData.entryValue) : formData.entryValue}
+                            onChange={(e) => handleMoneyChange(e, 'entryValue', setFormData)}
+                            onBlur={() => handleMoneyBlur('entryValue', setFormData, formData.entryValue)}
                             placeholder="0,00"
                             className={`h-8 border-slate-300 text-right ${disabledInputClass}`}
                             disabled={isFormDisabled}
@@ -1538,10 +1538,10 @@ export default function CashMovements({ onComplete }) {
                         <Input 
                           type="number"
                           min="1"
-                          max={selectedPaymentType?.max_installments || 1}
+                          max={selectedPaymentType?.maxInstallments || 1}
                           value={formData.installments}
                           onChange={(e) => {
-                            const max = selectedPaymentType?.max_installments || 1;
+                            const max = selectedPaymentType?.maxInstallments || 1;
                             const value = Math.min(Number(e.target.value), max);
                             setFormData(prev => ({ ...prev, installments: value }));
                           }}
@@ -1708,17 +1708,17 @@ export default function CashMovements({ onComplete }) {
 
           <div className="w-px h-6 bg-slate-400 mx-1" />
 
-          <Link to={createPageUrl("CustomerRegistration") + "?type=fornecedor&return=cash_movements"}>
+          <Link to={createPageUrl("CustomerRegistration") + "?type=fornecedor&return=cashMovements"}>
             <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
               <Factory className="w-4 h-4" /> Fornecedor
             </Button>
           </Link>
-          <Link to={createPageUrl("CustomerRegistration") + "?type=ponto_venda&return=cash_movements"}>
+          <Link to={createPageUrl("CustomerRegistration") + "?type=pontoVenda&return=cashMovements"}>
             <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
               <Store className="w-4 h-4" /> PDV
             </Button>
           </Link>
-          <Link to={createPageUrl("CustomerRegistration") + "?type=cliente&return=cash_movements"}>
+          <Link to={createPageUrl("CustomerRegistration") + "?type=cliente&return=cashMovements"}>
             <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
               <User className="w-4 h-4" /> Cliente
             </Button>
@@ -1739,11 +1739,11 @@ export default function CashMovements({ onComplete }) {
             </p>
             <div className="flex items-center justify-center gap-3 text-sm">
               <span className="font-medium">
-                {cashAccounts.find(a => a.id === transferData.from_account_id)?.name || 'Origem'}
+                {cashAccounts.find(a => a.id === transferData.fromAccountId)?.name || 'Origem'}
               </span>
               <ArrowRight className="w-5 h-5 text-blue-500" />
               <span className="font-medium">
-                {cashAccounts.find(a => a.id === transferData.to_account_id)?.name || 'Destino'}
+                {cashAccounts.find(a => a.id === transferData.toAccountId)?.name || 'Destino'}
               </span>
             </div>
           </div>
@@ -1794,7 +1794,7 @@ export default function CashMovements({ onComplete }) {
                       return (
                         p.name?.toLowerCase().includes(term) ||
                         p.document?.toLowerCase().includes(term) ||
-                        p.person_number?.toLowerCase().includes(term) ||
+                        p.personNumber?.toLowerCase().includes(term) ||
                         (p.phone && p.phone[0]?.includes(term))
                       );
                     })
@@ -1805,17 +1805,17 @@ export default function CashMovements({ onComplete }) {
                         onDoubleClick={() => {
                           setFormData(prev => ({
                             ...prev,
-                            person_id: p.id,
-                            person_name: p.name,
-                            fornecedor_input: '',
-                            sacado_input: ''
+                            personId: p.id,
+                            personName: p.name,
+                            fornecedorInput: '',
+                            sacadoInput: ''
                           }));
                           setSacadoError('');
                           setShowSearchModal(false);
                           setSearchTerm('');
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{p.person_number || p.id.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">{p.personNumber || p.id.slice(-6)}</TableCell>
                         <TableCell className="text-xs">{p.name}</TableCell>
                         <TableCell className="text-xs">{p.document || '-'}</TableCell>
                         <TableCell className="text-xs">{p.phone?.[0] || '-'}</TableCell>
@@ -1930,7 +1930,7 @@ export default function CashMovements({ onComplete }) {
                 </div>
                 <div>
                   <span className="text-slate-600">Entrada:</span>
-                  <span className="font-bold ml-2">{formatCurrency(formData.entry_value)}</span>
+                  <span className="font-bold ml-2">{formatCurrency(formData.entryValue)}</span>
                 </div>
                 <div>
                   <span className="text-slate-600">Parcelas:</span>
@@ -1951,16 +1951,16 @@ export default function CashMovements({ onComplete }) {
                 </TableHeader>
                 <TableBody>
                   {calculatedInstallments.map((inst, idx) => (
-                    <TableRow key={idx} className={inst.is_entry ? 'bg-green-50' : ''}>
+                    <TableRow key={idx} className={inst.isEntry ? 'bg-green-50' : ''}>
                       <TableCell className="text-xs font-mono">
-                        {inst.is_entry ? 'ENT' : inst.number}
+                        {inst.isEntry ? 'ENT' : inst.number}
                       </TableCell>
                       <TableCell className="text-xs">{inst.description}</TableCell>
                       <TableCell>
                         <Input 
                           type="date"
-                          value={inst.due_date}
-                          onChange={(e) => handleInstallmentChange(idx, 'due_date', e.target.value)}
+                          value={inst.dueDate}
+                          onChange={(e) => handleInstallmentChange(idx, 'dueDate', e.target.value)}
                           className="h-7 text-xs"
                         />
                       </TableCell>

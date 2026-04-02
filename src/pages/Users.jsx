@@ -27,7 +27,7 @@ export default function UsersPage() {
       setCurrentUser(user);
 
       // Verificar se o usuário tem permissão para acessar esta página
-      if (user.user_type !== 'admin' && user.user_type !== 'super_admin') {
+      if (user.userType !== 'admin' && user.userType !== 'superAdmin') {
         toast({
           title: "Acesso Negado",
           description: "Você não tem permissão para gerenciar usuários.",
@@ -42,19 +42,19 @@ export default function UsersPage() {
       if (user.email === 'brasileirosilvia@gmail.com') { // Condição para super admin
         // Super admin vê todos os usuários e empresas
         [usersData, companiesData] = await Promise.all([
-          User.list('-created_date'),
+          User.list('-createdDate'),
           Company.list('name') // Carregar todas as empresas em ordem alfabética
         ]);
       } else {
         // Admin da empresa vê usuários da sua empresa E usuários sem empresa
         const allUsers = await User.list();
-        const usersOfCompany = user.company_id ? allUsers.filter(u => u.company_id === user.company_id) : [];
-        const usersWithoutCompany = allUsers.filter(u => !u.company_id);
+        const usersOfCompany = user.companyId ? allUsers.filter(u => u.companyId === user.companyId) : [];
+        const usersWithoutCompany = allUsers.filter(u => !u.companyId);
         
         usersData = [...usersOfCompany, ...usersWithoutCompany];
         
         // Carregar apenas a empresa do admin, se ele tiver uma
-        companiesData = user.company_id ? await Company.filter({ id: user.company_id }) : [];
+        companiesData = user.companyId ? await Company.filter({ id: user.companyId }) : [];
       }
 
       setUsers(usersData);
@@ -89,13 +89,13 @@ export default function UsersPage() {
     try {
       const { id, ...userData } = editingUser;
       
-      // GARANTIR que company_name seja salvo junto com company_id
-      const company = companies.find(c => c.id === userData.company_id);
+      // GARANTIR que companyName seja salvo junto com companyId
+      const company = companies.find(c => c.id === userData.companyId);
       if (company) {
-        userData.company_name = company.name;
-        console.log('Salvando usuário com:', { company_id: userData.company_id, company_name: userData.company_name });
-      } else if (userData.company_id === null || userData.company_id === '') {
-        userData.company_name = null; // Explicitly set to null if company_id is null or empty
+        userData.companyName = company.name;
+        console.log('Salvando usuário com:', { companyId: userData.companyId, companyName: userData.companyName });
+      } else if (userData.companyId === null || userData.companyId === '') {
+        userData.companyName = null; // Explicitly set to null if companyId is null or empty
       }
       
       const updatedUser = await User.update(id, userData);
@@ -120,9 +120,9 @@ export default function UsersPage() {
   };
 
   const getUserTypeBadge = (userType) => {
-    // Adicionado super_admin para o badge também, caso necessário.
-    // O outline não especifica badge para super_admin, então manter admin para super_admin.
-    return userType === 'admin' || userType === 'super_admin'
+    // Adicionado superAdmin para o badge também, caso necessário.
+    // O outline não especifica badge para superAdmin, então manter admin para superAdmin.
+    return userType === 'admin' || userType === 'superAdmin'
       ? <Badge className="bg-purple-100 text-purple-800">Administrador</Badge>
       : <Badge className="bg-blue-100 text-blue-800">Atendente</Badge>;
   };
@@ -134,7 +134,7 @@ export default function UsersPage() {
   };
 
   // Se o currentUser foi carregado e não tem permissão, renderizar mensagem de acesso restrito
-  if (currentUser && currentUser.user_type !== 'admin' && currentUser.user_type !== 'super_admin') {
+  if (currentUser && currentUser.userType !== 'admin' && currentUser.userType !== 'superAdmin') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-7xl mx-auto">
@@ -168,7 +168,7 @@ export default function UsersPage() {
             <p className="text-slate-600">
               {currentUser?.email === 'brasileirosilvia@gmail.com' 
                 ? "Edite as permissões e dados de todos os usuários do sistema."
-                : `Edite os usuários da sua empresa: ${currentUser?.company_name || 'N/A'}`
+                : `Edite os usuários da sua empresa: ${currentUser?.companyName || 'N/A'}`
               }
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function UsersPage() {
                   <div>
                     <Label>Nome Completo</Label>
                     <Input
-                      value={editingUser.full_name || ''}
+                      value={editingUser.fullName || ''}
                       readOnly
                       disabled
                       className="bg-slate-100"
@@ -228,13 +228,13 @@ export default function UsersPage() {
                     <div>
                       <Label>Empresa *</Label>
                       <Select
-                        value={editingUser.company_id || ''}
+                        value={editingUser.companyId || ''}
                         onValueChange={(value) => {
                           const company = companies.find(c => c.id === value);
                           setEditingUser(prev => ({ 
                             ...prev, 
-                            company_id: value === "" ? null : value, // Set to null if empty string is selected
-                            company_name: value === "" ? null : company?.name // Set name to null if empty string is selected
+                            companyId: value === "" ? null : value, // Set to null if empty string is selected
+                            companyName: value === "" ? null : company?.name // Set name to null if empty string is selected
                           }));
                         }}
                       >
@@ -254,35 +254,35 @@ export default function UsersPage() {
                     <div>
                       <Label>Empresa *</Label>
                       <Select
-                        value={editingUser.company_id || ''}
+                        value={editingUser.companyId || ''}
                         onValueChange={(value) => {
                           // For company admin, 'value' can only be their company's ID or empty string.
                           if (value === "") { // User selected "Não Associado"
                             setEditingUser(prev => ({
                               ...prev,
-                              company_id: null,
-                              company_name: null
+                              companyId: null,
+                              companyName: null
                             }));
-                          } else if (value === currentUser.company_id) { // User selected their company
+                          } else if (value === currentUser.companyId) { // User selected their company
                             setEditingUser(prev => ({ 
                               ...prev, 
-                              company_id: currentUser.company_id,
-                              company_name: currentUser.company_name 
+                              companyId: currentUser.companyId,
+                              companyName: currentUser.companyName 
                             }));
                           }
                         }}
                         // Disabled if the user is already associated with ANY company OTHER THAN the current user's company.
                         // Since this is not a super admin, they can only manage their own company's users.
-                        disabled={!!(editingUser.company_id && editingUser.company_id !== currentUser.company_id)}
+                        disabled={!!(editingUser.companyId && editingUser.companyId !== currentUser.companyId)}
                       >
                         <SelectTrigger className="bg-white/80">
-                          <SelectValue placeholder={editingUser.company_id ? companies.find(c => c.id === editingUser.company_id)?.name : "Selecione a empresa"} />
+                          <SelectValue placeholder={editingUser.companyId ? companies.find(c => c.id === editingUser.companyId)?.name : "Selecione a empresa"} />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value={null}>Não Associado</SelectItem>
-                            {currentUser.company_id && (
-                                <SelectItem value={currentUser.company_id}>
-                                    {currentUser.company_name}
+                            {currentUser.companyId && (
+                                <SelectItem value={currentUser.companyId}>
+                                    {currentUser.companyName}
                                 </SelectItem>
                             )}
                         </SelectContent>
@@ -293,8 +293,8 @@ export default function UsersPage() {
                   <div>
                     <Label>Tipo de Usuário *</Label>
                     <Select
-                      value={editingUser.user_type || ''}
-                      onValueChange={(value) => setEditingUser(prev => ({ ...prev, user_type: value }))}
+                      value={editingUser.userType || ''}
+                      onValueChange={(value) => setEditingUser(prev => ({ ...prev, userType: value }))}
                     >
                       <SelectTrigger className="bg-white/80">
                         <SelectValue placeholder="Selecione o tipo" />
@@ -349,7 +349,7 @@ export default function UsersPage() {
             <CardTitle>
               {currentUser?.email === 'brasileirosilvia@gmail.com' 
                 ? "Todos os Usuários do Sistema"
-                : `Usuários da ${currentUser?.company_name || 'N/A'} e Não Associados`
+                : `Usuários da ${currentUser?.companyName || 'N/A'} e Não Associados`
               }
             </CardTitle>
           </CardHeader>
@@ -372,15 +372,15 @@ export default function UsersPage() {
                 <TableBody>
                   {users.map(user => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.full_name}</TableCell>
+                      <TableCell className="font-medium">{user.fullName}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.company_name || <span className="text-slate-400">Não associada</span>}</TableCell>
-                      <TableCell>{getUserTypeBadge(user.user_type)}</TableCell>
+                      <TableCell>{user.companyName || <span className="text-slate-400">Não associada</span>}</TableCell>
+                      <TableCell>{getUserTypeBadge(user.userType)}</TableCell>
                       <TableCell>{user.department || '-'}</TableCell>
                       <TableCell>{user.phone || '-'}</TableCell>
                       <TableCell>{getStatusBadge(user.active)}</TableCell>
                       <TableCell className="text-sm text-slate-500">
-                        {user.created_date ? format(parseISO(user.created_date), 'dd/MM/yyyy') : '-'}
+                        {user.createdDate ? format(parseISO(user.createdDate), 'dd/MM/yyyy') : '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 

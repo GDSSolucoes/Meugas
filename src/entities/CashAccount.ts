@@ -2,8 +2,8 @@ import { BaseEntity } from './BaseEntity';
 
 
 export enum CashAccountTypeEnum {
-  CAIXA_FISICO = 'caixa_fisico',
-  CONTA_BANCARIA = 'conta_bancaria',
+  CAIXA_FISICO = 'caixaFisico',
+  CONTA_BANCARIA = 'contaBancaria',
 }
 
 /**

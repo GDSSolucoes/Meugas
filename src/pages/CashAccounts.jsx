@@ -20,12 +20,12 @@ export default function CashAccounts() {
   
   const initialAccountState = {
     name: '',
-    type: 'caixa_fisico', // Added type with a default value
+    type: 'caixaFisico', // Added type with a default value
     balance: 0,
-    initial_balance: 0,
-    initial_balance_date: format(new Date(), 'yyyy-MM-dd'),
+    initialBalance: 0,
+    initialBalanceDate: format(new Date(), 'yyyy-MM-dd'),
     active: true,
-    created_by_name: ''
+    createdByName: ''
   };
   
   const [currentAccount, setCurrentAccount] = useState(initialAccountState);
@@ -37,7 +37,7 @@ export default function CashAccounts() {
   const loadAccounts = async () => {
     try {
       const user = await User.me();
-      const data = await CashAccount.filter({ company_id: user.company_id }, '-created_date');
+      const data = await CashAccount.filter({ companyId: user.companyId }, '-createdDate');
       setAccounts(data);
     } catch (error) {
       console.error("Erro ao carregar contas:", error);
@@ -49,7 +49,7 @@ export default function CashAccounts() {
     setIsEditing(true);
     setCurrentAccount({
         ...account,
-        type: account.type || 'caixa_fisico' // Ensures 'type' has a value, defaulting for old entries
+        type: account.type || 'caixaFisico' // Ensures 'type' has a value, defaulting for old entries
     });
     setOriginalAccountBeforeEdit(account); // Store the original account for comparison
     setShowForm(true);
@@ -75,8 +75,8 @@ export default function CashAccounts() {
         const { id } = currentAccount;
 
         // Calculate difference in initial balance
-        const oldInitialBalance = originalAccountBeforeEdit?.initial_balance || 0;
-        const newInitialBalance = Number(currentAccount.initial_balance) || 0;
+        const oldInitialBalance = originalAccountBeforeEdit?.initialBalance || 0;
+        const newInitialBalance = Number(currentAccount.initialBalance) || 0;
         const initialBalanceDifference = newInitialBalance - oldInitialBalance;
 
         // Adjust the current balance based on the initial balance change
@@ -86,26 +86,26 @@ export default function CashAccounts() {
           name: currentAccount.name,
           type: currentAccount.type,
           active: currentAccount.active,
-          initial_balance: newInitialBalance,
-          initial_balance_date: currentAccount.initial_balance_date,
+          initialBalance: newInitialBalance,
+          initialBalanceDate: currentAccount.initialBalanceDate,
           balance: newCurrentBalance,
         };
         
         await CashAccount.update(id, accountPayload);
       } else {
         // Creation of a new account
-        const initialBalance = Number(currentAccount.initial_balance) || 0;
+        const initialBalance = Number(currentAccount.initialBalance) || 0;
         
         const accountPayload = {
           name: currentAccount.name,
           type: currentAccount.type,
           balance: initialBalance, // O saldo atual é igual ao saldo inicial
-          initial_balance: initialBalance,
-          initial_balance_date: currentAccount.initial_balance_date,
+          initialBalance: initialBalance,
+          initialBalanceDate: currentAccount.initialBalanceDate,
           active: currentAccount.active,
-          created_by_name: user.full_name,
-          company_id: user.company_id,
-          company_name: user.company_name,
+          createdByName: user.fullName,
+          companyId: user.companyId,
+          companyName: user.companyName,
         };
         
         await CashAccount.create(accountPayload);
@@ -189,8 +189,8 @@ export default function CashAccounts() {
                     >
                       <SelectTrigger className="bg-white/80"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="caixa_fisico">Caixa Físico</SelectItem>
-                        <SelectItem value="conta_bancaria">Conta Bancária</SelectItem>
+                        <SelectItem value="caixaFisico">Caixa Físico</SelectItem>
+                        <SelectItem value="contaBancaria">Conta Bancária</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -200,8 +200,8 @@ export default function CashAccounts() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={currentAccount.initial_balance}
-                      onChange={(e) => setCurrentAccount(prev => ({ ...prev, initial_balance: e.target.value }))}
+                      value={currentAccount.initialBalance}
+                      onChange={(e) => setCurrentAccount(prev => ({ ...prev, initialBalance: e.target.value }))}
                       className="bg-white/80"
                       placeholder="0,00"
                     />
@@ -210,8 +210,8 @@ export default function CashAccounts() {
                     <Label>Data do Saldo Inicial</Label>
                     <Input
                       type="date"
-                      value={currentAccount.initial_balance_date}
-                      onChange={(e) => setCurrentAccount(prev => ({ ...prev, initial_balance_date: e.target.value }))}
+                      value={currentAccount.initialBalanceDate}
+                      onChange={(e) => setCurrentAccount(prev => ({ ...prev, initialBalanceDate: e.target.value }))}
                       className="bg-white/80"
                     />
                   </div>
@@ -268,7 +268,7 @@ export default function CashAccounts() {
                           {account.active ? "Ativa" : "Inativa"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-500">{account.created_by_name}</TableCell>
+                      <TableCell className="text-xs text-slate-500">{account.createdByName}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(account)} className="mr-2 hover:bg-blue-100">
                           <Edit className="w-4 h-4 text-blue-600" />

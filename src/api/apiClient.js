@@ -12,15 +12,15 @@ export const api = axios.create({
 })
 
 function getAccessToken() {
-  return localStorage.getItem('access_token')
+  return localStorage.getItem('accessToken')
 }
 
 function getRefreshToken() {
-  return localStorage.getItem('refresh_token')
+  return localStorage.getItem('refreshToken')
 }
 
 function setAccessToken(token) {
-  localStorage.setItem('access_token', token)
+  localStorage.setItem('accessToken', token)
 }
 
 api.interceptors.request.use(cfg => {
@@ -40,9 +40,9 @@ api.interceptors.response.use(
         try {
           const rt = getRefreshToken()
           if (!rt) throw err
-          const r = await api.post('/api/auth/refresh', { refresh_token: rt })
-          setAccessToken(r.data.access_token)
-          pending.forEach(fn => fn(r.data.access_token))
+          const r = await api.post('/api/auth/refresh', { refreshToken: rt })
+          setAccessToken(r.data.accessToken)
+          pending.forEach(fn => fn(r.data.accessToken))
           pending = []
           return api(original)
         } catch (error) {

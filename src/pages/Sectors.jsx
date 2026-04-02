@@ -24,12 +24,12 @@ export default function Sectors() {
 
   const initialSectorState = {
     name: '',
-    employee_id: '',
-    employee_name: '',
+    employeeId: '',
+    employeeName: '',
     phone: '',
-    is_own_stock: true,
-    master_sector_id: '',
-    master_sector_name: '',
+    isOwnStock: true,
+    masterSectorId: '',
+    masterSectorName: '',
     active: true,
   };
 
@@ -41,9 +41,9 @@ export default function Sectors() {
     try {
       const user = await User.me();
       const [sectorsData, employeesData, sectorMastersData] = await Promise.all([
-        Sector.filter({ company_id: user.company_id }, '-created_date'),
-        Employee.filter({ company_id: user.company_id, active: true }),
-        SectorMaster.filter({ company_id: user.company_id }) // Carregar Setores Master
+        Sector.filter({ companyId: user.companyId }, '-createdDate'),
+        Employee.filter({ companyId: user.companyId, active: true }),
+        SectorMaster.filter({ companyId: user.companyId }) // Carregar Setores Master
       ]);
       setSectors(sectorsData);
       setEmployees(employeesData);
@@ -82,23 +82,23 @@ export default function Sectors() {
     try {
       const user = await User.me();
       
-      const selectedEmployee = employees.find(emp => emp.id === currentSector.employee_id);
-      const selectedMasterSector = sectorMasters.find(ms => ms.id === currentSector.master_sector_id); // Use sectorMasters
+      const selectedEmployee = employees.find(emp => emp.id === currentSector.employeeId);
+      const selectedMasterSector = sectorMasters.find(ms => ms.id === currentSector.masterSectorId); // Use sectorMasters
       
       const payload = {
         ...currentSector,
-        employee_name: selectedEmployee ? selectedEmployee.name : '',
-        master_sector_id: currentSector.is_own_stock ? null : currentSector.master_sector_id,
-        master_sector_name: currentSector.is_own_stock ? null : (selectedMasterSector ? selectedMasterSector.name : ''),
-        company_id: user.company_id,
-        company_name: user.company_name
+        employeeName: selectedEmployee ? selectedEmployee.name : '',
+        masterSectorId: currentSector.isOwnStock ? null : currentSector.masterSectorId,
+        masterSectorName: currentSector.isOwnStock ? null : (selectedMasterSector ? selectedMasterSector.name : ''),
+        companyId: user.companyId,
+        companyName: user.companyName
       };
 
       if (isEditing) {
         const { id, ...sectorData } = payload;
         await Sector.update(id, sectorData);
       } else {
-        await Sector.create({ ...payload, created_by_name: user.full_name });
+        await Sector.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();
@@ -158,8 +158,8 @@ export default function Sectors() {
                   <div>
                     <Label>Funcionário Responsável</Label>
                      <Select
-                      value={currentSector.employee_id || ''}
-                      onValueChange={(value) => setCurrentSector(prev => ({ ...prev, employee_id: value }))}
+                      value={currentSector.employeeId || ''}
+                      onValueChange={(value) => setCurrentSector(prev => ({ ...prev, employeeId: value }))}
                     >
                       <SelectTrigger><SelectValue placeholder="Selecione um funcionário" /></SelectTrigger>
                       <SelectContent>
@@ -180,19 +180,19 @@ export default function Sectors() {
                   </div>
                   <div className="flex items-center space-x-2 pt-6">
                     <Switch
-                      id="is_own_stock"
-                      checked={currentSector.is_own_stock}
-                      onCheckedChange={(checked) => setCurrentSector(prev => ({ ...prev, is_own_stock: checked }))}
+                      id="isOwnStock"
+                      checked={currentSector.isOwnStock}
+                      onCheckedChange={(checked) => setCurrentSector(prev => ({ ...prev, isOwnStock: checked }))}
                     />
-                    <Label htmlFor="is_own_stock">Estoque Próprio? (Setor Master)</Label>
+                    <Label htmlFor="isOwnStock">Estoque Próprio? (Setor Master)</Label>
                   </div>
-                  {!currentSector.is_own_stock && (
+                  {!currentSector.isOwnStock && (
                     <div className="md:col-span-2">
                       <Label>Vincular ao Setor Master *</Label>
                       <Select
-                        value={currentSector.master_sector_id || ''}
-                        onValueChange={(value) => setCurrentSector(prev => ({ ...prev, master_sector_id: value }))}
-                        required={!currentSector.is_own_stock}
+                        value={currentSector.masterSectorId || ''}
+                        onValueChange={(value) => setCurrentSector(prev => ({ ...prev, masterSectorId: value }))}
+                        required={!currentSector.isOwnStock}
                       >
                         <SelectTrigger className="bg-yellow-50"><SelectValue placeholder="Selecione o setor master" /></SelectTrigger>
                         <SelectContent>
@@ -235,15 +235,15 @@ export default function Sectors() {
                 {sectors.map(sector => (
                   <TableRow key={sector.id}>
                     <TableCell className="font-medium">{sector.name}</TableCell>
-                    <TableCell>{sector.employee_name || '-'}</TableCell>
+                    <TableCell>{sector.employeeName || '-'}</TableCell>
                     <TableCell>{sector.phone || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant={sector.is_own_stock ? 'default' : 'secondary'}
-                             className={sector.is_own_stock ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}>
-                        {sector.is_own_stock ? "Próprio" : "Vinculado"}
+                      <Badge variant={sector.isOwnStock ? 'default' : 'secondary'}
+                             className={sector.isOwnStock ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}>
+                        {sector.isOwnStock ? "Próprio" : "Vinculado"}
                       </Badge>
                     </TableCell>
-                     <TableCell>{!sector.is_own_stock ? sector.master_sector_name : '-'}</TableCell>
+                     <TableCell>{!sector.isOwnStock ? sector.masterSectorName : '-'}</TableCell>
                     <TableCell>
                       <Badge variant={sector.active ? 'default' : 'outline'}
                              className={sector.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>

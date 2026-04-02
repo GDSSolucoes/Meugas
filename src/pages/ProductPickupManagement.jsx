@@ -11,7 +11,7 @@ import {
   Search, X, LogOut, Printer, ArrowDown, Trash2, ArrowRight, Check
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { base44 } from "@/api/base44Client";
+import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { Link } from "react-router-dom";
@@ -39,7 +39,7 @@ export default function ProductPickupManagement() {
   
   const [produtoInput, setProdutoInput] = useState('');
   
-  const [tipoProduto, setTipoProduto] = useState('a_retirar'); // 'a_retirar', 'retirados_entre'
+  const [tipoProduto, setTipoProduto] = useState('aRetirar'); // 'aRetirar', 'retiradosEntre'
   const [dataInicial, setDataInicial] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [dataFinal, setDataFinal] = useState(format(new Date(), 'yyyy-MM-dd'));
   
@@ -68,15 +68,15 @@ export default function ProductPickupManagement() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
       setCurrentUser(user);
       
       const [pickupsData, peopleData, productsData, salesData, sectorsData] = await Promise.all([
-        base44.entities.ProductPickup.filter({ company_id: user.company_id }, '-sale_date'),
-        base44.entities.Person.filter({ company_id: user.company_id }),
-        base44.entities.Product.filter({ company_id: user.company_id, active: true }),
-        base44.entities.Sale.filter({ company_id: user.company_id }),
-        base44.entities.Sector.filter({ company_id: user.company_id, active: true })
+        entities.ProductPickup.filter({ companyId: user.companyId }, '-saleDate'),
+        entities.Person.filter({ companyId: user.companyId }),
+        entities.Product.filter({ companyId: user.companyId, active: true }),
+        entities.Sale.filter({ companyId: user.companyId }),
+        entities.Sector.filter({ companyId: user.companyId, active: true })
       ]);
       
       setPickups(pickupsData);
@@ -101,15 +101,15 @@ export default function ProductPickupManagement() {
     
     // Filtro por cliente específico ou por tipo
     if (clienteInput) {
-      filtered = filtered.filter(p => p.person_id === clienteInput);
+      filtered = filtered.filter(p => p.personId === clienteInput);
     } else {
       // Filtrar por tipo se não há cliente específico
       filtered = filtered.filter(p => {
-        const person = people.find(per => per.id === p.person_id);
+        const person = people.find(per => per.id === p.personId);
         if (!person) return false;
         
         const isCliente = person.type === 'cliente';
-        const isPontoVenda = person.type === 'ponto_venda';
+        const isPontoVenda = person.type === 'pontoVenda';
         
         if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
         if (filtrarCliente) return isCliente;
@@ -121,19 +121,19 @@ export default function ProductPickupManagement() {
     
     // Filtro por produto
     if (produtoInput) {
-      filtered = filtered.filter(p => p.product_id === produtoInput);
+      filtered = filtered.filter(p => p.productId === produtoInput);
     }
     
     // Filtro por status do produto
-    if (tipoProduto === 'a_retirar') {
-      filtered = filtered.filter(p => p.status === 'pendente' || (p.status === 'retirado_parcial' && (p.pickup_quantity || 0) > (p.collected_quantity || 0)));
+    if (tipoProduto === 'aRetirar') {
+      filtered = filtered.filter(p => p.status === 'pendente' || (p.status === 'retiradoParcial' && (p.pickupQuantity || 0) > (p.collectedQuantity || 0)));
     } else {
       // Retirados entre datas - considera TODAS as retiradas (parciais e totais) com data
       filtered = filtered.filter(p => {
-        if (!p.collected_date) return false;
-        if ((p.collected_quantity || 0) === 0) return false;
+        if (!p.collectedDate) return false;
+        if ((p.collectedQuantity || 0) === 0) return false;
 
-        const collectedDate = parseISO(p.collected_date);
+        const collectedDate = parseISO(p.collectedDate);
         const start = startOfDay(parseISO(dataInicial));
         const end = endOfDay(parseISO(dataFinal));
 
@@ -143,17 +143,17 @@ export default function ProductPickupManagement() {
     
     // Filtro por código da venda
     if (codigoVendaInput) {
-      filtered = filtered.filter(p => p.sale_id === codigoVendaInput);
+      filtered = filtered.filter(p => p.saleId === codigoVendaInput);
     }
     
     // Calcular totais
     const aRetirar = filtered
-      .filter(p => p.status !== 'retirado_total')
-      .reduce((sum, p) => sum + ((p.pickup_quantity || 0) - (p.collected_quantity || 0)), 0);
+      .filter(p => p.status !== 'retiradoTotal')
+      .reduce((sum, p) => sum + ((p.pickupQuantity || 0) - (p.collectedQuantity || 0)), 0);
     
     const retirados = filtered
-      .filter(p => p.status === 'retirado_total')
-      .reduce((sum, p) => sum + (p.collected_quantity || 0), 0);
+      .filter(p => p.status === 'retiradoTotal')
+      .reduce((sum, p) => sum + (p.collectedQuantity || 0), 0);
     
     setTotalARetirar(aRetirar);
     setTotalRetirados(retirados);
@@ -182,7 +182,7 @@ export default function ProductPickupManagement() {
     setFiltrarPontoVenda(false);
     setClienteInput('');
     setProdutoInput('');
-    setTipoProduto('a_retirar');
+    setTipoProduto('aRetirar');
     setDataInicial(format(new Date(), 'yyyy-MM-dd'));
     setDataFinal(format(new Date(), 'yyyy-MM-dd'));
     setCodigoVendaInput('');
@@ -200,7 +200,7 @@ export default function ProductPickupManagement() {
       toast({ title: "Atenção", description: "Selecione um registro para dar baixa.", variant: "destructive" });
       return;
     }
-    if (pickupToUse.status === 'retirado_total') {
+    if (pickupToUse.status === 'retiradoTotal') {
       toast({ title: "Atenção", description: "Este produto já foi totalmente retirado.", variant: "destructive" });
       return;
     }
@@ -210,7 +210,7 @@ export default function ProductPickupManagement() {
     }
     
     // Pré-preencher campos
-    const pendente = (pickupToUse.pickup_quantity || 0) - (pickupToUse.collected_quantity || 0);
+    const pendente = (pickupToUse.pickupQuantity || 0) - (pickupToUse.collectedQuantity || 0);
     setQtdeBaixar(pendente.toString());
     setDataBaixa(format(new Date(), 'yyyy-MM-dd'));
     setSectorBaixa(sectors.length > 0 ? sectors[0].id : '');
@@ -223,7 +223,7 @@ export default function ProductPickupManagement() {
     if (!selectedPickup) return;
     
     const qtde = parseInt(qtdeBaixar) || 0;
-    const pendente = (selectedPickup.pickup_quantity || 0) - (selectedPickup.collected_quantity || 0);
+    const pendente = (selectedPickup.pickupQuantity || 0) - (selectedPickup.collectedQuantity || 0);
     
     if (qtde <= 0) {
       toast({ title: "Erro", description: "Informe uma quantidade válida.", variant: "destructive" });
@@ -246,28 +246,28 @@ export default function ProductPickupManagement() {
     }
     
     try {
-      const novaQtdeColetada = (selectedPickup.collected_quantity || 0) + qtde;
-      const totalPendente = selectedPickup.pickup_quantity || 0;
-      const novoStatus = novaQtdeColetada >= totalPendente ? 'retirado_total' : 'retirado_parcial';
+      const novaQtdeColetada = (selectedPickup.collectedQuantity || 0) + qtde;
+      const totalPendente = selectedPickup.pickupQuantity || 0;
+      const novoStatus = novaQtdeColetada >= totalPendente ? 'retiradoTotal' : 'retiradoParcial';
       
       const sector = sectors.find(s => s.id === sectorBaixa);
       
-      await base44.entities.ProductPickup.update(selectedPickup.id, {
+      await entities.ProductPickup.update(selectedPickup.id, {
         status: novoStatus,
-        collected_quantity: novaQtdeColetada,
-        collected_date: dataBaixa,
-        sector_id: sectorBaixa,
-        sector_name: sector?.name || '',
-        nota_fiscal: notaFiscal,
+        collectedQuantity: novaQtdeColetada,
+        collectedDate: dataBaixa,
+        sectorId: sectorBaixa,
+        sectorName: sector?.name || '',
+        notaFiscal: notaFiscal,
         pedido: pedido
       });
       
       // Salvar dados para impressão
-      const person = people.find(p => p.id === selectedPickup.person_id);
+      const person = people.find(p => p.id === selectedPickup.personId);
       setLastBaixaData({
-        cliente: selectedPickup.person_name,
+        cliente: selectedPickup.personName,
         clienteDoc: person?.document || '',
-        produto: selectedPickup.product_name,
+        produto: selectedPickup.productName,
         quantidade: qtde,
         data: dataBaixa,
         setor: sector?.name || '',
@@ -300,7 +300,7 @@ export default function ProductPickupManagement() {
     }
     
     try {
-      await base44.entities.ProductPickup.delete(selectedPickup.id);
+      await entities.ProductPickup.delete(selectedPickup.id);
       toast({ title: "Sucesso", description: "Registro excluído com sucesso." });
       setSelectedPickup(null);
       await loadData();
@@ -341,7 +341,7 @@ export default function ProductPickupManagement() {
       </head>
       <body>
         <div class="header">
-          <h1>${currentUser?.company_name || 'EMPRESA'}</h1>
+          <h1>${currentUser?.companyName || 'EMPRESA'}</h1>
           <p>Comprovante de Retirada de Produto</p>
           <p>Emitido em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
         </div>
@@ -453,7 +453,7 @@ export default function ProductPickupManagement() {
           <strong>Filtros:</strong> 
           Cliente: ${filtrarCliente ? 'Sim' : 'Não'} | 
           Pto. Venda: ${filtrarPontoVenda ? 'Sim' : 'Não'} |
-          Status: ${tipoProduto === 'a_retirar' ? 'A Retirar' : `Retirados de ${format(parseISO(dataInicial), 'dd/MM/yyyy')} a ${format(parseISO(dataFinal), 'dd/MM/yyyy')}`}
+          Status: ${tipoProduto === 'aRetirar' ? 'A Retirar' : `Retirados de ${format(parseISO(dataInicial), 'dd/MM/yyyy')} a ${format(parseISO(dataFinal), 'dd/MM/yyyy')}`}
         </div>
 
         <table>
@@ -470,12 +470,12 @@ export default function ProductPickupManagement() {
           <tbody>
             ${dataToPrint.map(pickup => `
               <tr>
-                <td>${pickup.sale_date ? format(parseISO(pickup.sale_date), 'dd/MM/yyyy') : '-'}</td>
-                <td>${pickup.sale_id?.slice(-6) || '-'}</td>
-                <td>${pickup.person_name || '-'}</td>
-                <td>${pickup.product_name || '-'}</td>
-                <td>${pickup.pickup_quantity || 0}</td>
-                <td>${(pickup.pickup_quantity || 0) - (pickup.collected_quantity || 0)}</td>
+                <td>${pickup.saleDate ? format(parseISO(pickup.saleDate), 'dd/MM/yyyy') : '-'}</td>
+                <td>${pickup.saleId?.slice(-6) || '-'}</td>
+                <td>${pickup.personName || '-'}</td>
+                <td>${pickup.productName || '-'}</td>
+                <td>${pickup.pickupQuantity || 0}</td>
+                <td>${(pickup.pickupQuantity || 0) - (pickup.collectedQuantity || 0)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -495,7 +495,7 @@ export default function ProductPickupManagement() {
 
   const filteredPeople = people.filter(p => {
     const isCliente = p.type === 'cliente';
-    const isPontoVenda = p.type === 'ponto_venda';
+    const isPontoVenda = p.type === 'pontoVenda';
     
     if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
     if (filtrarCliente) return isCliente;
@@ -524,19 +524,19 @@ export default function ProductPickupManagement() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox 
-                      id="filtro_cliente" 
+                      id="filtroCliente" 
                       checked={filtrarCliente}
                       onCheckedChange={setFiltrarCliente}
                     />
-                    <Label htmlFor="filtro_cliente" className="text-sm font-normal">Cliente</Label>
+                    <Label htmlFor="filtroCliente" className="text-sm font-normal">Cliente</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox 
-                      id="filtro_pdv" 
+                      id="filtroPdv" 
                       checked={filtrarPontoVenda}
                       onCheckedChange={setFiltrarPontoVenda}
                     />
-                    <Label htmlFor="filtro_pdv" className="text-sm font-normal">Pto. Venda</Label>
+                    <Label htmlFor="filtroPdv" className="text-sm font-normal">Pto. Venda</Label>
                   </div>
                 </div>
                 
@@ -574,12 +574,12 @@ export default function ProductPickupManagement() {
                   <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Produtos</h4>
                   <RadioGroup value={tipoProduto} onValueChange={setTipoProduto}>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="a_retirar" id="prod_retirar" />
-                      <Label htmlFor="prod_retirar" className="text-sm font-normal">A retirar</Label>
+                      <RadioGroupItem value="aRetirar" id="prodRetirar" />
+                      <Label htmlFor="prodRetirar" className="text-sm font-normal">A retirar</Label>
                     </div>
                     <div className="flex items-center space-x-2 mb-2">
-                      <RadioGroupItem value="retirados_entre" id="prod_retirados" />
-                      <Label htmlFor="prod_retirados" className="text-sm font-normal">Retirados entre</Label>
+                      <RadioGroupItem value="retiradosEntre" id="prodRetirados" />
+                      <Label htmlFor="prodRetirados" className="text-sm font-normal">Retirados entre</Label>
                     </div>
                   </RadioGroup>
                   
@@ -588,7 +588,7 @@ export default function ProductPickupManagement() {
                       type="date"
                       value={dataInicial}
                       onChange={(e) => setDataInicial(e.target.value)}
-                      disabled={tipoProduto !== 'retirados_entre'}
+                      disabled={tipoProduto !== 'retiradosEntre'}
                       className="h-8 text-sm w-36"
                     />
                     <span className="text-sm text-slate-600">e</span>
@@ -596,7 +596,7 @@ export default function ProductPickupManagement() {
                       type="date"
                       value={dataFinal}
                       onChange={(e) => setDataFinal(e.target.value)}
-                      disabled={tipoProduto !== 'retirados_entre'}
+                      disabled={tipoProduto !== 'retiradosEntre'}
                       className="h-8 text-sm w-36"
                     />
                   </div>
@@ -606,7 +606,7 @@ export default function ProductPickupManagement() {
                   <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Código da Venda</h4>
                   <div className="flex items-center gap-2">
                     <Input
-                      value={codigoVendaInput ? sales.find(s => s.id === codigoVendaInput)?.sale_number || '' : ''}
+                      value={codigoVendaInput ? sales.find(s => s.id === codigoVendaInput)?.saleNumber || '' : ''}
                       onChange={() => {}}
                       placeholder={!codigoVendaInput ? "Todas" : ""}
                       className={`h-8 text-sm flex-1 cursor-pointer ${!codigoVendaInput ? 'placeholder:text-red-500' : ''} ${activeCaixa === 'venda' ? 'ring-2 ring-blue-500' : ''}`}
@@ -647,7 +647,7 @@ export default function ProductPickupManagement() {
                         <TableHead className="text-xs">Cliente / Pto. Venda</TableHead>
                         <TableHead className="text-xs w-40">Produto</TableHead>
                         <TableHead className="text-xs w-20 text-center">Vend.</TableHead>
-                        {tipoProduto === 'a_retirar' ? (
+                        {tipoProduto === 'aRetirar' ? (
                           <TableHead className="text-xs w-20 text-center">A Ret.</TableHead>
                         ) : (
                           <>
@@ -678,24 +678,24 @@ export default function ProductPickupManagement() {
                             onDoubleClick={() => handleBaixar(pickup)}
                           >
                             <TableCell className="text-xs">
-                              {pickup.sale_date ? format(parseISO(pickup.sale_date), 'dd/MM/yyyy') : '-'}
+                              {pickup.saleDate ? format(parseISO(pickup.saleDate), 'dd/MM/yyyy') : '-'}
                             </TableCell>
-                            <TableCell className="text-xs font-mono">{pickup.sale_id?.slice(-6) || '-'}</TableCell>
-                            <TableCell className="text-xs">{pickup.person_name || '-'}</TableCell>
-                            <TableCell className="text-xs">{pickup.product_name || '-'}</TableCell>
-                            <TableCell className="text-xs text-center">{pickup.pickup_quantity || 0}</TableCell>
-                            {tipoProduto === 'a_retirar' ? (
+                            <TableCell className="text-xs font-mono">{pickup.saleId?.slice(-6) || '-'}</TableCell>
+                            <TableCell className="text-xs">{pickup.personName || '-'}</TableCell>
+                            <TableCell className="text-xs">{pickup.productName || '-'}</TableCell>
+                            <TableCell className="text-xs text-center">{pickup.pickupQuantity || 0}</TableCell>
+                            {tipoProduto === 'aRetirar' ? (
                               <TableCell className="text-xs text-center">
-                                {(pickup.pickup_quantity || 0) - (pickup.collected_quantity || 0)}
+                                {(pickup.pickupQuantity || 0) - (pickup.collectedQuantity || 0)}
                               </TableCell>
                             ) : (
                               <>
-                                <TableCell className="text-xs text-center">{pickup.collected_quantity || 0}</TableCell>
+                                <TableCell className="text-xs text-center">{pickup.collectedQuantity || 0}</TableCell>
                                 <TableCell className="text-xs">
-                                  {pickup.collected_date ? format(parseISO(pickup.collected_date), 'dd/MM/yyyy') : '-'}
+                                  {pickup.collectedDate ? format(parseISO(pickup.collectedDate), 'dd/MM/yyyy') : '-'}
                                 </TableCell>
                                 <TableCell className="text-xs text-center">
-                                  {(pickup.pickup_quantity || 0) - (pickup.collected_quantity || 0)}
+                                  {(pickup.pickupQuantity || 0) - (pickup.collectedQuantity || 0)}
                                 </TableCell>
                               </>
                             )}
@@ -814,7 +814,7 @@ export default function ProductPickupManagement() {
                   <Input 
                     type="number"
                     min="1"
-                    max={(selectedPickup.pickup_quantity || 0) - (selectedPickup.collected_quantity || 0)}
+                    max={(selectedPickup.pickupQuantity || 0) - (selectedPickup.collectedQuantity || 0)}
                     value={qtdeBaixar}
                     onChange={(e) => setQtdeBaixar(e.target.value)}
                     className="h-9 mt-1"
@@ -920,7 +920,7 @@ export default function ProductPickupManagement() {
                           setSearchTerm('');
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{p.person_number || p.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">{p.personNumber || p.id?.slice(-6)}</TableCell>
                         <TableCell className="text-xs">{p.name}</TableCell>
                         <TableCell className="text-xs">{p.type === 'cliente' ? 'Cliente' : 'Pto. Venda'}</TableCell>
                         <TableCell className="text-xs">{p.phone?.[0] || '-'}</TableCell>
@@ -1054,8 +1054,8 @@ export default function ProductPickupManagement() {
                     .filter(s => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return s.sale_number?.toLowerCase().includes(term) || 
-                             s.person_name?.toLowerCase().includes(term);
+                      return s.saleNumber?.toLowerCase().includes(term) || 
+                             s.personName?.toLowerCase().includes(term);
                     })
                     .slice(0, 50)
                     .map(s => (
@@ -1068,9 +1068,9 @@ export default function ProductPickupManagement() {
                           setSearchTerm('');
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{s.sale_number}</TableCell>
-                        <TableCell className="text-xs">{s.person_name}</TableCell>
-                        <TableCell className="text-xs">{s.sale_date ? format(parseISO(s.sale_date), 'dd/MM/yyyy') : '-'}</TableCell>
+                        <TableCell className="text-xs font-mono">{s.saleNumber}</TableCell>
+                        <TableCell className="text-xs">{s.personName}</TableCell>
+                        <TableCell className="text-xs">{s.saleDate ? format(parseISO(s.saleDate), 'dd/MM/yyyy') : '-'}</TableCell>
                       </TableRow>
                     ))}
                 </TableBody>

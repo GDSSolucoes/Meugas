@@ -26,11 +26,11 @@ export default function Employees() {
     phone: '',
     position: '',
     salary: 0,
-    hire_date: format(new Date(), 'yyyy-MM-dd'),
-    vacation_start: '',
-    vacation_end: '',
+    hireDate: format(new Date(), 'yyyy-MM-dd'),
+    vacationStart: '',
+    vacationEnd: '',
     active: true,
-    created_by_name: ''
+    createdByName: ''
   };
   
   const [currentEmployee, setCurrentEmployee] = useState(initialEmployeeState);
@@ -42,7 +42,7 @@ export default function Employees() {
   const loadData = async () => {
     try {
       const user = await User.me();
-      const employeesData = await Employee.filter({ company_id: user.company_id }, '-created_date');
+      const employeesData = await Employee.filter({ companyId: user.companyId }, '-createdDate');
       setEmployees(employeesData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -54,9 +54,9 @@ export default function Employees() {
     setIsEditing(true);
     setCurrentEmployee({
       ...employee,
-      hire_date: employee.hire_date ? format(parseISO(employee.hire_date), 'yyyy-MM-dd') : '',
-      vacation_start: employee.vacation_start ? format(parseISO(employee.vacation_start), 'yyyy-MM-dd') : '',
-      vacation_end: employee.vacation_end ? format(parseISO(employee.vacation_end), 'yyyy-MM-dd') : ''
+      hireDate: employee.hireDate ? format(parseISO(employee.hireDate), 'yyyy-MM-dd') : '',
+      vacationStart: employee.vacationStart ? format(parseISO(employee.vacationStart), 'yyyy-MM-dd') : '',
+      vacationEnd: employee.vacationEnd ? format(parseISO(employee.vacationEnd), 'yyyy-MM-dd') : ''
     });
     setShowForm(true);
   };
@@ -83,9 +83,9 @@ export default function Employees() {
       const employeeData = {
         ...currentEmployee,
         salary: Number(currentEmployee.salary) || 0,
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
       if (isEditing) {
@@ -230,8 +230,8 @@ export default function Employees() {
                     <Label>Data de Contratação</Label>
                     <Input
                       type="date"
-                      value={currentEmployee.hire_date}
-                      onChange={(e) => setCurrentEmployee(prev => ({ ...prev, hire_date: e.target.value }))}
+                      value={currentEmployee.hireDate}
+                      onChange={(e) => setCurrentEmployee(prev => ({ ...prev, hireDate: e.target.value }))}
                       className="bg-white/80"
                     />
                   </div>
@@ -259,8 +259,8 @@ export default function Employees() {
                       <Label>Início das Férias</Label>
                       <Input
                         type="date"
-                        value={currentEmployee.vacation_start}
-                        onChange={(e) => setCurrentEmployee(prev => ({ ...prev, vacation_start: e.target.value }))}
+                        value={currentEmployee.vacationStart}
+                        onChange={(e) => setCurrentEmployee(prev => ({ ...prev, vacationStart: e.target.value }))}
                         className="bg-white/80"
                       />
                     </div>
@@ -268,8 +268,8 @@ export default function Employees() {
                       <Label>Final das Férias</Label>
                       <Input
                         type="date"
-                        value={currentEmployee.vacation_end}
-                        onChange={(e) => setCurrentEmployee(prev => ({ ...prev, vacation_end: e.target.value }))}
+                        value={currentEmployee.vacationEnd}
+                        onChange={(e) => setCurrentEmployee(prev => ({ ...prev, vacationEnd: e.target.value }))}
                         className="bg-white/80"
                       />
                     </div>
@@ -317,15 +317,15 @@ export default function Employees() {
                         <TableCell>{employee.phone || '-'}</TableCell>
                         <TableCell>{getStatusBadge(employee.active)}</TableCell>
                         <TableCell>
-                          {employee.vacation_start && employee.vacation_end ? (
+                          {employee.vacationStart && employee.vacationEnd ? (
                             <span className="text-sm">
-                              {format(parseISO(employee.vacation_start), 'dd/MM/yyyy')} até {format(parseISO(employee.vacation_end), 'dd/MM/yyyy')}
+                              {format(parseISO(employee.vacationStart), 'dd/MM/yyyy')} até {format(parseISO(employee.vacationEnd), 'dd/MM/yyyy')}
                             </span>
                           ) : (
                             <span className="text-slate-400">Não definido</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500">{employee.created_by_name}</TableCell>
+                        <TableCell className="text-xs text-slate-500">{employee.createdByName}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(employee)} className="mr-2 hover:bg-blue-100">
                             <Edit className="w-4 h-4 text-blue-600" />

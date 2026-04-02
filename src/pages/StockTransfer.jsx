@@ -34,17 +34,17 @@ export default function StockTransferPage() {
   const [showForm, setShowForm] = useState(false);
 
   const initialTransferState = {
-    transfer_number: `TRF-${Date.now()}`,
-    product_id: '',
-    product_name: '',
-    from_sector_id: '',
-    from_sector_name: '',
-    to_sector_id: '',
-    to_sector_name: '',
+    transferNumber: `TRF-${Date.now()}`,
+    productId: '',
+    productName: '',
+    fromSectorId: '',
+    fromSectorName: '',
+    toSectorId: '',
+    toSectorName: '',
     quantity: 1,
-    transfer_date: format(new Date(), 'yyyy-MM-dd'),
+    transferDate: format(new Date(), 'yyyy-MM-dd'),
     notes: '',
-    created_by_name: ''
+    createdByName: ''
   };
 
   const [currentTransfer, setCurrentTransfer] = useState(initialTransferState);
@@ -65,7 +65,7 @@ export default function StockTransferPage() {
       ] = await Promise.all([
         Product.list().then(products => products.filter(p => p.active === true)),
         Sector.list().then(sectors => sectors.filter(s => s.active === true)),
-        StockTransfer.list('-created_date'),
+        StockTransfer.list('-createdDate'),
         ProductStock.list(),
         Sale.list(),
         Purchase.list(),
@@ -102,20 +102,20 @@ export default function StockTransferPage() {
     if (!productId || !sectorId) return 0;
 
     // 1. Estoque inicial registrado na ProductStock
-    const stockEntry = productStocks.find(s => s.product_id === productId && s.sector_id === sectorId);
+    const stockEntry = productStocks.find(s => s.productId === productId && s.sectorId === sectorId);
     let currentStock = stockEntry ? (stockEntry.quantity || 0) : 0;
-    const stockStartDate = stockEntry && stockEntry.initial_date ? parseISO(stockEntry.initial_date) : new Date(0); // Use epoch if no initial_date
+    const stockStartDate = stockEntry && stockEntry.initialDate ? parseISO(stockEntry.initialDate) : new Date(0); // Use epoch if no initialDate
 
     // 2. Somar compras (entrada)
     const purchases = allPurchases.filter(p =>
-      p.sector_id === sectorId &&
+      p.sectorId === sectorId &&
       p.items &&
-      p.items.some(i => i.product_id === productId) &&
-      parseISO(p.purchase_date) >= stockStartDate
+      p.items.some(i => i.productId === productId) &&
+      parseISO(p.purchaseDate) >= stockStartDate
     );
 
     purchases.forEach(purchase => {
-      const purchaseItems = purchase.items.filter(i => i.product_id === productId);
+      const purchaseItems = purchase.items.filter(i => i.productId === productId);
       purchaseItems.forEach(item => {
         currentStock += item.quantity || 0;
       });
@@ -123,14 +123,14 @@ export default function StockTransferPage() {
 
     // 3. Subtrair vendas (saída)
     const sales = allSales.filter(s =>
-      s.sector_id === sectorId &&
+      s.sectorId === sectorId &&
       s.items &&
-      s.items.some(i => i.product_id === productId) &&
-      parseISO(s.sale_date) >= stockStartDate
+      s.items.some(i => i.productId === productId) &&
+      parseISO(s.saleDate) >= stockStartDate
     );
 
     sales.forEach(sale => {
-      const saleItems = sale.items.filter(i => i.product_id === productId);
+      const saleItems = sale.items.filter(i => i.productId === productId);
       saleItems.forEach(item => {
         currentStock -= item.quantity || 0;
       });
@@ -138,15 +138,15 @@ export default function StockTransferPage() {
 
     // 4. Considerar transferências
     const transfersToSector = transfers.filter(t =>
-      t.product_id === productId &&
-      t.to_sector_id === sectorId &&
-      parseISO(t.transfer_date) >= stockStartDate
+      t.productId === productId &&
+      t.toSectorId === sectorId &&
+      parseISO(t.transferDate) >= stockStartDate
     );
 
     const transfersFromSector = transfers.filter(t =>
-      t.product_id === productId &&
-      t.from_sector_id === sectorId &&
-      parseISO(t.transfer_date) >= stockStartDate
+      t.productId === productId &&
+      t.fromSectorId === sectorId &&
+      parseISO(t.transferDate) >= stockStartDate
     );
 
     transfersToSector.forEach(transfer => {
@@ -159,27 +159,27 @@ export default function StockTransferPage() {
 
     // 5. Subtrair empréstimos de vasilhame (saída)
     const loans = allLoans.filter(l =>
-      l.vasilhame_id === productId &&
-      parseISO(l.loan_date) >= stockStartDate
+      l.vasilhameId === productId &&
+      parseISO(l.loanDate) >= stockStartDate
     );
 
     loans.forEach(loan => {
-      const sale = allSales.find(s => s.id === loan.sale_id);
-      if (sale && sale.sector_id === sectorId) { // Ensure loan is from this sector's sales
-        currentStock -= loan.loan_quantity || 0;
+      const sale = allSales.find(s => s.id === loan.saleId);
+      if (sale && sale.sectorId === sectorId) { // Ensure loan is from this sector's sales
+        currentStock -= loan.loanQuantity || 0;
       }
     });
 
     // 6. Subtrair retiradas de produtos (saída)
     const pickups = allPickups.filter(p =>
-      p.product_id === productId &&
-      parseISO(p.sale_date) >= stockStartDate
+      p.productId === productId &&
+      parseISO(p.saleDate) >= stockStartDate
     );
 
     pickups.forEach(pickup => {
-      const sale = allSales.find(s => s.id === pickup.sale_id);
-      if (sale && sale.sector_id === sectorId) { // Ensure pickup is from this sector's sales
-        currentStock -= pickup.collected_quantity || 0;
+      const sale = allSales.find(s => s.id === pickup.saleId);
+      if (sale && sale.sectorId === sectorId) { // Ensure pickup is from this sector's sales
+        currentStock -= pickup.collectedQuantity || 0;
       }
     });
 
@@ -188,20 +188,20 @@ export default function StockTransferPage() {
 
   // Atualizar estoque disponível quando produto ou setor origem mudar
   useEffect(() => {
-    if (currentTransfer.product_id && currentTransfer.from_sector_id) {
-      const realStock = calculateRealStock(currentTransfer.product_id, currentTransfer.from_sector_id);
+    if (currentTransfer.productId && currentTransfer.fromSectorId) {
+      const realStock = calculateRealStock(currentTransfer.productId, currentTransfer.fromSectorId);
       setAvailableStock(realStock);
     } else {
       setAvailableStock(0);
     }
-  }, [currentTransfer.product_id, currentTransfer.from_sector_id, calculateRealStock]);
+  }, [currentTransfer.productId, currentTransfer.fromSectorId, calculateRealStock]);
 
   const handleProductChange = (productId) => {
     const product = products.find(p => p.id === productId);
     setCurrentTransfer(prev => ({
       ...prev,
-      product_id: productId,
-      product_name: product ? product.name : ''
+      productId: productId,
+      productName: product ? product.name : ''
     }));
   };
 
@@ -209,8 +209,8 @@ export default function StockTransferPage() {
     const sector = sectors.find(s => s.id === sectorId);
     setCurrentTransfer(prev => ({
       ...prev,
-      from_sector_id: sectorId,
-      from_sector_name: sector ? sector.name : ''
+      fromSectorId: sectorId,
+      fromSectorName: sector ? sector.name : ''
     }));
   };
 
@@ -218,8 +218,8 @@ export default function StockTransferPage() {
     const sector = sectors.find(s => s.id === sectorId);
     setCurrentTransfer(prev => ({
       ...prev,
-      to_sector_id: sectorId,
-      to_sector_name: sector ? sector.name : ''
+      toSectorId: sectorId,
+      toSectorName: sector ? sector.name : ''
     }));
   };
 
@@ -227,7 +227,7 @@ export default function StockTransferPage() {
     e.preventDefault();
 
     // Validações
-    if (currentTransfer.from_sector_id === currentTransfer.to_sector_id) {
+    if (currentTransfer.fromSectorId === currentTransfer.toSectorId) {
       toast({
         title: "Erro",
         description: "Os setores de origem e destino não podem ser iguais.",
@@ -258,7 +258,7 @@ export default function StockTransferPage() {
       const user = await User.me();
       const transferData = {
         ...currentTransfer,
-        created_by_name: user.full_name
+        createdByName: user.fullName
       };
 
       // 1. Registrar a transferência
@@ -266,8 +266,8 @@ export default function StockTransferPage() {
 
       // 2. Atualizar estoque do setor de origem (diminuir)
       const fromStockEntry = productStocks.find(
-        s => s.product_id === currentTransfer.product_id &&
-             s.sector_id === currentTransfer.from_sector_id
+        s => s.productId === currentTransfer.productId &&
+             s.sectorId === currentTransfer.fromSectorId
       );
 
       if (fromStockEntry) {
@@ -276,20 +276,20 @@ export default function StockTransferPage() {
       } else {
          // Should not happen if availableStock > 0 and stock entry exists, but as a fallback
         await ProductStock.create({
-          product_id: currentTransfer.product_id,
-          product_name: currentTransfer.product_name,
-          sector_id: currentTransfer.from_sector_id,
-          sector_name: currentTransfer.from_sector_name,
+          productId: currentTransfer.productId,
+          productName: currentTransfer.productName,
+          sectorId: currentTransfer.fromSectorId,
+          sectorName: currentTransfer.fromSectorName,
           quantity: -currentTransfer.quantity, // Negative quantity as it's a deduction from a non-existent entry (conceptually)
-          initial_date: currentTransfer.transfer_date,
-          created_by_name: user.full_name
+          initialDate: currentTransfer.transferDate,
+          createdByName: user.fullName
         });
       }
 
       // 3. Atualizar estoque do setor de destino (aumentar)
       const toStockEntry = productStocks.find(
-        s => s.product_id === currentTransfer.product_id &&
-             s.sector_id === currentTransfer.to_sector_id
+        s => s.productId === currentTransfer.productId &&
+             s.sectorId === currentTransfer.toSectorId
       );
 
       if (toStockEntry) {
@@ -298,13 +298,13 @@ export default function StockTransferPage() {
       } else {
         // Criar nova entrada de estoque no setor destino
         await ProductStock.create({
-          product_id: currentTransfer.product_id,
-          product_name: currentTransfer.product_name,
-          sector_id: currentTransfer.to_sector_id,
-          sector_name: currentTransfer.to_sector_name,
+          productId: currentTransfer.productId,
+          productName: currentTransfer.productName,
+          sectorId: currentTransfer.toSectorId,
+          sectorName: currentTransfer.toSectorName,
           quantity: currentTransfer.quantity,
-          initial_date: currentTransfer.transfer_date,
-          created_by_name: user.full_name
+          initialDate: currentTransfer.transferDate,
+          createdByName: user.fullName
         });
       }
 
@@ -330,7 +330,7 @@ export default function StockTransferPage() {
   const resetForm = () => {
     setCurrentTransfer({
       ...initialTransferState,
-      transfer_number: `TRF-${Date.now()}`
+      transferNumber: `TRF-${Date.now()}`
     });
     setShowForm(false);
   };
@@ -367,7 +367,7 @@ export default function StockTransferPage() {
                   <div>
                     <Label>Setor de Origem *</Label>
                     <Select
-                      value={currentTransfer.from_sector_id}
+                      value={currentTransfer.fromSectorId}
                       onValueChange={handleFromSectorChange}
                     >
                       <SelectTrigger className="bg-white/80">
@@ -376,7 +376,7 @@ export default function StockTransferPage() {
                       <SelectContent>
                         {sectors.map(sector => (
                           <SelectItem key={sector.id} value={sector.id}>
-                            {sector.name} {sector.is_main ? '(Principal)' : ''}
+                            {sector.name} {sector.isMain ? '(Principal)' : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -386,7 +386,7 @@ export default function StockTransferPage() {
                   <div>
                     <Label>Setor de Destino *</Label>
                     <Select
-                      value={currentTransfer.to_sector_id}
+                      value={currentTransfer.toSectorId}
                       onValueChange={handleToSectorChange}
                     >
                       <SelectTrigger className="bg-white/80">
@@ -394,10 +394,10 @@ export default function StockTransferPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {sectors
-                          .filter(sector => sector.id !== currentTransfer.from_sector_id)
+                          .filter(sector => sector.id !== currentTransfer.fromSectorId)
                           .map(sector => (
                             <SelectItem key={sector.id} value={sector.id}>
-                              {sector.name} {sector.is_main ? '(Principal)' : ''}
+                              {sector.name} {sector.isMain ? '(Principal)' : ''}
                             </SelectItem>
                           ))}
                       </SelectContent>
@@ -407,7 +407,7 @@ export default function StockTransferPage() {
                   <div>
                     <Label>Produto *</Label>
                     <Select
-                      value={currentTransfer.product_id}
+                      value={currentTransfer.productId}
                       onValueChange={handleProductChange}
                     >
                       <SelectTrigger className="bg-white/80">
@@ -427,10 +427,10 @@ export default function StockTransferPage() {
                     <Label>Data da Transferência *</Label>
                     <Input
                       type="date"
-                      value={currentTransfer.transfer_date}
+                      value={currentTransfer.transferDate}
                       onChange={(e) => setCurrentTransfer(prev => ({
                         ...prev,
-                        transfer_date: e.target.value
+                        transferDate: e.target.value
                       }))}
                       className="bg-white/80"
                       required
@@ -438,7 +438,7 @@ export default function StockTransferPage() {
                   </div>
                 </div>
 
-                {currentTransfer.product_id && currentTransfer.from_sector_id && (
+                {currentTransfer.productId && currentTransfer.fromSectorId && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertCircle className="w-5 h-5 text-blue-600" />
@@ -532,27 +532,27 @@ export default function StockTransferPage() {
                     transfers.map((transfer) => (
                       <TableRow key={transfer.id}>
                         <TableCell className="font-medium">
-                          {transfer.transfer_number}
+                          {transfer.transferNumber}
                         </TableCell>
                         <TableCell>
-                          {format(new Date(transfer.transfer_date), 'dd/MM/yyyy')}
+                          {format(new Date(transfer.transferDate), 'dd/MM/yyyy')}
                         </TableCell>
-                        <TableCell>{transfer.product_name}</TableCell>
+                        <TableCell>{transfer.productName}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                            {transfer.from_sector_name}
+                            {transfer.fromSectorName}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            {transfer.to_sector_name}
+                            {transfer.toSectorName}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
                           {transfer.quantity}
                         </TableCell>
                         <TableCell className="text-sm text-slate-600">
-                          {transfer.created_by_name}
+                          {transfer.createdByName}
                         </TableCell>
                         <TableCell className="text-sm">
                           {transfer.notes || '-'}

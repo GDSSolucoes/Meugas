@@ -2,7 +2,7 @@ import { BaseEntity } from './BaseEntity';
 
 export enum OrdersStatusEnum {
   PENDENTE = 'pendente',
-  EM_ATENDIMENTO = 'em_atendimento',
+  EM_ATENDIMENTO = 'emAtendimento',
   FINALIZADO = 'finalizado',
   CANCELADO = 'cancelado',
 }
@@ -105,10 +105,10 @@ export class Order extends BaseEntity {
    * Filter orders by company with optional status filter
    */
   static async filterByCompany(
-    filters: { company_id?: string; status?: OrdersStatusEnum; [key: string]: any } = {}
+    filters: { companyId?: string; status?: OrdersStatusEnum; [key: string]: any } = {}
   ): Promise<Order[]> {
-    if (!filters.company_id) {
-      throw new Error('company_id é obrigatório para filtrar pedidos');
+    if (!filters.companyId) {
+      throw new Error('companyId é obrigatório para filtrar pedidos');
     }
     return super.filter.call(this, filters) as Promise<Order[]>;
   }

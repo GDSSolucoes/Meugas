@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, FileText, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Facilitadores() {
@@ -21,14 +21,14 @@ export default function Facilitadores() {
 
   const initialFacilitadorState = {
     nome: '',
-    modelo_fiscal: '55',
-    tipo_operacao: 'venda',
+    modeloFiscal: '55',
+    tipoOperacao: 'venda',
     cfop: '5102',
-    regime_tributario: 'simples_nacional',
-    icms_situacao_tributaria: '102',
-    pis_situacao_tributaria: '07',
-    cofins_situacao_tributaria: '07',
-    ipi_situacao_tributaria: '',
+    regimeTributario: 'simplesNacional',
+    icmsSituacaoTributaria: '102',
+    pisSituacaoTributaria: '07',
+    cofinsSituacaoTributaria: '07',
+    ipiSituacaoTributaria: '',
     observacoes: '',
     ativo: true
   };
@@ -38,12 +38,12 @@ export default function Facilitadores() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
       setCurrentUser(user);
 
-      const data = await base44.entities.Facilitador.filter(
-        { company_id: user.company_id },
-        '-created_date'
+      const data = await entities.Facilitador.filter(
+        { companyId: user.companyId },
+        '-createdDate'
       );
       setFacilitadores(data);
     } catch (error) {
@@ -71,7 +71,7 @@ export default function Facilitadores() {
   const handleDelete = async (facilitadorId) => {
     if (window.confirm("Tem certeza que deseja excluir este facilitador?")) {
       try {
-        await base44.entities.Facilitador.delete(facilitadorId);
+        await entities.Facilitador.delete(facilitadorId);
         loadData();
         toast({
           title: "Sucesso",
@@ -94,20 +94,20 @@ export default function Facilitadores() {
     try {
       const facilitadorData = {
         ...currentFacilitador,
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       };
 
       if (isEditing) {
         const { id, ...dataToUpdate } = facilitadorData;
-        await base44.entities.Facilitador.update(id, dataToUpdate);
+        await entities.Facilitador.update(id, dataToUpdate);
         toast({
           title: "Sucesso",
           description: "Facilitador atualizado com sucesso."
         });
       } else {
-        await base44.entities.Facilitador.create(facilitadorData);
+        await entities.Facilitador.create(facilitadorData);
         toast({
           title: "Sucesso",
           description: "Facilitador cadastrado com sucesso."
@@ -204,8 +204,8 @@ export default function Facilitadores() {
                   <div>
                     <Label>Modelo Fiscal *</Label>
                     <Select
-                      value={currentFacilitador.modelo_fiscal}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, modelo_fiscal: value }))}
+                      value={currentFacilitador.modeloFiscal}
+                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, modeloFiscal: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -220,8 +220,8 @@ export default function Facilitadores() {
                   <div>
                     <Label>Tipo de Operação *</Label>
                     <Select
-                      value={currentFacilitador.tipo_operacao}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, tipo_operacao: value }))}
+                      value={currentFacilitador.tipoOperacao}
+                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, tipoOperacao: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -254,16 +254,16 @@ export default function Facilitadores() {
                   <div>
                     <Label>Regime Tributário *</Label>
                     <Select
-                      value={currentFacilitador.regime_tributario}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, regime_tributario: value }))}
+                      value={currentFacilitador.regimeTributario}
+                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, regimeTributario: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="simples_nacional">Simples Nacional</SelectItem>
-                        <SelectItem value="lucro_presumido">Lucro Presumido</SelectItem>
-                        <SelectItem value="lucro_real">Lucro Real</SelectItem>
+                        <SelectItem value="simplesNacional">Simples Nacional</SelectItem>
+                        <SelectItem value="lucroPresumido">Lucro Presumido</SelectItem>
+                        <SelectItem value="lucroReal">Lucro Real</SelectItem>
                         <SelectItem value="mei">MEI</SelectItem>
                       </SelectContent>
                     </Select>
@@ -272,8 +272,8 @@ export default function Facilitadores() {
                   <div>
                     <Label>CST ICMS *</Label>
                     <Input
-                      value={currentFacilitador.icms_situacao_tributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, icms_situacao_tributaria: e.target.value }))}
+                      value={currentFacilitador.icmsSituacaoTributaria}
+                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, icmsSituacaoTributaria: e.target.value }))}
                       placeholder="102"
                       required
                     />
@@ -285,8 +285,8 @@ export default function Facilitadores() {
                   <div>
                     <Label>CST PIS *</Label>
                     <Input
-                      value={currentFacilitador.pis_situacao_tributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, pis_situacao_tributaria: e.target.value }))}
+                      value={currentFacilitador.pisSituacaoTributaria}
+                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, pisSituacaoTributaria: e.target.value }))}
                       placeholder="07"
                       required
                     />
@@ -295,8 +295,8 @@ export default function Facilitadores() {
                   <div>
                     <Label>CST COFINS *</Label>
                     <Input
-                      value={currentFacilitador.cofins_situacao_tributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, cofins_situacao_tributaria: e.target.value }))}
+                      value={currentFacilitador.cofinsSituacaoTributaria}
+                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, cofinsSituacaoTributaria: e.target.value }))}
                       placeholder="07"
                       required
                     />
@@ -305,8 +305,8 @@ export default function Facilitadores() {
                   <div>
                     <Label>CST IPI (Opcional)</Label>
                     <Input
-                      value={currentFacilitador.ipi_situacao_tributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, ipi_situacao_tributaria: e.target.value }))}
+                      value={currentFacilitador.ipiSituacaoTributaria}
+                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, ipiSituacaoTributaria: e.target.value }))}
                       placeholder="53"
                     />
                   </div>
@@ -373,10 +373,10 @@ export default function Facilitadores() {
                   {facilitadores.map(facilitador => (
                     <TableRow key={facilitador.id}>
                       <TableCell className="font-medium">{facilitador.nome}</TableCell>
-                      <TableCell>{getModeloBadge(facilitador.modelo_fiscal)}</TableCell>
+                      <TableCell>{getModeloBadge(facilitador.modeloFiscal)}</TableCell>
                       <TableCell>{facilitador.cfop}</TableCell>
-                      <TableCell className="text-xs">{facilitador.regime_tributario}</TableCell>
-                      <TableCell>{facilitador.icms_situacao_tributaria}</TableCell>
+                      <TableCell className="text-xs">{facilitador.regimeTributario}</TableCell>
+                      <TableCell>{facilitador.icmsSituacaoTributaria}</TableCell>
                       <TableCell>{getStatusBadge(facilitador.ativo)}</TableCell>
                       <TableCell className="text-right">
                         <Button

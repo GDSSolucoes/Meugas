@@ -10,7 +10,7 @@ import {
   Plus, Search, Trash2, Edit2,
   Save, X, Printer
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import * as entities from "@/entities";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,28 +23,28 @@ import {
 } from "@/components/ui/dialog";
 
 const initialSaleState = {
-  sale_number: '',
-  person_id: '',
-  person_name: '',
-  sector_id: '',
-  sector_name: '',
+  saleNumber: '',
+  personId: '',
+  personName: '',
+  sectorId: '',
+  sectorName: '',
   status: 'concluida',
-  sale_date: format(new Date(), 'yyyy-MM-dd'),
+  saleDate: format(new Date(), 'yyyy-MM-dd'),
   notes: '',
   items: [],
-  payment_methods: [], // Initial state is empty, PaymentModal will add first one if needed
-  total_amount: 0,
-  created_by_name: '',
-  order_id: null,
-  order_number: null,
-  conveniada_id: '',
-  conveniada_name: ''
+  paymentMethods: [], // Initial state is empty, PaymentModal will add first one if needed
+  totalAmount: 0,
+  createdByName: '',
+  orderId: null,
+  orderNumber: null,
+  conveniadaId: '',
+  conveniadaName: ''
 };
 
 // Helper function to generate installment details
 const generateInstallmentDetails = (paymentMethod, paymentTypes, saleDate) => {
-  const paymentType = paymentTypes.find(pt => pt.id === paymentMethod.payment_type_id);
-  const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
+  const paymentType = paymentTypes.find(pt => pt.id === paymentMethod.paymentTypeId);
+  const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
   const amount = parseFloat(paymentMethod.amount) || 0;
   const installments = parseInt(paymentMethod.installments) || 1;
 
@@ -52,9 +52,9 @@ const generateInstallmentDetails = (paymentMethod, paymentTypes, saleDate) => {
     return {
       ...paymentMethod,
       installments: 1, // Force 1 installment for immediate payments
-      installments_details: [{
+      installmentsDetails: [{
         number: 1,
-        due_date: saleDate,
+        dueDate: saleDate,
         amount: amount,
         status: 'pendente'
       }]
@@ -63,16 +63,16 @@ const generateInstallmentDetails = (paymentMethod, paymentTypes, saleDate) => {
     const installmentAmount = amount / installments;
     const newDetails = [];
     for (let i = 0; i < installments; i++) {
-      const due_date = new Date(saleDate);
-      due_date.setMonth(due_date.getMonth() + i); // Add months for subsequent installments
+      const dueDate = new Date(saleDate);
+      dueDate.setMonth(dueDate.getMonth() + i); // Add months for subsequent installments
       newDetails.push({
         number: i + 1,
-        due_date: format(due_date, 'yyyy-MM-dd'),
+        dueDate: format(dueDate, 'yyyy-MM-dd'),
         amount: installmentAmount,
         status: 'pendente'
       });
     }
-    return { ...paymentMethod, installments_details: newDetails };
+    return { ...paymentMethod, installmentsDetails: newDetails };
   }
 };
 
@@ -88,16 +88,16 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
       if (initialPaymentMethods.length === 0 && totalAmount > 0) {
         // If no initial methods, create one default
         methodsToSet = [{
-          payment_type_id: '',
-          payment_type_name: '',
+          paymentTypeId: '',
+          paymentTypeName: '',
           amount: totalAmount,
           installments: 1,
-          cash_account_id: '',
-          installments_details: [] // Initialize empty, will be generated
+          cashAccountId: '',
+          installmentsDetails: [] // Initialize empty, will be generated
         }];
       }
 
-      // Ensure installments_details are correctly generated/updated on open
+      // Ensure installmentsDetails are correctly generated/updated on open
       const updatedMethods = methodsToSet.map(pm => generateInstallmentDetails(pm, paymentTypes, saleDate));
       setPaymentMethods(updatedMethods);
       setObservations(initialNotes);
@@ -110,12 +110,12 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
   const addPaymentMethod = () => {
     const remaining = totalAmount - totalPaymentsMade;
     const newPaymentMethod = {
-      payment_type_id: '',
-      payment_type_name: '',
+      paymentTypeId: '',
+      paymentTypeName: '',
       amount: remaining > 0 ? remaining : 0,
       installments: 1,
-      cash_account_id: '',
-      installments_details: []
+      cashAccountId: '',
+      installmentsDetails: []
     };
     setPaymentMethods(prev => ([
       ...prev,
@@ -128,16 +128,16 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
     const currentPaymentMethod = newPayments[index];
     currentPaymentMethod[field] = value;
 
-    const paymentType = paymentTypes.find(pt => pt.id === currentPaymentMethod.payment_type_id);
-    const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
+    const paymentType = paymentTypes.find(pt => pt.id === currentPaymentMethod.paymentTypeId);
+    const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
 
-    if (field === 'payment_type_id') {
-      currentPaymentMethod.payment_type_name = paymentType?.name || '';
+    if (field === 'paymentTypeId') {
+      currentPaymentMethod.paymentTypeName = paymentType?.name || '';
       if (isImmediatePaymentType) {
-        currentPaymentMethod.cash_account_id = cashAccounts.length > 0 ? cashAccounts[0].id : '';
+        currentPaymentMethod.cashAccountId = cashAccounts.length > 0 ? cashAccounts[0].id : '';
         currentPaymentMethod.installments = 1; // Force 1 installment for immediate
       } else {
-        currentPaymentMethod.cash_account_id = ''; // Clear cash account for non-immediate
+        currentPaymentMethod.cashAccountId = ''; // Clear cash account for non-immediate
       }
     }
 
@@ -146,24 +146,24 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
       currentPaymentMethod.installments = 1;
     }
 
-    const oldInstallmentsCount = paymentMethods[index]?.installments_details?.length || 0;
+    const oldInstallmentsCount = paymentMethods[index]?.installmentsDetails?.length || 0;
     const newInstallmentsCount = parseInt(currentPaymentMethod.installments) || 1;
     const newPaymentAmount = parseFloat(currentPaymentMethod.amount) || 0;
 
     // Regenerate full details if payment type or installments count changes
-    if (field === 'payment_type_id' || (field === 'installments' && oldInstallmentsCount !== newInstallmentsCount)) {
+    if (field === 'paymentTypeId' || (field === 'installments' && oldInstallmentsCount !== newInstallmentsCount)) {
       newPayments[index] = generateInstallmentDetails(currentPaymentMethod, paymentTypes, saleDate);
     } else if (field === 'amount') {
       // If amount changes, redistribute to existing installments or update single installment
-      if (!isImmediatePaymentType && newInstallmentsCount > 1 && currentPaymentMethod.installments_details.length > 0) {
+      if (!isImmediatePaymentType && newInstallmentsCount > 1 && currentPaymentMethod.installmentsDetails.length > 0) {
         const perInstallmentAmount = newPaymentAmount / newInstallmentsCount;
-        newPayments[index].installments_details = newPayments[index].installments_details.map(det => ({
+        newPayments[index].installmentsDetails = newPayments[index].installmentsDetails.map(det => ({
           ...det,
           amount: perInstallmentAmount
         }));
-      } else if (currentPaymentMethod.installments_details.length > 0) {
+      } else if (currentPaymentMethod.installmentsDetails.length > 0) {
         // For single installment, just update its amount
-        newPayments[index].installments_details[0].amount = newPaymentAmount;
+        newPayments[index].installmentsDetails[0].amount = newPaymentAmount;
       }
     }
 
@@ -172,12 +172,12 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
 
   const updateInstallmentDetail = (paymentMethodIndex, installmentIndex, field, value) => {
     const newPayments = [...paymentMethods];
-    const detail = newPayments[paymentMethodIndex].installments_details[installmentIndex];
+    const detail = newPayments[paymentMethodIndex].installmentsDetails[installmentIndex];
     detail[field] = value;
 
     // Recalculate payment method amount if an installment amount is changed directly
     if (field === 'amount') {
-      const totalInstallmentAmount = newPayments[paymentMethodIndex].installments_details.reduce((sum, det) => sum + (parseFloat(det.amount) || 0), 0);
+      const totalInstallmentAmount = newPayments[paymentMethodIndex].installmentsDetails.reduce((sum, det) => sum + (parseFloat(det.amount) || 0), 0);
       newPayments[paymentMethodIndex].amount = totalInstallmentAmount;
     }
 
@@ -200,10 +200,10 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
 
     // Validate installment details sum for each payment method
     for (const pm of paymentMethods) {
-      if (pm.installments_details && pm.installments_details.length > 0) {
-        const totalInstallmentsAmount = pm.installments_details.reduce((sum, det) => sum + (parseFloat(det.amount) || 0), 0);
+      if (pm.installmentsDetails && pm.installmentsDetails.length > 0) {
+        const totalInstallmentsAmount = pm.installmentsDetails.reduce((sum, det) => sum + (parseFloat(det.amount) || 0), 0);
         if (Math.abs(totalInstallmentsAmount - (parseFloat(pm.amount) || 0)) > 0.01) {
-          toast({ title: "Erro", description: `O total das parcelas para "${pm.payment_type_name}" (R$ ${totalInstallmentsAmount.toFixed(2)}) não corresponde ao valor total do pagamento (R$ ${pm.amount.toFixed(2)}).`, variant: "destructive" });
+          toast({ title: "Erro", description: `O total das parcelas para "${pm.paymentTypeName}" (R$ ${totalInstallmentsAmount.toFixed(2)}) não corresponde ao valor total do pagamento (R$ ${pm.amount.toFixed(2)}).`, variant: "destructive" });
           return;
         }
       }
@@ -227,8 +227,8 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
           <h4 className="text-md font-semibold mt-4 mb-2" style={{ color: '#1E3A8A' }}>Formas de Pagamento</h4>
           <div className="space-y-3">
             {paymentMethods.map((payment, index) => {
-              const paymentType = paymentTypes.find(pt => pt.id === payment.payment_type_id);
-              const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
+              const paymentType = paymentTypes.find(pt => pt.id === payment.paymentTypeId);
+              const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
 
               return (
                 <div key={index} className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50">
@@ -236,8 +236,8 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
                     <div className="flex-1 min-w-[150px]">
                       <Label htmlFor={`payment-type-${index}`} className="sr-only">Forma de Pagamento</Label>
                       <Select
-                        value={payment.payment_type_id}
-                        onValueChange={(value) => updatePaymentMethod(index, 'payment_type_id', value)}
+                        value={payment.paymentTypeId}
+                        onValueChange={(value) => updatePaymentMethod(index, 'paymentTypeId', value)}
                         id={`payment-type-${index}`}
                       >
                         <SelectTrigger>
@@ -255,8 +255,8 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
                       <div className="flex-1 min-w-[150px]">
                         <Label htmlFor={`cash-account-${index}`} className="sr-only">Conta/Caixa</Label>
                         <Select
-                          value={payment.cash_account_id || ''}
-                          onValueChange={(value) => updatePaymentMethod(index, 'cash_account_id', value)}
+                          value={payment.cashAccountId || ''}
+                          onValueChange={(value) => updatePaymentMethod(index, 'cashAccountId', value)}
                           id={`cash-account-${index}`}
                         >
                           <SelectTrigger>
@@ -306,7 +306,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
                     </Button>
                   </div>
 
-                  {!isImmediatePaymentType && parseInt(payment.installments) > 1 && payment.installments_details && payment.installments_details.length > 0 && (
+                  {!isImmediatePaymentType && parseInt(payment.installments) > 1 && payment.installmentsDetails && payment.installmentsDetails.length > 0 && (
                     <div className="w-full mt-2 p-3 border rounded-md bg-white">
                       <h5 className="text-sm font-semibold mb-2" style={{ color: '#1E3A8A' }}>Detalhes das Parcelas</h5>
                       <Table className="min-w-full">
@@ -318,14 +318,14 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {payment.installments_details.map((detail, detIndex) => (
+                          {payment.installmentsDetails.map((detail, detIndex) => (
                             <TableRow key={detIndex}>
                               <TableCell className="text-xs w-1/4">{detail.number}</TableCell>
                               <TableCell className="text-xs w-1/3">
                                 <Input
                                   type="date"
-                                  value={detail.due_date}
-                                  onChange={(e) => updateInstallmentDetail(index, detIndex, 'due_date', e.target.value)}
+                                  value={detail.dueDate}
+                                  onChange={(e) => updateInstallmentDetail(index, detIndex, 'dueDate', e.target.value)}
                                   className="w-full h-8 text-xs"
                                 />
                               </TableCell>
@@ -427,22 +427,22 @@ export default function Sales({ onSaleComplete }) {
 
   const loadData = useCallback(async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
       setCurrentUser(user);
-      const companyId = user.company_id;
+      const companyId = user.companyId;
 
       setCurrentSale(prev => ({
         ...prev,
-        created_by_name: user.full_name
+        createdByName: user.fullName
       }));
 
       const [allPeople, productsData, sectorsData, paymentTypesData, cashAccountsData, ordersData] = await Promise.all([
-        base44.entities.Person.filter({ company_id: companyId }),
-        base44.entities.Product.filter({ company_id: companyId, active: true }),
-        base44.entities.Sector.filter({ company_id: companyId, active: true }),
-        base44.entities.PaymentType.filter({ company_id: companyId, active: true }),
-        base44.entities.CashAccount.filter({ company_id: companyId, active: true }),
-        base44.entities.Order.filter({ company_id: companyId, status: ['pendente', 'em_atendimento', 'finalizado'] }, '-created_date', 100).catch(() => [])
+        entities.Person.filter({ companyId: companyId }),
+        entities.Product.filter({ companyId: companyId, active: true }),
+        entities.Sector.filter({ companyId: companyId, active: true }),
+        entities.PaymentType.filter({ companyId: companyId, active: true }),
+        entities.CashAccount.filter({ companyId: companyId, active: true }),
+        entities.Order.filter({ companyId: companyId, status: ['pendente', 'emAtendimento', 'finalizado'] }, '-createdDate', 100).catch(() => [])
       ]);
 
       setPeople(allPeople.filter(p => p.type === 'cliente'));
@@ -468,7 +468,7 @@ export default function Sales({ onSaleComplete }) {
     if (product) {
       setSelectedProductObj(product);
       setProductDescription(product.name);
-      setProductPrice(product.unit_price.toString());
+      setProductPrice(product.unitPrice.toString());
     }
   };
 
@@ -486,25 +486,25 @@ export default function Sales({ onSaleComplete }) {
       return;
     }
 
-    const itemExists = currentSale.items.find(item => item.product_id === selectedProductObj.id);
+    const itemExists = currentSale.items.find(item => item.productId === selectedProductObj.id);
     if (itemExists) {
       toast({ title: "Atenção", description: "Este produto já foi adicionado.", variant: "warning" });
       return;
     }
 
     const newItem = {
-      product_id: selectedProductObj.id,
-      product_code: selectedProductObj.code || '',
-      product_name: selectedProductObj.name,
+      productId: selectedProductObj.id,
+      productCode: selectedProductObj.code || '',
+      productName: selectedProductObj.name,
       category: selectedProductObj.category,
-      vasilhame_id: selectedProductObj.vasilhame_id || '',
-      vasilhame_name: selectedProductObj.vasilhame_name || '',
+      vasilhameId: selectedProductObj.vasilhameId || '',
+      vasilhameName: selectedProductObj.vasilhameName || '',
       quantity: qty,
-      unit_price: price,
+      unitPrice: price,
       discount: 0,
       total: qty * price,
-      quantity_to_pickup: 0,
-      vasilhame_loan_quantity: 0
+      quantityToPickup: 0,
+      vasilhameLoanQuantity: 0
     };
 
     setCurrentSale(prev => ({
@@ -521,12 +521,12 @@ export default function Sales({ onSaleComplete }) {
 
   const updateItem = (index, field, value) => {
     const newItems = [...currentSale.items];
-    const numericValue = ['quantity', 'unit_price', 'discount', 'quantity_to_pickup', 'vasilhame_loan_quantity'].includes(field) ? parseFloat(value) || 0 : value;
+    const numericValue = ['quantity', 'unitPrice', 'discount', 'quantityToPickup', 'vasilhameLoanQuantity'].includes(field) ? parseFloat(value) || 0 : value;
 
     newItems[index][field] = numericValue;
 
     const item = newItems[index];
-    item.total = (item.quantity * item.unit_price) - item.discount;
+    item.total = (item.quantity * item.unitPrice) - item.discount;
 
     setCurrentSale(prev => ({ ...prev, items: newItems }));
   };
@@ -543,13 +543,13 @@ export default function Sales({ onSaleComplete }) {
     setCustomerFound(client);
     setCurrentSale(prev => ({
       ...prev,
-      person_id: client.id,
-      person_name: client.name,
-      conveniada_id: client.conveniada_id || '',
-      conveniada_name: client.conveniada_name || ''
+      personId: client.id,
+      personName: client.name,
+      conveniadaId: client.conveniadaId || '',
+      conveniadaName: client.conveniadaName || ''
     }));
 
-    if (client.conveniada_id) {
+    if (client.conveniadaId) {
       setTemConvenio('sim');
     } else {
       setTemConvenio('nao');
@@ -564,10 +564,10 @@ export default function Sales({ onSaleComplete }) {
     setCustomerFound(null);
     setCurrentSale(prev => ({
       ...prev,
-      person_id: '',
-      person_name: '',
-      conveniada_id: '',
-      conveniada_name: ''
+      personId: '',
+      personName: '',
+      conveniadaId: '',
+      conveniadaName: ''
     }));
     setTemConvenio('nao');
   };
@@ -587,7 +587,7 @@ export default function Sales({ onSaleComplete }) {
       return;
     }
 
-    const customer = people.find(p => p.id === order.person_id);
+    const customer = people.find(p => p.id === order.personId);
     if (customer) {
       setCustomerFound(customer);
       setCustomerSelected(true);
@@ -598,13 +598,13 @@ export default function Sales({ onSaleComplete }) {
     }
 
     let orderSector = null;
-    if (order.employee_id) {
-      orderSector = sectors.find(s => s.employee_id === order.employee_id);
+    if (order.employeeId) {
+      orderSector = sectors.find(s => s.employeeId === order.employeeId);
 
       if (!orderSector) {
         toast({
           title: "Atenção",
-          description: `Não foi encontrado um setor vinculado ao entregador ${order.employee_name || ''}. Por favor, selecione um setor manualmente.`,
+          description: `Não foi encontrado um setor vinculado ao entregador ${order.employeeName || ''}. Por favor, selecione um setor manualmente.`,
           variant: "warning"
         });
       }
@@ -617,59 +617,59 @@ export default function Sales({ onSaleComplete }) {
     }
 
     const saleItems = order.items.map(item => {
-      const productDetails = products.find(p => p.id === item.product_id);
+      const productDetails = products.find(p => p.id === item.productId);
       return {
-        product_id: item.product_id,
-        product_code: productDetails?.code || '',
-        product_name: item.product_name,
+        productId: item.productId,
+        productCode: productDetails?.code || '',
+        productName: item.productName,
         category: productDetails?.category || '',
-        vasilhame_id: productDetails?.vasilhame_id || '',
-        vasilhame_name: productDetails?.vasilhame_name || '',
+        vasilhameId: productDetails?.vasilhameId || '',
+        vasilhameName: productDetails?.vasilhameName || '',
         quantity: item.quantity,
-        unit_price: item.unit_price,
+        unitPrice: item.unitPrice,
         discount: item.discount || 0,
-        total: (item.quantity * item.unit_price) - (item.discount || 0),
-        quantity_to_pickup: 0,
-        vasilhame_loan_quantity: 0
+        total: (item.quantity * item.unitPrice) - (item.discount || 0),
+        quantityToPickup: 0,
+        vasilhameLoanQuantity: 0
       };
     });
 
-    const orderConveniadaId = order.conveniada_id || customer?.conveniada_id || '';
-    const orderConveniadaName = order.conveniada_name || customer?.conveniada_name || '';
+    const orderConveniadaId = order.conveniadaId || customer?.conveniadaId || '';
+    const orderConveniadaName = order.conveniadaName || customer?.conveniadaName || '';
 
-    const orderTotal = order.total_amount;
+    const orderTotal = order.totalAmount;
 
     setCurrentSale({
       ...initialSaleState,
-      sale_number: `VEN-${Date.now()}`,
-      person_id: order.person_id,
-      person_name: order.person_name,
-      sector_id: orderSector ? orderSector.id : '',
-      sector_name: orderSector ? orderSector.name : '',
+      saleNumber: `VEN-${Date.now()}`,
+      personId: order.personId,
+      personName: order.personName,
+      sectorId: orderSector ? orderSector.id : '',
+      sectorName: orderSector ? orderSector.name : '',
       status: 'concluida',
-      sale_date: order.delivery_date ? format(new Date(order.delivery_date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+      saleDate: order.deliveryDate ? format(new Date(order.deliveryDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
       notes: order.notes || '',
       items: saleItems,
-      payment_methods: [{
-        payment_type_id: '',
-        payment_type_name: '',
+      paymentMethods: [{
+        paymentTypeId: '',
+        paymentTypeName: '',
         amount: orderTotal,
         installments: 1,
-        cash_account_id: '',
-        installments_details: [] // Initialize for order payment methods
+        cashAccountId: '',
+        installmentsDetails: [] // Initialize for order payment methods
       }],
-      total_amount: orderTotal,
-      created_by_name: currentUser?.full_name || '',
-      order_id: order.id,
-      order_number: order.order_number,
-      conveniada_id: orderConveniadaId,
-      conveniada_name: orderConveniadaName
+      totalAmount: orderTotal,
+      createdByName: currentUser?.fullName || '',
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      conveniadaId: orderConveniadaId,
+      conveniadaName: orderConveniadaName
     });
     setTemConvenio(orderConveniadaId ? 'sim' : 'nao');
 
     toast({
       title: "Pedido Carregado",
-      description: `Pedido ${order.order_number} carregado com sucesso. ${orderSector ? `Setor: ${orderSector.name}` : 'Selecione o setor de estoque.'}`,
+      description: `Pedido ${order.orderNumber} carregado com sucesso. ${orderSector ? `Setor: ${orderSector.name}` : 'Selecione o setor de estoque.'}`,
       variant: "success"
     });
   };
@@ -680,7 +680,7 @@ export default function Sales({ onSaleComplete }) {
       return;
     }
 
-    if (!currentSale.sector_id) {
+    if (!currentSale.sectorId) {
       toast({ title: "Erro", description: "Selecione o setor.", variant: "destructive" });
       return;
     }
@@ -690,7 +690,7 @@ export default function Sales({ onSaleComplete }) {
       return;
     }
 
-    if (temConvenio === 'sim' && customerFound && customerFound.conveniada_id && !currentSale.conveniada_id) {
+    if (temConvenio === 'sim' && customerFound && customerFound.conveniadaId && !currentSale.conveniadaId) {
       toast({ title: "Erro", description: "Selecione a empresa conveniada.", variant: "destructive" });
       return;
     }
@@ -711,39 +711,39 @@ export default function Sales({ onSaleComplete }) {
 
     setIsSaving(true);
     try {
-      const companyId = currentUser.company_id;
-      const companyName = currentUser.company_name;
+      const companyId = currentUser.companyId;
+      const companyName = currentUser.companyName;
 
       // Gerar próximo código sequencial
-      const allSales = await base44.entities.Sale.filter({ company_id: companyId });
+      const allSales = await entities.Sale.filter({ companyId: companyId });
       const maxSaleNumber = allSales.reduce((max, sale) => {
-        const currentNum = parseInt(sale.sale_number, 10);
+        const currentNum = parseInt(sale.saleNumber, 10);
         return !isNaN(currentNum) && currentNum > max ? currentNum : max;
       }, 0);
       const newSaleNumber = String(maxSaleNumber + 1);
 
       const saleData = {
         ...currentSale,
-        sale_number: newSaleNumber,
-        total_amount: totalSale,
-        payment_methods: payments, // Payments now include installments_details
+        saleNumber: newSaleNumber,
+        totalAmount: totalSale,
+        paymentMethods: payments, // Payments now include installmentsDetails
         notes: modalObservations,
-        company_id: companyId,
-        company_name: companyName,
-        created_by_name: currentUser.full_name,
-        order_id: selectedOrderId,
-        order_number: currentSale.order_number,
-        conveniada_id: (temConvenio === 'sim' && currentSale.conveniada_id) ? currentSale.conveniada_id : null,
-        conveniada_name: (temConvenio === 'sim' && currentSale.conveniada_name) ? currentSale.conveniada_name : null
+        companyId: companyId,
+        companyName: companyName,
+        createdByName: currentUser.fullName,
+        orderId: selectedOrderId,
+        orderNumber: currentSale.orderNumber,
+        conveniadaId: (temConvenio === 'sim' && currentSale.conveniadaId) ? currentSale.conveniadaId : null,
+        conveniadaName: (temConvenio === 'sim' && currentSale.conveniadaName) ? currentSale.conveniadaName : null
       };
 
-      const savedSale = await base44.entities.Sale.create(saleData);
+      const savedSale = await entities.Sale.create(saleData);
 
       if (selectedOrderId) {
         try {
-          await base44.entities.Order.update(selectedOrderId, {
+          await entities.Order.update(selectedOrderId, {
             status: 'finalizado',
-            finalized_at: new Date().toISOString()
+            finalizedAt: new Date().toISOString()
           });
           loadData();
         } catch (error) {
@@ -754,122 +754,122 @@ export default function Sales({ onSaleComplete }) {
 
       for (const item of currentSale.items) {
         try {
-          const stockEntries = await base44.entities.ProductStock.filter({
-            product_id: item.product_id,
-            sector_id: currentSale.sector_id,
-            company_id: companyId
+          const stockEntries = await entities.ProductStock.filter({
+            productId: item.productId,
+            sectorId: currentSale.sectorId,
+            companyId: companyId
           });
 
           if (stockEntries.length > 0) {
             const stockEntry = stockEntries[0];
             const newQuantity = (stockEntry.quantity || 0) - item.quantity;
-            await base44.entities.ProductStock.update(stockEntry.id, { quantity: newQuantity });
+            await entities.ProductStock.update(stockEntry.id, { quantity: newQuantity });
           } else {
-            await base44.entities.ProductStock.create({
-              product_id: item.product_id,
-              product_name: item.product_name,
-              sector_id: currentSale.sector_id,
-              sector_name: currentSale.sector_name,
+            await entities.ProductStock.create({
+              productId: item.productId,
+              productName: item.productName,
+              sectorId: currentSale.sectorId,
+              sectorName: currentSale.sectorName,
               quantity: -item.quantity,
-              initial_date: currentSale.sale_date,
-              company_id: companyId,
-              company_name: companyName,
-              created_by_name: currentUser.full_name
+              initialDate: currentSale.saleDate,
+              companyId: companyId,
+              companyName: companyName,
+              createdByName: currentUser.fullName
             });
           }
         } catch (error) {
           console.error("Erro ao atualizar estoque:", error);
-          toast({ title: "Atenção", description: `Erro ao atualizar estoque para o produto ${item.product_name}.`, variant: "warning" });
+          toast({ title: "Atenção", description: `Erro ao atualizar estoque para o produto ${item.productName}.`, variant: "warning" });
         }
       }
 
       for (const item of currentSale.items) {
-        if (item.vasilhame_loan_quantity > 0 && item.vasilhame_id) {
-          await base44.entities.VasilhameLoan.create({
-            sale_id: savedSale.id,
-            person_id: savedSale.person_id,
-            person_name: savedSale.person_name,
-            vasilhame_id: item.vasilhame_id,
-            vasilhame_name: item.vasilhame_name,
-            loan_quantity: item.vasilhame_loan_quantity,
-            returned_quantity: 0,
-            loan_date: savedSale.sale_date,
+        if (item.vasilhameLoanQuantity > 0 && item.vasilhameId) {
+          await entities.VasilhameLoan.create({
+            saleId: savedSale.id,
+            personId: savedSale.personId,
+            personName: savedSale.personName,
+            vasilhameId: item.vasilhameId,
+            vasilhameName: item.vasilhameName,
+            loanQuantity: item.vasilhameLoanQuantity,
+            returnedQuantity: 0,
+            loanDate: savedSale.saleDate,
             status: 'pendente',
-            company_id: companyId,
-            company_name: companyName,
-            created_by_name: currentUser.full_name
+            companyId: companyId,
+            companyName: companyName,
+            createdByName: currentUser.fullName
           });
         }
 
-        if (item.quantity_to_pickup > 0) {
-          await base44.entities.ProductPickup.create({
-            sale_id: savedSale.id,
-            person_id: savedSale.person_id,
-            person_name: savedSale.person_name,
-            product_id: item.product_id,
-            product_name: item.product_name,
-            pickup_quantity: item.quantity_to_pickup,
-            sale_date: savedSale.sale_date,
-            company_id: companyId,
-            company_name: companyName,
-            created_by_name: currentUser.full_name
+        if (item.quantityToPickup > 0) {
+          await entities.ProductPickup.create({
+            saleId: savedSale.id,
+            personId: savedSale.personId,
+            personName: savedSale.personName,
+            productId: item.productId,
+            productName: item.productName,
+            pickupQuantity: item.quantityToPickup,
+            saleDate: savedSale.saleDate,
+            companyId: companyId,
+            companyName: companyName,
+            createdByName: currentUser.fullName
           });
         }
       }
 
-      let revenueGroup = await base44.entities.FinancialGroup.filter({ name: 'Receitas de Vendas', type: 'receita', company_id: companyId });
+      let revenueGroup = await entities.FinancialGroup.filter({ name: 'Receitas de Vendas', type: 'receita', companyId: companyId });
       if (revenueGroup.length === 0) {
-        revenueGroup = [await base44.entities.FinancialGroup.create({
+        revenueGroup = [await entities.FinancialGroup.create({
           name: 'Receitas de Vendas',
           type: 'receita',
           active: true,
-          company_id: companyId,
-          company_name: companyName,
-          created_by_name: currentUser.full_name
+          companyId: companyId,
+          companyName: companyName,
+          createdByName: currentUser.fullName
         })];
       }
 
       for (const paymentMethod of payments) {
-        const paymentType = paymentTypes.find(p => p.id === paymentMethod.payment_type_id);
+        const paymentType = paymentTypes.find(p => p.id === paymentMethod.paymentTypeId);
 
-        const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
-        if (paymentMethod.installments === 1 && isImmediatePaymentType && paymentMethod.cash_account_id) {
+        const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+        if (paymentMethod.installments === 1 && isImmediatePaymentType && paymentMethod.cashAccountId) {
           try {
-            const cashAccount = cashAccounts.find(ca => ca.id === paymentMethod.cash_account_id);
+            const cashAccount = cashAccounts.find(ca => ca.id === paymentMethod.cashAccountId);
             if (cashAccount) {
               const newBalance = (cashAccount.balance || 0) + paymentMethod.amount;
-              await base44.entities.CashAccount.update(cashAccount.id, {
+              await entities.CashAccount.update(cashAccount.id, {
                 balance: newBalance
               });
 
-              await base44.entities.CashMovement.create({
-                cash_account_id: cashAccount.id,
-                cash_account_name: cashAccount.name,
+              await entities.CashMovement.create({
+                cashAccountId: cashAccount.id,
+                cashAccountName: cashAccount.name,
                 type: 'receita',
-                description: `Recebimento da Venda #${savedSale.sale_number}`,
+                description: `Recebimento da Venda #${savedSale.saleNumber}`,
                 amount: paymentMethod.amount,
-                person_id: savedSale.person_id,
-                person_name: savedSale.person_name,
-                movement_date: savedSale.sale_date,
-                group_id: revenueGroup[0].id,
-                group_name: revenueGroup[0].name,
-                company_id: companyId,
-                company_name: companyName,
-                created_by_name: currentUser.full_name
+                personId: savedSale.personId,
+                personName: savedSale.personName,
+                movementDate: savedSale.saleDate,
+                groupId: revenueGroup[0].id,
+                groupName: revenueGroup[0].name,
+                companyId: companyId,
+                companyName: companyName,
+                createdByName: currentUser.fullName
               });
             }
           } catch (error) {
             console.error("Erro ao atualizar conta/caixa:", error);
-            toast({ title: "Atenção", description: `Erro ao processar pagamento imediato para ${paymentMethod.payment_type_name}.`, variant: "warning" });
+            toast({ title: "Atenção", description: `Erro ao processar pagamento imediato para ${paymentMethod.paymentTypeName}.`, variant: "warning" });
           }
         }
 
-        const isAPrazoPaymentType = paymentType && ['boleto', 'cheque', 'cartao_credito', 'convenio'].includes(paymentType.type);
-        if (isAPrazoPaymentType && paymentMethod.installments_details && paymentMethod.installments_details.length > 0) {
-          const targetPersonId = (paymentType?.type === 'convenio' && savedSale.conveniada_id) ?
-            savedSale.conveniada_id : savedSale.person_id;
-          const targetPersonName = (paymentType?.type === 'convenio' && savedSale.conveniada_name) ?
-            savedSale.conveniada_name : savedSale.person_name;
+        const isAPrazoPaymentType = paymentType && ['boleto', 'cheque', 'cartaoCredito', 'convenio'].includes(paymentType.type);
+        if (isAPrazoPaymentType && paymentMethod.installmentsDetails && paymentMethod.installmentsDetails.length > 0) {
+          const targetPersonId = (paymentType?.type === 'convenio' && savedSale.conveniadaId) ?
+            savedSale.conveniadaId : savedSale.personId;
+          const targetPersonName = (paymentType?.type === 'convenio' && savedSale.conveniadaName) ?
+            savedSale.conveniadaName : savedSale.personName;
 
           if (!targetPersonId) {
             console.error("Target person ID is missing for accounts receivable.");
@@ -877,30 +877,30 @@ export default function Sales({ onSaleComplete }) {
             continue;
           }
 
-          // Use the already generated and potentially edited installments_details from the payment method
-          for (const installment of paymentMethod.installments_details) {
+          // Use the already generated and potentially edited installmentsDetails from the payment method
+          for (const installment of paymentMethod.installmentsDetails) {
             try {
-              await base44.entities.AccountsReceivable.create({
-                sale_id: savedSale.id,
-                person_id: targetPersonId,
-                person_name: targetPersonName,
-                installment_number: installment.number,
-                due_date: installment.due_date,
+              await entities.AccountsReceivable.create({
+                saleId: savedSale.id,
+                personId: targetPersonId,
+                personName: targetPersonName,
+                installmentNumber: installment.number,
+                dueDate: installment.dueDate,
                 amount: installment.amount,
                 status: 'pendente', // Status is always pending on creation
-                company_id: companyId,
-                company_name: companyName,
-                created_by_name: currentUser.full_name
+                companyId: companyId,
+                companyName: companyName,
+                createdByName: currentUser.fullName
               });
             } catch (error) {
               console.error("Erro ao criar conta a receber:", error);
-              toast({ title: "Atenção", description: `Erro ao criar conta a receber para ${paymentMethod.payment_type_name}.`, variant: "warning" });
+              toast({ title: "Atenção", description: `Erro ao criar conta a receber para ${paymentMethod.paymentTypeName}.`, variant: "warning" });
             }
           }
         }
       }
 
-      toast({ title: "Sucesso!", description: `Venda #${savedSale.sale_number} realizada com sucesso.` });
+      toast({ title: "Sucesso!", description: `Venda #${savedSale.saleNumber} realizada com sucesso.` });
       setShowPaymentModal(false);
       resetForm();
       
@@ -921,8 +921,8 @@ export default function Sales({ onSaleComplete }) {
   const resetForm = () => {
     setCurrentSale({
       ...initialSaleState,
-      sale_number: '',
-      created_by_name: currentUser?.full_name || ''
+      saleNumber: '',
+      createdByName: currentUser?.fullName || ''
     });
     setCustomerSelected(false);
     setCustomerFound(null);
@@ -936,7 +936,7 @@ export default function Sales({ onSaleComplete }) {
     setShowPaymentModal(false);
   };
 
-  const totalVenda = currentSale.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+  const totalVenda = currentSale.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   const totalDesconto = currentSale.items.reduce((sum, item) => sum + item.discount, 0);
   const totalPagar = currentSale.items.reduce((sum, item) => sum + item.total, 0);
 
@@ -964,7 +964,7 @@ export default function Sales({ onSaleComplete }) {
                     <SelectItem value={null}>🆕 Nova Venda</SelectItem>
                     {orders.map(order => (
                       <SelectItem key={order.id} value={order.id}>
-                        #{order.order_number} - {order.person_name} - R$ {order.total_amount.toFixed(2)} - {order.status === 'pendente' ? '⏳ Pendente' : order.status === 'em_atendimento' ? '🚚 Em Atendimento' : '✅ Finalizado'}
+                        #{order.orderNumber} - {order.personName} - R$ {order.totalAmount.toFixed(2)} - {order.status === 'pendente' ? '⏳ Pendente' : order.status === 'emAtendimento' ? '🚚 Em Atendimento' : '✅ Finalizado'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -974,21 +974,21 @@ export default function Sales({ onSaleComplete }) {
                 <Label className="text-xs font-medium" style={{ color: '#374151' }}>Data: <span className="text-red-500">*</span></Label>
                 <Input
                   type="date"
-                  value={currentSale.sale_date}
-                  onChange={(e) => setCurrentSale(prev => ({ ...prev, sale_date: e.target.value }))}
+                  value={currentSale.saleDate}
+                  onChange={(e) => setCurrentSale(prev => ({ ...prev, saleDate: e.target.value }))}
                   className="mt-1"
                 />
               </div>
               <div>
                 <Label className="text-xs font-medium" style={{ color: '#374151' }}>Setor: <span className="text-red-500">*</span></Label>
                 <Select
-                  value={currentSale.sector_id || ''}
+                  value={currentSale.sectorId || ''}
                   onValueChange={(value) => {
                     const sector = sectors.find(s => s.id === value);
                     setCurrentSale(prev => ({
                       ...prev,
-                      sector_id: value,
-                      sector_name: sector ? sector.name : ''
+                      sectorId: value,
+                      sectorName: sector ? sector.name : ''
                     }));
                   }}
                 >
@@ -1086,8 +1086,8 @@ export default function Sales({ onSaleComplete }) {
                 <TableBody>
                   {currentSale.items.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell className="text-sm">{item.product_code || '-'}</TableCell>
-                      <TableCell className="text-sm">{item.product_name}</TableCell>
+                      <TableCell className="text-sm">{item.productCode || '-'}</TableCell>
+                      <TableCell className="text-sm">{item.productName}</TableCell>
                       <TableCell className="text-sm">
                         <Input
                           type="number"
@@ -1098,7 +1098,7 @@ export default function Sales({ onSaleComplete }) {
                           className="w-20"
                         />
                       </TableCell>
-                      <TableCell className="text-sm">R$ {item.unit_price.toFixed(2)}</TableCell>
+                      <TableCell className="text-sm">R$ {item.unitPrice.toFixed(2)}</TableCell>
                       <TableCell className="text-sm font-semibold" style={{ color: '#10B981' }}>
                         R$ {item.total.toFixed(2)}
                       </TableCell>
@@ -1112,11 +1112,11 @@ export default function Sales({ onSaleComplete }) {
                         />
                       </TableCell>
                       <TableCell className="text-sm">
-                        {item.category === 'glp' && item.vasilhame_id ? (
+                        {item.category === 'glp' && item.vasilhameId ? (
                           <Input
                             type="number"
-                            value={item.vasilhame_loan_quantity}
-                            onChange={(e) => updateItem(index, 'vasilhame_loan_quantity', e.target.value)}
+                            value={item.vasilhameLoanQuantity}
+                            onChange={(e) => updateItem(index, 'vasilhameLoanQuantity', e.target.value)}
                             className="w-16"
                             placeholder="0"
                           />
@@ -1125,8 +1125,8 @@ export default function Sales({ onSaleComplete }) {
                       <TableCell className="text-sm">
                         <Input
                           type="number"
-                          value={item.quantity_to_pickup}
-                          onChange={(e) => updateItem(index, 'quantity_to_pickup', e.target.value)}
+                          value={item.quantityToPickup}
+                          onChange={(e) => updateItem(index, 'quantityToPickup', e.target.value)}
                           className="w-16"
                           placeholder="0"
                         />
@@ -1253,7 +1253,7 @@ export default function Sales({ onSaleComplete }) {
               </div>
 
               {/* Convênio - só aparece se o cliente tiver conveniada vinculada */}
-              {customerFound && customerFound.conveniada_id && (
+              {customerFound && customerFound.conveniadaId && (
                 <div>
                   <h3 className="text-sm font-semibold mb-2" style={{ color: '#1E3A8A' }}>Convênio:</h3>
                   <div className="flex gap-4 mb-3">
@@ -1278,8 +1278,8 @@ export default function Sales({ onSaleComplete }) {
                           setTemConvenio(e.target.value);
                           setCurrentSale(prev => ({
                             ...prev,
-                            conveniada_id: '',
-                            conveniada_name: ''
+                            conveniadaId: '',
+                            conveniadaName: ''
                           }));
                         }}
                         className="w-4 h-4"
@@ -1292,13 +1292,13 @@ export default function Sales({ onSaleComplete }) {
                     <div>
                       <Label className="text-xs font-medium mb-1 block" style={{ color: '#374151' }}>Empresa Conveniada: <span className="text-red-500">*</span></Label>
                       <Select
-                        value={currentSale.conveniada_id || ''}
+                        value={currentSale.conveniadaId || ''}
                         onValueChange={(value) => {
                           const conveniada = conveniadas.find(c => c.id === value);
                           setCurrentSale(prev => ({
                             ...prev,
-                            conveniada_id: value,
-                            conveniada_name: conveniada ? conveniada.name : ''
+                            conveniadaId: value,
+                            conveniadaName: conveniada ? conveniada.name : ''
                           }));
                         }}
                       >
@@ -1399,11 +1399,11 @@ export default function Sales({ onSaleComplete }) {
         totalAmount={totalPagar}
         paymentTypes={paymentTypes}
         cashAccounts={cashAccounts}
-        saleNumber={currentSale.sale_number}
-        customerName={currentSale.person_name}
-        saleDate={currentSale.sale_date}
+        saleNumber={currentSale.saleNumber}
+        customerName={currentSale.personName}
+        saleDate={currentSale.saleDate}
         initialNotes={currentSale.notes}
-        initialPaymentMethods={currentSale.payment_methods}
+        initialPaymentMethods={currentSale.paymentMethods}
         isSaving={isSaving}
       />
     </div>

@@ -182,8 +182,8 @@ export default function RenegociacaoModal({
       for (const conta of contasSelecionadas) {
         await AccountsReceivable.update(conta.id, {
           status: 'renegociado',
-          payment_date: dataRenegociacao,
-          renegociacao_observacao: `Renegociada em ${format(parseISO(dataRenegociacao), 'dd/MM/yyyy')}`
+          paymentDate: dataRenegociacao,
+          renegociacaoObservacao: `Renegociada em ${format(parseISO(dataRenegociacao), 'dd/MM/yyyy')}`
         });
       }
       
@@ -192,19 +192,19 @@ export default function RenegociacaoModal({
         const contaDestino = cashAccounts.find(c => c.id === contaDestinoId);
         
         await CashMovement.create({
-          cash_account_id: contaDestinoId,
-          cash_account_name: contaDestino?.name || '',
+          cashAccountId: contaDestinoId,
+          cashAccountName: contaDestino?.name || '',
           type: 'receita',
-          description: `Entrada renegociação - ${contasSelecionadas.map(c => c.person_name).join(', ')}`,
+          description: `Entrada renegociação - ${contasSelecionadas.map(c => c.personName).join(', ')}`,
           amount: valorDinheiro,
-          movement_date: dataRenegociacao,
-          sector_id: setorId,
-          sector_name: setor?.name || '',
-          person_id: contasSelecionadas[0]?.person_id,
-          person_name: contasSelecionadas[0]?.person_name,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name
+          movementDate: dataRenegociacao,
+          sectorId: setorId,
+          sectorName: setor?.name || '',
+          personId: contasSelecionadas[0]?.personId,
+          personName: contasSelecionadas[0]?.personName,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName
         });
         
         // Atualizar saldo da conta
@@ -216,21 +216,21 @@ export default function RenegociacaoModal({
       // 3. Criar novas contas a receber para cada parcela
       for (const parcela of parcelas) {
         await AccountsReceivable.create({
-          person_id: contasSelecionadas[0]?.person_id,
-          person_name: contasSelecionadas[0]?.person_name,
+          personId: contasSelecionadas[0]?.personId,
+          personName: contasSelecionadas[0]?.personName,
           description: `Renegociação - Parcela ${String(parcela.numero).padStart(3, '0')}/${String(parcelas.length).padStart(3, '0')}`,
-          due_date: parcela.vencimento,
+          dueDate: parcela.vencimento,
           amount: parcela.valor,
-          installment_number: parcela.numero,
+          installmentNumber: parcela.numero,
           status: 'pendente',
-          sector_id: setorId,
-          sector_name: setor?.name || '',
-          renegociacao_origem: contasSelecionadas.map(c => c.id).join(','),
-          renegociacao_data: dataRenegociacao,
-          renegociacao_observacao: observacoes,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name
+          sectorId: setorId,
+          sectorName: setor?.name || '',
+          renegociacaoOrigem: contasSelecionadas.map(c => c.id).join(','),
+          renegociacaoData: dataRenegociacao,
+          renegociacaoObservacao: observacoes,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName
         });
       }
       
@@ -295,7 +295,7 @@ export default function RenegociacaoModal({
           </div>
           <div class="info-row">
             <span class="info-label">Cliente:</span>
-            <span>${contasSelecionadas[0]?.person_name || '-'}</span>
+            <span>${contasSelecionadas[0]?.personName || '-'}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Setor Responsável:</span>

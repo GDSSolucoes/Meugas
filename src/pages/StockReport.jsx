@@ -34,7 +34,7 @@ export default function StockReport() {
       try {
         const user = await User.me();
         setCurrentUser(user);
-        const sectorsData = await Sector.filter({ company_id: user.company_id });
+        const sectorsData = await Sector.filter({ companyId: user.companyId });
         setSectors(sectorsData);
       } catch (error) {
         toast({ title: "Erro", description: "Falha ao carregar dados iniciais.", variant: "destructive" });
@@ -57,7 +57,7 @@ export default function StockReport() {
         setIsLoading(false);
         return;
       }
-      const company_id = currentUser.company_id;
+      const companyId = currentUser.companyId;
       const reportDate = startOfDay(parseISO(filters.reportDate));
       const endOfReportDate = endOfDay(parseISO(filters.reportDate));
 
@@ -70,12 +70,12 @@ export default function StockReport() {
         allLoans,
         allPickups
       ] = await Promise.all([
-        Product.filter({ company_id }),
-        ProductStock.filter({ company_id }),
-        Sale.filter({ company_id }),
-        Purchase.filter({ company_id }),
-        StockTransfer.filter({ company_id }),
-        VasilhameLoan.filter({ company_id }),
+        Product.filter({ companyId }),
+        ProductStock.filter({ companyId }),
+        Sale.filter({ companyId }),
+        Purchase.filter({ companyId }),
+        StockTransfer.filter({ companyId }),
+        VasilhameLoan.filter({ companyId }),
         // Assumindo que existe uma entidade para retiradas de produtos
         // Se não existir, pode usar uma lista vazia ou implementar
         Promise.resolve([]) // Placeholder for ProductPickup.list()
@@ -83,33 +83,33 @@ export default function StockReport() {
 
       const calculatedData = allProducts.map(product => {
         // 1. Encontrar o estoque base inicial
-        const initialStockRecord = allStocks.find(s => s.product_id === product.id && s.sector_id === filters.sectorId);
-        const stockStartDate = initialStockRecord ? parseISO(initialStockRecord.initial_date) : new Date(0);
+        const initialStockRecord = allStocks.find(s => s.productId === product.id && s.sectorId === filters.sectorId);
+        const stockStartDate = initialStockRecord ? parseISO(initialStockRecord.initialDate) : new Date(0);
         let openingBalance = initialStockRecord ? (initialStockRecord.quantity || 0) : 0;
 
         // 2. Calcular o saldo inicial no começo do dia do relatório
         // Ajustar com todas as movimentações anteriores ao dia do relatório
         allPurchases
-          .filter(p => p.sector_id === filters.sectorId && p.items.some(i => i.product_id === product.id) && isBefore(parseISO(p.purchase_date), reportDate) && !isBefore(parseISO(p.purchase_date), stockStartDate))
-          .forEach(p => p.items.filter(i => i.product_id === product.id).forEach(i => openingBalance += i.quantity));
+          .filter(p => p.sectorId === filters.sectorId && p.items.some(i => i.productId === product.id) && isBefore(parseISO(p.purchaseDate), reportDate) && !isBefore(parseISO(p.purchaseDate), stockStartDate))
+          .forEach(p => p.items.filter(i => i.productId === product.id).forEach(i => openingBalance += i.quantity));
 
         allSales
-          .filter(s => s.sector_id === filters.sectorId && s.items.some(i => i.product_id === product.id) && isBefore(parseISO(s.sale_date), reportDate) && !isBefore(parseISO(s.sale_date), stockStartDate))
-          .forEach(s => s.items.filter(i => i.product_id === product.id).forEach(i => openingBalance -= i.quantity));
+          .filter(s => s.sectorId === filters.sectorId && s.items.some(i => i.productId === product.id) && isBefore(parseISO(s.saleDate), reportDate) && !isBefore(parseISO(s.saleDate), stockStartDate))
+          .forEach(s => s.items.filter(i => i.productId === product.id).forEach(i => openingBalance -= i.quantity));
 
         allTransfers
-          .filter(t => t.product_id === product.id && isBefore(parseISO(t.transfer_date), reportDate) && !isBefore(parseISO(t.transfer_date), stockStartDate))
+          .filter(t => t.productId === product.id && isBefore(parseISO(t.transferDate), reportDate) && !isBefore(parseISO(t.transferDate), stockStartDate))
           .forEach(t => {
-            if (t.to_sector_id === filters.sectorId) openingBalance += t.quantity;
-            if (t.from_sector_id === filters.sectorId) openingBalance -= t.quantity;
+            if (t.toSectorId === filters.sectorId) openingBalance += t.quantity;
+            if (t.fromSectorId === filters.sectorId) openingBalance -= t.quantity;
           });
 
         allLoans
-          .filter(l => l.vasilhame_id === product.id && isBefore(parseISO(l.loan_date), reportDate) && !isBefore(parseISO(l.loan_date), stockStartDate))
+          .filter(l => l.vasilhameId === product.id && isBefore(parseISO(l.loanDate), reportDate) && !isBefore(parseISO(l.loanDate), stockStartDate))
           .forEach(l => {
-              const sale = allSales.find(s => s.id === l.sale_id);
-              if (sale && sale.sector_id === filters.sectorId) {
-                  openingBalance -= l.loan_quantity;
+              const sale = allSales.find(s => s.id === l.saleId);
+              if (sale && sale.sectorId === filters.sectorId) {
+                  openingBalance -= l.loanQuantity;
               }
           });
 
@@ -117,35 +117,35 @@ export default function StockReport() {
         
         // Quantidade Comprada no dia
         const qtdeComprada = allPurchases
-          .filter(p => p.sector_id === filters.sectorId && p.items.some(i => i.product_id === product.id) && parseISO(p.purchase_date) >= reportDate && parseISO(p.purchase_date) <= endOfReportDate)
-          .flatMap(p => p.items.filter(i => i.product_id === product.id))
+          .filter(p => p.sectorId === filters.sectorId && p.items.some(i => i.productId === product.id) && parseISO(p.purchaseDate) >= reportDate && parseISO(p.purchaseDate) <= endOfReportDate)
+          .flatMap(p => p.items.filter(i => i.productId === product.id))
           .reduce((sum, i) => sum + i.quantity, 0);
 
         // Quantidade Vendida no dia
         const qtdeVendida = allSales
-          .filter(s => s.sector_id === filters.sectorId && s.items.some(i => i.product_id === product.id) && parseISO(s.sale_date) >= reportDate && parseISO(s.sale_date) <= endOfReportDate)
-          .flatMap(s => s.items.filter(i => i.product_id === product.id))
+          .filter(s => s.sectorId === filters.sectorId && s.items.some(i => i.productId === product.id) && parseISO(s.saleDate) >= reportDate && parseISO(s.saleDate) <= endOfReportDate)
+          .flatMap(s => s.items.filter(i => i.productId === product.id))
           .reduce((sum, i) => sum + i.quantity, 0);
 
         // Quantidade Transferida (entrada - saída) no dia
         const transfersIn = allTransfers
-          .filter(t => t.product_id === product.id && t.to_sector_id === filters.sectorId && parseISO(t.transfer_date) >= reportDate && parseISO(t.transfer_date) <= endOfReportDate)
+          .filter(t => t.productId === product.id && t.toSectorId === filters.sectorId && parseISO(t.transferDate) >= reportDate && parseISO(t.transferDate) <= endOfReportDate)
           .reduce((sum, t) => sum + t.quantity, 0);
 
         const transfersOut = allTransfers
-          .filter(t => t.product_id === product.id && t.from_sector_id === filters.sectorId && parseISO(t.transfer_date) >= reportDate && parseISO(t.transfer_date) <= endOfReportDate)
+          .filter(t => t.productId === product.id && t.fromSectorId === filters.sectorId && parseISO(t.transferDate) >= reportDate && parseISO(t.transferDate) <= endOfReportDate)
           .reduce((sum, t) => sum + t.quantity, 0);
 
         const qtdeTransferida = transfersIn - transfersOut;
 
         // Quantidade de Empréstimos de Vasilhame no dia (considerada como saída)
         const qtdeEmprestada = allLoans
-          .filter(l => l.vasilhame_id === product.id && parseISO(l.loan_date) >= reportDate && parseISO(l.loan_date) <= endOfReportDate)
+          .filter(l => l.vasilhameId === product.id && parseISO(l.loanDate) >= reportDate && parseISO(l.loanDate) <= endOfReportDate)
           .filter(l => {
-              const sale = allSales.find(s => s.id === l.sale_id);
-              return sale && sale.sector_id === filters.sectorId;
+              const sale = allSales.find(s => s.id === l.saleId);
+              return sale && sale.sectorId === filters.sectorId;
           })
-          .reduce((sum, l) => sum + l.loan_quantity, 0);
+          .reduce((sum, l) => sum + l.loanQuantity, 0);
 
         // Quantidade Baixada/Retirada no dia
         // Aqui você pode implementar a lógica para produtos retirados pelos clientes

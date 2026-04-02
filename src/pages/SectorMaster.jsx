@@ -24,7 +24,7 @@ export default function SectorMasterPage() {
   const loadData = useCallback(async () => {
     try {
       const user = await User.me();
-      const sectorMastersData = await SectorMaster.filter({ company_id: user.company_id }, '-created_date');
+      const sectorMastersData = await SectorMaster.filter({ companyId: user.companyId }, '-createdDate');
       setSectorMasters(sectorMastersData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -62,15 +62,15 @@ export default function SectorMasterPage() {
       
       const payload = {
         ...currentSectorMaster,
-        company_id: user.company_id,
-        company_name: user.company_name
+        companyId: user.companyId,
+        companyName: user.companyName
       };
 
       if (isEditing) {
         const { id, ...sectorMasterData } = payload;
         await SectorMaster.update(id, sectorMasterData);
       } else {
-        await SectorMaster.create({ ...payload, created_by_name: user.full_name });
+        await SectorMaster.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();

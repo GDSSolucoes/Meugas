@@ -19,11 +19,11 @@ export default function PeopleReport() {
   const loadPeople = async () => {
     try {
       const user = await User.me();
-      if (!user.company_id) {
+      if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Person.filter({ company_id: user.company_id }, '-created_date');
+      const data = await Person.filter({ companyId: user.companyId }, '-createdDate');
       setPeople(data);
     } catch (error) {
       console.error("Erro ao carregar pessoas:", error);
@@ -36,13 +36,13 @@ export default function PeopleReport() {
     const colors = {
       cliente: "bg-blue-100 text-blue-800",
       fornecedor: "bg-green-100 text-green-800",
-      ponto_venda: "bg-purple-100 text-purple-800",
+      pontoVenda: "bg-purple-100 text-purple-800",
       conveniada: "bg-amber-100 text-amber-800"
     };
     const labels = {
       cliente: "Cliente",
       fornecedor: "Fornecedor",
-      ponto_venda: "Ponto de Venda",
+      pontoVenda: "Ponto de Venda",
       conveniada: "Conveniada"
     };
     return <Badge className={colors[type]}>{labels[type]}</Badge>;
@@ -50,7 +50,7 @@ export default function PeopleReport() {
 
   const clientes = people.filter(p => p.type === 'cliente');
   const fornecedores = people.filter(p => p.type === 'fornecedor');
-  const pontosVenda = people.filter(p => p.type === 'ponto_venda');
+  const pontosVenda = people.filter(p => p.type === 'pontoVenda');
   const conveniadas = people.filter(p => p.type === 'conveniada');
 
   return (

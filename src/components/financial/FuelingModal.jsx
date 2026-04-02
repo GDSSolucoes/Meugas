@@ -45,19 +45,19 @@ export default function FuelingModal({
   // Form states
   const [formData, setFormData] = useState({
     plate: '',
-    fleet_number: '',
-    vehicle_id: '',
-    vehicle_type: '',
-    vehicle_description: '',
-    driver_id: '',
-    driver_name: '',
-    last_fueling_date: '',
-    last_km: 0,
-    fueling_date: format(new Date(), 'yyyy-MM-dd'),
-    current_km: '',
+    fleetNumber: '',
+    vehicleId: '',
+    vehicleType: '',
+    vehicleDescription: '',
+    driverId: '',
+    driverName: '',
+    lastFuelingDate: '',
+    lastKm: 0,
+    fuelingDate: format(new Date(), 'yyyy-MM-dd'),
+    currentKm: '',
     liters: '',
-    total_value: '',
-    create_expense: false
+    totalValue: '',
+    createExpense: false
   });
   
   // UI states
@@ -71,7 +71,7 @@ export default function FuelingModal({
   const isFormDisabled = editMode === 'none';
 
   useEffect(() => {
-    if (open && currentUser?.company_id) {
+    if (open && currentUser?.companyId) {
       loadData();
     }
   }, [open, currentUser]);
@@ -79,10 +79,10 @@ export default function FuelingModal({
   const loadData = async () => {
     try {
       const [vehiclesData, employeesData, fuelingsData, groupsData] = await Promise.all([
-        Vehicle.filter({ company_id: currentUser.company_id, active: true }),
-        Employee.filter({ company_id: currentUser.company_id, active: true }),
-        Fueling.filter({ company_id: currentUser.company_id }, '-fueling_date', 100),
-        FinancialGroup.filter({ company_id: currentUser.company_id, active: true })
+        Vehicle.filter({ companyId: currentUser.companyId, active: true }),
+        Employee.filter({ companyId: currentUser.companyId, active: true }),
+        Fueling.filter({ companyId: currentUser.companyId }, '-fuelingDate', 100),
+        FinancialGroup.filter({ companyId: currentUser.companyId, active: true })
       ]);
       
       setVehicles(vehiclesData);
@@ -97,19 +97,19 @@ export default function FuelingModal({
   const resetForm = () => {
     setFormData({
       plate: '',
-      fleet_number: '',
-      vehicle_id: '',
-      vehicle_type: '',
-      vehicle_description: '',
-      driver_id: '',
-      driver_name: '',
-      last_fueling_date: '',
-      last_km: 0,
-      fueling_date: format(new Date(), 'yyyy-MM-dd'),
-      current_km: '',
+      fleetNumber: '',
+      vehicleId: '',
+      vehicleType: '',
+      vehicleDescription: '',
+      driverId: '',
+      driverName: '',
+      lastFuelingDate: '',
+      lastKm: 0,
+      fuelingDate: format(new Date(), 'yyyy-MM-dd'),
+      currentKm: '',
       liters: '',
-      total_value: '',
-      create_expense: false
+      totalValue: '',
+      createExpense: false
     });
     setSelectedFueling(null);
     setEditMode('none');
@@ -122,46 +122,46 @@ export default function FuelingModal({
     
     if (vehicle) {
       // Buscar último abastecimento do veículo
-      const vehicleFuelings = fuelings.filter(f => f.vehicle_id === vehicle.id);
+      const vehicleFuelings = fuelings.filter(f => f.vehicleId === vehicle.id);
       const lastFueling = vehicleFuelings.length > 0 ? vehicleFuelings[0] : null;
       
       setFormData(prev => ({
         ...prev,
         plate: vehicle.plate,
-        fleet_number: vehicle.fleet_number || '',
-        vehicle_id: vehicle.id,
-        vehicle_type: vehicle.type,
-        vehicle_description: vehicle.description,
-        last_fueling_date: lastFueling?.fueling_date || '',
-        last_km: lastFueling?.current_km || vehicle.initial_km || 0
+        fleetNumber: vehicle.fleetNumber || '',
+        vehicleId: vehicle.id,
+        vehicleType: vehicle.type,
+        vehicleDescription: vehicle.description,
+        lastFuelingDate: lastFueling?.fuelingDate || '',
+        lastKm: lastFueling?.currentKm || vehicle.initialKm || 0
       }));
       setPlateError('');
     } else {
       setPlateError('Veículo não cadastrado');
       setFormData(prev => ({
         ...prev,
-        vehicle_id: '',
-        vehicle_type: '',
-        vehicle_description: '',
-        last_fueling_date: '',
-        last_km: 0
+        vehicleId: '',
+        vehicleType: '',
+        vehicleDescription: '',
+        lastFuelingDate: '',
+        lastKm: 0
       }));
     }
   };
 
   const selectVehicle = (vehicle) => {
-    const vehicleFuelings = fuelings.filter(f => f.vehicle_id === vehicle.id);
+    const vehicleFuelings = fuelings.filter(f => f.vehicleId === vehicle.id);
     const lastFueling = vehicleFuelings.length > 0 ? vehicleFuelings[0] : null;
     
     setFormData(prev => ({
       ...prev,
       plate: vehicle.plate,
-      fleet_number: vehicle.fleet_number || '',
-      vehicle_id: vehicle.id,
-      vehicle_type: vehicle.type,
-      vehicle_description: vehicle.description,
-      last_fueling_date: lastFueling?.fueling_date || '',
-      last_km: lastFueling?.current_km || vehicle.initial_km || 0
+      fleetNumber: vehicle.fleetNumber || '',
+      vehicleId: vehicle.id,
+      vehicleType: vehicle.type,
+      vehicleDescription: vehicle.description,
+      lastFuelingDate: lastFueling?.fuelingDate || '',
+      lastKm: lastFueling?.currentKm || vehicle.initialKm || 0
     }));
     setPlateError('');
     setShowVehicleSearch(false);
@@ -172,15 +172,15 @@ export default function FuelingModal({
     const driver = employees.find(e => e.id === driverId);
     setFormData(prev => ({
       ...prev,
-      driver_id: driverId,
-      driver_name: driver?.name || ''
+      driverId: driverId,
+      driverName: driver?.name || ''
     }));
   };
 
   const calculateMetrics = () => {
-    const kmTraveled = Number(formData.current_km) - formData.last_km;
+    const kmTraveled = Number(formData.currentKm) - formData.lastKm;
     const liters = Number(formData.liters);
-    const totalValue = Number(formData.total_value);
+    const totalValue = Number(formData.totalValue);
     
     const consumption = liters > 0 ? (kmTraveled / liters).toFixed(2) : 0;
     const costPerKm = kmTraveled > 0 ? (totalValue / kmTraveled).toFixed(2) : 0;
@@ -190,23 +190,23 @@ export default function FuelingModal({
   };
 
   const validateForm = () => {
-    if (!formData.vehicle_id) {
+    if (!formData.vehicleId) {
       toast({ title: "Erro", description: "Selecione um veículo.", variant: "destructive" });
       return false;
     }
-    if (!formData.driver_id) {
+    if (!formData.driverId) {
       toast({ title: "Erro", description: "Selecione um condutor.", variant: "destructive" });
       return false;
     }
-    if (!formData.fueling_date) {
+    if (!formData.fuelingDate) {
       toast({ title: "Erro", description: "Data é obrigatória.", variant: "destructive" });
       return false;
     }
-    if (!formData.current_km || Number(formData.current_km) <= 0) {
+    if (!formData.currentKm || Number(formData.currentKm) <= 0) {
       toast({ title: "Erro", description: "Km atual deve ser maior que zero.", variant: "destructive" });
       return false;
     }
-    if (Number(formData.current_km) <= formData.last_km) {
+    if (Number(formData.currentKm) <= formData.lastKm) {
       toast({ title: "Erro", description: "Km atual deve ser maior que o último registro.", variant: "destructive" });
       return false;
     }
@@ -214,7 +214,7 @@ export default function FuelingModal({
       toast({ title: "Erro", description: "Quantidade de litros deve ser maior que zero.", variant: "destructive" });
       return false;
     }
-    if (!formData.total_value || Number(formData.total_value) <= 0) {
+    if (!formData.totalValue || Number(formData.totalValue) <= 0) {
       toast({ title: "Erro", description: "Valor deve ser maior que zero.", variant: "destructive" });
       return false;
     }
@@ -228,24 +228,24 @@ export default function FuelingModal({
       const metrics = calculateMetrics();
       
       const fuelingData = {
-        vehicle_id: formData.vehicle_id,
-        vehicle_plate: formData.plate,
-        vehicle_description: formData.vehicle_description,
-        fleet_number: formData.fleet_number,
-        driver_id: formData.driver_id,
-        driver_name: formData.driver_name,
-        fueling_date: formData.fueling_date,
-        current_km: Number(formData.current_km),
+        vehicleId: formData.vehicleId,
+        vehiclePlate: formData.plate,
+        vehicleDescription: formData.vehicleDescription,
+        fleetNumber: formData.fleetNumber,
+        driverId: formData.driverId,
+        driverName: formData.driverName,
+        fuelingDate: formData.fuelingDate,
+        currentKm: Number(formData.currentKm),
         liters: Number(formData.liters),
-        total_value: Number(formData.total_value),
-        price_per_liter: Number(metrics.pricePerLiter),
-        km_traveled: metrics.kmTraveled,
+        totalValue: Number(formData.totalValue),
+        pricePerLiter: Number(metrics.pricePerLiter),
+        kmTraveled: metrics.kmTraveled,
         consumption: Number(metrics.consumption),
-        cost_per_km: Number(metrics.costPerKm),
-        create_expense: formData.create_expense,
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        costPerKm: Number(metrics.costPerKm),
+        createExpense: formData.createExpense,
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       };
 
       let savedFueling;
@@ -258,7 +258,7 @@ export default function FuelingModal({
       }
 
       // Criar lançamento de despesa se checkbox marcado
-      if (formData.create_expense && selectedAccount) {
+      if (formData.createExpense && selectedAccount) {
         const account = cashAccounts.find(a => a.id === selectedAccount);
         const combustivelGroup = groups.find(g => 
           g.name.toUpperCase().includes('COMBUSTÍVEL') || 
@@ -266,28 +266,28 @@ export default function FuelingModal({
         );
 
         const movementData = {
-          cash_account_id: selectedAccount,
-          cash_account_name: account?.name || '',
+          cashAccountId: selectedAccount,
+          cashAccountName: account?.name || '',
           type: 'despesa',
           description: `Abastecimento - ${formData.plate}`,
-          amount: Number(formData.total_value),
-          movement_date: formData.fueling_date,
-          group_id: combustivelGroup?.id || '',
-          group_name: combustivelGroup?.name || 'COMBUSTÍVEL',
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name
+          amount: Number(formData.totalValue),
+          movementDate: formData.fuelingDate,
+          groupId: combustivelGroup?.id || '',
+          groupName: combustivelGroup?.name || 'COMBUSTÍVEL',
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName
         };
 
         const movement = await CashMovement.create(movementData);
         
         // Atualizar saldo da conta
         await CashAccount.update(selectedAccount, {
-          balance: (account?.balance || 0) - Number(formData.total_value)
+          balance: (account?.balance || 0) - Number(formData.totalValue)
         });
 
         // Atualizar fueling com ID do movimento
-        await Fueling.update(savedFueling.id, { cash_movement_id: movement.id });
+        await Fueling.update(savedFueling.id, { cashMovementId: movement.id });
 
         toast({ title: "Sucesso", description: "Abastecimento registrado e lançamento de despesa criado!" });
         
@@ -323,25 +323,25 @@ export default function FuelingModal({
     
     // Buscar último abastecimento anterior a este
     const vehicleFuelings = fuelings
-      .filter(f => f.vehicle_id === fueling.vehicle_id && f.id !== fueling.id)
-      .sort((a, b) => new Date(b.fueling_date) - new Date(a.fueling_date));
-    const previousFueling = vehicleFuelings.find(f => new Date(f.fueling_date) < new Date(fueling.fueling_date));
+      .filter(f => f.vehicleId === fueling.vehicleId && f.id !== fueling.id)
+      .sort((a, b) => new Date(b.fuelingDate) - new Date(a.fuelingDate));
+    const previousFueling = vehicleFuelings.find(f => new Date(f.fuelingDate) < new Date(fueling.fuelingDate));
     
     setFormData({
-      plate: fueling.vehicle_plate,
-      fleet_number: fueling.fleet_number || '',
-      vehicle_id: fueling.vehicle_id,
-      vehicle_type: vehicles.find(v => v.id === fueling.vehicle_id)?.type || '',
-      vehicle_description: fueling.vehicle_description,
-      driver_id: fueling.driver_id,
-      driver_name: fueling.driver_name,
-      last_fueling_date: previousFueling?.fueling_date || '',
-      last_km: previousFueling?.current_km || 0,
-      fueling_date: fueling.fueling_date,
-      current_km: fueling.current_km,
+      plate: fueling.vehiclePlate,
+      fleetNumber: fueling.fleetNumber || '',
+      vehicleId: fueling.vehicleId,
+      vehicleType: vehicles.find(v => v.id === fueling.vehicleId)?.type || '',
+      vehicleDescription: fueling.vehicleDescription,
+      driverId: fueling.driverId,
+      driverName: fueling.driverName,
+      lastFuelingDate: previousFueling?.fuelingDate || '',
+      lastKm: previousFueling?.currentKm || 0,
+      fuelingDate: fueling.fuelingDate,
+      currentKm: fueling.currentKm,
       liters: fueling.liters,
-      total_value: fueling.total_value,
-      create_expense: fueling.create_expense || false
+      totalValue: fueling.totalValue,
+      createExpense: fueling.createExpense || false
     });
     setShowFuelingSearch(false);
   };
@@ -355,7 +355,7 @@ export default function FuelingModal({
     const term = vehicleSearchTerm.toLowerCase();
     return v.plate.toLowerCase().includes(term) || 
            v.description.toLowerCase().includes(term) ||
-           v.fleet_number?.toLowerCase().includes(term);
+           v.fleetNumber?.toLowerCase().includes(term);
   });
 
   return (
@@ -397,8 +397,8 @@ export default function FuelingModal({
                 <div className="col-span-3">
                   <Label className="text-xs font-medium">Nº Frota:</Label>
                   <Input
-                    value={formData.fleet_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fleet_number: e.target.value }))}
+                    value={formData.fleetNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fleetNumber: e.target.value }))}
                     placeholder="001"
                     className={`h-8 ${isFormDisabled ? 'bg-slate-100' : 'bg-white'}`}
                     disabled={isFormDisabled}
@@ -411,7 +411,7 @@ export default function FuelingModal({
                 <div className="col-span-3">
                   <Label className="text-xs font-medium">Tipo:</Label>
                   <Input
-                    value={vehicleTypes[formData.vehicle_type] || ''}
+                    value={vehicleTypes[formData.vehicleType] || ''}
                     readOnly
                     className="h-8 bg-slate-100 text-slate-600"
                   />
@@ -419,7 +419,7 @@ export default function FuelingModal({
                 <div className="col-span-9">
                   <Label className="text-xs font-medium">Descrição:</Label>
                   <Input
-                    value={formData.vehicle_description}
+                    value={formData.vehicleDescription}
                     readOnly
                     className="h-8 bg-slate-100 text-slate-600"
                   />
@@ -438,7 +438,7 @@ export default function FuelingModal({
                 <div className="col-span-5">
                   <Label className="text-xs font-medium">Condutor:</Label>
                   <Select 
-                    value={formData.driver_id} 
+                    value={formData.driverId} 
                     onValueChange={handleDriverChange}
                     disabled={isFormDisabled}
                   >
@@ -456,7 +456,7 @@ export default function FuelingModal({
                 <div className="col-span-3">
                   <Label className="text-xs font-medium">Último Abastecimento:</Label>
                   <Input
-                    value={formData.last_fueling_date ? format(parseISO(formData.last_fueling_date), 'dd/MM/yyyy') : '-'}
+                    value={formData.lastFuelingDate ? format(parseISO(formData.lastFuelingDate), 'dd/MM/yyyy') : '-'}
                     readOnly
                     className="h-8 bg-slate-100 text-slate-600"
                   />
@@ -465,7 +465,7 @@ export default function FuelingModal({
                 <div className="col-span-4">
                   <Label className="text-xs font-medium">Quilometragem (Último):</Label>
                   <Input
-                    value={formData.last_km ? `${formData.last_km.toLocaleString('pt-BR')} km` : '-'}
+                    value={formData.lastKm ? `${formData.lastKm.toLocaleString('pt-BR')} km` : '-'}
                     readOnly
                     className="h-8 bg-slate-100 text-slate-600"
                   />
@@ -478,8 +478,8 @@ export default function FuelingModal({
                   <Label className="text-xs font-medium">Data:</Label>
                   <Input
                     type="date"
-                    value={formData.fueling_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fueling_date: e.target.value }))}
+                    value={formData.fuelingDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fuelingDate: e.target.value }))}
                     max={format(new Date(), 'yyyy-MM-dd')}
                     className={`h-8 ${isFormDisabled ? 'bg-slate-100' : 'bg-white'}`}
                     disabled={isFormDisabled}
@@ -490,8 +490,8 @@ export default function FuelingModal({
                   <Label className="text-xs font-medium">Km Atual:</Label>
                   <Input
                     type="number"
-                    value={formData.current_km}
-                    onChange={(e) => setFormData(prev => ({ ...prev, current_km: e.target.value }))}
+                    value={formData.currentKm}
+                    onChange={(e) => setFormData(prev => ({ ...prev, currentKm: e.target.value }))}
                     placeholder="0"
                     className={`h-8 ${isFormDisabled ? 'bg-slate-100' : 'bg-white'}`}
                     disabled={isFormDisabled}
@@ -516,8 +516,8 @@ export default function FuelingModal({
                   <Input
                     type="number"
                     step="0.01"
-                    value={formData.total_value}
-                    onChange={(e) => setFormData(prev => ({ ...prev, total_value: e.target.value }))}
+                    value={formData.totalValue}
+                    onChange={(e) => setFormData(prev => ({ ...prev, totalValue: e.target.value }))}
                     placeholder="0,00"
                     className={`h-8 ${isFormDisabled ? 'bg-slate-100' : 'bg-white'}`}
                     disabled={isFormDisabled}
@@ -526,7 +526,7 @@ export default function FuelingModal({
               </div>
 
               {/* Métricas calculadas */}
-              {formData.current_km && formData.liters && formData.total_value && (
+              {formData.currentKm && formData.liters && formData.totalValue && (
                 <div className="flex gap-4 mb-4">
                   <Badge variant="outline" className="text-xs">
                     Km Percorridos: {metrics.kmTraveled.toLocaleString('pt-BR')} km
@@ -546,12 +546,12 @@ export default function FuelingModal({
               {/* Checkbox */}
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="create_expense"
-                  checked={formData.create_expense}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, create_expense: checked }))}
+                  id="createExpense"
+                  checked={formData.createExpense}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, createExpense: checked }))}
                   disabled={isFormDisabled}
                 />
-                <Label htmlFor="create_expense" className="text-sm">
+                <Label htmlFor="createExpense" className="text-sm">
                   Transformar Abastecimento em despesa
                 </Label>
               </div>
@@ -672,7 +672,7 @@ export default function FuelingModal({
                         <TableCell className="font-mono">{v.plate}</TableCell>
                         <TableCell>{v.description}</TableCell>
                         <TableCell>{vehicleTypes[v.type]}</TableCell>
-                        <TableCell>{v.fleet_number || '-'}</TableCell>
+                        <TableCell>{v.fleetNumber || '-'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -708,12 +708,12 @@ export default function FuelingModal({
                       className="cursor-pointer hover:bg-blue-50"
                       onDoubleClick={() => handleSelectFueling(f)}
                     >
-                      <TableCell className="text-xs">{format(parseISO(f.fueling_date), 'dd/MM/yyyy')}</TableCell>
-                      <TableCell className="text-xs font-mono">{f.vehicle_plate}</TableCell>
-                      <TableCell className="text-xs">{f.driver_name}</TableCell>
-                      <TableCell className="text-xs">{f.current_km?.toLocaleString('pt-BR')}</TableCell>
+                      <TableCell className="text-xs">{format(parseISO(f.fuelingDate), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="text-xs font-mono">{f.vehiclePlate}</TableCell>
+                      <TableCell className="text-xs">{f.driverName}</TableCell>
+                      <TableCell className="text-xs">{f.currentKm?.toLocaleString('pt-BR')}</TableCell>
                       <TableCell className="text-xs">{f.liters?.toFixed(2)}</TableCell>
-                      <TableCell className="text-xs">{formatCurrency(f.total_value)}</TableCell>
+                      <TableCell className="text-xs">{formatCurrency(f.totalValue)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

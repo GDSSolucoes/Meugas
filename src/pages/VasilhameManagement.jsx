@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Edit, Search, X, LogOut, Printer, ArrowRight } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
 import { Link } from "react-router-dom";
@@ -51,7 +51,7 @@ export default function VasilhameManagement() {
   const [setorEstqProprioValue, setSetorEstqProprioValue] = useState('');
   const [setorEstqProprioNome, setSetorEstqProprioNome] = useState('');
 
-  const [periodoTipo, setPeriodoTipo] = useState('a_devolver');
+  const [periodoTipo, setPeriodoTipo] = useState('aDevolver');
   const [dataInicial, setDataInicial] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [dataFinal, setDataFinal] = useState(format(new Date(), 'yyyy-MM-dd'));
 
@@ -72,11 +72,11 @@ export default function VasilhameManagement() {
       setCurrentUser(user);
       
       const [loansData, peopleData, vasilhamesData, sectorsData, sectorMastersData] = await Promise.all([
-        base44.entities.VasilhameLoan.filter({ company_id: user.company_id }, '-created_date'),
-        base44.entities.Person.filter({ company_id: user.company_id }),
-        base44.entities.Product.filter({ company_id: user.company_id, category: 'vasilhame', active: true }),
-        base44.entities.Sector.filter({ company_id: user.company_id, active: true }),
-        base44.entities.SectorMaster.filter({ company_id: user.company_id })
+        entities.VasilhameLoan.filter({ companyId: user.companyId }, '-createdDate'),
+        entities.Person.filter({ companyId: user.companyId }),
+        entities.Product.filter({ companyId: user.companyId, category: 'vasilhame', active: true }),
+        entities.Sector.filter({ companyId: user.companyId, active: true }),
+        entities.SectorMaster.filter({ companyId: user.companyId })
       ]);
       
       setLoans(loansData);
@@ -102,15 +102,15 @@ export default function VasilhameManagement() {
 
     // Filtro por Cliente/Pto.Venda
     if (filtroClientePdv) {
-      filtered = filtered.filter(loan => loan.person_id === filtroClientePdv);
+      filtered = filtered.filter(loan => loan.personId === filtroClientePdv);
     } else {
       // Filtrar por tipo de pessoa baseado nos checkboxes
       filtered = filtered.filter(loan => {
-        const person = people.find(p => p.id === loan.person_id);
+        const person = people.find(p => p.id === loan.personId);
         if (!person) return false;
         
         const isCliente = person.type === 'cliente';
-        const isPontoVenda = person.type === 'ponto_venda';
+        const isPontoVenda = person.type === 'pontoVenda';
         
         if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
         if (filtrarCliente && isCliente) return true;
@@ -122,24 +122,24 @@ export default function VasilhameManagement() {
 
     // Filtro por Setor Master
     if (setorMaster && setorMasterValue) {
-      filtered = filtered.filter(loan => loan.sector_master_id === setorMasterValue);
+      filtered = filtered.filter(loan => loan.sectorMasterId === setorMasterValue);
     }
 
     // Filtro por Setor Estoque Próprio
     if (setorEstqProprio && setorEstqProprioValue) {
-      filtered = filtered.filter(loan => loan.sector_id === setorEstqProprioValue);
+      filtered = filtered.filter(loan => loan.sectorId === setorEstqProprioValue);
     }
 
     // Filtro por Período
-    if (periodoTipo === 'a_devolver') {
-      filtered = filtered.filter(loan => loan.status !== 'devolvido_total' && loan.status !== 'devolvido_parcial');
+    if (periodoTipo === 'aDevolver') {
+      filtered = filtered.filter(loan => loan.status !== 'devolvidoTotal' && loan.status !== 'devolvidoParcial');
     } else {
       // Devolvidos entre datas
       filtered = filtered.filter(loan => {
-        if (loan.status !== 'devolvido_total') return false;
-        if (!loan.return_date) return false;
+        if (loan.status !== 'devolvidoTotal') return false;
+        if (!loan.returnDate) return false;
         
-        const returnDate = parseISO(loan.return_date);
+        const returnDate = parseISO(loan.returnDate);
         const start = startOfDay(new Date(dataInicial + 'T00:00:00'));
         const end = endOfDay(new Date(dataFinal + 'T23:59:59'));
         
@@ -149,11 +149,11 @@ export default function VasilhameManagement() {
 
     // Filtro por Produto
     if (filtroProduto) {
-      filtered = filtered.filter(loan => loan.vasilhame_id === filtroProduto);
+      filtered = filtered.filter(loan => loan.vasilhameId === filtroProduto);
     }
 
     // Ordenar por data mais recente
-    filtered.sort((a, b) => new Date(b.loan_date || 0) - new Date(a.loan_date || 0));
+    filtered.sort((a, b) => new Date(b.loanDate || 0) - new Date(a.loanDate || 0));
 
     setDisplayedLoans(filtered);
     setShowResults(true);
@@ -186,7 +186,7 @@ export default function VasilhameManagement() {
     setSetorEstqProprio(false);
     setSetorEstqProprioValue('');
     setSetorEstqProprioNome('');
-    setPeriodoTipo('a_devolver');
+    setPeriodoTipo('aDevolver');
     setDataInicial(format(new Date(), 'yyyy-MM-dd'));
     setDataFinal(format(new Date(), 'yyyy-MM-dd'));
     setFiltroProduto('');
@@ -201,8 +201,8 @@ export default function VasilhameManagement() {
       toast({ title: "Atenção", description: "Selecione um registro para modificar.", variant: "destructive" });
       return;
     }
-    setModDevolvido(selectedLoan.status === 'devolvido_total');
-    setModDataDevolucao(selectedLoan.return_date || format(new Date(), 'yyyy-MM-dd'));
+    setModDevolvido(selectedLoan.status === 'devolvidoTotal');
+    setModDataDevolucao(selectedLoan.returnDate || format(new Date(), 'yyyy-MM-dd'));
     setShowModificarModal(true);
   };
 
@@ -210,10 +210,10 @@ export default function VasilhameManagement() {
     if (!selectedLoan) return;
 
     try {
-      await base44.entities.VasilhameLoan.update(selectedLoan.id, {
-        status: modDevolvido ? 'devolvido_total' : 'pendente',
-        returned_quantity: modDevolvido ? selectedLoan.loan_quantity : 0,
-        return_date: modDevolvido ? modDataDevolucao : null
+      await entities.VasilhameLoan.update(selectedLoan.id, {
+        status: modDevolvido ? 'devolvidoTotal' : 'pendente',
+        returnedQuantity: modDevolvido ? selectedLoan.loanQuantity : 0,
+        returnDate: modDevolvido ? modDataDevolucao : null
       });
 
       toast({ title: "Sucesso", description: "Registro atualizado com sucesso." });
@@ -267,7 +267,7 @@ export default function VasilhameManagement() {
         <div class="filters">
           <strong>Filtros:</strong> 
           Tipo: ${filtrarCliente && filtrarPontoVenda ? 'Cliente e Pto. Venda' : filtrarCliente ? 'Cliente' : 'Pto. Venda'} |
-          Período: ${periodoTipo === 'a_devolver' ? 'A Devolver' : `Devolvidos de ${format(parseISO(dataInicial), 'dd/MM/yyyy')} a ${format(parseISO(dataFinal), 'dd/MM/yyyy')}`}
+          Período: ${periodoTipo === 'aDevolver' ? 'A Devolver' : `Devolvidos de ${format(parseISO(dataInicial), 'dd/MM/yyyy')} a ${format(parseISO(dataFinal), 'dd/MM/yyyy')}`}
           ${filtroProdutoNome ? ` | Produto: ${filtroProdutoNome}` : ''}
         </div>
 
@@ -285,14 +285,14 @@ export default function VasilhameManagement() {
           </thead>
           <tbody>
             ${dataToprint.map(loan => `
-              <tr class="${loan.status === 'devolvido_total' ? 'devolvido' : 'pendente'}">
-                <td>${loan.loan_date ? format(parseISO(loan.loan_date), 'dd/MM/yyyy') : '-'}</td>
-                <td>${loan.sale_id?.slice(-6) || '-'}</td>
-                <td>${loan.person_name || '-'}</td>
-                <td>${loan.vasilhame_name || '-'}</td>
-                <td>${loan.loan_quantity || 0}</td>
-                <td class="text-center">${loan.status === 'devolvido_total' ? 'Sim' : 'Não'}</td>
-                <td>${loan.return_date ? format(parseISO(loan.return_date), 'dd/MM/yyyy') : '-'}</td>
+              <tr class="${loan.status === 'devolvidoTotal' ? 'devolvido' : 'pendente'}">
+                <td>${loan.loanDate ? format(parseISO(loan.loanDate), 'dd/MM/yyyy') : '-'}</td>
+                <td>${loan.saleId?.slice(-6) || '-'}</td>
+                <td>${loan.personName || '-'}</td>
+                <td>${loan.vasilhameName || '-'}</td>
+                <td>${loan.loanQuantity || 0}</td>
+                <td class="text-center">${loan.status === 'devolvidoTotal' ? 'Sim' : 'Não'}</td>
+                <td>${loan.returnDate ? format(parseISO(loan.returnDate), 'dd/MM/yyyy') : '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -311,10 +311,10 @@ export default function VasilhameManagement() {
   };
 
   const getRowColor = (loan) => {
-    if (loan.status === 'devolvido_total') return 'bg-green-50';
+    if (loan.status === 'devolvidoTotal') return 'bg-green-50';
     // Verificar se é venda antiga (mais de 30 dias)
-    if (loan.loan_date) {
-      const loanDate = parseISO(loan.loan_date);
+    if (loan.loanDate) {
+      const loanDate = parseISO(loan.loanDate);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       if (isBefore(loanDate, thirtyDaysAgo)) {
@@ -325,7 +325,7 @@ export default function VasilhameManagement() {
   };
 
   const handleRowDoubleClick = (loan) => {
-    if (loan.status === 'devolvido_total') return;
+    if (loan.status === 'devolvidoTotal') return;
     setSelectedLoan(loan);
     setQtdeBaixar('');
     setBaixaError('');
@@ -336,7 +336,7 @@ export default function VasilhameManagement() {
     if (!selectedLoan) return;
     
     const qtde = parseInt(qtdeBaixar) || 0;
-    const pendente = (selectedLoan.loan_quantity || 0) - (selectedLoan.returned_quantity || 0);
+    const pendente = (selectedLoan.loanQuantity || 0) - (selectedLoan.returnedQuantity || 0);
     
     if (qtde <= 0) {
       setBaixaError('Informe uma quantidade válida.');
@@ -349,14 +349,14 @@ export default function VasilhameManagement() {
     }
 
     try {
-      const novaQtdeDevolvida = (selectedLoan.returned_quantity || 0) + qtde;
-      const totalEmprestado = selectedLoan.loan_quantity || 0;
-      const novoStatus = novaQtdeDevolvida >= totalEmprestado ? 'devolvido_total' : 'devolvido_parcial';
+      const novaQtdeDevolvida = (selectedLoan.returnedQuantity || 0) + qtde;
+      const totalEmprestado = selectedLoan.loanQuantity || 0;
+      const novoStatus = novaQtdeDevolvida >= totalEmprestado ? 'devolvidoTotal' : 'devolvidoParcial';
 
-      await base44.entities.VasilhameLoan.update(selectedLoan.id, {
+      await entities.VasilhameLoan.update(selectedLoan.id, {
         status: novoStatus,
-        returned_quantity: novaQtdeDevolvida,
-        return_date: novoStatus === 'devolvido_total' ? format(new Date(), 'yyyy-MM-dd') : selectedLoan.return_date
+        returnedQuantity: novaQtdeDevolvida,
+        returnDate: novoStatus === 'devolvidoTotal' ? format(new Date(), 'yyyy-MM-dd') : selectedLoan.returnDate
       });
 
       toast({ title: "Sucesso", description: `Baixa de ${qtde} vasilhame(s) realizada com sucesso.` });
@@ -374,7 +374,7 @@ export default function VasilhameManagement() {
 
   const filteredPeople = people.filter(p => {
     const isCliente = p.type === 'cliente';
-    const isPontoVenda = p.type === 'ponto_venda';
+    const isPontoVenda = p.type === 'pontoVenda';
     
     if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
     if (filtrarCliente) return isCliente;
@@ -407,19 +407,19 @@ export default function VasilhameManagement() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="fp_cliente" 
+                          id="fpCliente" 
                           checked={filtrarCliente}
                           onCheckedChange={setFiltrarCliente}
                         />
-                        <label htmlFor="fp_cliente" className="text-sm">Cliente</label>
+                        <label htmlFor="fpCliente" className="text-sm">Cliente</label>
                       </div>
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="fp_pdv" 
+                          id="fpPdv" 
                           checked={filtrarPontoVenda}
                           onCheckedChange={setFiltrarPontoVenda}
                         />
-                        <label htmlFor="fp_pdv" className="text-sm">Pto. Venda</label>
+                        <label htmlFor="fpPdv" className="text-sm">Pto. Venda</label>
                       </div>
                     </div>
                     
@@ -446,20 +446,20 @@ export default function VasilhameManagement() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="setor_geral" 
+                          id="setorGeral" 
                           checked={setorGeral} 
                           onCheckedChange={setSetorGeral}
                         />
-                        <label htmlFor="setor_geral" className="text-sm">Geral</label>
+                        <label htmlFor="setorGeral" className="text-sm">Geral</label>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="setor_master" 
+                          id="setorMaster" 
                           checked={setorMaster} 
                           onCheckedChange={setSetorMaster}
                         />
-                        <label htmlFor="setor_master" className="text-sm">Master</label>
+                        <label htmlFor="setorMaster" className="text-sm">Master</label>
                         <Input
                           value={setorMasterNome}
                           onChange={(e) => {
@@ -476,11 +476,11 @@ export default function VasilhameManagement() {
                       
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="setor_estq" 
+                          id="setorEstq" 
                           checked={setorEstqProprio} 
                           onCheckedChange={setSetorEstqProprio}
                         />
-                        <label htmlFor="setor_estq" className="text-sm whitespace-nowrap">Setor Estq.Proprio</label>
+                        <label htmlFor="setorEstq" className="text-sm whitespace-nowrap">Setor Estq.Proprio</label>
                         <Input
                           value={setorEstqProprioNome}
                           onChange={(e) => {
@@ -509,12 +509,12 @@ export default function VasilhameManagement() {
                     <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Período da venda / devolução:</h4>
                     <RadioGroup value={periodoTipo} onValueChange={setPeriodoTipo} className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <RadioGroupItem value="a_devolver" id="periodo_devolver" />
-                        <label htmlFor="periodo_devolver" className="text-sm">A Devolver</label>
+                        <RadioGroupItem value="aDevolver" id="periodoDevolver" />
+                        <label htmlFor="periodoDevolver" className="text-sm">A Devolver</label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <RadioGroupItem value="devolvidos" id="periodo_devolvidos" />
-                        <label htmlFor="periodo_devolvidos" className="text-sm">Devolvidos entre:</label>
+                        <RadioGroupItem value="devolvidos" id="periodoDevolvidos" />
+                        <label htmlFor="periodoDevolvidos" className="text-sm">Devolvidos entre:</label>
                       </div>
                     </RadioGroup>
                     
@@ -614,21 +614,21 @@ export default function VasilhameManagement() {
                             onDoubleClick={() => handleRowDoubleClick(loan)}
                           >
                             <TableCell className="text-xs">
-                              {loan.loan_date ? format(parseISO(loan.loan_date), 'dd/MM/yyyy') : '-'}
+                              {loan.loanDate ? format(parseISO(loan.loanDate), 'dd/MM/yyyy') : '-'}
                             </TableCell>
-                            <TableCell className="text-xs font-mono">{loan.sale_id?.slice(-6) || '-'}</TableCell>
-                            <TableCell className="text-xs">{loan.person_name || '-'}</TableCell>
-                            <TableCell className="text-xs">{loan.vasilhame_name || '-'}</TableCell>
-                            <TableCell className="text-xs text-center">{loan.loan_quantity || 0}</TableCell>
+                            <TableCell className="text-xs font-mono">{loan.saleId?.slice(-6) || '-'}</TableCell>
+                            <TableCell className="text-xs">{loan.personName || '-'}</TableCell>
+                            <TableCell className="text-xs">{loan.vasilhameName || '-'}</TableCell>
+                            <TableCell className="text-xs text-center">{loan.loanQuantity || 0}</TableCell>
                             <TableCell className="text-xs text-center">
-                              {loan.status === 'devolvido_total' ? (
+                              {loan.status === 'devolvidoTotal' ? (
                                 <Badge className="bg-green-100 text-green-800 text-xs">Sim</Badge>
                               ) : (
                                 <Badge className="bg-yellow-100 text-yellow-800 text-xs">Não</Badge>
                               )}
                             </TableCell>
                             <TableCell className="text-xs">
-                              {loan.return_date ? format(parseISO(loan.return_date), 'dd/MM/yyyy') : '-'}
+                              {loan.returnDate ? format(parseISO(loan.returnDate), 'dd/MM/yyyy') : '-'}
                             </TableCell>
                           </TableRow>
                         ))
@@ -753,7 +753,7 @@ export default function VasilhameManagement() {
                           setSearchTerm('');
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{p.person_number || p.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">{p.personNumber || p.id?.slice(-6)}</TableCell>
                         <TableCell className="text-xs">{p.name}</TableCell>
                         <TableCell className="text-xs">{p.type === 'cliente' ? 'Cliente' : 'Pto. Venda'}</TableCell>
                         <TableCell className="text-xs">{p.phone?.[0] || '-'}</TableCell>
@@ -835,19 +835,19 @@ export default function VasilhameManagement() {
           {selectedLoan && (
             <div className="space-y-4 py-4">
               <div className="bg-slate-50 p-3 rounded-lg text-sm space-y-1">
-                <p><strong>Cliente:</strong> {selectedLoan.person_name}</p>
-                <p><strong>Produto:</strong> {selectedLoan.vasilhame_name}</p>
-                <p><strong>Quantidade:</strong> {selectedLoan.loan_quantity}</p>
-                <p><strong>Data Empréstimo:</strong> {selectedLoan.loan_date ? format(parseISO(selectedLoan.loan_date), 'dd/MM/yyyy') : '-'}</p>
+                <p><strong>Cliente:</strong> {selectedLoan.personName}</p>
+                <p><strong>Produto:</strong> {selectedLoan.vasilhameName}</p>
+                <p><strong>Quantidade:</strong> {selectedLoan.loanQuantity}</p>
+                <p><strong>Data Empréstimo:</strong> {selectedLoan.loanDate ? format(parseISO(selectedLoan.loanDate), 'dd/MM/yyyy') : '-'}</p>
               </div>
 
               <div className="flex items-center gap-3">
                 <Checkbox 
-                  id="mod_devolvido" 
+                  id="modDevolvido" 
                   checked={modDevolvido} 
                   onCheckedChange={setModDevolvido}
                 />
-                <label htmlFor="mod_devolvido" className="text-sm font-medium">Marcar como Devolvido</label>
+                <label htmlFor="modDevolvido" className="text-sm font-medium">Marcar como Devolvido</label>
               </div>
 
               {modDevolvido && (
@@ -881,11 +881,11 @@ export default function VasilhameManagement() {
           {selectedLoan && (
             <div className="space-y-4 py-4">
               <div className="bg-slate-50 p-3 rounded-lg text-sm space-y-1">
-                <p><strong>Cliente:</strong> {selectedLoan.person_name}</p>
-                <p><strong>Produto:</strong> {selectedLoan.vasilhame_name}</p>
-                <p><strong>Emprestado:</strong> {selectedLoan.loan_quantity}</p>
-                <p><strong>Já devolvido:</strong> {selectedLoan.returned_quantity || 0}</p>
-                <p><strong>Pendente:</strong> {(selectedLoan.loan_quantity || 0) - (selectedLoan.returned_quantity || 0)}</p>
+                <p><strong>Cliente:</strong> {selectedLoan.personName}</p>
+                <p><strong>Produto:</strong> {selectedLoan.vasilhameName}</p>
+                <p><strong>Emprestado:</strong> {selectedLoan.loanQuantity}</p>
+                <p><strong>Já devolvido:</strong> {selectedLoan.returnedQuantity || 0}</p>
+                <p><strong>Pendente:</strong> {(selectedLoan.loanQuantity || 0) - (selectedLoan.returnedQuantity || 0)}</p>
               </div>
 
               <div>
@@ -893,7 +893,7 @@ export default function VasilhameManagement() {
                 <Input 
                   type="number"
                   min="1"
-                  max={(selectedLoan.loan_quantity || 0) - (selectedLoan.returned_quantity || 0)}
+                  max={(selectedLoan.loanQuantity || 0) - (selectedLoan.returnedQuantity || 0)}
                   value={qtdeBaixar}
                   onChange={(e) => {
                     setQtdeBaixar(e.target.value);

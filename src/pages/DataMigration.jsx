@@ -47,7 +47,7 @@ export default function DataMigration() {
       setCompanies(companiesData);
       setCurrentUser(user);
 
-      // Contar registros sem company_id para cada entidade
+      // Contar registros sem companyId para cada entidade
       const entities = [
         { name: 'Produtos', entity: Product },
         { name: 'Pessoas', entity: Person },
@@ -73,7 +73,7 @@ export default function DataMigration() {
       for (const { name, entity } of entities) {
         try {
           const items = await entity.list();
-          const itemsWithoutCompany = items.filter(item => !item.company_id);
+          const itemsWithoutCompany = items.filter(item => !item.companyId);
           newStats[name] = itemsWithoutCompany.length;
         } catch (error) {
           console.error(`Erro ao carregar ${name}:`, error);
@@ -110,8 +110,8 @@ export default function DataMigration() {
     try {
       const company = companies.find(c => c.id === selectedCompany);
       const companyData = {
-        company_id: company.id,
-        company_name: company.name
+        companyId: company.id,
+        companyName: company.name
       };
 
       console.log('Iniciando migração para:', company.name);
@@ -143,7 +143,7 @@ export default function DataMigration() {
         
         try {
           const items = await entity.list();
-          const itemsWithoutCompany = items.filter(item => !item.company_id);
+          const itemsWithoutCompany = items.filter(item => !item.companyId);
           
           console.log(`${name}: ${itemsWithoutCompany.length} registros para migrar`);
           

@@ -125,25 +125,25 @@ export default function PagamentoModal({
 
         // Criar movimento de caixa (despesa)
         await CashMovement.create({
-          cash_account_id: contaSelecionada.id,
-          cash_account_name: contaSelecionada.name,
+          cashAccountId: contaSelecionada.id,
+          cashAccountName: contaSelecionada.name,
           type: 'despesa',
-          description: `Pagamento: ${contaPagar.description || contaPagar.supplier_name}`,
+          description: `Pagamento: ${contaPagar.description || contaPagar.supplierName}`,
           amount: contaPagar.amount,
-          person_id: contaPagar.supplier_id,
-          person_name: contaPagar.supplier_name,
-          movement_date: paymentDate,
-          payment_type_name: formaPagamento,
+          personId: contaPagar.supplierId,
+          personName: contaPagar.supplierName,
+          movementDate: paymentDate,
+          paymentTypeName: formaPagamento,
           notes: observacoes,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName,
         });
 
         // Atualizar status da conta
         await ContasAPagar.update(contaPagar.id, {
           status: 'pago',
-          payment_date: paymentDate,
+          paymentDate: paymentDate,
         });
       }
 
@@ -241,8 +241,8 @@ export default function PagamentoModal({
             <tbody>
               ${contas.map(c => `
                 <tr>
-                  <td>${c.supplier_name || '-'}</td>
-                  <td>${format(parseISO(c.due_date), 'dd/MM/yyyy')}</td>
+                  <td>${c.supplierName || '-'}</td>
+                  <td>${format(parseISO(c.dueDate), 'dd/MM/yyyy')}</td>
                   <td class="text-right">${formatCurrency(c.amount)}</td>
                 </tr>
               `).join('')}
@@ -362,28 +362,28 @@ export default function PagamentoModal({
                 disabled={paymentConfirmed}
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dinheiro" id="fp_dinheiro" />
-                  <Label htmlFor="fp_dinheiro" className="text-sm cursor-pointer">Dinheiro</Label>
+                  <RadioGroupItem value="dinheiro" id="fpDinheiro" />
+                  <Label htmlFor="fpDinheiro" className="text-sm cursor-pointer">Dinheiro</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="transferencia" id="fp_transferencia" />
-                  <Label htmlFor="fp_transferencia" className="text-sm cursor-pointer">Transferência</Label>
+                  <RadioGroupItem value="transferencia" id="fpTransferencia" />
+                  <Label htmlFor="fpTransferencia" className="text-sm cursor-pointer">Transferência</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="pix" id="fp_pix" />
-                  <Label htmlFor="fp_pix" className="text-sm cursor-pointer">PIX</Label>
+                  <RadioGroupItem value="pix" id="fpPix" />
+                  <Label htmlFor="fpPix" className="text-sm cursor-pointer">PIX</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cheque" id="fp_cheque" />
-                  <Label htmlFor="fp_cheque" className="text-sm cursor-pointer">Cheque</Label>
+                  <RadioGroupItem value="cheque" id="fpCheque" />
+                  <Label htmlFor="fpCheque" className="text-sm cursor-pointer">Cheque</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cartao_debito" id="fp_debito" />
-                  <Label htmlFor="fp_debito" className="text-sm cursor-pointer">Cartão Débito</Label>
+                  <RadioGroupItem value="cartaoDebito" id="fpDebito" />
+                  <Label htmlFor="fpDebito" className="text-sm cursor-pointer">Cartão Débito</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cartao_credito" id="fp_credito" />
-                  <Label htmlFor="fp_credito" className="text-sm cursor-pointer">Cartão Crédito</Label>
+                  <RadioGroupItem value="cartaoCredito" id="fpCredito" />
+                  <Label htmlFor="fpCredito" className="text-sm cursor-pointer">Cartão Crédito</Label>
                 </div>
               </RadioGroup>
 
@@ -460,7 +460,7 @@ export default function PagamentoModal({
                 </div>
               )}
 
-              {(formaPagamento === 'cartao_debito' || formaPagamento === 'cartao_credito') && (
+              {(formaPagamento === 'cartaoDebito' || formaPagamento === 'cartaoCredito') && (
                 <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t">
                   <div>
                     <Label className="text-xs">Bandeira:</Label>
@@ -478,7 +478,7 @@ export default function PagamentoModal({
                     <Label className="text-xs">Nº Transação:</Label>
                     <Input value={numeroTransacaoCartao} onChange={(e) => setNumeroTransacaoCartao(e.target.value)} className="h-8" disabled={paymentConfirmed} />
                   </div>
-                  {formaPagamento === 'cartao_credito' && (
+                  {formaPagamento === 'cartaoCredito' && (
                     <div>
                       <Label className="text-xs">Nº Parcelas:</Label>
                       <Input type="number" min="1" value={numeroParcelas} onChange={(e) => setNumeroParcelas(parseInt(e.target.value) || 1)} className="h-8" disabled={paymentConfirmed} />
@@ -521,8 +521,8 @@ export default function PagamentoModal({
                   <TableBody>
                     {contas.map(c => (
                       <TableRow key={c.id}>
-                        <TableCell className="text-xs">{c.supplier_name || '-'}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(c.due_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell className="text-xs">{c.supplierName || '-'}</TableCell>
+                        <TableCell className="text-xs">{format(parseISO(c.dueDate), 'dd/MM/yyyy')}</TableCell>
                         <TableCell className="text-xs text-right font-mono">{formatCurrency(c.amount)}</TableCell>
                         <TableCell className="text-xs">
                           {paymentConfirmed ? (

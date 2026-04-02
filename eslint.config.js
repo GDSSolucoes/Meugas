@@ -3,15 +3,14 @@ import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
+import pluginUnicorn from "eslint-plugin-unicorn";
 
 export default [
   {
     files: [
-      "src/components/**/*.{js,mjs,cjs,jsx}",
-      "src/pages/**/*.{js,mjs,cjs,jsx}",
-      "src/Layout.jsx",
+      "src/**/*.{js,mjs,cjs,jsx}",
     ],
-    ignores: ["src/lib/**/*", "src/components/ui/**/*"],
+    ignores: [],
     ...pluginJs.configs.recommended,
     ...pluginReact.configs.flat.recommended,
     languageOptions: {
@@ -33,6 +32,7 @@ export default [
       react: pluginReact,
       "react-hooks": pluginReactHooks,
       "unused-imports": pluginUnusedImports,
+      unicorn: pluginUnicorn,
     },
     rules: {
       "no-unused-vars": "off",
@@ -55,6 +55,16 @@ export default [
         { ignore: ["cmdk-input-wrapper", "toast-close"] },
       ],
       "react-hooks/rules-of-hooks": "error",
+      "unicorn/prevent-abbreviations": "off",
+      "no-underscore-dangle": [
+        "error",
+        {
+          allow: ["__typename", "__REDUX_DEVTOOLS_EXTENSION__"],
+          allowAfterThis: false,
+          allowAfterSuper: false,
+          enforceInMethodNames: true,
+        }
+      ],
     },
   },
 ];

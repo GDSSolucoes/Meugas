@@ -34,9 +34,9 @@ export default function OrdersReport() {
     const end = endOfDay(new Date(filters.endDate + 'T00:00:00'));
 
     return allOrders.filter(order => {
-      const orderDate = parseISO(order.created_date);
+      const orderDate = parseISO(order.createdDate);
       const dateMatch = orderDate >= start && orderDate <= end;
-      const employeeMatch = filters.employeeId === 'all' || order.employee_id === filters.employeeId;
+      const employeeMatch = filters.employeeId === 'all' || order.employeeId === filters.employeeId;
       const statusMatch = filters.status === 'all' || order.status === filters.status;
       
       return dateMatch && employeeMatch && statusMatch;
@@ -46,13 +46,13 @@ export default function OrdersReport() {
   const loadData = async () => {
     try {
       const user = await User.me();
-      if (!user.company_id) {
+      if (!user.companyId) {
         setIsLoading(false);
         return;
       }
       const [ordersData, employeesData] = await Promise.all([
-        Order.filter({ company_id: user.company_id }, '-created_date'),
-        Employee.filter({ company_id: user.company_id, position: 'entregador', active: true })
+        Order.filter({ companyId: user.companyId }, '-createdDate'),
+        Employee.filter({ companyId: user.companyId, position: 'entregador', active: true })
       ]);
       setAllOrders(ordersData);
       setEmployees(employeesData);
@@ -70,7 +70,7 @@ export default function OrdersReport() {
   const getBadge = (status) => {
     switch(status) {
       case 'pendente': return <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>;
-      case 'em_atendimento': return <Badge className="bg-blue-100 text-blue-800">Em Atendimento</Badge>;
+      case 'emAtendimento': return <Badge className="bg-blue-100 text-blue-800">Em Atendimento</Badge>;
       case 'finalizado': return <Badge className="bg-green-100 text-green-800">Finalizado</Badge>;
       default: return <Badge>{status}</Badge>;
     }
@@ -78,9 +78,9 @@ export default function OrdersReport() {
 
   const totalOrders = filteredOrders.length;
   const pendingOrders = filteredOrders.filter(o => o.status === 'pendente').length;
-  const inProgressOrders = filteredOrders.filter(o => o.status === 'em_atendimento').length;
+  const inProgressOrders = filteredOrders.filter(o => o.status === 'emAtendimento').length;
   const completedOrders = filteredOrders.filter(o => o.status === 'finalizado').length;
-  const totalValue = filteredOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+  const totalValue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -141,7 +141,7 @@ export default function OrdersReport() {
                   <SelectContent>
                     <SelectItem value="all">Todos os Status</SelectItem>
                     <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
+                    <SelectItem value="emAtendimento">Em Atendimento</SelectItem>
                     <SelectItem value="finalizado">Finalizado</SelectItem>
                   </SelectContent>
                 </Select>
@@ -226,12 +226,12 @@ export default function OrdersReport() {
                   <TableBody>
                     {filteredOrders.length > 0 ? filteredOrders.map(order => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.order_number}</TableCell>
-                        <TableCell>{format(parseISO(order.created_date), 'dd/MM/yyyy HH:mm')}</TableCell>
-                        <TableCell>{order.person_name}</TableCell>
-                        <TableCell>{order.employee_name || 'Não definido'}</TableCell>
+                        <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                        <TableCell>{format(parseISO(order.createdDate), 'dd/MM/yyyy HH:mm')}</TableCell>
+                        <TableCell>{order.personName}</TableCell>
+                        <TableCell>{order.employeeName || 'Não definido'}</TableCell>
                         <TableCell>{getBadge(order.status)}</TableCell>
-                        <TableCell className="font-bold">R$ {(order.total_amount || 0).toFixed(2)}</TableCell>
+                        <TableCell className="font-bold">R$ {(order.totalAmount || 0).toFixed(2)}</TableCell>
                       </TableRow>
                     )) : (
                       <TableRow>

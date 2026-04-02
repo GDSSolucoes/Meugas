@@ -111,7 +111,7 @@ export default function ContasAPagarModal({
   const [filtroSectorMaster, setFiltroSectorMaster] = useState('todos');
   const [filtroNFe, setFiltroNFe] = useState('');
   const [statusContas, setStatusContas] = useState({
-    nao_pagas: true,
+    naoPagas: true,
     pagas: false
   });
 
@@ -119,13 +119,13 @@ export default function ContasAPagarModal({
   const [ordenacao, setOrdenacao] = useState('vencimento');
 
   const loadData = useCallback(async () => {
-    if (!currentUser?.company_id) return;
+    if (!currentUser?.companyId) return;
     setIsLoading(true);
     try {
       const [contasData, sectorMastersData, suppliersData] = await Promise.all([
-        ContasAPagar.filter({ company_id: currentUser.company_id }, '-due_date'),
-        SectorMaster.filter({ company_id: currentUser.company_id }),
-        Person.filter({ company_id: currentUser.company_id, type: 'fornecedor' })
+        ContasAPagar.filter({ companyId: currentUser.companyId }, '-dueDate'),
+        SectorMaster.filter({ companyId: currentUser.companyId }),
+        Person.filter({ companyId: currentUser.companyId, type: 'fornecedor' })
       ]);
       setContas(contasData);
       setSectorMasters(sectorMastersData);
@@ -152,45 +152,45 @@ export default function ContasAPagarModal({
     const today = startOfDay(new Date());
     
     const filtered = contas.filter(c => {
-      const dueDate = parseISO(c.due_date);
+      const dueDate = parseISO(c.dueDate);
       const isVencida = c.status === 'aberto' && isBefore(dueDate, today);
       const isPaga = c.status === 'pago';
       
       // Filtro de status
-      if (!statusContas.nao_pagas && !isPaga) return false;
+      if (!statusContas.naoPagas && !isPaga) return false;
       if (!statusContas.pagas && isPaga) return false;
 
       // Filtro de fornecedor
       if (fornecedorPesquisa) {
         const term = fornecedorPesquisa.toLowerCase();
-        if (!c.supplier_name?.toLowerCase().includes(term)) return false;
+        if (!c.supplierName?.toLowerCase().includes(term)) return false;
       }
 
       // Filtro de conta
-      if (filtroConta !== 'todas' && c.cash_account_id !== filtroConta) return false;
+      if (filtroConta !== 'todas' && c.cashAccountId !== filtroConta) return false;
 
       // Filtro de setor master
-      if (filtroSectorMaster !== 'todos' && c.sector_master_id !== filtroSectorMaster) return false;
+      if (filtroSectorMaster !== 'todos' && c.sectorMasterId !== filtroSectorMaster) return false;
 
       // Filtro de NFe
       if (filtroNFe) {
-        if (!c.nfe_number?.toLowerCase().includes(filtroNFe.toLowerCase())) return false;
+        if (!c.nfeNumber?.toLowerCase().includes(filtroNFe.toLowerCase())) return false;
       }
 
       return true;
     }).map(c => {
-      const dueDate = parseISO(c.due_date);
+      const dueDate = parseISO(c.dueDate);
       const today = startOfDay(new Date());
       const isVencida = c.status === 'aberto' && isBefore(dueDate, today);
       const diasParaVencer = differenceInDays(dueDate, today);
       const isVenceHoje = diasParaVencer === 0 && c.status === 'aberto';
       const isVenceEm3Dias = diasParaVencer > 0 && diasParaVencer <= 3 && c.status === 'aberto';
       
-      return { ...c, is_vencida: isVencida, is_vence_hoje: isVenceHoje, is_vence_em_3_dias: isVenceEm3Dias };
+      return { ...c, isVencida: isVencida, isVenceHoje: isVenceHoje, isVenceEm_3Dias: isVenceEm3Dias };
     }).sort((a, b) => {
-      if (ordenacao === 'vencimento') return new Date(a.due_date) - new Date(b.due_date);
+      if (ordenacao === 'vencimento') return new Date(a.dueDate) - new Date(b.dueDate);
       if (ordenacao === 'codigo') return (a.id || '').localeCompare(b.id || '');
-      if (ordenacao === 'fornecedor') return (a.supplier_name || '').localeCompare(b.supplier_name || '');
+      if (ordenacao === 'fornecedor') return (a.supplierName || '').localeCompare(b.supplierName || '');
       if (ordenacao === 'valor') return (b.amount || 0) - (a.amount || 0);
       return 0;
     });
@@ -205,8 +205,8 @@ export default function ContasAPagarModal({
   const totais = {
     pago: contas.filter(c => c.status === 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
     aPagar: filteredContas.filter(c => c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
-    vencido: filteredContas.filter(c => c.is_vencida).reduce((sum, c) => sum + (c.amount || 0), 0),
-    aVencer: filteredContas.filter(c => !c.is_vencida && c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
+    vencido: filteredContas.filter(c => c.isVencida).reduce((sum, c) => sum + (c.amount || 0), 0),
+    aVencer: filteredContas.filter(c => !c.isVencida && c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
     selecionado: selectedContas.reduce((sum, id) => {
       const conta = contas.find(c => c.id === id);
       return sum + (conta?.amount || 0);
@@ -325,23 +325,23 @@ export default function ContasAPagarModal({
 
         // Criar movimento de caixa (despesa)
         await CashMovement.create({
-          cash_account_id: payingAccount.id,
-          cash_account_name: payingAccount.name,
+          cashAccountId: payingAccount.id,
+          cashAccountName: payingAccount.name,
           type: 'despesa',
           description: `Pagamento: ${conta.description}`,
           amount: conta.amount,
-          person_id: conta.supplier_id,
-          person_name: conta.supplier_name,
-          movement_date: paidDate,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name,
+          personId: conta.supplierId,
+          personName: conta.supplierName,
+          movementDate: paidDate,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName,
         });
 
         // Atualizar status da conta
         await ContasAPagar.update(contaId, {
           status: 'pago',
-          payment_date: paidDate,
+          paymentDate: paidDate,
         });
 
         totalPago += conta.amount || 0;
@@ -417,14 +417,14 @@ export default function ContasAPagarModal({
           <tbody>
             ${contasToPrint.map(conta => `
               <tr>
-                <td>${conta.created_date ? format(parseISO(conta.created_date), 'dd/MM/yyyy') : '-'}</td>
-                <td>${conta.purchase_id?.slice(-6) || '-'}</td>
-                <td>${conta.nfe_number || '-'}</td>
-                <td>${format(parseISO(conta.due_date), 'dd/MM/yyyy')}</td>
+                <td>${conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yyyy') : '-'}</td>
+                <td>${conta.purchaseId?.slice(-6) || '-'}</td>
+                <td>${conta.nfeNumber || '-'}</td>
+                <td>${format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</td>
                 <td class="text-right">${formatCurrency(conta.amount)}</td>
-                <td>${conta.payment_date ? format(parseISO(conta.payment_date), 'dd/MM/yyyy') : '-'}</td>
+                <td>${conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</td>
                 <td class="text-right">${conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</td>
-                <td>${conta.supplier_name || '-'}</td>
+                <td>${conta.supplierName || '-'}</td>
               </tr>
             `).join('')}
             <tr class="total-row">
@@ -473,9 +473,9 @@ export default function ContasAPagarModal({
 
   const getRowColor = (conta) => {
     if (conta.status === 'pago') return 'bg-green-50';
-    if (conta.is_vence_hoje) return 'bg-yellow-50';
-    if (conta.is_vence_em_3_dias) return 'bg-orange-50';
-    if (conta.is_vencida) return 'bg-red-50';
+    if (conta.isVenceHoje) return 'bg-yellow-50';
+    if (conta.isVenceEm_3Dias) return 'bg-orange-50';
+    if (conta.isVencida) return 'bg-red-50';
     return '';
   };
 
@@ -582,19 +582,19 @@ export default function ContasAPagarModal({
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="nao_pagas_modal" 
-                          checked={statusContas.nao_pagas}
-                          onCheckedChange={(v) => setStatusContas(p => ({...p, nao_pagas: v}))}
+                          id="naoPagasModal" 
+                          checked={statusContas.naoPagas}
+                          onCheckedChange={(v) => setStatusContas(p => ({...p, naoPagas: v}))}
                         />
-                        <label htmlFor="nao_pagas_modal" className="text-xs">Não Pagas</label>
+                        <label htmlFor="naoPagasModal" className="text-xs">Não Pagas</label>
                       </div>
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="pagas_modal" 
+                          id="pagasModal" 
                           checked={statusContas.pagas}
                           onCheckedChange={(v) => setStatusContas(p => ({...p, pagas: v}))}
                         />
-                        <label htmlFor="pagas_modal" className="text-xs">Pagas</label>
+                        <label htmlFor="pagasModal" className="text-xs">Pagas</label>
                       </div>
                     </div>
 
@@ -664,20 +664,20 @@ export default function ContasAPagarModal({
                   <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Ordenação</h4>
                   <RadioGroup value={ordenacao} onValueChange={setOrdenacao} className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <RadioGroupItem value="vencimento" id="ord_vencimento_modal" />
-                      <label htmlFor="ord_vencimento_modal" className="text-xs">Vencimento</label>
+                      <RadioGroupItem value="vencimento" id="ordVencimentoModal" />
+                      <label htmlFor="ordVencimentoModal" className="text-xs">Vencimento</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <RadioGroupItem value="codigo" id="ord_codigo_modal" />
-                      <label htmlFor="ord_codigo_modal" className="text-xs">Código</label>
+                      <RadioGroupItem value="codigo" id="ordCodigoModal" />
+                      <label htmlFor="ordCodigoModal" className="text-xs">Código</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <RadioGroupItem value="fornecedor" id="ord_fornecedor_modal" />
-                      <label htmlFor="ord_fornecedor_modal" className="text-xs">Fornecedor</label>
+                      <RadioGroupItem value="fornecedor" id="ordFornecedorModal" />
+                      <label htmlFor="ordFornecedorModal" className="text-xs">Fornecedor</label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <RadioGroupItem value="valor" id="ord_valor_modal" />
-                      <label htmlFor="ord_valor_modal" className="text-xs">Valor</label>
+                      <RadioGroupItem value="valor" id="ordValorModal" />
+                      <label htmlFor="ordValorModal" className="text-xs">Valor</label>
                     </div>
                   </RadioGroup>
                   
@@ -745,25 +745,25 @@ export default function ContasAPagarModal({
                             disabled={conta.status === 'pago'}
                           />
                         </TableCell>
-                        <TableCell className="text-xs">{conta.created_date ? format(parseISO(conta.created_date), 'dd/MM/yy') : '-'}</TableCell>
-                        <TableCell className="text-xs font-mono">{conta.purchase_id?.slice(-6) || conta.id?.slice(-6)}</TableCell>
-                        <TableCell className="text-xs">{conta.nfe_number || '-'}</TableCell>
-                        <TableCell className="text-xs">{conta.payment_type_name || '-'}</TableCell>
-                        <TableCell className="text-xs text-center">{conta.installment_number || '1'}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(conta.due_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell className="text-xs">{conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yy') : '-'}</TableCell>
+                        <TableCell className="text-xs font-mono">{conta.purchaseId?.slice(-6) || conta.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs">{conta.nfeNumber || '-'}</TableCell>
+                        <TableCell className="text-xs">{conta.paymentTypeName || '-'}</TableCell>
+                        <TableCell className="text-xs text-center">{conta.installmentNumber || '1'}</TableCell>
+                        <TableCell className="text-xs">{format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</TableCell>
                         <TableCell className="text-xs text-right font-mono">{formatCurrency(conta.amount)}</TableCell>
-                        <TableCell className="text-xs">{conta.payment_date ? format(parseISO(conta.payment_date), 'dd/MM/yyyy') : '-'}</TableCell>
+                        <TableCell className="text-xs">{conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</TableCell>
                         <TableCell className="text-xs text-right font-mono">{conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</TableCell>
                         <TableCell className="text-xs">
                           {conta.status === 'pago' ? (
                             <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
-                          ) : conta.is_vencida ? (
+                          ) : conta.isVencida ? (
                             <Badge className="bg-red-100 text-red-800 text-xs">Vencido</Badge>
                           ) : (
                             <Badge className="bg-yellow-100 text-yellow-800 text-xs">Aberto</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs">{conta.supplier_name}</TableCell>
+                        <TableCell className="text-xs">{conta.supplierName}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -898,7 +898,7 @@ export default function ContasAPagarModal({
                             setTimeout(() => applyFiltersAndShow(), 100);
                           }}
                         >
-                          <TableCell className="text-xs font-mono">{s.person_number || s.id?.slice(-6)}</TableCell>
+                          <TableCell className="text-xs font-mono">{s.personNumber || s.id?.slice(-6)}</TableCell>
                           <TableCell className="text-xs">{s.name}</TableCell>
                           <TableCell className="text-xs">{s.document || '-'}</TableCell>
                           <TableCell className="text-xs">{s.phone?.[0] || '-'}</TableCell>
@@ -953,27 +953,27 @@ export default function ContasAPagarModal({
                   </TableHeader>
                   <TableBody>
                     {contas
-                      .filter(c => c.nfe_number)
+                      .filter(c => c.nfeNumber)
                       .filter(c => {
                         if (!nfSearchTerm) return true;
                         const term = nfSearchTerm.toLowerCase();
-                        return c.nfe_number?.toLowerCase().includes(term) || 
-                               c.supplier_name?.toLowerCase().includes(term);
+                        return c.nfeNumber?.toLowerCase().includes(term) || 
+                               c.supplierName?.toLowerCase().includes(term);
                       })
                       .map(c => (
                         <TableRow 
                           key={c.id} 
                           className="cursor-pointer hover:bg-blue-50"
                           onDoubleClick={() => {
-                            setFiltroNFe(c.nfe_number);
+                            setFiltroNFe(c.nfeNumber);
                             setShowNFSearch(false);
                             setNfSearchTerm('');
                             setTimeout(() => applyFiltersAndShow(), 100);
                           }}
                         >
-                          <TableCell className="text-xs font-mono">{c.nfe_number}</TableCell>
-                          <TableCell className="text-xs">{c.supplier_name}</TableCell>
-                          <TableCell className="text-xs">{format(parseISO(c.due_date), 'dd/MM/yyyy')}</TableCell>
+                          <TableCell className="text-xs font-mono">{c.nfeNumber}</TableCell>
+                          <TableCell className="text-xs">{c.supplierName}</TableCell>
+                          <TableCell className="text-xs">{format(parseISO(c.dueDate), 'dd/MM/yyyy')}</TableCell>
                           <TableCell className="text-xs text-right">{formatCurrency(c.amount)}</TableCell>
                           <TableCell className="text-xs">
                             {c.status === 'pago' ? (
@@ -984,10 +984,10 @@ export default function ContasAPagarModal({
                           </TableCell>
                         </TableRow>
                       ))}
-                    {contas.filter(c => c.nfe_number).filter(c => {
+                    {contas.filter(c => c.nfeNumber).filter(c => {
                       if (!nfSearchTerm) return true;
                       const term = nfSearchTerm.toLowerCase();
-                      return c.nfe_number?.toLowerCase().includes(term) || c.supplier_name?.toLowerCase().includes(term);
+                      return c.nfeNumber?.toLowerCase().includes(term) || c.supplierName?.toLowerCase().includes(term);
                     }).length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-8 text-slate-500">
@@ -1020,9 +1020,9 @@ export default function ContasAPagarModal({
                 <div className="mt-4 p-3 bg-slate-50 rounded-lg text-sm space-y-2 max-h-40 overflow-auto">
                   {getSelectedContasForAction().map(conta => (
                     <div key={conta.id} className="border-b pb-2 last:border-0">
-                      <p><strong>Fornecedor:</strong> {conta.supplier_name}</p>
+                      <p><strong>Fornecedor:</strong> {conta.supplierName}</p>
                       <p><strong>Valor:</strong> {formatCurrency(conta.amount)}</p>
-                      <p><strong>Vencimento:</strong> {format(parseISO(conta.due_date), 'dd/MM/yyyy')}</p>
+                      <p><strong>Vencimento:</strong> {format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</p>
                     </div>
                   ))}
                   {getSelectedContasForAction().length > 1 && (

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, CreditCard } from "lucide-react";
 import { Acquirer } from "@/entities/Acquirer";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Acquirers() {
@@ -19,8 +19,8 @@ export default function Acquirers() {
 
   const initialAcquirerState = {
     name: '',
-    fee_percentage: 0,
-    settlement_days: 1,
+    feePercentage: 0,
+    settlementDays: 1,
     active: true
   };
 
@@ -29,7 +29,7 @@ export default function Acquirers() {
   const loadAcquirers = useCallback(async () => {
     try {
       const user = await User.me();
-      const data = await Acquirer.filter({ company_id: user.company_id }, '-created_date');
+      const data = await Acquirer.filter({ companyId: user.companyId }, '-createdDate');
       setAcquirers(data);
     } catch (error) {
       console.error("Erro ao carregar adquirentes:", error);
@@ -66,15 +66,15 @@ export default function Acquirers() {
       const user = await User.me();
       const payload = {
         ...currentAcquirer,
-        company_id: user.company_id,
-        company_name: user.company_name,
+        companyId: user.companyId,
+        companyName: user.companyName,
       };
 
       if (isEditing) {
         const { id, ...data } = payload;
         await Acquirer.update(id, data);
       } else {
-        await Acquirer.create({ ...payload, created_by_name: user.full_name });
+        await Acquirer.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();
@@ -134,16 +134,16 @@ export default function Acquirers() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={currentAcquirer.fee_percentage}
-                      onChange={(e) => setCurrentAcquirer(prev => ({ ...prev, fee_percentage: parseFloat(e.target.value) || 0 }))}
+                      value={currentAcquirer.feePercentage}
+                      onChange={(e) => setCurrentAcquirer(prev => ({ ...prev, feePercentage: parseFloat(e.target.value) || 0 }))}
                     />
                   </div>
                   <div>
                     <Label>Dias para Liquidação</Label>
                     <Input
                       type="number"
-                      value={currentAcquirer.settlement_days}
-                      onChange={(e) => setCurrentAcquirer(prev => ({ ...prev, settlement_days: parseInt(e.target.value) || 1 }))}
+                      value={currentAcquirer.settlementDays}
+                      onChange={(e) => setCurrentAcquirer(prev => ({ ...prev, settlementDays: parseInt(e.target.value) || 1 }))}
                     />
                   </div>
                 </div>
@@ -187,8 +187,8 @@ export default function Acquirers() {
                 {acquirers.map(acq => (
                   <TableRow key={acq.id}>
                     <TableCell className="font-medium">{acq.name}</TableCell>
-                    <TableCell>{acq.fee_percentage}%</TableCell>
-                    <TableCell>{acq.settlement_days}</TableCell>
+                    <TableCell>{acq.feePercentage}%</TableCell>
+                    <TableCell>{acq.settlementDays}</TableCell>
                     <TableCell>
                       <Badge className={acq.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
                         {acq.active ? "Ativo" : "Inativo"}

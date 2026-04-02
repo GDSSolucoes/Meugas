@@ -15,29 +15,29 @@ Deno.serve(async (req) => {
     }
 
     // Obter dados da requisição
-    const { sale_id } = await req.json();
+    const { saleId } = await req.json();
     
-    if (!sale_id) {
+    if (!saleId) {
       return Response.json({ error: 'ID da venda não fornecido' }, { status: 400 });
     }
 
-    console.log('Baixando DANFE da venda (NFC-e):', sale_id);
+    console.log('Baixando DANFE da venda (NFC-e):', saleId);
 
     // Buscar dados da venda
-    const sales = await base44.asServiceRole.entities.Sale.filter({ id: sale_id });
+    const sales = await base44.asServiceRole.entities.Sale.filter({ id: saleId });
     if (!sales || sales.length === 0) {
       return Response.json({ error: 'Venda não encontrada' }, { status: 404 });
     }
     const sale = sales[0];
 
     // Verificar se existe NFC-e emitida
-    if (!sale.nfce_key) {
+    if (!sale.nfceKey) {
       return Response.json({ 
         error: 'Não há NFC-e emitida para esta venda'
       }, { status: 400 });
     }
 
-    console.log('Chave NFC-e:', sale.nfce_key);
+    console.log('Chave NFC-e:', sale.nfceKey);
 
     // Obter credenciais
     const clientId = Deno.env.get('NUVEM_FISCAL_CLIENT_ID');
@@ -57,9 +57,9 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
+        grantType: 'clientCredentials',
+        clientId: clientId,
+        clientSecret: clientSecret,
         scope: 'cep cnpj nfe nfce nfse cte mdfe'
       })
     });
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
-    const { access_token } = await tokenResponse.json();
+    const { accessToken } = await tokenResponse.json();
     console.log('Token obtido com sucesso');
 
     // Determinar ambiente (assumindo produção por padrão)
@@ -81,10 +81,10 @@ Deno.serve(async (req) => {
 
     // Consultar a nota para verificar status
     console.log('Consultando status da nota...');
-    const consultaResponse = await fetch(`${baseUrl}/nfce/${sale.nfce_key}`, {
+    const consultaResponse = await fetch(`${baseUrl}/nfce/${sale.nfceKey}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${access_token}`
+        'Authorization': `Bearer ${accessToken}`
       }
     });
 
@@ -105,18 +105,18 @@ Deno.serve(async (req) => {
       return Response.json({ 
         error: 'A nota fiscal ainda não foi autorizada pela SEFAZ',
         details: `Status atual: ${notaData.status}`,
-        status_nota: notaData.status
+        statusNota: notaData.status
       }, { status: 400 });
     }
 
     // Baixar o PDF
-    const pdfUrl = `${baseUrl}/nfce/${sale.nfce_key}/pdf`;
+    const pdfUrl = `${baseUrl}/nfce/${sale.nfceKey}/pdf`;
     console.log('Baixando PDF...');
 
     const pdfResponse = await fetch(pdfUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/pdf'
       }
     });
@@ -173,10 +173,10 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      pdf_base64: base64Pdf,
-      filename: `NFC-e_${sale.nfce_number}_${sale.person_name}.pdf`,
+      pdfBase64: base64Pdf,
+      filename: `NFC-e_${sale.nfceNumber}_${sale.personName}.pdf`,
       tamanho: pdfBuffer.byteLength,
-      numero_nota: sale.nfce_number
+      numeroNota: sale.nfceNumber
     });
 
   } catch (error) {

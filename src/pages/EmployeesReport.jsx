@@ -19,11 +19,11 @@ export default function EmployeesReport() {
   const loadEmployees = async () => {
     try {
       const user = await User.me();
-      if (!user.company_id) {
+      if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Employee.filter({ company_id: user.company_id }, '-created_date');
+      const data = await Employee.filter({ companyId: user.companyId }, '-createdDate');
       setEmployees(data);
     } catch (error) {
       console.error("Erro ao carregar funcionários:", error);
@@ -134,7 +134,7 @@ export default function EmployeesReport() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-500" />
-                            {employee.hire_date ? format(parseISO(employee.hire_date), 'dd/MM/yyyy') : '-'}
+                            {employee.hireDate ? format(parseISO(employee.hireDate), 'dd/MM/yyyy') : '-'}
                           </div>
                         </TableCell>
                         <TableCell>R$ {(employee.salary || 0).toFixed(2)}</TableCell>

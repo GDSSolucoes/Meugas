@@ -21,8 +21,8 @@ export default function Login() {
       if (!apiEnabled) throw new Error('API desabilitada')
       const payload = mode === 'email' ? { email, password } : { cpf, password }
       const r = await api.post('/api/auth/login', payload)
-      localStorage.setItem('access_token', r.data.access_token)
-      localStorage.setItem('refresh_token', r.data.refresh_token)
+      localStorage.setItem('accessToken', r.data.accessToken)
+      localStorage.setItem('refreshToken', r.data.refreshToken)
       checkAppState();
     } catch (err) {
       setError(err.response?.data?.message || 'Falha ao autenticar')

@@ -31,9 +31,9 @@ const AuthenticatedApp = () => {
 
   // Handle authentication errors
   if (authError) {
-    if (!apiEnabled && authError.type === 'user_not_registered') {
+    if (!apiEnabled && authError.type === 'userNotRegistered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
+    } else if (authError.type === 'authRequired') {
       if (apiEnabled) {
         return <Login />;
       } else {

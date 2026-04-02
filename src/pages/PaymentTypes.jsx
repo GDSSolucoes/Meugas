@@ -18,13 +18,13 @@ export default function PaymentTypes() {
   
   const initialPaymentTypeState = {
     name: '',
-    type: 'a_vista',
-    max_installments: 1,
-    days_interval: 0,
+    type: 'aVista',
+    maxInstallments: 1,
+    daysInterval: 0,
     active: true,
-    created_by_name: '',
-    company_id: '',
-    company_name: ''
+    createdByName: '',
+    companyId: '',
+    companyName: ''
   };
   
   const [currentPaymentType, setCurrentPaymentType] = useState(initialPaymentTypeState);
@@ -36,7 +36,7 @@ export default function PaymentTypes() {
   const loadPaymentTypes = async () => {
     try {
       const user = await User.me();
-      const data = await PaymentType.filter({ company_id: user.company_id }, '-created_date');
+      const data = await PaymentType.filter({ companyId: user.companyId }, '-createdDate');
       setPaymentTypes(data);
     } catch (error) {
       console.error("Erro ao carregar tipos de pagamento:", error);
@@ -48,7 +48,7 @@ export default function PaymentTypes() {
     setIsEditing(true);
     setCurrentPaymentType({
       ...paymentType,
-      days_interval: paymentType.days_interval || 0,
+      daysInterval: paymentType.daysInterval || 0,
     });
     setShowForm(true);
   };
@@ -70,17 +70,17 @@ export default function PaymentTypes() {
       const user = await User.me();
       const payload = {
         ...currentPaymentType,
-        max_installments: Number(currentPaymentType.max_installments) || 1,
-        days_interval: Number(currentPaymentType.days_interval) || 0,
-        company_id: user.company_id,
-        company_name: user.company_name
+        maxInstallments: Number(currentPaymentType.maxInstallments) || 1,
+        daysInterval: Number(currentPaymentType.daysInterval) || 0,
+        companyId: user.companyId,
+        companyName: user.companyName
       };
 
       if (isEditing) {
         const { id, ...data } = payload;
         await PaymentType.update(id, data);
       } else {
-        await PaymentType.create({ ...payload, created_by_name: user.full_name });
+        await PaymentType.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();
@@ -102,14 +102,14 @@ export default function PaymentTypes() {
 
   const getTypeBadge = (type) => {
     const info = {
-      a_vista: { label: "À Vista", color: "bg-green-100 text-green-800" },
-      a_prazo: { label: "À Prazo", color: "bg-blue-100 text-blue-800" },
+      aVista: { label: "À Vista", color: "bg-green-100 text-green-800" },
+      aPrazo: { label: "À Prazo", color: "bg-blue-100 text-blue-800" },
       cartao: { label: "Cartão", color: "bg-purple-100 text-purple-800" }
     };
-    return <Badge className={info[type]?.color || info.a_vista.color}>{info[type]?.label || type}</Badge>;
+    return <Badge className={info[type]?.color || info.aVista.color}>{info[type]?.label || type}</Badge>;
   };
 
-  const isAPrazo = (type) => type === 'a_prazo';
+  const isAPrazo = (type) => type === 'aPrazo';
   const isCartao = (type) => type === 'cartao';
 
   return (
@@ -161,8 +161,8 @@ export default function PaymentTypes() {
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="a_vista">À Vista</SelectItem>
-                        <SelectItem value="a_prazo">À Prazo</SelectItem>
+                        <SelectItem value="aVista">À Vista</SelectItem>
+                        <SelectItem value="aPrazo">À Prazo</SelectItem>
                         <SelectItem value="cartao">Cartão</SelectItem>
                       </SelectContent>
                     </Select>
@@ -173,8 +173,8 @@ export default function PaymentTypes() {
                     <Input
                       type="number"
                       min="1"
-                      value={currentPaymentType.max_installments}
-                      onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, max_installments: e.target.value }))}
+                      value={currentPaymentType.maxInstallments}
+                      onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, maxInstallments: e.target.value }))}
                       className="bg-white/80"
                       placeholder="1"
                     />
@@ -188,8 +188,8 @@ export default function PaymentTypes() {
                        <Input
                          type="number"
                          min="0"
-                         value={currentPaymentType.days_interval}
-                         onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, days_interval: e.target.value }))}
+                         value={currentPaymentType.daysInterval}
+                         onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, daysInterval: e.target.value }))}
                          className="bg-white/80"
                          placeholder="Ex: 30"
                        />
@@ -245,18 +245,18 @@ export default function PaymentTypes() {
                       <TableCell className="font-medium">{pt.name}</TableCell>
                       <TableCell>{getTypeBadge(pt.type)}</TableCell>
                       <TableCell>
-                        {pt.max_installments > 1 
-                          ? <Badge variant="outline">A Prazo ({pt.max_installments}x)</Badge>
+                        {pt.maxInstallments > 1 
+                          ? <Badge variant="outline">A Prazo ({pt.maxInstallments}x)</Badge>
                           : <Badge variant="outline">À Vista</Badge>
                         }
                       </TableCell>
-                      <TableCell>{(isAPrazo(pt.type) || isCartao(pt.type)) ? `${pt.days_interval || 0} dias` : '-'}</TableCell>
+                      <TableCell>{(isAPrazo(pt.type) || isCartao(pt.type)) ? `${pt.daysInterval || 0} dias` : '-'}</TableCell>
                       <TableCell>
                         <Badge className={pt.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
                           {pt.active ? "Ativo" : "Inativo"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-500">{pt.created_by_name}</TableCell>
+                      <TableCell className="text-xs text-slate-500">{pt.createdByName}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(pt)} className="mr-2 hover:bg-blue-100">
                           <Edit className="w-4 h-4 text-blue-600" />

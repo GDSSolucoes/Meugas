@@ -41,15 +41,15 @@ export default function AdminCompanies() {
       state: '',
       zipcode: ''
     },
-    plan_type: 'basic',
-    monthly_fee: 0,
-    due_date: format(new Date(), 'yyyy-MM-dd'),
+    planType: 'basic',
+    monthlyFee: 0,
+    dueDate: format(new Date(), 'yyyy-MM-dd'),
     status: 'ativa',
-    suspension_reason: '',
+    suspensionReason: '',
     notes: '',
-    admin_name: '',
-    admin_email: '',
-    created_by_name: ''
+    adminName: '',
+    adminEmail: '',
+    createdByName: ''
   };
 
   const [currentCompany, setCurrentCompany] = useState(initialCompanyState);
@@ -68,12 +68,12 @@ export default function AdminCompanies() {
         return;
       }
 
-      const companiesData = await Company.list('-created_date');
+      const companiesData = await Company.list('-createdDate');
       setCompanies(companiesData);
       
       const active = companiesData.filter(c => c.status === 'ativa').length;
-      const suspended = companiesData.filter(c => c.status === 'suspensa_pagamento').length;
-      const totalRevenue = companiesData.reduce((sum, c) => sum + (c.monthly_fee || 0), 0);
+      const suspended = companiesData.filter(c => c.status === 'suspensaPagamento').length;
+      const totalRevenue = companiesData.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
       
       setStats({
         totalCompanies: companiesData.length,
@@ -122,7 +122,7 @@ export default function AdminCompanies() {
     try {
       const updateData = { 
         status: newStatus,
-        suspension_reason: newStatus === 'suspensa_pagamento' ? reason : ''
+        suspensionReason: newStatus === 'suspensaPagamento' ? reason : ''
       };
       await Company.update(companyId, updateData);
       loadCompanies();
@@ -130,7 +130,7 @@ export default function AdminCompanies() {
       const statusLabels = {
         'ativa': 'ativada',
         'inativa': 'inativada',
-        'suspensa_pagamento': 'suspensa'
+        'suspensaPagamento': 'suspensa'
       };
       
       toast({
@@ -158,32 +158,32 @@ export default function AdminCompanies() {
         toast({ title: "Sucesso", description: "Empresa atualizada com sucesso." });
       } else {
         // Criar a empresa
-        const newCompany = await Company.create({ ...currentCompany, created_by_name: user.full_name });
+        const newCompany = await Company.create({ ...currentCompany, createdByName: user.fullName });
         
         // AUTOMATICAMENTE vincular o usuário administrador à empresa criada
         try {
           // Buscar se o usuário já existe
           const allUsers = await User.list();
-          const existingUser = allUsers.find(u => u.email === currentCompany.admin_email);
+          const existingUser = allUsers.find(u => u.email === currentCompany.adminEmail);
           
           if (existingUser) {
             // Usuário já existe, apenas atualizar o vínculo com a empresa
             await User.update(existingUser.id, {
-              company_id: newCompany.id,
-              company_name: newCompany.name,
-              user_type: 'admin' // Garantir que é admin da empresa
+              companyId: newCompany.id,
+              companyName: newCompany.name,
+              userType: 'admin' // Garantir que é admin da empresa
             });
-            console.log(`Usuário ${currentCompany.admin_email} vinculado automaticamente à empresa ${newCompany.name}`);
+            console.log(`Usuário ${currentCompany.adminEmail} vinculado automaticamente à empresa ${newCompany.name}`);
             toast({ 
               title: "Sucesso", 
-              description: `Empresa criada e o administrador ${currentCompany.admin_email} foi vinculado automaticamente.`,
+              description: `Empresa criada e o administrador ${currentCompany.adminEmail} foi vinculado automaticamente.`,
               duration: 10000,
             });
           } else {
-            console.log(`Usuário ${currentCompany.admin_email} não existe ainda. Será vinculado quando fizer o primeiro login.`);
+            console.log(`Usuário ${currentCompany.adminEmail} não existe ainda. Será vinculado quando fizer o primeiro login.`);
             toast({ 
               title: "Sucesso", 
-              description: `Empresa criada! O administrador ${currentCompany.admin_email} será vinculado no primeiro login. Convide-o pela plataforma se ainda não for usuário.`,
+              description: `Empresa criada! O administrador ${currentCompany.adminEmail} será vinculado no primeiro login. Convide-o pela plataforma se ainda não for usuário.`,
               duration: 10000,
             });
           }
@@ -221,7 +221,7 @@ export default function AdminCompanies() {
     const configs = {
       ativa: { color: "bg-green-100 text-green-800", label: "Ativa" },
       inativa: { color: "bg-gray-100 text-gray-800", label: "Inativa" },
-      suspensa_pagamento: { color: "bg-red-100 text-red-800", label: "Suspensa" }
+      suspensaPagamento: { color: "bg-red-100 text-red-800", label: "Suspensa" }
     };
     const config = configs[status] || configs.inativa;
     return <Badge className={config.color}>{config.label}</Badge>;
@@ -372,8 +372,8 @@ export default function AdminCompanies() {
                   <div>
                     <Label>Nome do Administrador *</Label>
                     <Input
-                      value={currentCompany.admin_name}
-                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, admin_name: e.target.value }))}
+                      value={currentCompany.adminName}
+                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, adminName: e.target.value }))}
                       required
                       className="bg-white/80"
                     />
@@ -382,8 +382,8 @@ export default function AdminCompanies() {
                     <Label>Email do Administrador *</Label>
                     <Input
                       type="email"
-                      value={currentCompany.admin_email}
-                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, admin_email: e.target.value }))}
+                      value={currentCompany.adminEmail}
+                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, adminEmail: e.target.value }))}
                       required
                       className="bg-white/80"
                     />
@@ -467,8 +467,8 @@ export default function AdminCompanies() {
                   <div>
                     <Label>Plano</Label>
                     <Select
-                      value={currentCompany.plan_type}
-                      onValueChange={(value) => setCurrentCompany(prev => ({ ...prev, plan_type: value }))}
+                      value={currentCompany.planType}
+                      onValueChange={(value) => setCurrentCompany(prev => ({ ...prev, planType: value }))}
                     >
                       <SelectTrigger className="bg-white/80">
                         <SelectValue />
@@ -485,8 +485,8 @@ export default function AdminCompanies() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={currentCompany.monthly_fee}
-                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, monthly_fee: parseFloat(e.target.value) || 0 }))}
+                      value={currentCompany.monthlyFee}
+                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, monthlyFee: parseFloat(e.target.value) || 0 }))}
                       className="bg-white/80"
                     />
                   </div>
@@ -494,8 +494,8 @@ export default function AdminCompanies() {
                     <Label>Data de Vencimento</Label>
                     <Input
                       type="date"
-                      value={currentCompany.due_date}
-                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, due_date: e.target.value }))}
+                      value={currentCompany.dueDate}
+                      onChange={(e) => setCurrentCompany(prev => ({ ...prev, dueDate: e.target.value }))}
                       className="bg-white/80"
                     />
                   </div>
@@ -553,13 +553,13 @@ export default function AdminCompanies() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{company.admin_name}</div>
-                          <div className="text-sm text-gray-500">{company.admin_email}</div>
+                          <div className="font-medium">{company.adminName}</div>
+                          <div className="text-sm text-gray-500">{company.adminEmail}</div>
                         </div>
                       </TableCell>
-                      <TableCell>{getPlanBadge(company.plan_type)}</TableCell>
-                      <TableCell>R$ {company.monthly_fee?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell>{company.due_date ? format(new Date(company.due_date), 'dd/MM/yyyy') : '-'}</TableCell>
+                      <TableCell>{getPlanBadge(company.planType)}</TableCell>
+                      <TableCell>R$ {company.monthlyFee?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>{company.dueDate ? format(new Date(company.dueDate), 'dd/MM/yyyy') : '-'}</TableCell>
                       <TableCell>{getStatusBadge(company.status)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -573,7 +573,7 @@ export default function AdminCompanies() {
                               size="icon" 
                               onClick={() => {
                                 const reason = prompt("Motivo da suspensão:");
-                                if (reason) handleStatusChange(company.id, 'suspensa_pagamento', reason);
+                                if (reason) handleStatusChange(company.id, 'suspensaPagamento', reason);
                               }}
                               className="hover:bg-red-100"
                             >
@@ -581,7 +581,7 @@ export default function AdminCompanies() {
                             </Button>
                           )}
                           
-                          {company.status === 'suspensa_pagamento' && (
+                          {company.status === 'suspensaPagamento' && (
                             <Button 
                               variant="ghost" 
                               size="icon" 

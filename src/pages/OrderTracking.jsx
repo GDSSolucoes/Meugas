@@ -68,7 +68,7 @@ const FilterSection = ({ employees, filters, onFilterChange }) => (
             <SelectContent>
               <SelectItem value="all">Todos os Status</SelectItem>
               <SelectItem value="pendente">Pendente</SelectItem>
-              <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
+              <SelectItem value="emAtendimento">Em Atendimento</SelectItem>
               <SelectItem value="finalizado">Finalizado</SelectItem>
               <SelectItem value="cancelado">Cancelado</SelectItem>
             </SelectContent>
@@ -100,13 +100,13 @@ export default function OrderTracking() {
       setCurrentUser(user);
       
       const [ordersData, allEmployees, allPaymentTypes] = await Promise.all([
-        Order.filter({ company_id: user.company_id }),
-        Employee.filter({ company_id: user.company_id, position: 'entregador', active: true }),
-        PaymentType.filter({ company_id: user.company_id, active: true })
+        Order.filter({ companyId: user.companyId }),
+        Employee.filter({ companyId: user.companyId, position: 'entregador', active: true }),
+        PaymentType.filter({ companyId: user.companyId, active: true })
       ]);
       
       // Sort orders by created date (newest first)
-      const sortedOrders = ordersData.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      const sortedOrders = ordersData.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
       
       setAllOrders(sortedOrders);
       setEmployees(allEmployees);
@@ -134,7 +134,7 @@ export default function OrderTracking() {
 
     // Aplicar filtro de funcionário
     if (filters.employeeId !== 'all') {
-      filtered = filtered.filter(order => order.employee_id === filters.employeeId);
+      filtered = filtered.filter(order => order.employeeId === filters.employeeId);
     }
 
     // Aplicar filtro de status
@@ -148,7 +148,7 @@ export default function OrderTracking() {
       const filterEndDate = filters.endDate;
       
       filtered = filtered.filter(order => {
-        const orderDateString = order.created_date.split('T')[0];
+        const orderDateString = order.createdDate.split('T')[0];
         return orderDateString >= filterStartDate && orderDateString <= filterEndDate;
       });
     }
@@ -158,7 +158,7 @@ export default function OrderTracking() {
 
   const pendingOrders = useMemo(() => filteredOrders.filter(o => o.status === 'pendente'), [filteredOrders]);
 
-  const inProgressOrders = useMemo(() => filteredOrders.filter(o => o.status === 'em_atendimento'), [filteredOrders]);
+  const inProgressOrders = useMemo(() => filteredOrders.filter(o => o.status === 'emAtendimento'), [filteredOrders]);
   // Atualizado: Finalizados agora inclui os Cancelados
   const completedOrders = useMemo(() => filteredOrders.filter(o => o.status === 'finalizado' || o.status === 'cancelado'), [filteredOrders]);
 
@@ -178,11 +178,11 @@ export default function OrderTracking() {
     }
 
     try {
-      await Order.update(orderId, { employee_id: employee.id, employee_name: employee.name });
+      await Order.update(orderId, { employeeId: employee.id, employeeName: employee.name });
       setAllOrders(prevOrders =>
         prevOrders.map(order =>
           order.id === orderId
-            ? { ...order, employee_id: employee.id, employee_name: employee.name }
+            ? { ...order, employeeId: employee.id, employeeName: employee.name }
             : order
         )
       );
@@ -212,11 +212,11 @@ export default function OrderTracking() {
     }
 
     try {
-      await Order.update(orderId, { payment_type_id: paymentType.id, payment_type_name: paymentType.name });
+      await Order.update(orderId, { paymentTypeId: paymentType.id, paymentTypeName: paymentType.name });
       setAllOrders(prevOrders =>
         prevOrders.map(order =>
           order.id === orderId
-            ? { ...order, payment_type_id: paymentType.id, payment_type_name: paymentType.name }
+            ? { ...order, paymentTypeId: paymentType.id, paymentTypeName: paymentType.name }
             : order
         )
       );
@@ -235,11 +235,11 @@ export default function OrderTracking() {
   };
 
   const handleUpdateStatus = async (order, newStatus) => {
-    if (newStatus === 'em_atendimento' && !order.employee_id) {
+    if (newStatus === 'emAtendimento' && !order.employeeId) {
       toast({ title: "Atenção", description: "Selecione um entregador antes de enviar para entrega.", variant: "destructive" });
       return;
     }
-    if (newStatus === 'em_atendimento' && !order.payment_type_id) {
+    if (newStatus === 'emAtendimento' && !order.paymentTypeId) {
       toast({ title: "Atenção", description: "Selecione uma forma de pagamento antes de enviar para entrega.", variant: "destructive" });
       return;
     }
@@ -248,13 +248,13 @@ export default function OrderTracking() {
     try {
       const updateData = {
         status: newStatus,
-        attended_at: new Date().toISOString()
+        attendedAt: new Date().toISOString()
       };
       const updatedOrder = await Order.update(order.id, updateData);
       setAllOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
       toast({
         title: "Sucesso",
-        description: `Status do pedido ${order.order_number} atualizado para '${newStatus}'.`,
+        description: `Status do pedido ${order.orderNumber} atualizado para '${newStatus}'.`,
       });
     } catch (error) {
       console.error(`Erro ao atualizar status para ${newStatus}:`, error);
@@ -273,31 +273,31 @@ export default function OrderTracking() {
     try {
       const updateData = {
         status: 'finalizado',
-        finalized_at: new Date().toISOString()
+        finalizedAt: new Date().toISOString()
       };
       const updatedOrder = await Order.update(order.id, updateData);
       setAllOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
 
-      const allProducts = await Product.filter({ company_id: currentUser.company_id }); 
+      const allProducts = await Product.filter({ companyId: currentUser.companyId }); 
       for (const item of order.items) {
         try {
-          const product = allProducts.find(p => p.id === item.product_id);
+          const product = allProducts.find(p => p.id === item.productId);
           if (product) {
-            const newStock = (product.stock_quantity || 0) - (item.quantity || 0);
-            await Product.update(product.id, { stock_quantity: Math.max(0, newStock) });
+            const newStock = (product.stockQuantity || 0) - (item.quantity || 0);
+            await Product.update(product.id, { stockQuantity: Math.max(0, newStock) });
           }
         } catch (productError) {
-           console.error(`Erro ao atualizar estoque para o produto ID ${item.product_id}:`, productError);
+           console.error(`Erro ao atualizar estoque para o produto ID ${item.productId}:`, productError);
            toast({
             title: "Atenção",
-            description: `Falha ao atualizar estoque para o produto ${item.product_name}.`,
+            description: `Falha ao atualizar estoque para o produto ${item.productName}.`,
             variant: "warning",
            });
         }
       }
       toast({
         title: "Sucesso",
-        description: `Pedido ${order.order_number} finalizado com sucesso!`,
+        description: `Pedido ${order.orderNumber} finalizado com sucesso!`,
       });
     } catch (error) {
       console.error("Erro ao finalizar pedido:", error);
@@ -316,13 +316,13 @@ export default function OrderTracking() {
     try {
       const updateData = {
         status: 'cancelado',
-        canceled_at: new Date().toISOString()
+        canceledAt: new Date().toISOString()
       };
       const updatedOrder = await Order.update(order.id, updateData);
       setAllOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
       toast({
         title: "Sucesso",
-        description: `Pedido ${order.order_number} cancelado com sucesso.`,
+        description: `Pedido ${order.orderNumber} cancelado com sucesso.`,
       });
     } catch (error) {
       console.error("Erro ao cancelar pedido:", error);
@@ -342,7 +342,7 @@ export default function OrderTracking() {
     const getBadge = (status) => {
         switch(status) {
             case 'pendente': return <Badge className="bg-yellow-100 text-yellow-800 text-xs">Pendente</Badge>;
-            case 'em_atendimento': return <Badge className="bg-blue-100 text-blue-800 text-xs">Em Atendimento</Badge>;
+            case 'emAtendimento': return <Badge className="bg-blue-100 text-blue-800 text-xs">Em Atendimento</Badge>;
             case 'finalizado': return <Badge className="bg-green-100 text-green-800 text-xs">Finalizado</Badge>;
             case 'cancelado': return <Badge className="bg-red-100 text-red-800 text-xs">Cancelado</Badge>;
             default: return <Badge className="text-xs">{status}</Badge>
@@ -350,9 +350,9 @@ export default function OrderTracking() {
     }
 
     // Define personAddress directly from the order object.
-    const personAddress = order.person_address || {};
+    const personAddress = order.personAddress || {};
 
-    const isOrderActionable = order.status === 'pendente' || order.status === 'em_atendimento';
+    const isOrderActionable = order.status === 'pendente' || order.status === 'emAtendimento';
     
     const cardClassName = order.status === 'cancelado' 
       ? "bg-red-50 border-red-200 shadow-md hover:shadow-lg transition-shadow" 
@@ -363,26 +363,26 @@ export default function OrderTracking() {
       <CardHeader className="pb-2 flex justify-between items-start">
         <div className="flex-1 pr-2">
           <CardTitle className="text-sm font-bold text-slate-800 flex justify-between items-center mb-1">
-            <span>{order.person_name}</span>
+            <span>{order.personName}</span>
             {getBadge(order.status)}
           </CardTitle>
           
           {/* Mostrar número do pedido apenas quando expandido */}
           {isExpanded && (
-            <p className="text-xs text-slate-600 mb-1">Pedido: {order.order_number}</p>
+            <p className="text-xs text-slate-600 mb-1">Pedido: {order.orderNumber}</p>
           )}
           
           {/* Informações sempre visíveis quando não expandido */}
           {!isExpanded && (
             <div className="text-xs text-slate-500 space-y-1">
               <p className="truncate">
-                <span className="font-medium">Entregador:</span> {order.employee_name || 'Não atribuído'}
+                <span className="font-medium">Entregador:</span> {order.employeeName || 'Não atribuído'}
               </p>
             </div>
           )}
           
           {/* Mostrar valor total apenas quando expandido */}
-          {isExpanded && <p className="text-sm font-bold text-slate-800 mt-1">R$ {order.total_amount?.toFixed(2)}</p>}
+          {isExpanded && <p className="text-sm font-bold text-slate-800 mt-1">R$ {order.totalAmount?.toFixed(2)}</p>}
         </div>
         <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="flex-shrink-0 h-6 w-6">
           {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-600" /> : <ChevronDown className="w-4 h-4 text-slate-600" />}
@@ -394,29 +394,29 @@ export default function OrderTracking() {
           <CardContent className="pt-0 border-t border-slate-200/30">
             <div className="space-y-1 mt-2">
               <p className="text-xs text-slate-500 pt-1">
-                  Data: {format(parseISO(order.created_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })} por {order.created_by_name || 'Sistema'}
+                  Data: {format(parseISO(order.createdDate), 'dd/MM/yyyy HH:mm', { locale: ptBR })} por {order.createdByName || 'Sistema'}
               </p>
-              {order.attended_at && (
+              {order.attendedAt && (
                 <p className="text-xs text-slate-500 pt-1 flex items-center gap-1.5">
                   <Send className="w-3 h-3 text-blue-500"/>
-                  Em Atendimento: {format(parseISO(order.attended_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  Em Atendimento: {format(parseISO(order.attendedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                 </p>
               )}
-              {order.finalized_at && (
+              {order.finalizedAt && (
                 <p className="text-xs text-slate-500 pt-1 flex items-center gap-1.5">
                   <CheckCircle className="w-3 h-3 text-green-500"/>
-                  Finalizado: {format(parseISO(order.finalized_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  Finalizado: {format(parseISO(order.finalizedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                 </p>
               )}
-              {order.canceled_at && ( /* Display canceled_at */
+              {order.canceledAt && ( /* Display canceledAt */
                 <p className="text-xs text-red-500 pt-1 flex items-center gap-1.5">
                   <XCircle className="w-3 h-3 text-red-500"/>
-                  Cancelado: {format(parseISO(order.canceled_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                  Cancelado: {format(parseISO(order.canceledAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                 </p>
               )}
-              {order.cancellation_reason && (
+              {order.cancellationReason && (
                 <p className="text-xs text-red-600 pt-1 bg-red-50 p-2 rounded border-l-2 border-red-300">
-                  <span className="font-medium">Motivo:</span> {order.cancellation_reason}
+                  <span className="font-medium">Motivo:</span> {order.cancellationReason}
                 </p>
               )}
             </div>
@@ -432,8 +432,8 @@ export default function OrderTracking() {
                 <p className="text-xs text-slate-600 pl-5">
                   {personAddress.neighborhood || 'Bairro não informado'} - {personAddress.city || 'Cidade não informada'}
                 </p>
-                {personAddress.reference_point && (
-                    <p className="text-xs text-slate-500 pl-5">Ref: {personAddress.reference_point}</p>
+                {personAddress.referencePoint && (
+                    <p className="text-xs text-slate-500 pl-5">Ref: {personAddress.referencePoint}</p>
                 )}
             </div>
 
@@ -443,7 +443,7 @@ export default function OrderTracking() {
                   <Label className="text-xs font-medium text-slate-700">
                     {order.status === 'pendente' ? 'Atribuir Entregador *' : 'Alterar Entregador'}
                   </Label>
-                  <Select onValueChange={(employeeId) => onAssign(order.id, employeeId)} value={order.employee_id || ''} disabled={!isOrderActionable}>
+                  <Select onValueChange={(employeeId) => onAssign(order.id, employeeId)} value={order.employeeId || ''} disabled={!isOrderActionable}>
                     <SelectTrigger className="w-full mt-1 bg-white text-xs h-8">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -455,7 +455,7 @@ export default function OrderTracking() {
                   </Select>
                 </div>
               ) : (
-                <p className="text-xs text-slate-500">Entregador: {order.employee_name || 'Não definido'}</p>
+                <p className="text-xs text-slate-500">Entregador: {order.employeeName || 'Não definido'}</p>
               )}
 
               {isOrderActionable ? (
@@ -463,7 +463,7 @@ export default function OrderTracking() {
                   <Label className="text-xs font-medium text-slate-700">
                      {order.status === 'pendente' ? 'Forma de Pagamento *' : 'Alterar Forma de Pagamento'}
                   </Label>
-                  <Select onValueChange={(paymentTypeId) => onAssignPayment(order.id, paymentTypeId)} value={order.payment_type_id || ''} disabled={!isOrderActionable}>
+                  <Select onValueChange={(paymentTypeId) => onAssignPayment(order.id, paymentTypeId)} value={order.paymentTypeId || ''} disabled={!isOrderActionable}>
                     <SelectTrigger className="w-full mt-1 bg-white text-xs h-8">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -475,7 +475,7 @@ export default function OrderTracking() {
                   </Select>
                 </div>
               ) : (
-                 <p className="text-xs text-slate-500">Pagamento: {order.payment_type_name || 'Não definido'}</p>
+                 <p className="text-xs text-slate-500">Pagamento: {order.paymentTypeName || 'Não definido'}</p>
               )}
             </div>
             
@@ -484,7 +484,7 @@ export default function OrderTracking() {
                 <div key={index} className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-1">
                     <Package className="w-3 h-3 text-slate-500" />
-                    <span className="text-slate-700">{item.product_name}</span>
+                    <span className="text-slate-700">{item.productName}</span>
                   </div>
                   <span className="text-slate-500">Qtd: {item.quantity}</span>
                 </div>
@@ -493,12 +493,12 @@ export default function OrderTracking() {
             <Separator />
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-slate-600">Total:</span>
-              <span className="text-sm font-bold text-slate-800">R$ {order.total_amount?.toFixed(2)}</span>
+              <span className="text-sm font-bold text-slate-800">R$ {order.totalAmount?.toFixed(2)}</span>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2 pt-2">
             {/* Botão de Cancelar - para pedidos pendentes e em atendimento */}
-            {(order.status === 'pendente' || order.status === 'em_atendimento') && (
+            {(order.status === 'pendente' || order.status === 'emAtendimento') && (
                <Button
                  onClick={() => onCancel(order)}
                  disabled={isLoading}
@@ -512,7 +512,7 @@ export default function OrderTracking() {
             
             {order.status === 'pendente' && (
                <Button
-                 onClick={() => onStart(order, 'em_atendimento')}
+                 onClick={() => onStart(order, 'emAtendimento')}
                  disabled={isLoading}
                  className="bg-blue-600 hover:bg-blue-700 text-xs h-8 px-3"
                 >
@@ -520,7 +520,7 @@ export default function OrderTracking() {
                  Enviar para Entrega
                </Button>
             )}
-            {order.status === 'em_atendimento' && (
+            {order.status === 'emAtendimento' && (
                <Button
                  onClick={() => onFinalize(order)}
                  disabled={isLoading}

@@ -23,7 +23,7 @@ export default function FinancialGroups() {
     type: 'despesa',
     description: '',
     active: true,
-    created_by_name: ''
+    createdByName: ''
   };
 
   const [currentGroup, setCurrentGroup] = useState(initialGroupState);
@@ -32,7 +32,7 @@ export default function FinancialGroups() {
   const loadData = useCallback(async () => {
     try {
       const user = await User.me();
-      const data = await FinancialGroup.filter({ company_id: user.company_id }, '-created_date');
+      const data = await FinancialGroup.filter({ companyId: user.companyId }, '-createdDate');
       setFinancialGroups(data);
     } catch (error) {
       console.error("Erro ao carregar grupos financeiros:", error);
@@ -69,9 +69,9 @@ export default function FinancialGroups() {
       const user = await User.me();
       const groupData = {
         ...currentGroup,
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
       if (isEditing) {

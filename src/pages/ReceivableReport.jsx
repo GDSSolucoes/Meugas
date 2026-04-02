@@ -33,8 +33,8 @@ export default function ReceivableReport() {
     const createdEnd = endOfDay(new Date(filters.createdEndDate + 'T00:00:00'));
 
     return allReceivables.filter(receivable => {
-      const dueDate = parseISO(receivable.due_date);
-      const createdDate = parseISO(receivable.created_date);
+      const dueDate = parseISO(receivable.dueDate);
+      const createdDate = parseISO(receivable.createdDate);
       
       const dueDateMatch = dueDate >= dueStart && dueDate <= dueEnd;
       const createdDateMatch = createdDate >= createdStart && createdDate <= createdEnd;
@@ -46,7 +46,7 @@ export default function ReceivableReport() {
   const loadReceivables = async () => {
     try {
       const user = await User.me();
-      const data = await AccountsReceivable.filter({ company_id: user.company_id }, '-created_date');
+      const data = await AccountsReceivable.filter({ companyId: user.companyId }, '-createdDate');
       setAllReceivables(data);
     } catch (error) {
       console.error("Erro ao carregar contas a receber:", error);
@@ -65,7 +65,7 @@ export default function ReceivableReport() {
     }
     
     const today = new Date();
-    const dueDate = parseISO(receivable.due_date);
+    const dueDate = parseISO(receivable.dueDate);
     
     if (isBefore(dueDate, today)) {
       return <Badge className="bg-red-100 text-red-800">Vencido</Badge>;
@@ -75,11 +75,11 @@ export default function ReceivableReport() {
   };
 
   const totalReceivables = filteredReceivables.reduce((sum, r) => sum + (r.amount || 0), 0);
-  const totalPaid = filteredReceivables.filter(r => r.status === 'pago').reduce((sum, r) => sum + (r.paid_amount || 0), 0);
+  const totalPaid = filteredReceivables.filter(r => r.status === 'pago').reduce((sum, r) => sum + (r.paidAmount || 0), 0);
   const totalPending = filteredReceivables.filter(r => r.status === 'pendente').reduce((sum, r) => sum + (r.amount || 0), 0);
   const totalOverdue = filteredReceivables.filter(r => {
     const today = new Date();
-    const dueDate = parseISO(r.due_date);
+    const dueDate = parseISO(r.dueDate);
     return r.status === 'pendente' && isBefore(dueDate, today);
   }).reduce((sum, r) => sum + (r.amount || 0), 0);
 
@@ -218,12 +218,12 @@ export default function ReceivableReport() {
                   <TableBody>
                     {filteredReceivables.length > 0 ? filteredReceivables.map(receivable => (
                       <TableRow key={receivable.id}>
-                        <TableCell className="font-medium">{receivable.person_name}</TableCell>
-                        <TableCell>{format(parseISO(receivable.created_date), 'dd/MM/yyyy')}</TableCell>
-                        <TableCell>{format(parseISO(receivable.due_date), 'dd/MM/yyyy')}</TableCell>
-                        <TableCell>{receivable.installment_number}/1</TableCell>
+                        <TableCell className="font-medium">{receivable.personName}</TableCell>
+                        <TableCell>{format(parseISO(receivable.createdDate), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{format(parseISO(receivable.dueDate), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{receivable.installmentNumber}/1</TableCell>
                         <TableCell>R$ {(receivable.amount || 0).toFixed(2)}</TableCell>
-                        <TableCell>R$ {(receivable.paid_amount || 0).toFixed(2)}</TableCell>
+                        <TableCell>R$ {(receivable.paidAmount || 0).toFixed(2)}</TableCell>
                         <TableCell>{getBadge(receivable)}</TableCell>
                       </TableRow>
                     )) : (

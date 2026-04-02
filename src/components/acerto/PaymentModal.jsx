@@ -13,8 +13,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { addMonths, format } from "date-fns";
+import { User } from "@/entities/User";
+import { CashAccount } from "@/entities/CashAccount";
+import { PaymentType } from "@/entities/PaymentType";
+import { Acquirer } from "@/entities/Acquirer";
 
 export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) {
   const [paymentType, setPaymentType] = useState("");
@@ -45,8 +48,8 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
   if (paymentType) {
     console.log('🔍 DEBUG DETALHADO PaymentModal:', {
       paymentType,
-      selectedPaymentType_name: selectedPaymentType?.name,
-      selectedPaymentType_type: selectedPaymentType?.type,
+      selectedPaymentTypeName: selectedPaymentType?.name,
+      selectedPaymentTypeType: selectedPaymentType?.type,
       isCardPayment,
       allPaymentTypes: paymentTypes.map(t => ({ id: t.id, name: t.name, type: t.type }))
     });
@@ -54,7 +57,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
 
   useEffect(() => {
     if (pedido) {
-      const valorFormatado = (pedido.total_amount || 0).toFixed(4).replace('.', ',');
+      const valorFormatado = (pedido.totalAmount || 0).toFixed(4).replace('.', ',');
       setValor(valorFormatado);
       // Resetar todos os dados ao abrir o modal
       setPayments([]);
@@ -70,8 +73,8 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     if (paymentType && paymentTypes.length > 0) {
       const selectedType = paymentTypes.find(t => t.id === paymentType);
       if (selectedType) {
-        // Define automaticamente vista ou prazo baseado no max_installments
-        setPaymentOption(selectedType.max_installments > 1 ? 'prazo' : 'vista');
+        // Define automaticamente vista ou prazo baseado no maxInstallments
+        setPaymentOption(selectedType.maxInstallments > 1 ? 'prazo' : 'vista');
       }
     }
   }, [paymentType, paymentTypes]);
@@ -79,18 +82,18 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const user = await base44.auth.me();
+        const user = await User.me();
         const [accounts, types, acquirers] = await Promise.all([
-          base44.entities.CashAccount.filter({ 
-            company_id: user.company_id,
+          CashAccount.filter({ 
+            companyId: user.companyId,
             active: true 
           }),
-          base44.entities.PaymentType.filter({ 
-            company_id: user.company_id,
+          PaymentType.filter({ 
+            companyId: user.companyId,
             active: true 
           }),
-          base44.entities.Acquirer.filter({ 
-            company_id: user.company_id,
+          Acquirer.filter({ 
+            companyId: user.companyId,
             active: true 
           }).catch(() => [])
         ]);
@@ -104,7 +107,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
           const dinheiro = types.find(t => t.type === 'dinheiro');
           if (dinheiro) {
             setPaymentType(dinheiro.id);
-            setPaymentOption(dinheiro.max_installments > 1 ? 'prazo' : 'vista');
+            setPaymentOption(dinheiro.maxInstallments > 1 ? 'prazo' : 'vista');
           }
         }
       } catch (error) {
@@ -116,7 +119,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     }
   }, [open]);
 
-  const totalVenda = pedido?.total_amount || 0;
+  const totalVenda = pedido?.totalAmount || 0;
   const descontoValue = parseFloat(desconto.replace(',', '.')) || 0;
   const acrescimoValue = parseFloat(acrescimo.replace(',', '.')) || 0;
   const totalAReceber = totalVenda - descontoValue + acrescimoValue;
@@ -138,7 +141,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     const valorPagamento = parseFloat(valor.replace(',', '.')) || 0;
     const valorParcela = valorPagamento / installmentCount;
     const selectedType = paymentTypes.find(t => t.id === paymentType);
-    const daysInterval = selectedType?.days_interval || 30;
+    const daysInterval = selectedType?.daysInterval || 30;
     
     const parcelas = [];
     for (let i = 0; i < installmentCount; i++) {
@@ -157,9 +160,9 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     // Sincronizar cartoesData com todas as parcelas quando houver parcelas
     if (parcelas.length > 0 && hasAddedCardPayment) {
       const newCartoesData = parcelas.map((parcela) => ({
-        nr_parcela: parcela.numero,
+        nrParcela: parcela.numero,
         bandeira: '',
-        codigo_liberacao: ''
+        codigoLiberacao: ''
       }));
       setCartoesData(newCartoesData);
     }
@@ -170,7 +173,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     newCartoesData[index] = {
       ...newCartoesData[index],
       bandeira,
-      codigo_liberacao: bandeira ? newCartoesData[index].codigo_liberacao : ''
+      codigoLiberacao: bandeira ? newCartoesData[index].codigoLiberacao : ''
     };
     setCartoesData(newCartoesData);
   };
@@ -179,7 +182,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     const newCartoesData = [...cartoesData];
     newCartoesData[index] = {
       ...newCartoesData[index],
-      codigo_liberacao: codigo
+      codigoLiberacao: codigo
     };
     setCartoesData(newCartoesData);
   };
@@ -192,7 +195,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
         tipo: paymentType,
         descricao: `${selectedPaymentType?.name || 'Pagamento'} - ${isCardPayment || paymentOption === 'prazo' ? 'A Prazo' : 'À Vista'}`,
         valor: valorPagamento,
-        caixa_id: caixa
+        caixaId: caixa
       };
       setPayments([...payments, newPayment]);
       
@@ -203,7 +206,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
         const parcelasAjustadas = newParcelas.map(p => ({
           ...p,
           numero: p.numero + parcelaOffset,
-          payment_id: newPayment.id
+          paymentId: newPayment.id
         }));
         setParcelas([...parcelas, ...parcelasAjustadas]);
         
@@ -245,7 +248,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     setHasAddedCardPayment(false);
     setDesconto("0,00");
     setAcrescimo("0,00");
-    setValor((pedido?.total_amount || 0).toFixed(4).replace('.', ','));
+    setValor((pedido?.totalAmount || 0).toFixed(4).replace('.', ','));
     setPaymentType("");
     setCaixa(cashAccounts.length > 0 ? cashAccounts[0].id : "");
     setShowCancelConfirm(false);
@@ -257,7 +260,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
     
     // Validar dados de cartão se houver pagamento em cartão
     if (hasAddedCardPayment && cartoesData.length > 0) {
-      const hasIncompleteData = cartoesData.some(cartao => !cartao.bandeira || !cartao.codigo_liberacao);
+      const hasIncompleteData = cartoesData.some(cartao => !cartao.bandeira || !cartao.codigoLiberacao);
       if (hasIncompleteData) {
         setShowCardDataWarning(true);
         return;
@@ -297,10 +300,10 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
                   const selectedType = paymentTypes.find(t => t.id === value);
                   if (selectedType) {
                     // Se for cartão, sempre A Prazo
-                    if (selectedType.type === 'cartao_debito' || selectedType.type === 'cartao_credito') {
+                    if (selectedType.type === 'cartaoDebito' || selectedType.type === 'cartaoCredito') {
                       setPaymentOption('prazo');
                     } else {
-                      setPaymentOption(selectedType.max_installments > 1 ? 'prazo' : 'vista');
+                      setPaymentOption(selectedType.maxInstallments > 1 ? 'prazo' : 'vista');
                     }
                   }
                 }}>
@@ -539,7 +542,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
                           ) : (
                             cartoesData.map((cartao, idx) => (
                               <TableRow key={idx}>
-                                <TableCell className="text-xs text-center">{cartao.nr_parcela}</TableCell>
+                                <TableCell className="text-xs text-center">{cartao.nrParcela}</TableCell>
                                 <TableCell className="p-1">
                                   <Select 
                                     value={cartao.bandeira} 
@@ -559,7 +562,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
                                 </TableCell>
                                 <TableCell className="p-1">
                                   <Input
-                                    value={cartao.codigo_liberacao}
+                                    value={cartao.codigoLiberacao}
                                     onChange={(e) => handleCodigoChange(idx, e.target.value)}
                                     disabled={!cartao.bandeira}
                                     placeholder="Digite o código"

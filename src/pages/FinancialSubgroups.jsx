@@ -31,10 +31,10 @@ export default function FinancialSubgroups() {
   const initialSubgroupState = {
     name: '',
     description: '',
-    financial_group_id: '',
-    financial_group_name: '',
+    financialGroupId: '',
+    financialGroupName: '',
     active: true,
-    created_by_name: ''
+    createdByName: ''
   };
 
   const [currentSubgroup, setCurrentSubgroup] = useState(initialSubgroupState);
@@ -43,8 +43,8 @@ export default function FinancialSubgroups() {
     try {
       const user = await User.me();
       const [subgroupsData, groupsData] = await Promise.all([
-        FinancialSubgroup.filter({ company_id: user.company_id }, '-created_date'),
-        FinancialGroup.filter({ company_id: user.company_id, active: true })
+        FinancialSubgroup.filter({ companyId: user.companyId }, '-createdDate'),
+        FinancialGroup.filter({ companyId: user.companyId, active: true })
       ]);
       setSubgroups(subgroupsData);
       setGroups(groupsData);
@@ -72,23 +72,23 @@ export default function FinancialSubgroups() {
         ...newGroup,
         name: newGroup.name.toUpperCase(),
         description: newGroup.description.toUpperCase(),
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name,
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName,
         active: true
       };
 
       const savedGroup = await FinancialGroup.create(groupData);
       
       // Recarregar grupos
-      const updatedGroups = await FinancialGroup.filter({ company_id: user.company_id, active: true });
+      const updatedGroups = await FinancialGroup.filter({ companyId: user.companyId, active: true });
       setGroups(updatedGroups);
       
       // Selecionar automaticamente o novo grupo
       setCurrentSubgroup(prev => ({
         ...prev,
-        financial_group_id: savedGroup.id,
-        financial_group_name: savedGroup.name
+        financialGroupId: savedGroup.id,
+        financialGroupName: savedGroup.name
       }));
 
       // Resetar form e fechar modal
@@ -124,19 +124,19 @@ export default function FinancialSubgroups() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!currentSubgroup.financial_group_id) {
+      if (!currentSubgroup.financialGroupId) {
         toast({ title: "Erro", description: "O grupo financeiro é obrigatório.", variant: "destructive" });
         return;
       }
       const user = await User.me();
-      const selectedGroup = groups.find(g => g.id === currentSubgroup.financial_group_id);
+      const selectedGroup = groups.find(g => g.id === currentSubgroup.financialGroupId);
       
       const subgroupData = {
         ...currentSubgroup,
-        financial_group_name: selectedGroup ? selectedGroup.name : '',
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        financialGroupName: selectedGroup ? selectedGroup.name : '',
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
       if (isEditing) {
@@ -171,8 +171,8 @@ export default function FinancialSubgroups() {
     const group = groups.find(g => g.id === groupId);
     setCurrentSubgroup(prev => ({
       ...prev,
-      financial_group_id: groupId,
-      financial_group_name: group ? group.name : ''
+      financialGroupId: groupId,
+      financialGroupName: group ? group.name : ''
     }));
   };
 
@@ -276,7 +276,7 @@ export default function FinancialSubgroups() {
                   <div>
                     <Label htmlFor="financial-group-select">Grupo Financeiro *</Label>
                     <div className="flex gap-2">
-                      <Select value={currentSubgroup.financial_group_id} onValueChange={handleGroupChange}>
+                      <Select value={currentSubgroup.financialGroupId} onValueChange={handleGroupChange}>
                         <SelectTrigger id="financial-group-select" className="flex-1">
                           <SelectValue placeholder="Selecione um grupo" />
                         </SelectTrigger>
@@ -336,7 +336,7 @@ export default function FinancialSubgroups() {
                 {subgroups.map(subgroup => (
                   <TableRow key={subgroup.id}>
                     <TableCell className="font-medium">{subgroup.name}</TableCell>
-                    <TableCell>{subgroup.financial_group_name}</TableCell>
+                    <TableCell>{subgroup.financialGroupName}</TableCell>
                     <TableCell>
                       <Badge variant={subgroup.active ? 'default' : 'outline'}
                              className={subgroup.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>

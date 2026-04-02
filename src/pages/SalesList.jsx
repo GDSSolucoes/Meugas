@@ -18,7 +18,7 @@ import {
   XCircle,
   FileCode // Added FileCode icon
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import * as entities from "@/entities";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,12 +57,12 @@ export default function SalesList() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
       setCurrentUser(user);
 
-      const salesData = await base44.entities.Sale.filter(
-        { company_id: user.company_id },
-        '-created_date',
+      const salesData = await entities.Sale.filter(
+        { companyId: user.companyId },
+        '-createdDate',
         500
       );
 
@@ -94,7 +94,7 @@ export default function SalesList() {
     // Filtro de data
     if (filters.startDate && filters.endDate) {
       filtered = filtered.filter(sale => {
-        const saleDate = sale.sale_date || sale.created_date?.split('T')[0];
+        const saleDate = sale.saleDate || sale.createdDate?.split('T')[0];
         return saleDate >= filters.startDate && saleDate <= filters.endDate;
       });
     }
@@ -103,8 +103,8 @@ export default function SalesList() {
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(sale =>
-        sale.sale_number?.toLowerCase().includes(searchLower) ||
-        sale.person_name?.toLowerCase().includes(searchLower)
+        sale.saleNumber?.toLowerCase().includes(searchLower) ||
+        sale.personName?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -124,11 +124,11 @@ export default function SalesList() {
     setIsDownloading(true);
     try {
       const functionName = tipo === 'nfe' ? 'baixarDANFe' : 'baixarDANFCe';
-      const result = await base44.functions.invoke(functionName, { sale_id: sale.id });
+      const result = await base44.functions.invoke(functionName, { saleId: sale.id });
 
-      if (result.success && result.pdf_base64) {
+      if (result.success && result.pdfBase64) {
         // Converter base64 para blob
-        const byteCharacters = atob(result.pdf_base64);
+        const byteCharacters = atob(result.pdfBase64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -140,7 +140,7 @@ export default function SalesList() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = result.filename || `DANFE_${sale.sale_number}.pdf`;
+        a.download = result.filename || `DANFE_${sale.saleNumber}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -173,11 +173,11 @@ export default function SalesList() {
     setIsDownloading(true);
     try {
       const functionName = tipo === 'nfe' ? 'baixarXMLNFe' : 'baixarXMLNFCe';
-      const result = await base44.functions.invoke(functionName, { sale_id: sale.id });
+      const result = await base44.functions.invoke(functionName, { saleId: sale.id });
 
-      if (result.success && result.xml_base64) {
+      if (result.success && result.xmlBase64) {
         // Converter base64 para blob
-        const byteCharacters = atob(result.xml_base64);
+        const byteCharacters = atob(result.xmlBase64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -189,7 +189,7 @@ export default function SalesList() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = result.filename || `${tipo.toUpperCase()}_${sale.sale_number}.xml`;
+        a.download = result.filename || `${tipo.toUpperCase()}_${sale.saleNumber}.xml`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -238,8 +238,8 @@ export default function SalesList() {
     setIsCancelling(true);
     try {
       const result = await base44.functions.invoke('cancelarNotaFiscal', {
-        sale_id: selectedSale.id,
-        tipo_nota: cancelTipoNota,
+        saleId: selectedSale.id,
+        tipoNota: cancelTipoNota,
         justificativa: cancelJustification
       });
 
@@ -271,18 +271,18 @@ export default function SalesList() {
   };
 
   const handleEmitNFe = async (sale) => {
-    if (!window.confirm(`Deseja emitir NF-e para a venda ${sale.sale_number}?`)) {
+    if (!window.confirm(`Deseja emitir NF-e para a venda ${sale.saleNumber}?`)) {
       return;
     }
 
     setIsEmittingNFe(true);
     try {
-      const result = await base44.functions.invoke('emitirNFe', { sale_id: sale.id });
+      const result = await base44.functions.invoke('emitirNFe', { saleId: sale.id });
 
       if (result.success) {
         toast({
           title: "Sucesso!",
-          description: `NF-e ${result.nfe_number} emitida com sucesso!`
+          description: `NF-e ${result.nfeNumber} emitida com sucesso!`
         });
 
         // Recarregar dados
@@ -307,18 +307,18 @@ export default function SalesList() {
   };
 
   const handleEmitNFCe = async (sale) => {
-    if (!window.confirm(`Deseja emitir NFC-e para a venda ${sale.sale_number}?`)) {
+    if (!window.confirm(`Deseja emitir NFC-e para a venda ${sale.saleNumber}?`)) {
       return;
     }
 
     setIsEmittingNFCe(true);
     try {
-      const result = await base44.functions.invoke('emitirNFCe', { sale_id: sale.id });
+      const result = await base44.functions.invoke('emitirNFCe', { saleId: sale.id });
 
       if (result.success) {
         toast({
           title: "Sucesso!",
-          description: `NFC-e ${result.nfce_number} emitida com sucesso!`
+          description: `NFC-e ${result.nfceNumber} emitida com sucesso!`
         });
 
         // Recarregar dados
@@ -344,10 +344,10 @@ export default function SalesList() {
 
   const getPaymentMethodsDisplay = (paymentMethods) => {
     if (!paymentMethods || paymentMethods.length === 0) return 'Não especificado';
-    return paymentMethods.map(pm => pm.payment_type_name).join(', ');
+    return paymentMethods.map(pm => pm.paymentTypeName).join(', ');
   };
 
-  const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+  const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
 
   if (isLoading) {
     return (
@@ -481,31 +481,31 @@ export default function SalesList() {
                     index === self.findIndex(s => s.id === sale.id)
                   ).map(sale => (
                     <TableRow key={sale.id}>
-                      <TableCell className="font-medium">{sale.sale_number}</TableCell>
+                      <TableCell className="font-medium">{sale.saleNumber}</TableCell>
                       <TableCell>
-                        {format(parseISO(sale.sale_date || sale.created_date), 'dd/MM/yyyy', { locale: ptBR })}
+                        {format(parseISO(sale.saleDate || sale.createdDate), 'dd/MM/yyyy', { locale: ptBR })}
                       </TableCell>
-                      <TableCell>{sale.person_name}</TableCell>
-                      <TableCell>{sale.sector_name || '-'}</TableCell>
+                      <TableCell>{sale.personName}</TableCell>
+                      <TableCell>{sale.sectorName || '-'}</TableCell>
                       <TableCell className="text-sm">
-                        {getPaymentMethodsDisplay(sale.payment_methods)}
+                        {getPaymentMethodsDisplay(sale.paymentMethods)}
                       </TableCell>
                       <TableCell className="text-right font-semibold text-green-600">
-                        R$ {sale.total_amount?.toFixed(2)}
+                        R$ {sale.totalAmount?.toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          {sale.nfe_number && (
-                            <Badge className={sale.nfe_cancelada ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
-                              NF-e {sale.nfe_number} {sale.nfe_cancelada && '(Cancelada)'}
+                          {sale.nfeNumber && (
+                            <Badge className={sale.nfeCancelada ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
+                              NF-e {sale.nfeNumber} {sale.nfeCancelada && '(Cancelada)'}
                             </Badge>
                           )}
-                          {sale.nfce_number && (
-                            <Badge className={sale.nfce_cancelada ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>
-                              NFC-e {sale.nfce_number} {sale.nfce_cancelada && '(Cancelada)'}
+                          {sale.nfceNumber && (
+                            <Badge className={sale.nfceCancelada ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>
+                              NFC-e {sale.nfceNumber} {sale.nfceCancelada && '(Cancelada)'}
                             </Badge>
                           )}
-                          {!sale.nfe_number && !sale.nfce_number && (
+                          {!sale.nfeNumber && !sale.nfceNumber && (
                             <Badge className="bg-yellow-100 text-yellow-800">
                               Nota Pendente
                             </Badge>
@@ -524,7 +524,7 @@ export default function SalesList() {
                             <Eye className="w-4 h-4 text-blue-600" />
                           </Button>
 
-                          {!sale.nfe_number && !sale.nfce_number && (
+                          {!sale.nfeNumber && !sale.nfceNumber && (
                             <>
                               <Button
                                 variant="ghost"
@@ -551,7 +551,7 @@ export default function SalesList() {
                             </>
                           )}
 
-                          {sale.nfe_number && !sale.nfe_cancelada && (
+                          {sale.nfeNumber && !sale.nfeCancelada && (
                             <>
                               <Button
                                 variant="ghost"
@@ -573,7 +573,7 @@ export default function SalesList() {
                               >
                                 <FileCode className="w-4 h-4 text-indigo-600" />
                               </Button>
-                              {currentUser?.user_type === 'admin' && (
+                              {currentUser?.userType === 'admin' && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -587,7 +587,7 @@ export default function SalesList() {
                             </>
                           )}
 
-                          {sale.nfce_number && !sale.nfce_cancelada && (
+                          {sale.nfceNumber && !sale.nfceCancelada && (
                             <>
                               <Button
                                 variant="ghost"
@@ -609,7 +609,7 @@ export default function SalesList() {
                               >
                                 <FileCode className="w-4 h-4 text-indigo-600" />
                               </Button>
-                              {currentUser?.user_type === 'admin' && (
+                              {currentUser?.userType === 'admin' && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -686,7 +686,7 @@ export default function SalesList() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-800">
-              Detalhes da Venda #{selectedSale?.sale_number}
+              Detalhes da Venda #{selectedSale?.saleNumber}
             </DialogTitle>
           </DialogHeader>
           {selectedSale && (
@@ -694,9 +694,9 @@ export default function SalesList() {
               {/* Informações do Cliente */}
               <div className="p-4 bg-slate-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Cliente</h3>
-                <p className="text-sm"><strong>Nome:</strong> {selectedSale.person_name}</p>
-                <p className="text-sm"><strong>Data:</strong> {format(parseISO(selectedSale.sale_date || selectedSale.created_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
-                <p className="text-sm"><strong>Setor:</strong> {selectedSale.sector_name || '-'}</p>
+                <p className="text-sm"><strong>Nome:</strong> {selectedSale.personName}</p>
+                <p className="text-sm"><strong>Data:</strong> {format(parseISO(selectedSale.saleDate || selectedSale.createdDate), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+                <p className="text-sm"><strong>Setor:</strong> {selectedSale.sectorName || '-'}</p>
               </div>
 
               {/* Itens */}
@@ -714,9 +714,9 @@ export default function SalesList() {
                   <TableBody>
                     {selectedSale.items?.map((item, index) => (
                       <TableRow key={index}>
-                        <TableCell>{item.product_name}</TableCell>
+                        <TableCell>{item.productName}</TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">R$ {item.unit_price?.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">R$ {item.unitPrice?.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-semibold">
                           R$ {item.total?.toFixed(2)}
                         </TableCell>
@@ -730,10 +730,10 @@ export default function SalesList() {
               <div>
                 <h3 className="font-semibold mb-2">Formas de Pagamento</h3>
                 <div className="space-y-2">
-                  {selectedSale.payment_methods?.map((pm, index) => (
+                  {selectedSale.paymentMethods?.map((pm, index) => (
                     <div key={index} className="p-3 bg-slate-50 rounded">
                       <p className="text-sm">
-                        <strong>{pm.payment_type_name}:</strong> R$ {pm.amount?.toFixed(2)}
+                        <strong>{pm.paymentTypeName}:</strong> R$ {pm.amount?.toFixed(2)}
                         {pm.installments > 1 && ` (${pm.installments}x)`}
                       </p>
                     </div>
@@ -744,7 +744,7 @@ export default function SalesList() {
               {/* Total */}
               <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
                 <p className="text-lg font-bold text-green-700">
-                  Total: R$ {selectedSale.total_amount?.toFixed(2)}
+                  Total: R$ {selectedSale.totalAmount?.toFixed(2)}
                 </p>
               </div>
 

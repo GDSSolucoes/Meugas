@@ -18,11 +18,11 @@ export default function ProductsReport() {
   const loadProducts = async () => {
     try {
       const user = await User.me();
-      if (!user.company_id) {
+      if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Product.filter({ company_id: user.company_id }, '-created_date');
+      const data = await Product.filter({ companyId: user.companyId }, '-createdDate');
       setProducts(data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
@@ -51,8 +51,8 @@ export default function ProductsReport() {
     return <Badge className={colors[category] || colors.default}>{labels[category] || category}</Badge>;
   };
 
-  const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock);
-  const totalValue = products.reduce((sum, p) => sum + ((p.stock_quantity || 0) * (p.unit_price || 0)), 0);
+  const lowStockProducts = products.filter(p => p.stockQuantity <= p.minStock);
+  const totalValue = products.reduce((sum, p) => sum + ((p.stockQuantity || 0) * (p.unitPrice || 0)), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -129,10 +129,10 @@ export default function ProductsReport() {
                   </TableHeader>
                   <TableBody>
                     {products.map(product => (
-                      <TableRow key={product.id} className={product.stock_quantity <= product.min_stock ? 'bg-red-50' : ''}>
+                      <TableRow key={product.id} className={product.stockQuantity <= product.minStock ? 'bg-red-50' : ''}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            {product.stock_quantity <= product.min_stock && (
+                            {product.stockQuantity <= product.minStock && (
                               <AlertTriangle className="w-4 h-4 text-red-500" />
                             )}
                             {product.name}
@@ -141,19 +141,19 @@ export default function ProductsReport() {
                         <TableCell>{product.code}</TableCell>
                         <TableCell>{getCategoryBadge(product.category)}</TableCell>
                         <TableCell>
-                          {product.category === 'glp' && product.vasilhame_name ? (
-                            <span className="text-sm text-slate-600">{product.vasilhame_name}</span>
+                          {product.category === 'glp' && product.vasilhameName ? (
+                            <span className="text-sm text-slate-600">{product.vasilhameName}</span>
                           ) : (
                             <span className="text-sm text-slate-400">-</span>
                           )}
                         </TableCell>
-                        <TableCell>R$ {product.unit_price?.toFixed(2)}</TableCell>
+                        <TableCell>R$ {product.unitPrice?.toFixed(2)}</TableCell>
                         <TableCell>
-                          <span className={product.stock_quantity <= product.min_stock ? 'text-red-600 font-semibold' : ''}>
-                            {product.stock_quantity}
+                          <span className={product.stockQuantity <= product.minStock ? 'text-red-600 font-semibold' : ''}>
+                            {product.stockQuantity}
                           </span>
                         </TableCell>
-                        <TableCell>R$ {((product.stock_quantity || 0) * (product.unit_price || 0)).toFixed(2)}</TableCell>
+                        <TableCell>R$ {((product.stockQuantity || 0) * (product.unitPrice || 0)).toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge className={product.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
                             {product.active ? "Ativo" : "Inativo"}

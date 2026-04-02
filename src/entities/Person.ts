@@ -3,7 +3,7 @@ import { BaseEntity } from './BaseEntity';
 export enum PersonType {
   CLIENTE = 'cliente',
   FORNECEDOR = 'fornecedor',
-  PONTO_VENDA = 'ponto_venda',
+  PONTO_VENDA = 'pontoVenda',
   CONVENIADA = 'conveniada'
 }
 
@@ -12,7 +12,7 @@ export interface PersonAddress {
   number?: string;
   complement?: string;
   neighborhood?: string;
-  reference_point?: string;
+  referencePoint?: string;
   city?: string;
   state?: string;
   zipcode?: string;

@@ -15,29 +15,29 @@ Deno.serve(async (req) => {
     }
 
     // Obter dados da requisição
-    const { sale_id } = await req.json();
+    const { saleId } = await req.json();
     
-    if (!sale_id) {
+    if (!saleId) {
       return Response.json({ error: 'ID da venda não fornecido' }, { status: 400 });
     }
 
-    console.log('Baixando XML da venda:', sale_id);
+    console.log('Baixando XML da venda:', saleId);
 
     // Buscar dados da venda
-    const sales = await base44.asServiceRole.entities.Sale.filter({ id: sale_id });
+    const sales = await base44.asServiceRole.entities.Sale.filter({ id: saleId });
     if (!sales || sales.length === 0) {
       return Response.json({ error: 'Venda não encontrada' }, { status: 404 });
     }
     const sale = sales[0];
 
     // Verificar se existe NF-e emitida
-    if (!sale.nfe_key) {
+    if (!sale.nfeKey) {
       return Response.json({ 
         error: 'Não há NF-e emitida para esta venda'
       }, { status: 400 });
     }
 
-    console.log('Chave NF-e:', sale.nfe_key);
+    console.log('Chave NF-e:', sale.nfeKey);
 
     // Obter credenciais
     const clientId = Deno.env.get('NUVEM_FISCAL_CLIENT_ID');
@@ -57,9 +57,9 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
+        grantType: 'clientCredentials',
+        clientId: clientId,
+        clientSecret: clientSecret,
         scope: 'cep cnpj nfe nfce nfse cte mdfe'
       })
     });
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
-    const { access_token } = await tokenResponse.json();
+    const { accessToken } = await tokenResponse.json();
     console.log('Token obtido com sucesso');
 
     // Determinar ambiente (assumindo produção por padrão)
@@ -81,10 +81,10 @@ Deno.serve(async (req) => {
 
     // Consultar a nota para verificar status
     console.log('Consultando status da nota...');
-    const consultaResponse = await fetch(`${baseUrl}/nfe/${sale.nfe_key}`, {
+    const consultaResponse = await fetch(`${baseUrl}/nfe/${sale.nfeKey}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${access_token}`
+        'Authorization': `Bearer ${accessToken}`
       }
     });
 
@@ -105,18 +105,18 @@ Deno.serve(async (req) => {
       return Response.json({ 
         error: 'A nota fiscal ainda não foi autorizada pela SEFAZ',
         details: `Status atual: ${notaData.status}`,
-        status_nota: notaData.status
+        statusNota: notaData.status
       }, { status: 400 });
     }
 
     // Baixar o XML
-    const xmlUrl = `${baseUrl}/nfe/${sale.nfe_key}/xml`;
+    const xmlUrl = `${baseUrl}/nfe/${sale.nfeKey}/xml`;
     console.log('Baixando XML...');
 
     const xmlResponse = await fetch(xmlUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/xml, text/xml'
       }
     });
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       console.error('Conteúdo não é XML válido!');
       return Response.json({ 
         error: 'Conteúdo baixado não é um XML válido',
-        conteudo_recebido: xmlText.substring(0, 300)
+        conteudoRecebido: xmlText.substring(0, 300)
       }, { status: 500 });
     }
 
@@ -162,11 +162,11 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      xml_base64: base64Xml,
-      filename: `NF-e_${sale.nfe_number}_${sale.person_name}.xml`,
+      xmlBase64: base64Xml,
+      filename: `NF-e_${sale.nfeNumber}_${sale.personName}.xml`,
       tamanho: xmlText.length,
-      numero_nota: sale.nfe_number,
-      chave: sale.nfe_key
+      numeroNota: sale.nfeNumber,
+      chave: sale.nfeKey
     });
 
   } catch (error) {

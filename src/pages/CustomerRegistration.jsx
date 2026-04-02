@@ -24,17 +24,17 @@ const initialPersonState = {
     number: '',
     complement: '', // Added new field
     neighborhood: '',
-    reference_point: '',
+    referencePoint: '',
     city: '',
     state: ''
   },
-  glp_consumption_days: '', // Added new field
-  conveniada_id: '',
-  conveniada_name: '',
+  glpConsumptionDays: '', // Added new field
+  conveniadaId: '',
+  conveniadaName: '',
   active: true,
-  created_by_name: '',
-  company_id: '',
-  company_name: ''
+  createdByName: '',
+  companyId: '',
+  companyName: ''
 };
 
 export default function CustomerRegistration() {
@@ -51,7 +51,7 @@ export default function CustomerRegistration() {
   const loadConveniadas = async (companyId) => {
     if (!companyId) return;
     try {
-      const allPeople = await Person.filter({ company_id: companyId });
+      const allPeople = await Person.filter({ companyId: companyId });
       setConveniadas(allPeople.filter(p => p.type === 'conveniada' && p.active));
     } catch (error) {
       console.error("Erro ao carregar conveniadas:", error);
@@ -61,7 +61,7 @@ export default function CustomerRegistration() {
   const loadPersonForEditing = useCallback(async (personId, companyId) => {
     if (!personId || !companyId) return;
     try {
-      const allPeople = await Person.filter({ company_id: companyId });
+      const allPeople = await Person.filter({ companyId: companyId });
       const personToEdit = allPeople.find(p => p.id === personId);
       if (personToEdit) {
         // Ensure phone array is at least [''] if empty from backend
@@ -72,9 +72,9 @@ export default function CustomerRegistration() {
         if (!personToEdit.address.complement) {
           personToEdit.address.complement = '';
         }
-        // Ensure glp_consumption_days exists and is a number or empty string
-        if (typeof personToEdit.glp_consumption_days === 'undefined' || personToEdit.glp_consumption_days === null) {
-          personToEdit.glp_consumption_days = '';
+        // Ensure glpConsumptionDays exists and is a number or empty string
+        if (typeof personToEdit.glpConsumptionDays === 'undefined' || personToEdit.glpConsumptionDays === null) {
+          personToEdit.glpConsumptionDays = '';
         }
         if (!personToEdit.birthday) {
           personToEdit.birthday = '';
@@ -111,15 +111,15 @@ export default function CustomerRegistration() {
       setIsFromGerencial(moduleParam === 'gerencial');
       
       // Se veio com tipo pré-definido, setar o tipo
-      if (typeParam && ['cliente', 'fornecedor', 'ponto_venda', 'conveniada'].includes(typeParam)) {
+      if (typeParam && ['cliente', 'fornecedor', 'pontoVenda', 'conveniada'].includes(typeParam)) {
         setCurrentPerson(prev => ({ ...prev, type: typeParam }));
       }
       
-      // Load conveniadas and person for editing based on current user's company_id
-      if (user.company_id) {
-        loadConveniadas(user.company_id);
+      // Load conveniadas and person for editing based on current user's companyId
+      if (user.companyId) {
+        loadConveniadas(user.companyId);
         if (editParam) {
-          loadPersonForEditing(editParam, user.company_id);
+          loadPersonForEditing(editParam, user.companyId);
         }
       }
     };
@@ -240,14 +240,14 @@ export default function CustomerRegistration() {
       let personToSave = { 
         ...currentPerson, 
         phone: phonesToSave.length > 0 ? phonesToSave : [''],
-        company_id: currentUser.company_id,
-        company_name: currentUser.company_name,
-        created_by_name: currentUser.full_name
+        companyId: currentUser.companyId,
+        companyName: currentUser.companyName,
+        createdByName: currentUser.fullName
       };
       
       // Ensure optional fields are null if empty
-      if (personToSave.glp_consumption_days === '') {
-        personToSave.glp_consumption_days = null;
+      if (personToSave.glpConsumptionDays === '') {
+        personToSave.glpConsumptionDays = null;
       }
       if (personToSave.birthday === '') {
         personToSave.birthday = null;
@@ -265,16 +265,16 @@ export default function CustomerRegistration() {
         }
       } else {
         // Generate sequential person number for new persons
-        const allPersons = await Person.filter({ company_id: currentUser.company_id });
+        const allPersons = await Person.filter({ companyId: currentUser.companyId });
         const maxPersonNumber = allPersons.reduce((max, person) => {
-          const currentNum = parseInt(person.person_number, 10);
+          const currentNum = parseInt(person.personNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
         }, 0);
         const newPersonNumber = maxPersonNumber + 1;
         
         personToSave = {
           ...personToSave,
-          person_number: String(newPersonNumber)
+          personNumber: String(newPersonNumber)
         };
 
         const newPerson = await Person.create(personToSave); // Store the returned new person object
@@ -285,9 +285,9 @@ export default function CustomerRegistration() {
         const returnTo = urlParams.get('return');
         
         if (returnTo === 'purchases' && currentPerson.type === 'fornecedor') {
-          window.location.href = `${createPageUrl("Purchases")}?supplier_id=${newPerson.id}`;
-        } else if (returnTo === 'cash_movements') {
-          window.location.href = `${createPageUrl("CashMovements")}?person_id=${newPerson.id}`;
+          window.location.href = `${createPageUrl("Purchases")}?supplierId=${newPerson.id}`;
+        } else if (returnTo === 'cashMovements') {
+          window.location.href = `${createPageUrl("CashMovements")}?personId=${newPerson.id}`;
         } else if (isFromGerencial) {
           resetForm(); // For gerencial, reset after creation
         } else {
@@ -341,15 +341,15 @@ export default function CustomerRegistration() {
     if (conveniadaId === 'none') { // 'none' is a custom value for 'Nenhuma'
         setCurrentPerson(prev => ({
             ...prev,
-            conveniada_id: '',
-            conveniada_name: ''
+            conveniadaId: '',
+            conveniadaName: ''
         }));
     } else {
         const conveniada = conveniadas.find(c => c.id === conveniadaId);
         setCurrentPerson(prev => ({
             ...prev,
-            conveniada_id: conveniada ? conveniada.id : '',
-            conveniada_name: conveniada ? conveniada.name : ''
+            conveniadaId: conveniada ? conveniada.id : '',
+            conveniadaName: conveniada ? conveniada.name : ''
         }));
     }
   };
@@ -428,7 +428,7 @@ export default function CustomerRegistration() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cliente">Cliente</SelectItem>
-                      <SelectItem value="ponto_venda">Ponto de Venda</SelectItem>
+                      <SelectItem value="pontoVenda">Ponto de Venda</SelectItem>
                       <SelectItem value="fornecedor">Fornecedor</SelectItem>
                       <SelectItem value="conveniada">Conveniada</SelectItem>
                     </SelectContent>
@@ -438,7 +438,7 @@ export default function CustomerRegistration() {
                   <div>
                     <Label htmlFor="conveniada">Empresa Conveniada (Opcional)</Label>
                     <Select
-                      value={currentPerson.conveniada_id || 'none'}
+                      value={currentPerson.conveniadaId || 'none'}
                       onValueChange={handleConveniadaChange}
                     >
                       <SelectTrigger id="conveniada" className="bg-white/80">
@@ -569,13 +569,13 @@ export default function CustomerRegistration() {
                     />
                   </div>
                   <div className="md:col-span-4">
-                    <Label htmlFor="reference_point">Ponto de Referência</Label>
+                    <Label htmlFor="referencePoint">Ponto de Referência</Label>
                     <Input
-                      id="reference_point"
-                      value={currentPerson.address.reference_point}
+                      id="referencePoint"
+                      value={currentPerson.address.referencePoint}
                       onChange={(e) => setCurrentPerson(prev => ({
                         ...prev,
-                        address: { ...prev.address, reference_point: e.target.value.toUpperCase() }
+                        address: { ...prev.address, referencePoint: e.target.value.toUpperCase() }
                       }))}
                       className="bg-white/80"
                     />
@@ -612,14 +612,14 @@ export default function CustomerRegistration() {
                 <h3 className="text-lg font-semibold mb-4">Informações Complementares</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="glp_consumption">Consumo GLP (dias) - Opcional</Label>
+                    <Label htmlFor="glpConsumption">Consumo GLP (dias) - Opcional</Label>
                     <Input
-                      id="glp_consumption"
+                      id="glpConsumption"
                       type="number"
-                      value={currentPerson.glp_consumption_days || ''}
+                      value={currentPerson.glpConsumptionDays || ''}
                       onChange={(e) => setCurrentPerson(prev => ({ 
                         ...prev, 
-                        glp_consumption_days: e.target.value === '' ? '' : parseInt(e.target.value, 10) || ''
+                        glpConsumptionDays: e.target.value === '' ? '' : parseInt(e.target.value, 10) || ''
                       }))}
                       placeholder="Ex: 30"
                       className="bg-white/80"

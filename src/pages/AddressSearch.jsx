@@ -33,7 +33,7 @@ export default function AddressSearch() {
       street: '',
       number: '',
       neighborhood: '',
-      reference_point: '',
+      referencePoint: '',
       city: '',
       state: ''
     },
@@ -45,7 +45,7 @@ export default function AddressSearch() {
   }, []);
 
   const loadPeople = async () => {
-    const data = await Person.list('-created_date');
+    const data = await Person.list('-createdDate');
     setPeople(data);
   };
 
@@ -210,7 +210,7 @@ export default function AddressSearch() {
         street: '',
         number: '',
         neighborhood: '',
-        reference_point: '',
+        referencePoint: '',
         city: '',
         state: ''
       },
@@ -230,7 +230,7 @@ export default function AddressSearch() {
     const colors = {
       cliente: "bg-blue-100 text-blue-800",
       fornecedor: "bg-green-100 text-green-800",
-      ponto_venda: "bg-purple-100 text-purple-800"
+      pontoVenda: "bg-purple-100 text-purple-800"
     };
     return <Badge className={colors[type]}>{type}</Badge>;
   };
@@ -300,7 +300,7 @@ export default function AddressSearch() {
                       <SelectContent>
                         <SelectItem value="cliente">Cliente</SelectItem>
                         <SelectItem value="fornecedor">Fornecedor</SelectItem>
-                        <SelectItem value="ponto_venda">Ponto de Venda</SelectItem>
+                        <SelectItem value="pontoVenda">Ponto de Venda</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -379,10 +379,10 @@ export default function AddressSearch() {
                     <div className="md:col-span-4">
                       <Label>Ponto de Referência</Label>
                       <Input
-                        value={currentPerson.address.reference_point}
+                        value={currentPerson.address.referencePoint}
                         onChange={(e) => setCurrentPerson(prev => ({
                           ...prev,
-                          address: { ...prev.address, reference_point: e.target.value }
+                          address: { ...prev.address, referencePoint: e.target.value }
                         }))}
                         className="bg-white/80"
                       />
@@ -563,7 +563,7 @@ export default function AddressSearch() {
                             {person.address?.city} - {person.address?.state}
                             {person.address?.zipcode && ` - CEP: ${person.address.zipcode}`}
                           </p>
-                          {person.address?.reference_point && <p className="text-xs text-slate-400">Ref: {person.address.reference_point}</p>}
+                          {person.address?.referencePoint && <p className="text-xs text-slate-400">Ref: {person.address.referencePoint}</p>}
                         </div>
                       </TableCell>
                       <TableCell>

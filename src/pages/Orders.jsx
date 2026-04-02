@@ -68,21 +68,21 @@ export default function Orders() {
   const [phoneToAdd, setPhoneToAdd] = useState(''); // State to hold the new phone number
 
   const initialOrderState = {
-    person_id: '',
-    person_name: '',
-    person_address: {}, // Add person_address to initial state
-    employee_id: '',
-    employee_name: '',
-    payment_type_id: '',
-    payment_type_name: '',
-    cash_account_id: '',
-    cash_account_name: '',
+    personId: '',
+    personName: '',
+    personAddress: {}, // Add personAddress to initial state
+    employeeId: '',
+    employeeName: '',
+    paymentTypeId: '',
+    paymentTypeName: '',
+    cashAccountId: '',
+    cashAccountName: '',
     status: 'pendente',
-    delivery_date: format(new Date(), 'yyyy-MM-dd'),
+    deliveryDate: format(new Date(), 'yyyy-MM-dd'),
     notes: '',
     items: [],
-    total_amount: 0,
-    created_by_name: '',
+    totalAmount: 0,
+    createdByName: '',
     canal: 'DISK GAS',
     urgente: false,
     convenio: false
@@ -103,58 +103,58 @@ export default function Orders() {
       number: '',
       complement: '', // Added complement
       neighborhood: '',
-      reference_point: '',
+      referencePoint: '',
       city: '',
       state: ''
     },
-    glp_consumption_days: '', // Added glp_consumption_days
-    conveniada_id: '',
-    conveniada_name: '',
-    created_by_name: '',
+    glpConsumptionDays: '', // Added glpConsumptionDays
+    conveniadaId: '',
+    conveniadaName: '',
+    createdByName: '',
     active: true,
-    person_number: '' // Added for sequential numbering
+    personNumber: '' // Added for sequential numbering
   };
 
   const [currentCustomer, setCurrentCustomer] = useState(initialCustomerState);
 
   // New function: generateReceivables
   const generateReceivables = async (order, user) => {
-    if (order.payment_methods && Array.isArray(order.payment_methods)) {
-        for (const payment of order.payment_methods) {
+    if (order.paymentMethods && Array.isArray(order.paymentMethods)) {
+        for (const payment of order.paymentMethods) {
             if (payment.installments && payment.installments > 0 && payment.type !== 'avista') {
                 for (let i = 1; i <= payment.installments; i++) {
-                    const baseDueDate = payment.due_date ? new Date(payment.due_date) : new Date(order.delivery_date || new Date());
+                    const baseDueDate = payment.dueDate ? new Date(payment.dueDate) : new Date(order.deliveryDate || new Date());
                     await AccountsReceivable.create({
-                        person_id: order.person_id,
-                        person_name: order.person_name,
-                        sale_id: order.id, 
-                        installment_number: i,
-                        description: `Parcela ${i}/${payment.installments} do Pedido ${order.order_number}`,
-                        due_date: format(addDays(baseDueDate, (i - 1) * 30), 'yyyy-MM-dd'),
+                        personId: order.personId,
+                        personName: order.personName,
+                        saleId: order.id, 
+                        installmentNumber: i,
+                        description: `Parcela ${i}/${payment.installments} do Pedido ${order.orderNumber}`,
+                        dueDate: format(addDays(baseDueDate, (i - 1) * 30), 'yyyy-MM-dd'),
                         amount: payment.amount / payment.installments,
                         status: 'pendente',
-                        company_id: user.company_id,
-                        company_name: user.company_name,
-                        created_by_name: user.full_name,
+                        companyId: user.companyId,
+                        companyName: user.companyName,
+                        createdByName: user.fullName,
                     });
                 }
             }
         }
     } else {
-        const paymentType = paymentTypes.find(pt => pt.id === currentOrder.payment_type_id);
-        if (paymentType && paymentType.type === 'a_prazo') {
+        const paymentType = paymentTypes.find(pt => pt.id === currentOrder.paymentTypeId);
+        if (paymentType && paymentType.type === 'aPrazo') {
             await AccountsReceivable.create({
-                person_id: order.person_id,
-                person_name: order.person_name,
-                sale_id: order.id, 
-                installment_number: 1,
-                description: `Pedido ${order.order_number} - ${currentOrder.payment_type_name}`,
-                due_date: format(addDays(new Date(order.delivery_date || new Date()), 0), 'yyyy-MM-dd'),
-                amount: order.total_amount,
+                personId: order.personId,
+                personName: order.personName,
+                saleId: order.id, 
+                installmentNumber: 1,
+                description: `Pedido ${order.orderNumber} - ${currentOrder.paymentTypeName}`,
+                dueDate: format(addDays(new Date(order.deliveryDate || new Date()), 0), 'yyyy-MM-dd'),
+                amount: order.totalAmount,
                 status: 'pendente',
-                company_id: user.company_id,
-                company_name: user.company_name,
-                created_by_name: user.full_name,
+                companyId: user.companyId,
+                companyName: user.companyName,
+                createdByName: user.fullName,
             });
         }
     }
@@ -162,7 +162,7 @@ export default function Orders() {
 
   // New function: updateStock - Placeholder as implementation is not provided in outline
   const updateStock = async (items, user) => {
-    console.log("Updating stock for order items:", items, "for user:", user.full_name);
+    console.log("Updating stock for order items:", items, "for user:", user.fullName);
     // TODO: Implement actual stock update logic (e.g., decrement product quantities)
   };
 
@@ -241,14 +241,14 @@ export default function Orders() {
     try {
       const user = await UserEntity.me();
       setCurrentUser(user);
-      const company_id = user.company_id;
+      const companyId = user.companyId;
 
       const [allPeople, productsData, employeesData, paymentTypesData, cashAccountsData] = await Promise.all([
-        Person.filter({ company_id: company_id }),
-        Product.filter({ company_id: company_id, active: true }),
-        Employee.filter({ company_id: company_id, position: 'entregador', active: true }),
-        PaymentType.filter({ company_id: company_id, active: true }),
-        CashAccount.filter({ company_id: company_id, active: true }),
+        Person.filter({ companyId: companyId }),
+        Product.filter({ companyId: companyId, active: true }),
+        Employee.filter({ companyId: companyId, position: 'entregador', active: true }),
+        PaymentType.filter({ companyId: companyId, active: true }),
+        CashAccount.filter({ companyId: companyId, active: true }),
       ]);
 
       setPeople(allPeople.filter(p => p.type === 'cliente'));
@@ -276,8 +276,8 @@ export default function Orders() {
     try {
       const user = await UserEntity.me();
       const history = await Order.filter(
-        { person_id: customerFound.id, company_id: user.company_id },
-        '-created_date',
+        { personId: customerFound.id, companyId: user.companyId },
+        '-createdDate',
         12
       );
       setCustomerHistory(history);
@@ -297,9 +297,9 @@ export default function Orders() {
     setCustomerFound(person);
     setCurrentOrder(prev => ({
         ...prev,
-        person_id: person.id,
-        person_name: person.name,
-        person_address: person.address || {}
+        personId: person.id,
+        personName: person.name,
+        personAddress: person.address || {}
     }));
     // Reset search states
     setSearchPhone('');
@@ -320,8 +320,8 @@ export default function Orders() {
           toast({ title: "Sucesso", description: `Telefone ${newPhone} adicionado a ${person.name}.` });
 
           // Refresh local data to reflect the change
-          const user = await UserEntity.me(); // Need user to get company_id
-          const updatedPeople = await Person.filter({ company_id: user.company_id, type: 'cliente' }); // Filter by type to get only clients
+          const user = await UserEntity.me(); // Need user to get companyId
+          const updatedPeople = await Person.filter({ companyId: user.companyId, type: 'cliente' }); // Filter by type to get only clients
           setPeople(updatedPeople);
           const updatedPerson = updatedPeople.find(p => p.id === person.id);
           
@@ -541,9 +541,9 @@ export default function Orders() {
         ...currentCustomer,
         // Filter out empty phone numbers before saving
         phone: currentCustomer.phone.filter(p => p.trim() !== ''),
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
       // If all phone fields are empty after filtering, ensure the phone array is not empty
@@ -552,8 +552,8 @@ export default function Orders() {
       }
       
       // Ensure optional fields are null if empty
-      if (customerPayload.glp_consumption_days === '') {
-        customerPayload.glp_consumption_days = null;
+      if (customerPayload.glpConsumptionDays === '') {
+        customerPayload.glpConsumptionDays = null;
       }
       if (customerPayload.birthday === '') {
         customerPayload.birthday = null;
@@ -565,22 +565,22 @@ export default function Orders() {
         savedCustomer = await Person.update(id, customerData);
       } else {
         // Generate sequential person number for new customers
-        const allPersons = await Person.filter({ company_id: user.company_id });
+        const allPersons = await Person.filter({ companyId: user.companyId });
         const maxPersonNumber = allPersons.reduce((max, person) => {
-          const currentNum = parseInt(person.person_number, 10);
+          const currentNum = parseInt(person.personNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
         }, 0);
         const newPersonNumber = maxPersonNumber + 1;
         
         customerPayload = {
           ...customerPayload,
-          person_number: String(newPersonNumber)
+          personNumber: String(newPersonNumber)
         };
 
         savedCustomer = await Person.create(customerPayload);
       }
 
-      const refreshedPeople = await Person.filter({ company_id: user.company_id, type: 'cliente' });
+      const refreshedPeople = await Person.filter({ companyId: user.companyId, type: 'cliente' });
       setPeople(refreshedPeople);
 
       const updatedCustomer = refreshedPeople.find(p => p.id === (savedCustomer.id || currentCustomer.id));
@@ -604,9 +604,9 @@ export default function Orders() {
     setCustomerFound(null);
     setCurrentOrder(prev => ({
       ...prev,
-      person_id: '',
-      person_name: '',
-      person_address: {} // Clear address when clearing customer
+      personId: '',
+      personName: '',
+      personAddress: {} // Clear address when clearing customer
     }));
     setSearchPhone('');
     setSearchAddress('');
@@ -640,18 +640,18 @@ export default function Orders() {
 
     const product = products.find(p => p.id === selectedProductId);
     if (product) {
-      const itemExists = pedidoItems.find(item => item.product_id === product.id);
+      const itemExists = pedidoItems.find(item => item.productId === product.id);
       if (itemExists) {
         toast({ title: "Atenção", description: "Este produto já foi adicionado ao pedido.", variant: "destructive" });
         return;
       }
 
       setPedidoItems(prev => [...prev, {
-        product_id: product.id,
+        productId: product.id,
         codigo: product.code || product.id.substring(0, 6),
         produto: product.name,
         qtde: 1,
-        preco: product.unit_price || 0,
+        preco: product.unitPrice || 0,
         desconto: 0
       }]);
       setSelectedProductId('');
@@ -667,41 +667,41 @@ export default function Orders() {
       const orderTotal = calcularTotal();
 
       // Lógica para numeração sequencial
-      const companyOrders = await Order.filter({ company_id: user.company_id });
+      const companyOrders = await Order.filter({ companyId: user.companyId });
       const maxOrderNumber = companyOrders.reduce((max, order) => {
-        const currentNum = parseInt(order.order_number, 10);
+        const currentNum = parseInt(order.orderNumber, 10);
         return !isNaN(currentNum) && currentNum > max ? currentNum : max;
       }, 0);
       const newOrderNumber = maxOrderNumber + 1;
 
       const orderToSave = {
-        order_number: String(newOrderNumber),
-        person_id: currentOrder.person_id,
-        person_name: currentOrder.person_name,
+        orderNumber: String(newOrderNumber),
+        personId: currentOrder.personId,
+        personName: currentOrder.personName,
         // Garante que o endereço do cliente selecionado seja salvo no pedido
-        person_address: customerFound?.address || {},
-        employee_id: currentOrder.employee_id || '',
-        employee_name: currentOrder.employee_name || '',
-        payment_type_id: currentOrder.payment_type_id || '',
-        payment_type_name: currentOrder.payment_type_name || '',
+        personAddress: customerFound?.address || {},
+        employeeId: currentOrder.employeeId || '',
+        employeeName: currentOrder.employeeName || '',
+        paymentTypeId: currentOrder.paymentTypeId || '',
+        paymentTypeName: currentOrder.paymentTypeName || '',
         status: 'pendente', // Garantir que o status seja definido explicitamente
-        delivery_date: currentOrder.delivery_date,
+        deliveryDate: currentOrder.deliveryDate,
         notes: currentOrder.notes || '',
         canal: currentOrder.canal, // Preserve existing order properties
         urgente: currentOrder.urgente, // Preserve existing order properties
         convenio: currentOrder.convenio, // Preserve existing order properties
         items: pedidoItems.map(item => ({
-          product_id: item.product_id,
-          product_name: item.produto,
+          productId: item.productId,
+          productName: item.produto,
           quantity: item.qtde,
-          unit_price: item.preco,
+          unitPrice: item.preco,
           discount: item.desconto,
           total: (item.qtde * item.preco) - item.desconto
         })),
-        total_amount: orderTotal,
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        totalAmount: orderTotal,
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
       const newOrder = await Order.create(orderToSave);
@@ -936,10 +936,10 @@ export default function Orders() {
                   <label className="block text-sm font-medium mb-1" style={{ color: '#223f61' }}>Ponto de Referência</label>
                   <input
                     type="text"
-                    value={currentCustomer.address.reference_point}
+                    value={currentCustomer.address.referencePoint}
                     onChange={(e) => setCurrentCustomer(prev => ({
                       ...prev,
-                      address: { ...prev.address, reference_point: e.target.value.toUpperCase() }
+                      address: { ...prev.address, referencePoint: e.target.value.toUpperCase() }
                     }))}
                     className="w-full p-2 border-2 rounded-lg"
                     style={{ borderColor: '#95b4df' }}
@@ -953,10 +953,10 @@ export default function Orders() {
                   <label className="block text-sm font-medium mb-1" style={{ color: '#223f61' }}>Consumo GLP (dias) - Opcional</label>
                   <input
                     type="number"
-                    value={currentCustomer.glp_consumption_days || ''}
+                    value={currentCustomer.glpConsumptionDays || ''}
                     onChange={(e) => setCurrentCustomer(prev => ({ 
                       ...prev, 
-                      glp_consumption_days: e.target.value === '' ? '' : parseInt(e.target.value, 10) || ''
+                      glpConsumptionDays: e.target.value === '' ? '' : parseInt(e.target.value, 10) || ''
                     }))}
                     placeholder="Ex: 30 (dias para trocar o botijão)"
                     className="w-full p-2 border-2 rounded-lg"
@@ -1022,12 +1022,12 @@ export default function Orders() {
                       <tbody>
                         {customerHistory.map(order => (
                           <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-2">{format(parseISO(order.created_date), 'dd/MM/yy')}</td>
+                            <td className="py-3 px-2">{format(parseISO(order.createdDate), 'dd/MM/yy')}</td>
                             <td className="py-3 px-2">
-                              {order.items.map(item => `${item.product_name} (${item.quantity})`).join(', ')}
+                              {order.items.map(item => `${item.productName} (${item.quantity})`).join(', ')}
                             </td>
-                            <td className="py-3 px-2 text-right font-medium">R$ {order.total_amount.toFixed(2)}</td>
-                            <td className="py-3 px-2">{order.employee_name || 'N/A'}</td>
+                            <td className="py-3 px-2 text-right font-medium">R$ {order.totalAmount.toFixed(2)}</td>
+                            <td className="py-3 px-2">{order.employeeName || 'N/A'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1149,7 +1149,7 @@ export default function Orders() {
                     <span className="font-bold text-base" style={{ color: '#223f61' }}>
                       {Array.isArray(customerFound.phone) ? customerFound.phone[0] : (customerFound.phone || 'N/A')}
                     </span>
-                    <span className="text-sm text-gray-500">Cód: {customerFound.person_number || customerFound.id.substring(0, 6)}</span>
+                    <span className="text-sm text-gray-500">Cód: {customerFound.personNumber || customerFound.id.substring(0, 6)}</span>
                   </div>
                   <div className="flex space-x-1">
                     <button
@@ -1191,8 +1191,8 @@ export default function Orders() {
                     <p>{customerFound.address.complement}</p>
                   )}
                   <p>{(customerFound.address?.neighborhood?.toUpperCase() || 'Bairro não informado')} - {(customerFound.address?.city?.toUpperCase() || 'Cidade não informada')}/{(customerFound.address?.state?.toUpperCase() || 'UF')}</p>
-                  {customerFound.address?.reference_point && (
-                    <p className="text-gray-600">Ref: {customerFound.address.reference_point}</p>
+                  {customerFound.address?.referencePoint && (
+                    <p className="text-gray-600">Ref: {customerFound.address.referencePoint}</p>
                   )}
                 </div>
               </div>
@@ -1220,10 +1220,10 @@ export default function Orders() {
                     {customerFound.active ? 'Ativo' : 'Inativo'}
                   </p>
                 </div>
-                {customerFound.glp_consumption_days && (
+                {customerFound.glpConsumptionDays && (
                   <div className="space-y-1">
                     <p className="text-gray-500">Consumo GLP:</p>
-                    <p className="font-medium" style={{ color: '#223f61' }}>{customerFound.glp_consumption_days} dias</p>
+                    <p className="font-medium" style={{ color: '#223f61' }}>{customerFound.glpConsumptionDays} dias</p>
                   </div>
                 )}
               </div>
@@ -1261,7 +1261,7 @@ export default function Orders() {
                 <option value="">Selecione um produto...</option>
                 {products.map(product => (
                   <option key={product.id} value={product.id}>
-                    {product.name} - R$ {product.unit_price?.toFixed(2)}
+                    {product.name} - R$ {product.unitPrice?.toFixed(2)}
                   </option>
                 ))}
               </select>
@@ -1423,8 +1423,8 @@ export default function Orders() {
                   <Calendar className="w-4 h-4" style={{ color: '#95b4df' }}/>
                   <input
                     type="date"
-                    value={currentOrder.delivery_date}
-                    onChange={(e) => setCurrentOrder(prev => ({ ...prev, delivery_date: e.target.value }))}
+                    value={currentOrder.deliveryDate}
+                    onChange={(e) => setCurrentOrder(prev => ({ ...prev, deliveryDate: e.target.value }))}
                     className="flex-1 p-2 border-2 rounded-lg text-sm"
                     style={{ borderColor: '#95b4df' }}
                   />
@@ -1434,13 +1434,13 @@ export default function Orders() {
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: '#223f61' }}>Pagamento:</label>
                 <select
-                  value={currentOrder.payment_type_id}
+                  value={currentOrder.paymentTypeId}
                   onChange={(e) => {
                     const paymentType = paymentTypes.find(p => p.id === e.target.value);
                     setCurrentOrder(prev => ({
                       ...prev,
-                      payment_type_id: e.target.value,
-                      payment_type_name: paymentType ? paymentType.name : ''
+                      paymentTypeId: e.target.value,
+                      paymentTypeName: paymentType ? paymentType.name : ''
                     }));
                   }}
                   className="w-full p-2 border-2 rounded-lg text-sm"
@@ -1485,13 +1485,13 @@ export default function Orders() {
               <span>Entregador</span>
             </h3>
             <select
-              value={currentOrder.employee_id}
+              value={currentOrder.employeeId}
               onChange={(e) => {
                 const employee = employees.find(emp => emp.id === e.target.value);
                 setCurrentOrder(prev => ({
                   ...prev,
-                  employee_id: e.target.value,
-                  employee_name: employee ? employee.name : ''
+                  employeeId: e.target.value,
+                  employeeName: employee ? employee.name : ''
                 }));
               }}
               className="w-full p-2 border-2 rounded-lg text-sm"

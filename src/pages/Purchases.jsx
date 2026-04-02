@@ -12,7 +12,7 @@ import {
   ShoppingCart, Search, Plus, Trash2, Save, Package, X,
   Upload, UserPlus
 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 // Added import
@@ -35,62 +35,62 @@ export default function Purchases() {
   const [searchSupplier, setSearchSupplier] = useState('');
 
   const initialPurchaseState = {
-    purchase_number: '',
-    supplier_id: '', // Changed from person_id
-    supplier_name: '', // Changed from person_name
-    sector_id: '',
-    sector_name: '',
-    cash_account_id: '',
-    cash_account_name: '',
+    purchaseNumber: '',
+    supplierId: '', // Changed from personId
+    supplierName: '', // Changed from personName
+    sectorId: '',
+    sectorName: '',
+    cashAccountId: '',
+    cashAccountName: '',
     status: 'rascunho',
     items: [],
     freight: 0,
     taxes: 0,
-    total_discount: 0,
+    totalDiscount: 0,
     subtotal: 0,
-    total_amount: 0,
-    payment_type_id: '',
-    payment_type_name: '',
+    totalAmount: 0,
+    paymentTypeId: '',
+    paymentTypeName: '',
     installments: 1,
-    installments_details: [],
-    payment_discount: 0,
-    final_total: 0,
+    installmentsDetails: [],
+    paymentDiscount: 0,
+    finalTotal: 0,
     notes: '',
-    nfe_received: false,
-    nfe_number: '',
-    nfe_series: '001',
-    nfe_date: format(new Date(), 'yyyy-MM-dd'),
-    created_by_name: '',
-    purchase_date: format(new Date(), 'yyyy-MM-dd')
+    nfeReceived: false,
+    nfeNumber: '',
+    nfeSeries: '001',
+    nfeDate: format(new Date(), 'yyyy-MM-dd'),
+    createdByName: '',
+    purchaseDate: format(new Date(), 'yyyy-MM-dd')
   };
 
   const [currentPurchase, setCurrentPurchase] = useState(initialPurchaseState);
 
   const [currentItem, setCurrentItem] = useState({
-    product_id: '',
-    product_code: '',
-    product_name: '',
+    productId: '',
+    productCode: '',
+    productName: '',
     quantity: 1,
-    unit_price: 0,
+    unitPrice: 0,
     discount: 0,
     subtotal: 0,
-    stock_only: false,
-    vasilhame_loan_quantity: 0,
-    quantity_to_pickup: 0
+    stockOnly: false,
+    vasilhameLoanQuantity: 0,
+    quantityToPickup: 0
   });
 
   const loadData = useCallback(async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
       setCurrentUser(user);
 
       const [allPeople, productsData, sectorsData, sectorMastersData, cashAccountsData, paymentTypesData] = await Promise.all([
-        base44.entities.Person.filter({ company_id: user.company_id }),
-        base44.entities.Product.filter({ company_id: user.company_id, active: true }),
-        base44.entities.Sector.filter({ company_id: user.company_id, active: true }),
-        base44.entities.SectorMaster.filter({ company_id: user.company_id }),
-        base44.entities.CashAccount.filter({ company_id: user.company_id, active: true }),
-        base44.entities.PaymentType.filter({ company_id: user.company_id, active: true })
+        entities.Person.filter({ companyId: user.companyId }),
+        entities.Product.filter({ companyId: user.companyId, active: true }),
+        entities.Sector.filter({ companyId: user.companyId, active: true }),
+        entities.SectorMaster.filter({ companyId: user.companyId }),
+        entities.CashAccount.filter({ companyId: user.companyId, active: true }),
+        entities.PaymentType.filter({ companyId: user.companyId, active: true })
       ]);
 
       const suppliersList = allPeople.filter(p => p.type === 'fornecedor');
@@ -103,21 +103,21 @@ export default function Purchases() {
 
       // Código sequencial será gerado apenas no momento do salvamento
 
-      // Verificar se há um supplier_id na URL para auto-selecionar
+      // Verificar se há um supplierId na URL para auto-selecionar
       const urlParams = new URLSearchParams(window.location.search);
-      const supplierId = urlParams.get('supplier_id');
+      const supplierId = urlParams.get('supplierId');
       if (supplierId) {
         const supplier = suppliersList.find(s => s.id === supplierId);
         if (supplier) {
           setSelectedSupplier(supplier);
           setCurrentPurchase(prev => ({
             ...prev,
-            supplier_id: supplier.id,
-            supplier_name: supplier.name
+            supplierId: supplier.id,
+            supplierName: supplier.name
           }));
           toast({ title: "Fornecedor selecionado", description: supplier.name });
           // Limpar o parâmetro da URL para evitar re-seleção em recarregamentos
-          urlParams.delete('supplier_id');
+          urlParams.delete('supplierId');
           window.history.replaceState({}, document.title, `${window.location.pathname}?${urlParams.toString()}`);
         }
       }
@@ -131,29 +131,29 @@ export default function Purchases() {
     loadData();
   }, [loadData]);
 
-  // Effect to calculate main financial totals (subtotal, taxes, total_amount, final_total)
+  // Effect to calculate main financial totals (subtotal, taxes, totalAmount, finalTotal)
   useEffect(() => {
     const itemsSubtotal = currentPurchase.items.reduce((sum, item) => sum + item.subtotal, 0);
     const totalDiscount = currentPurchase.items.reduce((sum, item) => sum + item.discount, 0);
     const total = itemsSubtotal + currentPurchase.freight;
-    const finalTotal = total - currentPurchase.payment_discount;
+    const finalTotal = total - currentPurchase.paymentDiscount;
 
     setCurrentPurchase(prev => ({
       ...prev,
       subtotal: itemsSubtotal,
-      total_discount: totalDiscount,
+      totalDiscount: totalDiscount,
       taxes: 0,
-      total_amount: total,
-      final_total: finalTotal
+      totalAmount: total,
+      finalTotal: finalTotal
     }));
-  }, [currentPurchase.items, currentPurchase.freight, currentPurchase.payment_discount]);
+  }, [currentPurchase.items, currentPurchase.freight, currentPurchase.paymentDiscount]);
 
-  // Effect to update installment amounts when final_total or number of installments changes
+  // Effect to update installment amounts when finalTotal or number of installments changes
   useEffect(() => {
-    if (currentPurchase.payment_type_id && currentPurchase.installments > 0 && !isNaN(currentPurchase.final_total)) {
-      const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.payment_type_id);
+    if (currentPurchase.paymentTypeId && currentPurchase.installments > 0 && !isNaN(currentPurchase.finalTotal)) {
+      const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.paymentTypeId);
       if (selectedPaymentType) {
-        const isImmediatePayment = ['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
+        const isImmediatePayment = ['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
 
         // If it's an immediate payment type, ensure installments is 1
         if (isImmediatePayment && currentPurchase.installments !== 1) {
@@ -161,23 +161,23 @@ export default function Purchases() {
           return; // Exit to let the next render cycle with updated installments handle the details
         }
 
-        const newInstallmentAmount = currentPurchase.final_total / currentPurchase.installments;
+        const newInstallmentAmount = currentPurchase.finalTotal / currentPurchase.installments;
 
         // Only update if amounts actually need changing to avoid unnecessary state updates
-        // and if installments_details exists
-        if (currentPurchase.installments_details.length > 0 && currentPurchase.installments_details[0].amount !== newInstallmentAmount) {
-            const updatedInstallmentsDetails = currentPurchase.installments_details.map(detail => ({
+        // and if installmentsDetails exists
+        if (currentPurchase.installmentsDetails.length > 0 && currentPurchase.installmentsDetails[0].amount !== newInstallmentAmount) {
+            const updatedInstallmentsDetails = currentPurchase.installmentsDetails.map(detail => ({
                 ...detail,
-                amount: newInstallmentAmount // Update amount based on new final_total
+                amount: newInstallmentAmount // Update amount based on new finalTotal
             }));
             setCurrentPurchase(prev => ({
                 ...prev,
-                installments_details: updatedInstallmentsDetails
+                installmentsDetails: updatedInstallmentsDetails
             }));
         }
       }
     }
-  }, [currentPurchase.final_total, currentPurchase.payment_type_id, currentPurchase.installments, paymentTypes, currentPurchase.installments_details]);
+  }, [currentPurchase.finalTotal, currentPurchase.paymentTypeId, currentPurchase.installments, paymentTypes, currentPurchase.installmentsDetails]);
 
 
   const handleSearchSupplier = () => {
@@ -195,8 +195,8 @@ export default function Purchases() {
       setSelectedSupplier(found);
       setCurrentPurchase(prev => ({
         ...prev,
-        supplier_id: found.id, // Changed from person_id
-        supplier_name: found.name // Changed from person_name
+        supplierId: found.id, // Changed from personId
+        supplierName: found.name // Changed from personName
       }));
       toast({ title: "Fornecedor encontrado", description: found.name });
     } else {
@@ -209,19 +209,19 @@ export default function Purchases() {
     if (product) {
       setCurrentItem(prev => ({
         ...prev,
-        product_id: product.id,
-        product_code: product.code || '',
-        product_name: product.name,
-        unit_price: product.cost_price || 0,
-        subtotal: prev.quantity * (product.cost_price || 0) - prev.discount
+        productId: product.id,
+        productCode: product.code || '',
+        productName: product.name,
+        unitPrice: product.costPrice || 0,
+        subtotal: prev.quantity * (product.costPrice || 0) - prev.discount
       }));
     } else {
       setCurrentItem(prev => ({
         ...prev,
-        product_id: '',
-        product_code: '', // Reset product code as well
-        product_name: '',
-        unit_price: 0,
+        productId: '',
+        productCode: '', // Reset product code as well
+        productName: '',
+        unitPrice: 0,
         subtotal: (prev.quantity * 0) - prev.discount
       }));
     }
@@ -231,20 +231,20 @@ export default function Purchases() {
     setCurrentItem(prev => {
       const updated = { ...prev, [field]: value };
 
-      if (field === 'quantity' || field === 'unit_price' || field === 'discount') {
-        updated.subtotal = (updated.quantity * updated.unit_price) - updated.discount;
+      if (field === 'quantity' || field === 'unitPrice' || field === 'discount') {
+        updated.subtotal = (updated.quantity * updated.unitPrice) - updated.discount;
       }
       return updated;
     });
   };
 
   const addItem = () => {
-    if (!currentItem.product_id) {
+    if (!currentItem.productId) {
       toast({ title: "Atenção", description: "Selecione um produto.", variant: "destructive" });
       return;
     }
 
-    const itemExists = currentPurchase.items.find(item => item.product_id === currentItem.product_id);
+    const itemExists = currentPurchase.items.find(item => item.productId === currentItem.productId);
     if (itemExists) {
       toast({ title: "Atenção", description: "Este produto já foi adicionado.", variant: "destructive" });
       return;
@@ -256,16 +256,16 @@ export default function Purchases() {
     }));
 
     setCurrentItem({
-      product_id: '',
-      product_code: '',
-      product_name: '',
+      productId: '',
+      productCode: '',
+      productName: '',
       quantity: 1,
-      unit_price: 0,
+      unitPrice: 0,
       discount: 0,
       subtotal: 0,
-      stock_only: false,
-      vasilhame_loan_quantity: 0,
-      quantity_to_pickup: 0
+      stockOnly: false,
+      vasilhameLoanQuantity: 0,
+      quantityToPickup: 0
     });
   };
 
@@ -278,12 +278,12 @@ export default function Purchases() {
 
   const updateItem = (index, field, value) => {
     const newItems = [...currentPurchase.items];
-    const numericValue = ['quantity', 'unit_price', 'discount', 'vasilhame_loan_quantity', 'quantity_to_pickup'].includes(field) ? parseFloat(value) || 0 : value;
+    const numericValue = ['quantity', 'unitPrice', 'discount', 'vasilhameLoanQuantity', 'quantityToPickup'].includes(field) ? parseFloat(value) || 0 : value;
 
     newItems[index][field] = numericValue;
 
     const item = newItems[index];
-    item.subtotal = (item.quantity * item.unit_price) - item.discount;
+    item.subtotal = (item.quantity * item.unitPrice) - item.discount;
 
     setCurrentPurchase(prev => ({ ...prev, items: newItems }));
   };
@@ -292,19 +292,19 @@ export default function Purchases() {
     const paymentType = paymentTypes.find(pt => pt.id === paymentTypeId);
     if (!paymentType) return;
 
-    const isImmediatePayment = ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
-    const maxInstallments = paymentType.max_installments || 1;
+    const isImmediatePayment = ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+    const maxInstallments = paymentType.maxInstallments || 1;
     const installments = isImmediatePayment ? 1 : maxInstallments;
 
     // Gerar detalhes das parcelas
     const installmentsDetails = [];
-    const totalAmountPerInstallment = currentPurchase.final_total / installments;
+    const totalAmountPerInstallment = currentPurchase.finalTotal / installments;
     for (let i = 0; i < installments; i++) {
-      const dueDate = new Date(currentPurchase.purchase_date);
+      const dueDate = new Date(currentPurchase.purchaseDate);
       dueDate.setDate(dueDate.getDate() + (i * 30)); // Assuming 30 days per installment for simplicity
       installmentsDetails.push({
         number: i + 1,
-        due_date: format(dueDate, 'yyyy-MM-dd'),
+        dueDate: format(dueDate, 'yyyy-MM-dd'),
         amount: totalAmountPerInstallment,
         status: 'pendente'
       });
@@ -312,23 +312,23 @@ export default function Purchases() {
 
     setCurrentPurchase(prev => ({
       ...prev,
-      payment_type_id: paymentTypeId,
-      payment_type_name: paymentType.name,
+      paymentTypeId: paymentTypeId,
+      paymentTypeName: paymentType.name,
       installments: installments,
-      installments_details: installmentsDetails
+      installmentsDetails: installmentsDetails
     }));
   };
 
   const handleInstallmentsChange = (newInstallments) => {
     const numInstallments = Math.max(1, newInstallments); // Ensure at least 1 installment
     const installmentsDetails = [];
-    const totalAmountPerInstallment = currentPurchase.final_total / numInstallments;
+    const totalAmountPerInstallment = currentPurchase.finalTotal / numInstallments;
     for (let i = 0; i < numInstallments; i++) {
-      const dueDate = new Date(currentPurchase.purchase_date);
+      const dueDate = new Date(currentPurchase.purchaseDate);
       dueDate.setDate(dueDate.getDate() + (i * 30)); // Assuming 30 days per installment for simplicity
       installmentsDetails.push({
         number: i + 1,
-        due_date: format(dueDate, 'yyyy-MM-dd'),
+        dueDate: format(dueDate, 'yyyy-MM-dd'),
         amount: totalAmountPerInstallment,
         status: 'pendente'
       });
@@ -337,22 +337,22 @@ export default function Purchases() {
     setCurrentPurchase(prev => ({
       ...prev,
       installments: numInstallments,
-      installments_details: installmentsDetails
+      installmentsDetails: installmentsDetails
     }));
   };
 
   const updateInstallmentDetail = (index, field, value) => {
-    const newDetails = [...currentPurchase.installments_details];
+    const newDetails = [...currentPurchase.installmentsDetails];
     // Ensure numeric fields are parsed correctly
     newDetails[index][field] = (field === 'amount' ? parseFloat(value) || 0 : value);
     setCurrentPurchase(prev => ({
       ...prev,
-      installments_details: newDetails
+      installmentsDetails: newDetails
     }));
   };
 
   const handleSavePurchase = async () => {
-    if (purchaseType === 'cadastrado' && !currentPurchase.supplier_id) { // Updated validation
+    if (purchaseType === 'cadastrado' && !currentPurchase.supplierId) { // Updated validation
       toast({ title: "Erro", description: "Selecione um fornecedor.", variant: "destructive" });
       return;
     }
@@ -362,28 +362,28 @@ export default function Purchases() {
       return;
     }
 
-    if (!currentPurchase.sector_id) {
+    if (!currentPurchase.sectorId) {
       toast({ title: "Erro", description: "Selecione o setor de estoque.", variant: "destructive" });
       return;
     }
 
-    if (!currentPurchase.cash_account_id) {
+    if (!currentPurchase.cashAccountId) {
       toast({ title: "Erro", description: "Selecione a conta de movimento.", variant: "destructive" });
       return;
     }
 
-    if (!currentPurchase.payment_type_id) {
+    if (!currentPurchase.paymentTypeId) {
       toast({ title: "Erro", description: "Selecione a forma de pagamento.", variant: "destructive" });
       return;
     }
 
     try {
-      const user = await base44.auth.me();
+      const user = await entities.User.me();
 
       // Gerar próximo código sequencial
-      const allPurchases = await base44.entities.Purchase.filter({ company_id: user.company_id });
+      const allPurchases = await entities.Purchase.filter({ companyId: user.companyId });
       const maxNumber = allPurchases.reduce((max, p) => {
-        const num = parseInt(p.purchase_number, 10);
+        const num = parseInt(p.purchaseNumber, 10);
         return !isNaN(num) && num > max ? num : max;
       }, 0);
       const newNumber = String(maxNumber + 1);
@@ -391,43 +391,43 @@ export default function Purchases() {
       // Para compra avulsa, usar dados genéricos
       const purchaseData = {
         ...currentPurchase,
-        purchase_number: newNumber,
-        supplier_id: purchaseType === 'avulsa' ? 'avulsa' : currentPurchase.supplier_id, // Handled 'avulsa'
-        supplier_name: purchaseType === 'avulsa' ? 'Compra Avulsa' : currentPurchase.supplier_name, // Handled 'avulsa'
-        company_id: user.company_id,
-        company_name: user.company_name,
-        created_by_name: user.full_name
+        purchaseNumber: newNumber,
+        supplierId: purchaseType === 'avulsa' ? 'avulsa' : currentPurchase.supplierId, // Handled 'avulsa'
+        supplierName: purchaseType === 'avulsa' ? 'Compra Avulsa' : currentPurchase.supplierName, // Handled 'avulsa'
+        companyId: user.companyId,
+        companyName: user.companyName,
+        createdByName: user.fullName
       };
 
-      const createdPurchase = await base44.entities.Purchase.create(purchaseData);
+      const createdPurchase = await entities.Purchase.create(purchaseData);
 
       // Verificar se é pagamento a prazo
-      const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.payment_type_id);
-      const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
+      const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.paymentTypeId);
+      const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
 
-      if (isAPrazo && currentPurchase.installments_details.length > 0) {
+      if (isAPrazo && currentPurchase.installmentsDetails.length > 0) {
         // Registrar cada parcela em Contas a Pagar
-        for (const installment of currentPurchase.installments_details) {
-          await base44.entities.ContasAPagar.create({
-            supplier_id: purchaseData.supplier_id,
-            supplier_name: purchaseData.supplier_name,
-            description: `Compra ${currentPurchase.purchase_number} - Parcela ${installment.number}/${currentPurchase.installments}`,
-            due_date: installment.due_date,
+        for (const installment of currentPurchase.installmentsDetails) {
+          await entities.ContasAPagar.create({
+            supplierId: purchaseData.supplierId,
+            supplierName: purchaseData.supplierName,
+            description: `Compra ${currentPurchase.purchaseNumber} - Parcela ${installment.number}/${currentPurchase.installments}`,
+            dueDate: installment.dueDate,
             amount: installment.amount,
             status: 'aberto',
-            payment_type_id: currentPurchase.payment_type_id,
-            payment_type_name: currentPurchase.payment_type_name,
-            installment_number: installment.number,
-            purchase_id: createdPurchase.id,
-            nfe_number: currentPurchase.nfe_number || '',
-            company_id: user.company_id,
-            company_name: user.company_name,
-            created_by_name: user.full_name
+            paymentTypeId: currentPurchase.paymentTypeId,
+            paymentTypeName: currentPurchase.paymentTypeName,
+            installmentNumber: installment.number,
+            purchaseId: createdPurchase.id,
+            nfeNumber: currentPurchase.nfeNumber || '',
+            companyId: user.companyId,
+            companyName: user.companyName,
+            createdByName: user.fullName
           });
         }
-        toast({ title: "Sucesso", description: `Compra #${createdPurchase.purchase_number} salva! ${currentPurchase.installments} parcela(s) registrada(s) em Contas a Pagar.` });
+        toast({ title: "Sucesso", description: `Compra #${createdPurchase.purchaseNumber} salva! ${currentPurchase.installments} parcela(s) registrada(s) em Contas a Pagar.` });
       } else {
-        toast({ title: "Sucesso", description: `Compra #${createdPurchase.purchase_number} salva com sucesso!` });
+        toast({ title: "Sucesso", description: `Compra #${createdPurchase.purchaseNumber} salva com sucesso!` });
       }
 
       setCurrentPurchase(initialPurchaseState);
@@ -463,7 +463,7 @@ export default function Purchases() {
               <div>
                 <Label>Setor *</Label>
                 <Select
-                  value={currentPurchase.sector_id}
+                  value={currentPurchase.sectorId}
                   onValueChange={(value) => {
                     // Procurar em setores normais e master
                     const sector = sectors.find(s => s.id === value);
@@ -472,8 +472,8 @@ export default function Purchases() {
 
                     setCurrentPurchase(prev => ({
                       ...prev,
-                      sector_id: value,
-                      sector_name: selectedSector?.name || ''
+                      sectorId: value,
+                      sectorName: selectedSector?.name || ''
                     }));
                   }}
                 >
@@ -511,13 +511,13 @@ export default function Purchases() {
               <div>
                 <Label>Conta Movimento *</Label>
                 <Select
-                  value={currentPurchase.cash_account_id || ''}
+                  value={currentPurchase.cashAccountId || ''}
                   onValueChange={(value) => {
                     const account = cashAccounts.find(a => a.id === value);
                     setCurrentPurchase(prev => ({
                       ...prev,
-                      cash_account_id: value,
-                      cash_account_name: account?.name || ''
+                      cashAccountId: value,
+                      cashAccountName: account?.name || ''
                     }));
                   }}
                 >
@@ -535,8 +535,8 @@ export default function Purchases() {
                 <Label>Data *</Label>
                 <Input
                   type="date"
-                  value={currentPurchase.purchase_date}
-                  onChange={(e) => setCurrentPurchase(prev => ({...prev, purchase_date: e.target.value}))}
+                  value={currentPurchase.purchaseDate}
+                  onChange={(e) => setCurrentPurchase(prev => ({...prev, purchaseDate: e.target.value}))}
                   className="bg-white"
                 />
               </div>
@@ -606,7 +606,7 @@ export default function Purchases() {
               <div className="col-span-2">
                 <Label>Código</Label>
                 <Select
-                  value={currentItem.product_id}
+                  value={currentItem.productId}
                   onValueChange={(value) => handleProductCodeChange(value)}
                 >
                   <SelectTrigger className="bg-white">
@@ -633,7 +633,7 @@ export default function Purchases() {
               <div className="col-span-3"> {/* Changed from col-span-4 to col-span-3 */}
                 <Label>Descrição do Produto</Label>
                 <Input
-                  value={currentItem.product_name}
+                  value={currentItem.productName}
                   readOnly
                   placeholder="Selecione um produto"
                   className="bg-slate-50"
@@ -644,8 +644,8 @@ export default function Purchases() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={currentItem.unit_price}
-                  onChange={(e) => updateItemField('unit_price', parseFloat(e.target.value) || 0)}
+                  value={currentItem.unitPrice}
+                  onChange={(e) => updateItemField('unitPrice', parseFloat(e.target.value) || 0)}
                   className="bg-white"
                 />
               </div>
@@ -669,11 +669,11 @@ export default function Purchases() {
             {/* Linha: Checkbox Somente Estoque */}
             <div className="flex items-center space-x-2">
               <Checkbox
-                checked={currentItem.stock_only || false}
-                onCheckedChange={(checked) => updateItemField('stock_only', checked)}
-                id="stock_only"
+                checked={currentItem.stockOnly || false}
+                onCheckedChange={(checked) => updateItemField('stockOnly', checked)}
+                id="stockOnly"
               />
-              <Label htmlFor="stock_only" className="cursor-pointer text-sm">
+              <Label htmlFor="stockOnly" className="cursor-pointer text-sm">
                 Somente Estoque
               </Label>
             </div>
@@ -704,8 +704,8 @@ export default function Purchases() {
                   <TableBody>
                     {currentPurchase.items.map((item, index) => (
                       <TableRow key={index}>
-                        <TableCell className="text-sm">{item.product_code || '-'}</TableCell>
-                        <TableCell className="text-sm">{item.product_name}</TableCell>
+                        <TableCell className="text-sm">{item.productCode || '-'}</TableCell>
+                        <TableCell className="text-sm">{item.productName}</TableCell>
                         <TableCell className="text-sm">
                           <Input
                             type="number"
@@ -715,7 +715,7 @@ export default function Purchases() {
                             className="w-20"
                           />
                         </TableCell>
-                        <TableCell className="text-sm">R$ {item.unit_price.toFixed(2)}</TableCell>
+                        <TableCell className="text-sm">R$ {item.unitPrice.toFixed(2)}</TableCell>
                         <TableCell className="text-sm font-semibold" style={{ color: '#10B981' }}>
                           R$ {item.subtotal.toFixed(2)}
                         </TableCell>
@@ -731,8 +731,8 @@ export default function Purchases() {
                         <TableCell className="text-sm">
                           <Input
                             type="number"
-                            value={item.vasilhame_loan_quantity || 0}
-                            onChange={(e) => updateItem(index, 'vasilhame_loan_quantity', e.target.value)}
+                            value={item.vasilhameLoanQuantity || 0}
+                            onChange={(e) => updateItem(index, 'vasilhameLoanQuantity', e.target.value)}
                             className="w-16"
                             placeholder="0"
                           />
@@ -740,8 +740,8 @@ export default function Purchases() {
                         <TableCell className="text-sm">
                           <Input
                             type="number"
-                            value={item.quantity_to_pickup || 0}
-                            onChange={(e) => updateItem(index, 'quantity_to_pickup', e.target.value)}
+                            value={item.quantityToPickup || 0}
+                            onChange={(e) => updateItem(index, 'quantityToPickup', e.target.value)}
                             className="w-16"
                             placeholder="0"
                           />
@@ -789,7 +789,7 @@ export default function Purchases() {
                 <div>
                   <Label>Forma de Pagamento *</Label>
                   <Select
-                    value={currentPurchase.payment_type_id}
+                    value={currentPurchase.paymentTypeId}
                     onValueChange={handlePaymentTypeChange}
                   >
                     <SelectTrigger className="bg-white">
@@ -803,9 +803,9 @@ export default function Purchases() {
                   </Select>
                 </div>
 
-                {currentPurchase.payment_type_id && (() => {
-                  const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.payment_type_id);
-                  const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
+                {currentPurchase.paymentTypeId && (() => {
+                  const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.paymentTypeId);
+                  const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
 
                   return isAPrazo && (
                     <>
@@ -814,18 +814,18 @@ export default function Purchases() {
                         <Input
                           type="number"
                           min="1"
-                          max={selectedPaymentType.max_installments || 12} // Default max 12 if not specified
+                          max={selectedPaymentType.maxInstallments || 12} // Default max 12 if not specified
                           value={currentPurchase.installments}
                           onChange={(e) => handleInstallmentsChange(parseInt(e.target.value) || 1)}
                           className="bg-white"
                         />
                       </div>
 
-                      {currentPurchase.installments_details.length > 0 && (
+                      {currentPurchase.installmentsDetails.length > 0 && (
                         <div className="border rounded-lg p-4 bg-slate-50">
                           <h4 className="text-sm font-semibold mb-3">Detalhes das Parcelas</h4>
                           <div className="space-y-2">
-                            {currentPurchase.installments_details.map((detail, index) => (
+                            {currentPurchase.installmentsDetails.map((detail, index) => (
                               <div key={index} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="text-sm font-medium">
                                   Parcela {detail.number}
@@ -833,8 +833,8 @@ export default function Purchases() {
                                 <div>
                                   <Input
                                     type="date"
-                                    value={detail.due_date}
-                                    onChange={(e) => updateInstallmentDetail(index, 'due_date', e.target.value)}
+                                    value={detail.dueDate}
+                                    onChange={(e) => updateInstallmentDetail(index, 'dueDate', e.target.value)}
                                     className="bg-white text-xs"
                                   />
                                 </div>
@@ -858,8 +858,8 @@ export default function Purchases() {
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    checked={currentPurchase.nfe_received}
-                    onCheckedChange={(checked) => setCurrentPurchase(prev => ({...prev, nfe_received: checked}))}
+                    checked={currentPurchase.nfeReceived}
+                    onCheckedChange={(checked) => setCurrentPurchase(prev => ({...prev, nfeReceived: checked}))}
                     id="nfe"
                   />
                   <Label htmlFor="nfe" className="cursor-pointer font-semibold">
@@ -867,13 +867,13 @@ export default function Purchases() {
                   </Label>
                 </div>
 
-                {currentPurchase.nfe_received && (
+                {currentPurchase.nfeReceived && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Número</Label>
                       <Input
-                        value={currentPurchase.nfe_number}
-                        onChange={(e) => setCurrentPurchase(prev => ({...prev, nfe_number: e.target.value}))}
+                        value={currentPurchase.nfeNumber}
+                        onChange={(e) => setCurrentPurchase(prev => ({...prev, nfeNumber: e.target.value}))}
                         placeholder="000123456"
                         className="bg-white"
                       />
@@ -881,8 +881,8 @@ export default function Purchases() {
                     <div>
                       <Label>Série</Label>
                       <Input
-                        value={currentPurchase.nfe_series}
-                        onChange={(e) => setCurrentPurchase(prev => ({...prev, nfe_series: e.target.value}))}
+                        value={currentPurchase.nfeSeries}
+                        onChange={(e) => setCurrentPurchase(prev => ({...prev, nfeSeries: e.target.value}))}
                         className="bg-white"
                       />
                     </div>
@@ -905,7 +905,7 @@ export default function Purchases() {
 
                 <div className="flex justify-between text-red-600">
                   <span>Desconto Total:</span>
-                  <span className="font-semibold">R$ {currentPurchase.total_discount.toFixed(2)}</span>
+                  <span className="font-semibold">R$ {currentPurchase.totalDiscount.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -921,7 +921,7 @@ export default function Purchases() {
 
                 <div className="border-t pt-3 flex justify-between text-lg">
                   <span className="font-bold">TOTAL A PAGAR:</span>
-                  <span className="font-bold text-blue-600">R$ {currentPurchase.total_amount.toFixed(2)}</span>
+                  <span className="font-bold text-blue-600">R$ {currentPurchase.totalAmount.toFixed(2)}</span>
                 </div>
 
                 <div className="mt-4 space-y-2">
@@ -930,15 +930,15 @@ export default function Purchases() {
                     <Input
                       type="number"
                       step="0.01"
-                      value={currentPurchase.payment_discount}
-                      onChange={(e) => setCurrentPurchase(prev => ({...prev, payment_discount: parseFloat(e.target.value) || 0}))}
+                      value={currentPurchase.paymentDiscount}
+                      onChange={(e) => setCurrentPurchase(prev => ({...prev, paymentDiscount: parseFloat(e.target.value) || 0}))}
                       className="bg-white"
                     />
                   </div>
 
                   <div className="flex justify-between text-green-600">
                     <span className="font-semibold">Total Líquido:</span>
-                    <span className="font-bold text-lg">R$ {currentPurchase.final_total.toFixed(2)}</span>
+                    <span className="font-bold text-lg">R$ {currentPurchase.finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

@@ -28,7 +28,7 @@ export default function SalesReport() {
     const end = endOfDay(new Date(filters.endDate + 'T00:00:00'));
 
     return allSales.filter(sale => {
-      const saleDate = parseISO(sale.created_date);
+      const saleDate = parseISO(sale.createdDate);
       return saleDate >= start && saleDate <= end;
     });
   }, [allSales, filters, isLoading]);
@@ -36,7 +36,7 @@ export default function SalesReport() {
   const loadSales = async () => {
     try {
       const user = await User.me();
-      const data = await Sale.filter({ company_id: user.company_id }, '-created_date');
+      const data = await Sale.filter({ companyId: user.companyId }, '-createdDate');
       setAllSales(data);
     } catch (error) {
       console.error("Erro ao carregar vendas:", error);
@@ -49,7 +49,7 @@ export default function SalesReport() {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+  const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
   const averageTicket = filteredSales.length > 0 ? totalSales / filteredSales.length : 0;
 
   return (
@@ -147,11 +147,11 @@ export default function SalesReport() {
                   <TableBody>
                     {filteredSales.length > 0 ? filteredSales.map(sale => (
                       <TableRow key={sale.id}>
-                        <TableCell className="font-medium">{sale.sale_number}</TableCell>
-                        <TableCell>{format(parseISO(sale.created_date), 'dd/MM/yyyy HH:mm')}</TableCell>
-                        <TableCell>{sale.person_name}</TableCell>
+                        <TableCell className="font-medium">{sale.saleNumber}</TableCell>
+                        <TableCell>{format(parseISO(sale.createdDate), 'dd/MM/yyyy HH:mm')}</TableCell>
+                        <TableCell>{sale.personName}</TableCell>
                         <TableCell>{sale.items?.length || 0}</TableCell>
-                        <TableCell className="font-bold">R$ {(sale.total_amount || 0).toFixed(2)}</TableCell>
+                        <TableCell className="font-bold">R$ {(sale.totalAmount || 0).toFixed(2)}</TableCell>
                       </TableRow>
                     )) : (
                       <TableRow>

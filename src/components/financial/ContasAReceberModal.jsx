@@ -101,12 +101,12 @@ export default function ContasAReceberModal({
   // Filtros - Tipo Sacado
   const [tipoSacado, setTipoSacado] = useState({
     cliente: true,
-    ponto_venda: false,
+    pontoVenda: false,
     conveniada: false
   });
 
   // Filtros - Método de Pesquisa
-  const [metodoPesquisa, setMetodoPesquisa] = useState('codigo_venda');
+  const [metodoPesquisa, setMetodoPesquisa] = useState('codigoVenda');
   const [codigoPesquisa, setCodigoPesquisa] = useState('');
 
   // Filtros - Período
@@ -121,22 +121,22 @@ export default function ContasAReceberModal({
 
   // Filtros - Status
   const [statusContas, setStatusContas] = useState({
-    nao_pagas: true,
+    naoPagas: true,
     pagas: false,
-    em_cobranca: false
+    emCobranca: false
   });
 
   // Ordenação
   const [ordenacao, setOrdenacao] = useState('codigo');
 
   const loadData = useCallback(async () => {
-    if (!currentUser?.company_id) return;
+    if (!currentUser?.companyId) return;
     setIsLoading(true);
     try {
       const [contasData, paymentTypesData, sectorsData] = await Promise.all([
-        AccountsReceivable.filter({ company_id: currentUser.company_id }, '-due_date'),
-        PaymentType.filter({ company_id: currentUser.company_id, active: true }),
-        Sector.filter({ company_id: currentUser.company_id, active: true })
+        AccountsReceivable.filter({ companyId: currentUser.companyId }, '-dueDate'),
+        PaymentType.filter({ companyId: currentUser.companyId, active: true }),
+        Sector.filter({ companyId: currentUser.companyId, active: true })
       ]);
       setContas(contasData);
       setPaymentTypes(paymentTypesData);
@@ -162,39 +162,39 @@ export default function ContasAReceberModal({
   const applyFiltersAndShow = () => {
     const filtered = contas.filter(c => {
       // Filtro de status
-      const isVencida = c.status === 'pendente' && isBefore(parseISO(c.due_date), startOfDay(new Date()));
+      const isVencida = c.status === 'pendente' && isBefore(parseISO(c.dueDate), startOfDay(new Date()));
       const isPaga = c.status === 'pago';
-      const isEmCobranca = c.status === 'em_cobranca';
+      const isEmCobranca = c.status === 'emCobranca';
       
-      if (!statusContas.nao_pagas && !isPaga && !isEmCobranca) return false;
+      if (!statusContas.naoPagas && !isPaga && !isEmCobranca) return false;
       if (!statusContas.pagas && isPaga) return false;
-      if (!statusContas.em_cobranca && isEmCobranca) return false;
+      if (!statusContas.emCobranca && isEmCobranca) return false;
 
       // Filtro de período
       if (usarPeriodo) {
-        const contaDate = parseISO(c.due_date);
+        const contaDate = parseISO(c.dueDate);
         const inicio = new Date(dataInicio + 'T00:00:00');
         const fim = new Date(dataFinal + 'T23:59:59');
         if (contaDate < inicio || contaDate > fim) return false;
       }
 
       // Filtro de conta
-      if (filtroConta !== 'todas' && c.cash_account_id !== filtroConta) return false;
+      if (filtroConta !== 'todas' && c.cashAccountId !== filtroConta) return false;
 
       // Filtro de tipo pagamento
-      if (filtroTipoPagto !== 'todos' && c.payment_type_id !== filtroTipoPagto) return false;
+      if (filtroTipoPagto !== 'todos' && c.paymentTypeId !== filtroTipoPagto) return false;
 
       // Filtro de setor
-      if (filtroSetor !== 'todos' && c.sector_id !== filtroSetor) return false;
+      if (filtroSetor !== 'todos' && c.sectorId !== filtroSetor) return false;
 
       return true;
     }).map(c => {
-      const isVencida = c.status === 'pendente' && isBefore(parseISO(c.due_date), startOfDay(new Date()));
-      return { ...c, is_vencida: isVencida };
+      const isVencida = c.status === 'pendente' && isBefore(parseISO(c.dueDate), startOfDay(new Date()));
+      return { ...c, isVencida: isVencida };
     }).sort((a, b) => {
       if (ordenacao === 'codigo') return (a.id || '').localeCompare(b.id || '');
-      if (ordenacao === 'data') return new Date(a.created_date) - new Date(b.created_date);
-      if (ordenacao === 'vencimento') return new Date(a.due_date) - new Date(b.due_date);
+      if (ordenacao === 'data') return new Date(a.createdDate) - new Date(b.createdDate);
+      if (ordenacao === 'vencimento') return new Date(a.dueDate) - new Date(b.dueDate);
       return 0;
     });
 
@@ -208,18 +208,18 @@ export default function ContasAReceberModal({
   // Filtros de referência para cálculos internos (sem exibição)
   const allFilteredContas = contas.filter(c => {
     // Filtro de status
-    const isVencida = c.status === 'pendente' && isBefore(parseISO(c.due_date), startOfDay(new Date()));
+    const isVencida = c.status === 'pendente' && isBefore(parseISO(c.dueDate), startOfDay(new Date()));
     const isPaga = c.status === 'pago';
-    const isEmCobranca = c.status === 'em_cobranca';
+    const isEmCobranca = c.status === 'emCobranca';
     
-    if (!statusContas.nao_pagas && !isPaga && !isEmCobranca) return false;
+    if (!statusContas.naoPagas && !isPaga && !isEmCobranca) return false;
     if (!statusContas.pagas && isPaga) return false;
-    if (!statusContas.em_cobranca && isEmCobranca) return false;
-    if (statusContas.nao_pagas && !isPaga && !isEmCobranca) { /* ok */ }
+    if (!statusContas.emCobranca && isEmCobranca) return false;
+    if (statusContas.naoPagas && !isPaga && !isEmCobranca) { /* ok */ }
 
     // Filtro de período
     if (usarPeriodo) {
-      const contaDate = parseISO(c.due_date);
+      const contaDate = parseISO(c.dueDate);
       const inicio = new Date(dataInicio + 'T00:00:00');
       const fim = new Date(dataFinal + 'T23:59:59');
       if (contaDate < inicio || contaDate > fim) return false;
@@ -227,32 +227,32 @@ export default function ContasAReceberModal({
 
     // Filtro de código de pesquisa
     if (codigoPesquisa) {
-      if (metodoPesquisa === 'codigo_venda' && !c.sale_id?.includes(codigoPesquisa)) return false;
-      if (metodoPesquisa === 'nota_fiscal' && !c.nfe_number?.includes(codigoPesquisa)) return false;
-      if (metodoPesquisa === 'documento' && !c.person_document?.includes(codigoPesquisa)) return false;
+      if (metodoPesquisa === 'codigoVenda' && !c.saleId?.includes(codigoPesquisa)) return false;
+      if (metodoPesquisa === 'notaFiscal' && !c.nfeNumber?.includes(codigoPesquisa)) return false;
+      if (metodoPesquisa === 'documento' && !c.personDocument?.includes(codigoPesquisa)) return false;
     }
 
     // Filtro de conta
-    if (filtroConta !== 'todas' && c.cash_account_id !== filtroConta) return false;
+    if (filtroConta !== 'todas' && c.cashAccountId !== filtroConta) return false;
 
     // Filtro de tipo pagamento
-    if (filtroTipoPagto !== 'todos' && c.payment_type_id !== filtroTipoPagto) return false;
+    if (filtroTipoPagto !== 'todos' && c.paymentTypeId !== filtroTipoPagto) return false;
 
     // Filtro de setor
-    if (filtroSetor !== 'todos' && c.sector_id !== filtroSetor) return false;
+    if (filtroSetor !== 'todos' && c.sectorId !== filtroSetor) return false;
 
     return true;
   }).map(c => {
-    const isVencida = c.status === 'pendente' && isBefore(parseISO(c.due_date), startOfDay(new Date()));
-    return { ...c, is_vencida: isVencida };
+    const isVencida = c.status === 'pendente' && isBefore(parseISO(c.dueDate), startOfDay(new Date()));
+    return { ...c, isVencida: isVencida };
   });
 
   // Cálculos de totais
   const totais = {
     recebido: contas.filter(c => c.status === 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
     aReceber: filteredContas.filter(c => c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
-    vencido: filteredContas.filter(c => c.is_vencida).reduce((sum, c) => sum + (c.amount || 0), 0),
-    aVencer: filteredContas.filter(c => !c.is_vencida && c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
+    vencido: filteredContas.filter(c => c.isVencida).reduce((sum, c) => sum + (c.amount || 0), 0),
+    aVencer: filteredContas.filter(c => !c.isVencida && c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
     selecionado: selectedContas.reduce((sum, id) => {
       const conta = contas.find(c => c.id === id);
       return sum + (conta?.amount || 0);
@@ -339,15 +339,15 @@ export default function ContasAReceberModal({
 
     const results = contas.filter(c => {
       const searchTerm = codigoPesquisa.toLowerCase().trim();
-      if (metodoPesquisa === 'codigo_venda') {
-        return c.sale_id?.toLowerCase().includes(searchTerm) || c.id?.toLowerCase().includes(searchTerm);
+      if (metodoPesquisa === 'codigoVenda') {
+        return c.saleId?.toLowerCase().includes(searchTerm) || c.id?.toLowerCase().includes(searchTerm);
       }
-      if (metodoPesquisa === 'nota_fiscal') {
-        return c.nfe_number?.toLowerCase().includes(searchTerm);
+      if (metodoPesquisa === 'notaFiscal') {
+        return c.nfeNumber?.toLowerCase().includes(searchTerm);
       }
       if (metodoPesquisa === 'documento') {
-        return c.person_document?.toLowerCase().includes(searchTerm) || 
-               c.person_name?.toLowerCase().includes(searchTerm);
+        return c.personDocument?.toLowerCase().includes(searchTerm) || 
+               c.personName?.toLowerCase().includes(searchTerm);
       }
       return false;
     });
@@ -360,8 +360,8 @@ export default function ContasAReceberModal({
       setSearchResults(results);
       // Atualiza a lista principal com os resultados da busca rápida
       const resultsWithStatus = results.map(c => {
-        const isVencida = c.status === 'pendente' && isBefore(parseISO(c.due_date), startOfDay(new Date()));
-        return { ...c, is_vencida: isVencida };
+        const isVencida = c.status === 'pendente' && isBefore(parseISO(c.dueDate), startOfDay(new Date()));
+        return { ...c, isVencida: isVencida };
       });
       setDisplayedContas(resultsWithStatus);
     }
@@ -453,15 +453,15 @@ export default function ContasAReceberModal({
           <tbody>
             ${contasToPrint.map(conta => `
               <tr>
-                <td>${conta.created_date ? format(parseISO(conta.created_date), 'dd/MM/yyyy') : '-'}</td>
-                <td>${conta.sale_id?.slice(-6) || '-'}</td>
-                <td>${conta.nfe_number || '-'}</td>
-                <td class="text-center">${conta.installment_number || '1'}</td>
-                <td>${format(parseISO(conta.due_date), 'dd/MM/yyyy')}</td>
+                <td>${conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yyyy') : '-'}</td>
+                <td>${conta.saleId?.slice(-6) || '-'}</td>
+                <td>${conta.nfeNumber || '-'}</td>
+                <td class="text-center">${conta.installmentNumber || '1'}</td>
+                <td>${format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</td>
                 <td class="text-right">${formatCurrency(conta.amount)}</td>
-                <td>${conta.payment_date ? format(parseISO(conta.payment_date), 'dd/MM/yyyy') : '-'}</td>
+                <td>${conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</td>
                 <td class="text-right">${conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</td>
-                <td>${conta.person_name || '-'}</td>
+                <td>${conta.personName || '-'}</td>
               </tr>
             `).join('')}
             <tr class="total-row">
@@ -509,15 +509,15 @@ export default function ContasAReceberModal({
       }
 
       // Buscar ou criar grupo financeiro
-      let revenueGroup = await FinancialGroup.filter({ name: 'Receitas de Contas a Receber', company_id: currentUser.company_id });
+      let revenueGroup = await FinancialGroup.filter({ name: 'Receitas de Contas a Receber', companyId: currentUser.companyId });
       if (revenueGroup.length === 0) {
         revenueGroup = [await FinancialGroup.create({ 
           name: 'Receitas de Contas a Receber', 
           type: 'receita', 
           active: true,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName
         })];
       }
 
@@ -530,25 +530,25 @@ export default function ContasAReceberModal({
 
         // Criar movimento de caixa
         await CashMovement.create({
-          cash_account_id: receivingAccount.id,
-          cash_account_name: receivingAccount.name,
+          cashAccountId: receivingAccount.id,
+          cashAccountName: receivingAccount.name,
           type: 'receita',
           description: `Recebimento: ${conta.description}`,
           amount: conta.amount,
-          person_id: conta.person_id,
-          person_name: conta.person_name,
-          movement_date: paidDate,
-          group_id: revenueGroup[0].id,
-          group_name: revenueGroup[0].name,
-          company_id: currentUser.company_id,
-          company_name: currentUser.company_name,
-          created_by_name: currentUser.full_name,
+          personId: conta.personId,
+          personName: conta.personName,
+          movementDate: paidDate,
+          groupId: revenueGroup[0].id,
+          groupName: revenueGroup[0].name,
+          companyId: currentUser.companyId,
+          companyName: currentUser.companyName,
+          createdByName: currentUser.fullName,
         });
 
         // Atualizar status da conta
         await AccountsReceivable.update(contaId, {
           status: 'pago',
-          payment_date: paidDate,
+          paymentDate: paidDate,
         });
 
         totalBaixado += conta.amount || 0;
@@ -574,8 +574,8 @@ export default function ContasAReceberModal({
 
   const getRowColor = (conta) => {
     if (conta.status === 'pago') return 'bg-green-50';
-    if (conta.status === 'em_cobranca') return 'bg-blue-50';
-    if (conta.is_vencida) return 'bg-red-50';
+    if (conta.status === 'emCobranca') return 'bg-blue-50';
+    if (conta.isVencida) return 'bg-red-50';
     return '';
   };
 
@@ -622,11 +622,11 @@ export default function ContasAReceberModal({
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox 
-                      id="ponto_venda" 
-                      checked={tipoSacado.ponto_venda}
-                      onCheckedChange={(v) => setTipoSacado(p => ({...p, ponto_venda: v}))}
+                      id="pontoVenda" 
+                      checked={tipoSacado.pontoVenda}
+                      onCheckedChange={(v) => setTipoSacado(p => ({...p, pontoVenda: v}))}
                     />
-                    <label htmlFor="ponto_venda" className="text-xs">Ponto de Venda</label>
+                    <label htmlFor="pontoVenda" className="text-xs">Ponto de Venda</label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox 
@@ -643,12 +643,12 @@ export default function ContasAReceberModal({
               <div className="space-y-1">
                 <RadioGroup value={metodoPesquisa} onValueChange={setMetodoPesquisa} className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <RadioGroupItem value="codigo_venda" id="codigo_venda" />
-                    <label htmlFor="codigo_venda" className="text-xs">Código da Venda</label>
+                    <RadioGroupItem value="codigoVenda" id="codigoVenda" />
+                    <label htmlFor="codigoVenda" className="text-xs">Código da Venda</label>
                   </div>
                   <div className="flex items-center gap-2">
-                    <RadioGroupItem value="nota_fiscal" id="nota_fiscal" />
-                    <label htmlFor="nota_fiscal" className="text-xs">Número Nota Fiscal</label>
+                    <RadioGroupItem value="notaFiscal" id="notaFiscal" />
+                    <label htmlFor="notaFiscal" className="text-xs">Número Nota Fiscal</label>
                   </div>
                   <div className="flex items-center gap-2">
                     <RadioGroupItem value="documento" id="documento" />
@@ -678,9 +678,9 @@ export default function ContasAReceberModal({
                       className="p-2 hover:bg-blue-50 cursor-pointer border-b last:border-0 text-xs"
                       onClick={() => handleSelectSearchResult(conta)}
                     >
-                      <div className="font-medium">{conta.person_name}</div>
+                      <div className="font-medium">{conta.personName}</div>
                       <div className="text-slate-500">
-                        {formatCurrency(conta.amount)} - Venc: {format(parseISO(conta.due_date), 'dd/MM/yyyy')}
+                        {formatCurrency(conta.amount)} - Venc: {format(parseISO(conta.dueDate), 'dd/MM/yyyy')}
                       </div>
                     </div>
                   ))}
@@ -691,11 +691,11 @@ export default function ContasAReceberModal({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Checkbox 
-                    id="usar_periodo" 
+                    id="usarPeriodo" 
                     checked={usarPeriodo}
                     onCheckedChange={setUsarPeriodo}
                   />
-                  <label htmlFor="usar_periodo" className="text-xs font-medium">Período</label>
+                  <label htmlFor="usarPeriodo" className="text-xs font-medium">Período</label>
                 </div>
                 <div className={`grid grid-cols-2 gap-2 ${!usarPeriodo ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div>
@@ -769,11 +769,11 @@ export default function ContasAReceberModal({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Checkbox 
-                      id="nao_pagas" 
-                      checked={statusContas.nao_pagas}
-                      onCheckedChange={(v) => setStatusContas(p => ({...p, nao_pagas: v}))}
+                      id="naoPagas" 
+                      checked={statusContas.naoPagas}
+                      onCheckedChange={(v) => setStatusContas(p => ({...p, naoPagas: v}))}
                     />
-                    <label htmlFor="nao_pagas" className="text-xs">Não Pagas</label>
+                    <label htmlFor="naoPagas" className="text-xs">Não Pagas</label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox 
@@ -785,11 +785,11 @@ export default function ContasAReceberModal({
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox 
-                      id="em_cobranca" 
-                      checked={statusContas.em_cobranca}
-                      onCheckedChange={(v) => setStatusContas(p => ({...p, em_cobranca: v}))}
+                      id="emCobranca" 
+                      checked={statusContas.emCobranca}
+                      onCheckedChange={(v) => setStatusContas(p => ({...p, emCobranca: v}))}
                     />
-                    <label htmlFor="em_cobranca" className="text-xs">Em Cobrança</label>
+                    <label htmlFor="emCobranca" className="text-xs">Em Cobrança</label>
                   </div>
                 </div>
               </div>
@@ -800,16 +800,16 @@ export default function ContasAReceberModal({
               <h4 className="text-xs font-semibold text-slate-700 uppercase">Ordenação</h4>
               <RadioGroup value={ordenacao} onValueChange={setOrdenacao} className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="codigo" id="ord_codigo" />
-                  <label htmlFor="ord_codigo" className="text-xs">Código</label>
+                  <RadioGroupItem value="codigo" id="ordCodigo" />
+                  <label htmlFor="ordCodigo" className="text-xs">Código</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="data" id="ord_data" />
-                  <label htmlFor="ord_data" className="text-xs">Data</label>
+                  <RadioGroupItem value="data" id="ordData" />
+                  <label htmlFor="ordData" className="text-xs">Data</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="vencimento" id="ord_vencimento" />
-                  <label htmlFor="ord_vencimento" className="text-xs">Vencimento</label>
+                  <RadioGroupItem value="vencimento" id="ordVencimento" />
+                  <label htmlFor="ordVencimento" className="text-xs">Vencimento</label>
                 </div>
               </RadioGroup>
             </div>
@@ -894,24 +894,24 @@ export default function ContasAReceberModal({
                             disabled={conta.status === 'pago'}
                           />
                         </TableCell>
-                        <TableCell className="text-xs">{conta.created_date ? format(parseISO(conta.created_date), 'dd/MM/yy') : '-'}</TableCell>
-                        <TableCell className="text-xs font-mono">{conta.sale_id?.slice(-6) || '-'}</TableCell>
-                        <TableCell className="text-xs">{conta.nfe_number || '-'}</TableCell>
-                        <TableCell className="text-xs text-center">{conta.installment_number || '1'}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(conta.due_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell className="text-xs">{conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yy') : '-'}</TableCell>
+                        <TableCell className="text-xs font-mono">{conta.saleId?.slice(-6) || '-'}</TableCell>
+                        <TableCell className="text-xs">{conta.nfeNumber || '-'}</TableCell>
+                        <TableCell className="text-xs text-center">{conta.installmentNumber || '1'}</TableCell>
+                        <TableCell className="text-xs">{format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</TableCell>
                         <TableCell className="text-xs text-right font-mono">{formatCurrency(conta.amount)}</TableCell>
-                        <TableCell className="text-xs">{conta.payment_date ? format(parseISO(conta.payment_date), 'dd/MM/yyyy') : '-'}</TableCell>
+                        <TableCell className="text-xs">{conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</TableCell>
                         <TableCell className="text-xs text-right font-mono">{conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</TableCell>
                         <TableCell className="text-xs">
                           {conta.status === 'pago' ? (
                             <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
-                          ) : conta.is_vencida ? (
+                          ) : conta.isVencida ? (
                             <Badge className="bg-red-100 text-red-800 text-xs">Vencido</Badge>
                           ) : (
                             <Badge className="bg-yellow-100 text-yellow-800 text-xs">Aberto</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs">{conta.person_name}</TableCell>
+                        <TableCell className="text-xs">{conta.personName}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -1047,7 +1047,7 @@ export default function ContasAReceberModal({
             <div className="space-y-4">
               <div className="flex gap-4 items-end">
                 <div className="flex-1">
-                  <Label className="text-xs">Buscar por {metodoPesquisa === 'codigo_venda' ? 'Código da Venda' : metodoPesquisa === 'nota_fiscal' ? 'Nota Fiscal' : 'Documento/Nome'}</Label>
+                  <Label className="text-xs">Buscar por {metodoPesquisa === 'codigoVenda' ? 'Código da Venda' : metodoPesquisa === 'notaFiscal' ? 'Nota Fiscal' : 'Documento/Nome'}</Label>
                   <Input 
                     placeholder="Digite para buscar..."
                     className="h-8"
@@ -1059,14 +1059,14 @@ export default function ContasAReceberModal({
                         return;
                       }
                       const results = contas.filter(c => {
-                        if (metodoPesquisa === 'codigo_venda') {
-                          return c.sale_id?.toLowerCase().includes(term) || c.id?.toLowerCase().includes(term);
+                        if (metodoPesquisa === 'codigoVenda') {
+                          return c.saleId?.toLowerCase().includes(term) || c.id?.toLowerCase().includes(term);
                         }
-                        if (metodoPesquisa === 'nota_fiscal') {
-                          return c.nfe_number?.toLowerCase().includes(term);
+                        if (metodoPesquisa === 'notaFiscal') {
+                          return c.nfeNumber?.toLowerCase().includes(term);
                         }
-                        return c.person_document?.toLowerCase().includes(term) || 
-                               c.person_name?.toLowerCase().includes(term);
+                        return c.personDocument?.toLowerCase().includes(term) || 
+                               c.personName?.toLowerCase().includes(term);
                       });
                       setSearchResults(results);
                     }}
@@ -1092,9 +1092,9 @@ export default function ContasAReceberModal({
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => handleSelectSearchResult(conta)}
                       >
-                        <TableCell className="text-xs font-mono">{conta.sale_id?.slice(-6) || conta.id?.slice(-6)}</TableCell>
-                        <TableCell className="text-xs">{conta.person_name}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(conta.due_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell className="text-xs font-mono">{conta.saleId?.slice(-6) || conta.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs">{conta.personName}</TableCell>
+                        <TableCell className="text-xs">{format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</TableCell>
                         <TableCell className="text-xs text-right font-mono">{formatCurrency(conta.amount)}</TableCell>
                         <TableCell className="text-xs">
                           {conta.status === 'pago' ? (
@@ -1130,9 +1130,9 @@ export default function ContasAReceberModal({
                 <div className="mt-4 p-3 bg-slate-50 rounded-lg text-sm space-y-2 max-h-40 overflow-auto">
                   {getSelectedContasForAction().map(conta => (
                     <div key={conta.id} className="border-b pb-2 last:border-0">
-                      <p><strong>Sacado:</strong> {conta.person_name}</p>
+                      <p><strong>Sacado:</strong> {conta.personName}</p>
                       <p><strong>Valor:</strong> {formatCurrency(conta.amount)}</p>
-                      <p><strong>Vencimento:</strong> {format(parseISO(conta.due_date), 'dd/MM/yyyy')}</p>
+                      <p><strong>Vencimento:</strong> {format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</p>
                     </div>
                   ))}
                   {getSelectedContasForAction().length > 1 && (
