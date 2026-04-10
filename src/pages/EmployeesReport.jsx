@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserCheck, DollarSign, Calendar, Phone } from "lucide-react";
 import { Employee } from "@/entities/Employee";
 import { format, parseISO } from "date-fns";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 
 export default function EmployeesReport() {
   const [employees, setEmployees] = useState([]);

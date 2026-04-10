@@ -46,8 +46,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster"; // Importar o Toaster
 
-// Import correto da entidade User
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 import { Company } from "@/entities/Company"; // Import correto da entidade Company
 
 const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165fLogo5.png";

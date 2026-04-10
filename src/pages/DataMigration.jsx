@@ -23,7 +23,7 @@ import { VasilhameLoan } from "@/entities/VasilhameLoan";
 import { ProductPickup } from "@/entities/ProductPickup";
 import { Purchase } from "@/entities/Purchase";
 import { StockTransfer } from "@/entities/StockTransfer";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 
 export default function DataMigration() {
   const [companies, setCompanies] = useState([]);

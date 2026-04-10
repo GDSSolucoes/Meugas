@@ -12,7 +12,7 @@ import { Warehouse, Save, Filter, ArrowRightLeft, BarChart3 } from "lucide-react
 import { ProductStock } from "@/entities/ProductStock";
 import { Sector } from "@/entities/Sector";
 import { Product } from "@/entities/Product";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO } from 'date-fns';
 

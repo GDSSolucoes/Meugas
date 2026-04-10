@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Package, AlertTriangle, BarChart3 } from "lucide-react";
 import { Product } from "@/entities/Product";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 
 export default function ProductsReport() {
   const [products, setProducts] = useState([]);

@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Plus, Wallet, Edit, Trash2 } from "lucide-react";
 import { CashAccount } from "@/entities/CashAccount";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 import { format } from "date-fns";
 
 export default function CashAccounts() {

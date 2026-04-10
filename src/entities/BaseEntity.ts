@@ -29,7 +29,7 @@ export class BaseEntity {
    * @returns Promise<Entity[]>
    */
   static async filter<T extends BaseEntity>(
-    this: new (data?: any) => T,
+    this: new (data?: T) => T,
     filters: FilterOptions = {},
     pagination?: PaginationOptions
   ): Promise<T[]> {
@@ -74,7 +74,7 @@ export class BaseEntity {
    * @returns Promise<Entity>
    */
   static async create<T extends BaseEntity>(
-    this: new (data?: any) => T,
+    this: new (data?: T) => T,
     data: Partial<T>
   ): Promise<T> {
     if (!apiEnabled) {
@@ -98,7 +98,7 @@ export class BaseEntity {
    * @returns Promise<Entity>
    */
   static async update<T extends BaseEntity>(
-    this: new (data?: any) => T,
+    this: new (data?: T) => T,
     id: string,
     data: Partial<T>
   ): Promise<T> {
@@ -122,7 +122,7 @@ export class BaseEntity {
    * @returns Promise<void>
    */
   static async delete<T extends BaseEntity>(
-    this: new (data?: any) => T,
+    this: new (data?: T) => T,
     id: string
   ): Promise<void> {
     if (!apiEnabled) {
@@ -144,7 +144,7 @@ export class BaseEntity {
    * @returns Promise<Entity | null>
    */
   static async findById<T extends BaseEntity>(
-    this: new (data?: any) => T,
+    this: new (data?: T) => T,
     id: string
   ): Promise<T | null> {
     if (!apiEnabled) {

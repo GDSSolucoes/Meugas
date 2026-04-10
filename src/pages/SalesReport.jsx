@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Receipt, DollarSign, TrendingUp, Filter } from "lucide-react";
 import { Sale } from "@/entities/Sale";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
-import  User  from "@/api/providers/user";
+import { User } from "@/entities/User";
 
 export default function SalesReport() {
   const [allSales, setAllSales] = useState([]);

@@ -13,7 +13,7 @@ import { Order } from "@/entities/Order";
 import { Product } from "@/entities/Product";
 import { Person } from "@/entities/Person";
 import { Sale } from "@/entities/Sale";
-import  User  from "@/api/providers/user"; // Added User import
+import { User } from "@/entities/User"; // Added User import
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 

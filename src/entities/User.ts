@@ -30,7 +30,7 @@ export class User extends BaseEntity {
 
   static async me(this: new (data?: any) => User) {
     const r = await api.get(`/api/auth/me`);
-    return r.data.map((item: any) => new this(item));
+    return new this(r.data);    
   }
 
   static async logout() {}
