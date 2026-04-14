@@ -6,6 +6,7 @@ import { RolesGuard } from '../../auth/roles.guard'
 import { Roles } from '../../auth/roles.decorator'
 import { CompanyPostDto } from './dto/company.post.dto'
 import { CompanyUpdateDto } from './dto/company.update.dto'
+import { CurrentUser } from '../../auth/current-user.decorator'
 
 @ApiTags('Companies')
 @ApiBearerAuth()
@@ -22,8 +23,8 @@ export class CompaniesController {
   @Post()
   @Roles('admin')
   @ApiBody({ type: CompanyPostDto })
-  async create(@Body() body: CompanyPostDto) {
-    return this.service.create(body)
+  async create(@Body() body: CompanyPostDto, @CurrentUser() user: any) {
+    return this.service.create(body, user)
   }
 
   @Put(':id')

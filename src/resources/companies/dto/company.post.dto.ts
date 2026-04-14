@@ -15,7 +15,7 @@ export class CompanyPostDto {
   @ApiProperty({ required: false })
   parametrosFiscais?: CompanyParametrosFiscais
   @ApiProperty({ enum: PlanTypeEnum, default: PlanTypeEnum.BASIC, required: false })
-  plano?: PlanTypeEnum
+  planType?: PlanTypeEnum
   @ApiProperty({ required: false, enum: CompanyStatusEnum, default: CompanyStatusEnum.ATIVA })
   status?: CompanyStatusEnum
   @ApiProperty()

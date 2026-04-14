@@ -26,9 +26,10 @@ export class CompaniesService {
     return this.get(id)
   }
 
-  async create(data: CompanyPostDto) {
+  async create(data: CompanyPostDto, user: any) {
     const rows = await this.db.insert(companies).values({
-      ...data
+      ...data,
+      createdByName: user.name
     }).returning()
     return rows[0]
   }
