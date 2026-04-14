@@ -19,6 +19,7 @@ import { EmployeEsesModule } from './resources/employees/employees.module'
 import { FacilitadorEsesModule } from './resources/facilitadores/facilitadores.module'
 import { FinancialgroupsModule } from './resources/financialGroups/financialGroups.module'
 import { FinancialsubgroupsModule } from './resources/financialSubgroups/financialSubgroups.module'
+import { FiscalModule } from './resources/fiscal/fiscal.module'
 import { FuelingsModule } from './resources/fuelings/fuelings.module'
 import { OrdersModule } from './resources/orders/orders.module'
 import { PaymenttypEsesModule } from './resources/paymentTypes/paymentTypes.module'
@@ -53,6 +54,7 @@ import { VasilhameloansModule } from './resources/vasilhameLoans/vasilhameLoans.
     FacilitadorEsesModule,
     FinancialgroupsModule,
     FinancialsubgroupsModule,
+    FiscalModule,
     FuelingsModule,
     OrdersModule,
     PaymenttypEsesModule,
