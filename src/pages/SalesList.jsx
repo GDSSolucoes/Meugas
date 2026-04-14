@@ -19,6 +19,7 @@ import {
   FileCode // Added FileCode icon
 } from "lucide-react";
 import * as entities from "@/entities";
+import FiscalProvider from "@/providers/FiscalProvider";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
@@ -123,8 +124,7 @@ export default function SalesList() {
   const handleDownloadDANFe = async (sale, tipo) => {
     setIsDownloading(true);
     try {
-      const functionName = tipo === 'nfe' ? 'baixarDANFe' : 'baixarDANFCe';
-      const result = await base44.functions.invoke(functionName, { saleId: sale.id });
+      const result = await FiscalProvider.downloadDanfe(sale.id, tipo);
 
       if (result.success && result.pdfBase64) {
         // Converter base64 para blob
@@ -172,8 +172,7 @@ export default function SalesList() {
   const handleDownloadXML = async (sale, tipo) => {
     setIsDownloading(true);
     try {
-      const functionName = tipo === 'nfe' ? 'baixarXMLNFe' : 'baixarXMLNFCe';
-      const result = await base44.functions.invoke(functionName, { saleId: sale.id });
+      const result = await FiscalProvider.downloadXml(sale.id, tipo);
 
       if (result.success && result.xmlBase64) {
         // Converter base64 para blob
@@ -237,11 +236,7 @@ export default function SalesList() {
 
     setIsCancelling(true);
     try {
-      const result = await base44.functions.invoke('cancelarNotaFiscal', {
-        saleId: selectedSale.id,
-        tipoNota: cancelTipoNota,
-        justificativa: cancelJustification
-      });
+      const result = await FiscalProvider.cancelFiscalNote(selectedSale.id, cancelTipoNota, cancelJustification);
 
       if (result.success) {
         toast({
@@ -277,7 +272,7 @@ export default function SalesList() {
 
     setIsEmittingNFe(true);
     try {
-      const result = await base44.functions.invoke('emitirNFe', { saleId: sale.id });
+      const result = await FiscalProvider.emitNFe(sale.id, sale.facilitadorId);
 
       if (result.success) {
         toast({
@@ -313,7 +308,7 @@ export default function SalesList() {
 
     setIsEmittingNFCe(true);
     try {
-      const result = await base44.functions.invoke('emitirNFCe', { saleId: sale.id });
+      const result = await FiscalProvider.emitNFCe(sale.id, sale.facilitadorId);
 
       if (result.success) {
         toast({

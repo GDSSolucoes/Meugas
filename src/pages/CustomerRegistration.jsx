@@ -9,7 +9,7 @@ import { Person } from "@/entities/Person";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User } from "@/entities/User";
-import { searchAddressByStreet } from "@/functions/searchAddressByStreet";
+import FiscalProvider from "@/providers/FiscalProvider";
 
 const initialPersonState = {
   name: '',
@@ -141,8 +141,7 @@ export default function CustomerRegistration() {
       setIsAddressLoading(true);
       debounceTimeout.current = setTimeout(async () => {
         try {
-          // Use the imported searchAddressByStreet function
-          const { data: suggestions } = await searchAddressByStreet({
+          const suggestions = await FiscalProvider.searchAddressByStreet({
             state: currentPerson.address.state,
             city: currentPerson.address.city,
             street: value
