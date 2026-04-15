@@ -393,7 +393,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
   );
 };
 
-export default function Sales({ onSaleComplete }) {
+export default function SalesPage({ onSaleComplete }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

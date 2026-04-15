@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, Warehouse } from "lucide-react";
-import { Sector } from "@/entities/Sector";
-import { Employee } from "@/entities/Employee";
-import { SectorMaster } from "@/entities/SectorMaster"; // Importar SectorMaster
-import { User } from "@/entities/User";
+import { Sectors } from "@/entities/Sectors";
+import { Employees } from "@/entities/Employees";
+import { SectorMasters } from "@/entities/SectorMasters"; // Importar SectorMaster
+import { Users } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function Sectors() {
+export default function SectorsPage() {
   const { toast } = useToast();
   const [sectors, setSectors] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -39,11 +39,11 @@ export default function Sectors() {
 
   const loadData = useCallback(async () => {
     try {
-      const user = await User.me();
+      const user = await Users.me();
       const [sectorsData, employeesData, sectorMastersData] = await Promise.all([
-        Sector.filter({ companyId: user.companyId }, '-createdDate'),
-        Employee.filter({ companyId: user.companyId, active: true }),
-        SectorMaster.filter({ companyId: user.companyId }) // Carregar Setores Master
+        Sectors.filter({ companyId: user.companyId }, '-createdDate'),
+        Employees.filter({ companyId: user.companyId, active: true }),
+        SectorMasters.filter({ companyId: user.companyId }) // Carregar Setores Master
       ]);
       setSectors(sectorsData);
       setEmployees(employeesData);
@@ -67,7 +67,7 @@ export default function Sectors() {
   const handleDelete = async (sectorId) => {
     if (window.confirm("Tem certeza que deseja excluir este setor?")) {
       try {
-        await Sector.delete(sectorId);
+        await Sectors.delete(sectorId);
         loadData();
         toast({ title: "Sucesso", description: "Setor excluído." });
       } catch (error) {
@@ -80,7 +80,7 @@ export default function Sectors() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await User.me();
+      const user = await Users.me();
       
       const selectedEmployee = employees.find(emp => emp.id === currentSector.employeeId);
       const selectedMasterSector = sectorMasters.find(ms => ms.id === currentSector.masterSectorId); // Use sectorMasters
@@ -96,9 +96,9 @@ export default function Sectors() {
 
       if (isEditing) {
         const { id, ...sectorData } = payload;
-        await Sector.update(id, sectorData);
+        await Sectors.update(id, sectorData);
       } else {
-        await Sector.create({ ...payload, createdByName: user.fullName });
+        await Sectors.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();

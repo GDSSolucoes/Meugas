@@ -12,7 +12,7 @@ export enum userTypeEnum {
   SUPER_ADMIN = "superAdmin",
 }
 
-export class User extends BaseEntity {
+export class Users extends BaseEntity {
   email!: string;
   cpf?: string | null;
   name!: string;
@@ -24,14 +24,21 @@ export class User extends BaseEntity {
   department?: string;
   deleted?: boolean;
 
-  constructor(data?: Partial<User>) {
+  constructor(data?: Partial<Users>) {
     super(data);
   }
 
-  static async me(this: new (data?: any) => User) {
-    const r = await api.get(`/api/auth/me`);
+  static async me(this: new (data?: any) => Users) {
+    const r = await api.get(`/auth/me`);
     return new this(r.data);    
   }
 
-  static async logout() {}
+  static async logout() {
+    // Remove tokens from localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    
+    // Redirect to login page
+    window.location.href = '/login';
+  }
 }

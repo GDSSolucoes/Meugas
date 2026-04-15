@@ -12,11 +12,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   DollarSign, Search, LogOut, Printer, Edit, Trash2, CheckSquare, X, ArrowRight
 } from "lucide-react";
-import { Person } from "@/entities/Person";
+import { Persons } from "@/entities/Persons";
 import { ContasAPagar } from "@/entities/ContasAPagar";
-import { CashAccount } from "@/entities/CashAccount";
-import { CashMovement } from "@/entities/CashMovement";
-import { SectorMaster } from "@/entities/SectorMaster";
+import { CashAccounts } from "@/entities/CashAccounts";
+import { CashMovements } from "@/entities/CashMovements";
+import { SectorMasters } from "@/entities/SectorMasters";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, differenceInDays } from "date-fns";
 
@@ -124,8 +124,8 @@ export default function ContasAPagarModal({
     try {
       const [contasData, sectorMastersData, suppliersData] = await Promise.all([
         ContasAPagar.filter({ companyId: currentUser.companyId }, '-dueDate'),
-        SectorMaster.filter({ companyId: currentUser.companyId }),
-        Person.filter({ companyId: currentUser.companyId, type: 'fornecedor' })
+        SectorMasters.filter({ companyId: currentUser.companyId }),
+        Persons.filter({ companyId: currentUser.companyId, type: 'fornecedor' })
       ]);
       setContas(contasData);
       setSectorMasters(sectorMastersData);
@@ -324,7 +324,7 @@ export default function ContasAPagarModal({
         if (!conta || conta.status === 'pago') continue;
 
         // Criar movimento de caixa (despesa)
-        await CashMovement.create({
+        await CashMovements.create({
           cashAccountId: payingAccount.id,
           cashAccountName: payingAccount.name,
           type: 'despesa',
@@ -349,7 +349,7 @@ export default function ContasAPagarModal({
 
       // Atualizar saldo da conta
       const newBalance = (payingAccount.balance || 0) - totalPago;
-      await CashAccount.update(payingAccount.id, { balance: newBalance });
+      await CashAccounts.update(payingAccount.id, { balance: newBalance });
 
       toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) paga(s) com sucesso!` });
       setIsBaixaOpen(false);

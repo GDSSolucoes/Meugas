@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Warehouse } from "lucide-react";
-import { SectorMaster } from "@/entities/SectorMaster";
-import { User } from "@/entities/User";
+import { SectorMasters } from "@/entities/SectorMasters";
+import { Users } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function SectorMasterPage() {
@@ -23,8 +23,8 @@ export default function SectorMasterPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const user = await User.me();
-      const sectorMastersData = await SectorMaster.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await Users.me();
+      const sectorMastersData = await SectorMasters.filter({ companyId: user.companyId }, '-createdDate');
       setSectorMasters(sectorMastersData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -45,7 +45,7 @@ export default function SectorMasterPage() {
   const handleDelete = async (sectorMasterId) => {
     if (window.confirm("Tem certeza que deseja excluir este setor master?")) {
       try {
-        await SectorMaster.delete(sectorMasterId);
+        await SectorMasters.delete(sectorMasterId);
         loadData();
         toast({ title: "Sucesso", description: "Setor master excluído." });
       } catch (error) {
@@ -58,7 +58,7 @@ export default function SectorMasterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await User.me();
+      const user = await Users.me();
       
       const payload = {
         ...currentSectorMaster,
@@ -68,9 +68,9 @@ export default function SectorMasterPage() {
 
       if (isEditing) {
         const { id, ...sectorMasterData } = payload;
-        await SectorMaster.update(id, sectorMasterData);
+        await SectorMasters.update(id, sectorMasterData);
       } else {
-        await SectorMaster.create({ ...payload, createdByName: user.fullName });
+        await SectorMasters.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();

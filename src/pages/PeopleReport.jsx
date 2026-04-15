@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Users, UserCheck, Phone, MapPin, Gift } from "lucide-react";
-import { Person } from "@/entities/Person";
-import { User } from "@/entities/User";
+import { UsersIcon, UserCheck, Phone, MapPin, Gift } from "lucide-react";
+import { Persons } from "@/entities/Persons";
+import { Users } from "@/entities/Users";
 import { format, parseISO } from 'date-fns';
 
-export default function PeopleReport() {
+export default function PeopleReportPage() {
   const [people, setPeople] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,12 +18,12 @@ export default function PeopleReport() {
 
   const loadPeople = async () => {
     try {
-      const user = await User.me();
+      const user = await Users.me();
       if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Person.filter({ companyId: user.companyId }, '-createdDate');
+      const data = await Persons.filter({ companyId: user.companyId }, '-createdDate');
       setPeople(data);
     } catch (error) {
       console.error("Erro ao carregar pessoas:", error);
@@ -66,7 +66,7 @@ export default function PeopleReport() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Pessoas</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{people.length}</div>
@@ -86,7 +86,7 @@ export default function PeopleReport() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Fornecedores</CardTitle>
-              <Users className="h-4 w-4 text-green-500" />
+              <UsersIcon className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{fornecedores.length}</div>
@@ -96,7 +96,7 @@ export default function PeopleReport() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pontos de Venda</CardTitle>
-              <Users className="h-4 w-4 text-purple-500" />
+              <UsersIcon className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pontosVenda.length}</div>
@@ -106,7 +106,7 @@ export default function PeopleReport() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Empresas Conveniadas</CardTitle>
-              <Users className="h-4 w-4 text-amber-500" />
+              <UsersIcon className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{conveniadas.length}</div>

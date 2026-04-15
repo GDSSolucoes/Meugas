@@ -18,7 +18,7 @@ export interface PersonAddress {
   zipcode?: string;
 }
 
-export class Person extends BaseEntity {
+export class Persons extends BaseEntity {
   companyId!: string;
   personNumber?: string;
   name!: string;
@@ -36,7 +36,7 @@ export class Person extends BaseEntity {
   active!: boolean;
   deleted?: boolean;
 
-  constructor(data?: Partial<Person>) {
+  constructor(data?: Partial<Persons>) {
     super(data);
     if (data) {
       // Convert date strings to Date objects

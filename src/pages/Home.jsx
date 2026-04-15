@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Settings, ClipboardList, ArrowRight, LogOut, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { User } from "@/entities/User";
+import { Users } from "@/entities/Users";
 
-export default function Home() {
+export default function HomePage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await User.me();
+        const user = await Users.me();
         setCurrentUser(user);
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
@@ -28,7 +28,7 @@ export default function Home() {
   const handleLogout = async () => {
     if (window.confirm("Tem certeza que deseja sair do sistema?")) {
       try {
-        await User.logout();
+        await Users.logout();
         // Optionally redirect to login page or update state if logout is successful
         // navigate('/login'); // Example if using react-router-dom navigate hook
       } catch (error) {

@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Package, AlertTriangle, BarChart3 } from "lucide-react";
-import { Product } from "@/entities/Product";
-import { User } from "@/entities/User";
+import { Products } from "@/entities/Products";
+import { Users } from "@/entities/Users";
 
-export default function ProductsReport() {
+export default function ProductsReportPage() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -17,12 +17,12 @@ export default function ProductsReport() {
 
   const loadProducts = async () => {
     try {
-      const user = await User.me();
+      const user = await Users.me();
       if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Product.filter({ companyId: user.companyId }, '-createdDate');
+      const data = await Products.filter({ companyId: user.companyId }, '-createdDate');
       setProducts(data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);

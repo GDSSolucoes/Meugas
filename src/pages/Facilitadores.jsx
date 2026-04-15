@@ -11,7 +11,7 @@ import { Plus, FileText, Edit, Trash2, CheckCircle, XCircle } from "lucide-react
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function Facilitadores() {
+export default function FacilitadoresPage() {
   const { toast } = useToast();
   const [facilitadores, setFacilitadores] = useState([]);
   const [showForm, setShowForm] = useState(false);

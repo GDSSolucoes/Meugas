@@ -17,12 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search, Edit, Trash2, Check, X, LogOut, Printer, Car, Fuel, AlertCircle
 } from "lucide-react";
-import { Vehicle } from "@/entities/Vehicle";
-import { Fueling } from "@/entities/Fueling";
-import { Employee } from "@/entities/Employee";
-import { CashMovement } from "@/entities/CashMovement";
-import { CashAccount } from "@/entities/CashAccount";
-import { FinancialGroup } from "@/entities/FinancialGroup";
+import { Vehicles } from "@/entities/Vehicles";
+import { Fuelings } from "@/entities/Fuelings";
+import { Employees } from "@/entities/Employees";
+import { CashMovements } from "@/entities/CashMovements";
+import { CashAccounts } from "@/entities/CashAccounts";
+import { FinancialGroups } from "@/entities/FinancialGroups";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO } from "date-fns";
 
@@ -79,10 +79,10 @@ export default function FuelingModal({
   const loadData = async () => {
     try {
       const [vehiclesData, employeesData, fuelingsData, groupsData] = await Promise.all([
-        Vehicle.filter({ companyId: currentUser.companyId, active: true }),
-        Employee.filter({ companyId: currentUser.companyId, active: true }),
-        Fueling.filter({ companyId: currentUser.companyId }, '-fuelingDate', 100),
-        FinancialGroup.filter({ companyId: currentUser.companyId, active: true })
+        Vehicles.filter({ companyId: currentUser.companyId, active: true }),
+        Employees.filter({ companyId: currentUser.companyId, active: true }),
+        Fuelings.filter({ companyId: currentUser.companyId }, '-fuelingDate', 100),
+        FinancialGroups.filter({ companyId: currentUser.companyId, active: true })
       ]);
       
       setVehicles(vehiclesData);
@@ -250,10 +250,10 @@ export default function FuelingModal({
 
       let savedFueling;
       if (editMode === 'modificar' && selectedFueling) {
-        savedFueling = await Fueling.update(selectedFueling.id, fuelingData);
+        savedFueling = await Fuelings.update(selectedFueling.id, fuelingData);
         toast({ title: "Sucesso", description: "Abastecimento atualizado!" });
       } else {
-        savedFueling = await Fueling.create(fuelingData);
+        savedFueling = await Fuelings.create(fuelingData);
         toast({ title: "Sucesso", description: "Abastecimento registrado!" });
       }
 
@@ -279,15 +279,15 @@ export default function FuelingModal({
           createdByName: currentUser.fullName
         };
 
-        const movement = await CashMovement.create(movementData);
+        const movement = await CashMovements.create(movementData);
         
         // Atualizar saldo da conta
-        await CashAccount.update(selectedAccount, {
+        await CashAccounts.update(selectedAccount, {
           balance: (account?.balance || 0) - Number(formData.totalValue)
         });
 
         // Atualizar fueling com ID do movimento
-        await Fueling.update(savedFueling.id, { cashMovementId: movement.id });
+        await Fuelings.update(savedFueling.id, { cashMovementId: movement.id });
 
         toast({ title: "Sucesso", description: "Abastecimento registrado e lançamento de despesa criado!" });
         
@@ -307,7 +307,7 @@ export default function FuelingModal({
     
     if (window.confirm("Tem certeza que deseja excluir este abastecimento?")) {
       try {
-        await Fueling.delete(selectedFueling.id);
+        await Fuelings.delete(selectedFueling.id);
         toast({ title: "Sucesso", description: "Abastecimento excluído!" });
         loadData();
         resetForm();

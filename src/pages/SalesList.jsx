@@ -31,7 +31,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-export default function SalesList() {
+export default function SalesListPage() {
   const { toast } = useToast();
   const [sales, setSales] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);

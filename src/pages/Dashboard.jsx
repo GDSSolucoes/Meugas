@@ -3,21 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Package, 
-  Users, 
   TrendingUp, 
   DollarSign, 
   ClipboardList, 
-  AlertTriangle 
+  AlertTriangle, 
+  UsersIcon
 } from "lucide-react";
-import { Order } from "@/entities/Order";
-import { Product } from "@/entities/Product";
-import { Person } from "@/entities/Person";
-import { Sale } from "@/entities/Sale";
-import { User } from "@/entities/User"; // Added User import
+import { Orders } from "@/entities/Orders";
+import { Products } from "@/entities/Products";
+import { Persons } from "@/entities/Persons";
+import { Sales } from "@/entities/Sales";
+import { Users } from "@/entities/Users"; // Added User import
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalProducts: 0,
@@ -34,7 +34,7 @@ export default function Dashboard() {
   const loadStats = async () => {
     ;
     try {
-      const user = await User.me();
+      const user = await Users.me();
       setCurrentUser(user);
       
       // DEBUG: Verificar companyId do usuário
@@ -43,10 +43,10 @@ export default function Dashboard() {
       console.log('User companyName:', user.companyName);
       
       const [orders, products, people, sales] = await Promise.all([
-        Order.filter({ companyId: user.companyId }).catch(() => []),
-        Product.filter({ companyId: user.companyId }).catch(() => []),
-        Person.filter({ companyId: user.companyId, type: 'cliente' }).catch(() => []),
-        Sale.filter({ companyId: user.companyId }).catch(() => [])
+        Orders.filter({ companyId: user.companyId }).catch(() => []),
+        Products.filter({ companyId: user.companyId }).catch(() => []),
+        Persons.filter({ companyId: user.companyId, type: 'cliente' }).catch(() => []),
+        Sales.filter({ companyId: user.companyId }).catch(() => [])
       ]);
 
       console.log('Dados filtrados:');
@@ -106,7 +106,7 @@ export default function Dashboard() {
           <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalCustomers}</div>
@@ -184,7 +184,7 @@ export default function Dashboard() {
                 </Link>
                 <Link to={createPageUrl("People")}>
                   <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-                    <Users className="w-6 h-6" />
+                    <UsersIcon className="w-6 h-6" />
                     <span className="font-medium">Pessoas</span>
                   </Button>
                 </Link>

@@ -15,7 +15,7 @@ import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function VasilhameManagement() {
+export default function VasilhameManagementPage() {
   const { toast } = useToast();
   const [loans, setLoans] = useState([]);
   const [displayedLoans, setDisplayedLoans] = useState([]);

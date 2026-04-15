@@ -26,7 +26,7 @@ export interface OrderItemsItem {
   total?: number;
 }
 
-export class Order extends BaseEntity {
+export class Orders extends BaseEntity {
   companyId!: string;
   orderNumber!: string;
   personId!: string;
@@ -52,7 +52,7 @@ export class Order extends BaseEntity {
   active!: boolean;
   deleted?: boolean;
 
-  constructor(data?: Partial<Order>) {
+  constructor(data?: Partial<Orders>) {
     super(data);
     if (data) {
       // Convert date strings to Date objects
@@ -106,17 +106,17 @@ export class Order extends BaseEntity {
    */
   static async filterByCompany(
     filters: { companyId?: string; status?: OrdersStatusEnum; [key: string]: any } = {}
-  ): Promise<Order[]> {
+  ): Promise<Orders[]> {
     if (!filters.companyId) {
       throw new Error('companyId é obrigatório para filtrar pedidos');
     }
-    return super.filter.call(this, filters) as Promise<Order[]>;
+    return super.filter.call(this, filters) as Promise<Orders[]>;
   }
 
   /**
    * Create order with validation
    */
-  static async createWithValidation(data: Partial<Order>): Promise<Order> {
+  static async createWithValidation(data: Partial<Orders>): Promise<Orders> {
     if (!data.companyId) {
       throw new Error('companyId é obrigatório para criar pedido');
     }
@@ -126,14 +126,14 @@ export class Order extends BaseEntity {
     if (!data.personId) {
       throw new Error('personId é obrigatório');
     }
-    return super.create.call(this, data) as Promise<Order>;
+    return super.create.call(this, data) as Promise<Orders>;
   }
 
   /**
    * Update order status
    */
-  static async updateStatus(id: string, newStatus: OrdersStatusEnum): Promise<Order> {
-    const updates: Partial<Order> = { status: newStatus };
+  static async updateStatus(id: string, newStatus: OrdersStatusEnum): Promise<Orders> {
+    const updates: Partial<Orders> = { status: newStatus };
 
     if (newStatus === OrdersStatusEnum.EM_ATENDIMENTO) {
       updates.attendedAt = new Date();
@@ -143,13 +143,13 @@ export class Order extends BaseEntity {
       updates.cancelledAt = new Date();
     }
 
-    return super.update.call(this, id, updates) as Promise<Order>;
+    return super.update.call(this, id, updates) as Promise<Orders>;
   }
 
   /**
    * Cancel order with reason
    */
-  static async cancel(id: string, reason: string): Promise<Order> {
+  static async cancel(id: string, reason: string): Promise<Orders> {
     return this.updateStatus(id, OrdersStatusEnum.CANCELADO).then(order => {
       order.cancellationReason = reason;
       return order;

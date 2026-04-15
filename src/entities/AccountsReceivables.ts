@@ -1,67 +1,64 @@
 import { BaseEntity } from './BaseEntity';
 
 
-export enum ProductPickupStatusEnum {
+export enum AccountsReceivableStatusEnum {
   PENDENTE = "pendente",
-  RETIRADO_PARCIAL = "retiradoParcial",
-  RETIRADO_TOTAL = "retiradoTotal",
+  PAGO = "pago",
+  VENCIDO = "vencido",
 }
 
 /**
- * ProductPickup Entity
+ * AccountsReceivable Entity
  *
- * Represents a ProductPickup record in the system.
+ * Represents a AccountsReceivable record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class ProductPickup extends BaseEntity {
-  saleId: string;
+export class AccountsReceivables extends BaseEntity {
   onDelete: any;
   personName: string;
-  productName: string;
-  pickupQuantity: number;
-  collectedQuantity: number;
-  collectedDate: Date;
-  saleDate: Date;
-  sectorId: string;
-  sectorName: string;
-  notaFiscal: string;
-  pedido: string;
-  status: ProductPickupStatusEnum;
+  installmentNumber: number;
+  description: string;
+  dueDate: Date;
+  amount: number;
+  paymentDate: Date;
+  baseUrl: string = "/accountsReceivables";
+
+
 
   /**
-   * Static method to filter ProductPickup records
+   * Static method to filter AccountsReceivable records
    *
    * @param filters Object with filter criteria
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
-   * @returns Promise<ProductPickup[]>
+   * @returns Promise<AccountsReceivable[]>
    */
   static async filter(filters = {}, pagination = {}) {
     return super.filter.call(this, filters, pagination);
   }
 
   /**
-   * Static method to create a new ProductPickup
+   * Static method to create a new AccountsReceivable
    *
-   * @param data Object with ProductPickup properties
-   * @returns Promise<ProductPickup>
+   * @param data Object with AccountsReceivable properties
+   * @returns Promise<AccountsReceivable>
    */
   static async create(data) {
     return super.create.call(this, data);
   }
 
   /**
-   * Static method to update a ProductPickup
+   * Static method to update a AccountsReceivable
    *
    * @param id The entity ID
    * @param data Object with updated properties
-   * @returns Promise<ProductPickup>
+   * @returns Promise<AccountsReceivable>
    */
   static async update(id, data) {
     return super.update.call(this, id, data);
   }
 
   /**
-   * Static method to delete a ProductPickup
+   * Static method to delete a AccountsReceivable
    *
    * @param id The entity ID
    * @returns Promise<void>
@@ -71,10 +68,10 @@ export class ProductPickup extends BaseEntity {
   }
 
   /**
-   * Static method to find a ProductPickup by ID
+   * Static method to find a AccountsReceivable by ID
    *
    * @param id The entity ID
-   * @returns Promise<ProductPickup | null>
+   * @returns Promise<AccountsReceivable | null>
    */
   static async findById(id) {
     return super.findById.call(this, id);

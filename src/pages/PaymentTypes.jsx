@@ -8,10 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, CreditCard, Edit, Trash2 } from "lucide-react";
-import { PaymentType } from "@/entities/PaymentType";
-import { User } from "@/entities/User";
+import { PaymentTypes } from "@/entities/PaymentTypes";
+import { Users } from "@/entities/Users";
 
-export default function PaymentTypes() {
+export default function PaymentTypesPage() {
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -35,8 +35,8 @@ export default function PaymentTypes() {
 
   const loadPaymentTypes = async () => {
     try {
-      const user = await User.me();
-      const data = await PaymentType.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await Users.me();
+      const data = await PaymentTypes.filter({ companyId: user.companyId }, '-createdDate');
       setPaymentTypes(data);
     } catch (error) {
       console.error("Erro ao carregar tipos de pagamento:", error);
@@ -56,7 +56,7 @@ export default function PaymentTypes() {
   const handleDelete = async (paymentTypeId) => {
     if (window.confirm("Tem certeza que deseja deletar este tipo de pagamento?")) {
       try {
-        await PaymentType.delete(paymentTypeId);
+        await PaymentTypes.delete(paymentTypeId);
         loadPaymentTypes();
       } catch (error) {
         console.error("Erro ao deletar tipo de pagamento:", error);
@@ -67,7 +67,7 @@ export default function PaymentTypes() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await User.me();
+      const user = await Users.me();
       const payload = {
         ...currentPaymentType,
         maxInstallments: Number(currentPaymentType.maxInstallments) || 1,
@@ -78,9 +78,9 @@ export default function PaymentTypes() {
 
       if (isEditing) {
         const { id, ...data } = payload;
-        await PaymentType.update(id, data);
+        await PaymentTypes.update(id, data);
       } else {
-        await PaymentType.create({ ...payload, createdByName: user.fullName });
+        await PaymentTypes.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();

@@ -1,4 +1,5 @@
 import { api, apiEnabled } from '@/api/apiClient';
+import { inherits } from 'node:util';
 
 export interface FilterOptions {
   [key: string]: any;
@@ -12,6 +13,7 @@ export interface PaginationOptions {
 }
 
 export class BaseEntity {
+  baseUrl!: string;
   id?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -56,12 +58,16 @@ export class BaseEntity {
         if (pagination.order) params.append('order', pagination.order);
       }
 
-      const endpoint = `/${this.name.toLowerCase()}s`;
+      const endpoint = `/${this.name.toLowerCase()}`;
       const queryString = params.toString();
       const url = queryString ? `${endpoint}?${queryString}` : endpoint;
 
       const response = await api.get(url);
-      return response.data.map((item: any) => new this(item));
+      // a API por padrão retorna um objeto null ou um objeto com { data: T[], totalPages: number, page: number, limit: number }
+      // mas o frontend nao esta preparado para tabelas paginadas, entao vamos retornar apenas o array de dados
+      
+      
+      return response.data?.data ? response.data.data.map((item: any) => new this(item)) : response.data;
     } catch (error) {
       console.error(`Erro ao filtrar ${this.name}:`, error);
       throw error;

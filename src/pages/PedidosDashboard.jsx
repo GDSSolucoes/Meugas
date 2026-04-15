@@ -4,22 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   ClipboardList,
-  Users,
+  UsersIcon,
   TrendingUp,
   Package,
   AlertCircle,
   Loader2 // Added for loading spinner
 } from "lucide-react";
-import { Order } from "@/entities/Order";
-import { Person } from "@/entities/Person";
-import { User } from "@/entities/User";
-import { Employee } from "@/entities/Employee"; // New import
-import { Product } from "@/entities/Product"; // New import, implied by outline usage
+import { Orders } from "@/entities/Orders";
+import { Persons } from "@/entities/Persons";
+import { Users } from "@/entities/Users";
+import { Employees } from "@/entities/Employees"; // New import
+import { Products } from "@/entities/Products"; // New import, implied by outline usage
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast"; // New import
 
-export default function PedidosDashboard() {
+export default function PedidosDashboardPage() {
   const { toast } = useToast(); // Initialize toast
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -35,7 +35,7 @@ export default function PedidosDashboard() {
   const loadData = useCallback(async () => { // Renamed from loadStats to loadData and wrapped in useCallback
     setIsLoading(true);
     try {
-      const user = await User.me();
+      const user = await Users.me();
       setCurrentUser(user);
       const companyId = user.companyId;
 
@@ -47,10 +47,10 @@ export default function PedidosDashboard() {
 
       // Fetch all necessary data for the dashboard
       const [ordersData, productsData, employeesData, peopleData] = await Promise.all([
-        Order.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
-        Product.filter({ companyId }).catch(() => []),
-        Employee.filter({ companyId, position: 'entregador', active: true }).catch(() => []),
-        Person.filter({ companyId, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
+        Orders.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
+        Products.filter({ companyId }).catch(() => []),
+        Employees.filter({ companyId, position: 'entregador', active: true }).catch(() => []),
+        Persons.filter({ companyId, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
       ]);
 
       setRecentOrders(ordersData.slice(0, 5)); // Set recent orders, taking the first 5
@@ -85,7 +85,7 @@ export default function PedidosDashboard() {
       return;
     }
     try {
-      await Order.create({
+      await Orders.create({
         ...order,
         companyId: currentUser.companyId,
         companyName: currentUser.companyName,
@@ -165,7 +165,7 @@ export default function PedidosDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <UsersIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalCustomers}</div>
@@ -194,7 +194,7 @@ export default function PedidosDashboard() {
                 </Link>
                 <Link to={createPageUrl("OrderPeople")} className="w-full">
                   <Button variant="outline" className="w-full justify-start">
-                    <Users className="w-5 h-5 mr-3" />
+                    <UsersIcon className="w-5 h-5 mr-3" />
                     Gerenciar Clientes
                   </Button>
                 </Link>

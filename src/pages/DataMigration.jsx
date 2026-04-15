@@ -4,28 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, Database, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
-import { Company } from "@/entities/Company";
-import { Product } from "@/entities/Product";
-import { Person } from "@/entities/Person";
-import { Employee } from "@/entities/Employee";
-import { Order } from "@/entities/Order";
-import { Sale } from "@/entities/Sale";
-import { CashAccount } from "@/entities/CashAccount";
-import { PaymentType } from "@/entities/PaymentType";
-import { Sector } from "@/entities/Sector";
-import { ProductStock } from "@/entities/ProductStock";
-import { CashMovement } from "@/entities/CashMovement";
-import { FinancialGroup } from "@/entities/FinancialGroup";
-import { FinancialSubgroup } from "@/entities/FinancialSubgroup";
+import { Company } from "@/entities";
+import { Products } from "@/entities/Products";
+import { Persons } from "@/entities/Persons";
+import { Employees } from "@/entities/Employees";
+import { Orders } from "@/entities/Orders";
+import { Sales } from "@/entities/Sales";
+import { CashAccounts } from "@/entities/CashAccounts";
+import { PaymentTypes } from "@/entities/PaymentTypes";
+import { Sectors } from "@/entities/Sectors";
+import { ProductStocks } from "@/entities/ProductStocks";
+import { CashMovements } from "@/entities/CashMovements";
+import { FinancialGroups } from "@/entities/FinancialGroups";
+import { FinancialSubgroups } from "@/entities/FinancialSubgroups";
 import { ContasAPagar } from "@/entities/ContasAPagar";
-import { AccountsReceivable } from "@/entities/AccountsReceivable";
-import { VasilhameLoan } from "@/entities/VasilhameLoan";
-import { ProductPickup } from "@/entities/ProductPickup";
-import { Purchase } from "@/entities/Purchase";
-import { StockTransfer } from "@/entities/StockTransfer";
-import { User } from "@/entities/User";
+import { AccountsReceivables } from "@/entities/AccountsReceivables";
+import { VasilhameLoans } from "@/entities/VasilhameLoans";
+import { ProductPickups } from "@/entities/ProductPickups";
+import { Purchases } from "@/entities/Purchases";
+import { StockTransfers } from "@/entities/StockTransfers";
+import { Users } from "@/entities/Users";
 
-export default function DataMigration() {
+export default function DataMigrationPage() {
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,31 +42,31 @@ export default function DataMigration() {
     try {
       const [companiesData, user] = await Promise.all([
         Company.list(),
-        User.me()
+        Users.me()
       ]);
       setCompanies(companiesData);
       setCurrentUser(user);
 
       // Contar registros sem companyId para cada entidade
       const entities = [
-        { name: 'Produtos', entity: Product },
-        { name: 'Pessoas', entity: Person },
-        { name: 'Funcionários', entity: Employee },
-        { name: 'Pedidos', entity: Order },
-        { name: 'Vendas', entity: Sale },
-        { name: 'Contas/Caixa', entity: CashAccount },
-        { name: 'Formas Pagamento', entity: PaymentType },
-        { name: 'Setores', entity: Sector },
-        { name: 'Estoque', entity: ProductStock },
-        { name: 'Movimentações', entity: CashMovement },
-        { name: 'Grupos Financeiros', entity: FinancialGroup },
-        { name: 'Subgrupos Financeiros', entity: FinancialSubgroup },
+        { name: 'Produtos', entity: Products },
+        { name: 'Pessoas', entity: Persons },
+        { name: 'Funcionários', entity: Employees },
+        { name: 'Pedidos', entity: Orders },
+        { name: 'Vendas', entity: Sales },
+        { name: 'Contas/Caixa', entity: CashAccounts },
+        { name: 'Formas Pagamento', entity: PaymentTypes },
+        { name: 'Setores', entity: Sectors },
+        { name: 'Estoque', entity: ProductStocks },
+        { name: 'Movimentações', entity: CashMovements },
+        { name: 'Grupos Financeiros', entity: FinancialGroups },
+        { name: 'Subgrupos Financeiros', entity: FinancialSubgroups },
         { name: 'Contas a Pagar', entity: ContasAPagar },
-        { name: 'Contas a Receber', entity: AccountsReceivable },
-        { name: 'Empréstimo Vasilhames', entity: VasilhameLoan },
-        { name: 'Retirada Produtos', entity: ProductPickup },
-        { name: 'Compras', entity: Purchase },
-        { name: 'Transferências', entity: StockTransfer }
+        { name: 'Contas a Receber', entity: AccountsReceivables },
+        { name: 'Empréstimo Vasilhames', entity: VasilhameLoans },
+        { name: 'Retirada Produtos', entity: ProductPickups },
+        { name: 'Compras', entity: Purchases },
+        { name: 'Transferências', entity: StockTransfers }
       ];
 
       const newStats = {};
@@ -118,24 +118,24 @@ export default function DataMigration() {
 
       // Lista de entidades para migrar
       const entitiesToMigrate = [
-        { name: 'Produtos', entity: Product },
-        { name: 'Pessoas', entity: Person },
-        { name: 'Funcionários', entity: Employee },
-        { name: 'Setores', entity: Sector },
-        { name: 'Contas/Caixa', entity: CashAccount },
-        { name: 'Formas Pagamento', entity: PaymentType },
-        { name: 'Grupos Financeiros', entity: FinancialGroup },
-        { name: 'Subgrupos Financeiros', entity: FinancialSubgroup },
-        { name: 'Estoque', entity: ProductStock },
-        { name: 'Movimentações', entity: CashMovement },
+        { name: 'Produtos', entity: Products },
+        { name: 'Pessoas', entity: Persons },
+        { name: 'Funcionários', entity: Employees },
+        { name: 'Setores', entity: Sectors },
+        { name: 'Contas/Caixa', entity: CashAccounts },
+        { name: 'Formas Pagamento', entity: PaymentTypes },
+        { name: 'Grupos Financeiros', entity: FinancialGroups },
+        { name: 'Subgrupos Financeiros', entity: FinancialSubgroups },
+        { name: 'Estoque', entity: ProductStocks },
+        { name: 'Movimentações', entity: CashMovements },
         { name: 'Contas a Pagar', entity: ContasAPagar },
-        { name: 'Contas a Receber', entity: AccountsReceivable },
-        { name: 'Pedidos', entity: Order },
-        { name: 'Vendas', entity: Sale },
-        { name: 'Compras', entity: Purchase },
-        { name: 'Transferências', entity: StockTransfer },
-        { name: 'Empréstimo Vasilhames', entity: VasilhameLoan },
-        { name: 'Retirada Produtos', entity: ProductPickup }
+        { name: 'Contas a Receber', entity: AccountsReceivables },
+        { name: 'Pedidos', entity: Orders },
+        { name: 'Vendas', entity: Sales },
+        { name: 'Compras', entity: Purchases },
+        { name: 'Transferências', entity: StockTransfers },
+        { name: 'Empréstimo Vasilhames', entity: VasilhameLoans },
+        { name: 'Retirada Produtos', entity: ProductPickups }
       ];
 
       for (const { name, entity } of entitiesToMigrate) {

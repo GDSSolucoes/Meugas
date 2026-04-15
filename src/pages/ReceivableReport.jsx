@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileText, DollarSign, AlertTriangle, CheckCircle, Filter } from "lucide-react";
-import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { AccountsReceivables } from "@/entities/AccountsReceivables";
 import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
-import { User } from "@/entities/User";
+import { Users } from "@/entities/Users";
 
-export default function ReceivableReport() {
+export default function ReceivableReportPage() {
   const [allReceivables, setAllReceivables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -45,8 +45,8 @@ export default function ReceivableReport() {
 
   const loadReceivables = async () => {
     try {
-      const user = await User.me();
-      const data = await AccountsReceivable.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await Users.me();
+      const data = await AccountsReceivables.filter({ companyId: user.companyId }, '-createdDate');
       setAllReceivables(data);
     } catch (error) {
       console.error("Erro ao carregar contas a receber:", error);

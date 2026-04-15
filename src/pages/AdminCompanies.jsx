@@ -8,15 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Building2, Edit, Trash2, Ban, CheckCircle, AlertCircle, Users, DollarSign, Home, Database } from "lucide-react";
-import { Company } from "@/entities/Company";
-import { User } from "@/entities/User";
+import { Plus, Building2, Edit, Trash2, Ban, CheckCircle, AlertCircle, UsersIcon, DollarSign, Home, Database } from "lucide-react";
+import { Users } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { Company } from "@/entities";
 
-export default function AdminCompanies() {
+export default function AdminCompaniesPage() {
   const { toast } = useToast();
   const [companies, setCompanies] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -56,7 +56,7 @@ export default function AdminCompanies() {
 
   const loadCompanies = useCallback(async () => {
     try {
-      const user = await User.me();
+      const user = await Users.me();
       
       if (user.email !== 'brasileirosilvia@gmail.com') {
         toast({
@@ -68,12 +68,12 @@ export default function AdminCompanies() {
         return;
       }
 
-      const companiesData = await Company.list('-createdDate');
+      const companiesData = await Company.filter();
       setCompanies(companiesData);
       
       const active = companiesData.filter(c => c.status === 'ativa').length;
       const suspended = companiesData.filter(c => c.status === 'suspensaPagamento').length;
-      const totalRevenue = companiesData.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
+      const totalRevenue = 0//companiesData.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
       
       setStats({
         totalCompanies: companiesData.length,
@@ -150,7 +150,7 @@ export default function AdminCompanies() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await User.me();
+      const user = await Users.me();
       
       if (isEditing) {
         const { id, ...companyData } = currentCompany;
@@ -163,12 +163,12 @@ export default function AdminCompanies() {
         // AUTOMATICAMENTE vincular o usuário administrador à empresa criada
         try {
           // Buscar se o usuário já existe
-          const allUsers = await User.list();
+          const allUsers = await Users.list();
           const existingUser = allUsers.find(u => u.email === currentCompany.adminEmail);
           
           if (existingUser) {
             // Usuário já existe, apenas atualizar o vínculo com a empresa
-            await User.update(existingUser.id, {
+            await Users.update(existingUser.id, {
               companyId: newCompany.id,
               companyName: newCompany.name,
               userType: 'admin' // Garantir que é admin da empresa
@@ -254,7 +254,7 @@ export default function AdminCompanies() {
             </Link>
             <Link to={createPageUrl("Users")}>
               <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20">
-                <Users className="w-4 h-4 mr-2" />
+                <UsersIcon className="w-4 h-4 mr-2" />
                 Gerenciar Usuários
               </Button>
             </Link>
@@ -558,7 +558,7 @@ export default function AdminCompanies() {
                         </div>
                       </TableCell>
                       <TableCell>{getPlanBadge(company.planType)}</TableCell>
-                      <TableCell>R$ {company.monthlyFee?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>R$ {Number(company.monthlyFee)?.toFixed(2) || '0.00'}</TableCell>
                       <TableCell>{company.dueDate ? format(new Date(company.dueDate), 'dd/MM/yyyy') : '-'}</TableCell>
                       <TableCell>{getStatusBadge(company.status)}</TableCell>
                       <TableCell className="text-right">

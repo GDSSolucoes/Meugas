@@ -1,13 +1,35 @@
 import { BaseEntity } from './BaseEntity';
 
 
+export enum FacilitadorModeloFiscalEnum {
+  NFCE = "55",
+  NFCeST = "65",
+}
+
+
+export enum FacilitadorRegimeTributarioEnum {
+  SIMPLES_NACIONAL = "simples_nacional",
+  LUCRO_PRESUMIDO = "lucro_presumido",
+  LUCRO_REAL = "lucro_real",
+  MEI = "mei",
+}
+
+export enum FacilitadorTipoOperacaoEnum {
+  VENDA = "venda",
+  COMPRA = "compra",
+  REMESSA = "remessa",
+  RETORNO = "retorno",
+  DEVOLUCAO = "devolucao",
+  TRANSFERENCIA = "transferencia",
+  OUTRAS = "outras",
+}
 /**
  * Facilitadore Entity
  *
  * Represents a Facilitadore record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Facilitadore extends BaseEntity {
+export class Facilitadores extends BaseEntity {
   empresaId: string;
   nome: string;
   tipoOperacao: FacilitadorTipoOperacaoEnum;

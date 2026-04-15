@@ -8,16 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRightLeft, Plus, AlertCircle } from "lucide-react";
-import { StockTransfer } from "@/entities/StockTransfer";
-import { ProductStock } from "@/entities/ProductStock";
-import { Product } from "@/entities/Product";
-import { Sector } from "@/entities/Sector";
-import { User } from "@/entities/User";
+import { StockTransfers } from "@/entities/StockTransfers";
+import { ProductStocks } from "@/entities/ProductStocks";
+import { Products } from "@/entities/Products";
+import { Sectors } from "@/entities/Sectors";
+import { Users } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
-import { Sale } from "@/entities/Sale";
-import { Purchase } from "@/entities/Purchase";
-import { VasilhameLoan } from "@/entities/VasilhameLoan";
-import { ProductPickup } from "@/entities/ProductPickup";
+import { Sales } from "@/entities/Sales";
+import { Purchases } from "@/entities/Purchases";
+import { VasilhameLoans } from "@/entities/VasilhameLoans";
+import { ProductPickups } from "@/entities/ProductPickups";
 import { format, parseISO } from "date-fns";
 
 export default function StockTransferPage() {
@@ -63,14 +63,14 @@ export default function StockTransferPage() {
         loansData,
         pickupsData
       ] = await Promise.all([
-        Product.list().then(products => products.filter(p => p.active === true)),
-        Sector.list().then(sectors => sectors.filter(s => s.active === true)),
-        StockTransfer.list('-createdDate'),
-        ProductStock.list(),
-        Sale.list(),
-        Purchase.list(),
-        VasilhameLoan.list(),
-        ProductPickup.list().catch(() => []) // Em caso de erro, retorna array vazio
+        Products.list().then(products => products.filter(p => p.active === true)),
+        Sectors.list().then(sectors => sectors.filter(s => s.active === true)),
+        StockTransfers.list('-createdDate'),
+        ProductStocks.list(),
+        Sales.list(),
+        Purchases.list(),
+        VasilhameLoans.list(),
+        ProductPickups.list().catch(() => []) // Em caso de erro, retorna array vazio
       ]);
 
       setProducts(productsData);
@@ -255,14 +255,14 @@ export default function StockTransferPage() {
     }
 
     try {
-      const user = await User.me();
+      const user = await Users.me();
       const transferData = {
         ...currentTransfer,
         createdByName: user.fullName
       };
 
       // 1. Registrar a transferência
-      await StockTransfer.create(transferData);
+      await StockTransfers.create(transferData);
 
       // 2. Atualizar estoque do setor de origem (diminuir)
       const fromStockEntry = productStocks.find(
@@ -272,10 +272,10 @@ export default function StockTransferPage() {
 
       if (fromStockEntry) {
         const newQuantity = (fromStockEntry.quantity || 0) - currentTransfer.quantity;
-        await ProductStock.update(fromStockEntry.id, { quantity: newQuantity });
+        await ProductStocks.update(fromStockEntry.id, { quantity: newQuantity });
       } else {
          // Should not happen if availableStock > 0 and stock entry exists, but as a fallback
-        await ProductStock.create({
+        await ProductStocks.create({
           productId: currentTransfer.productId,
           productName: currentTransfer.productName,
           sectorId: currentTransfer.fromSectorId,
@@ -294,10 +294,10 @@ export default function StockTransferPage() {
 
       if (toStockEntry) {
         const newQuantity = (toStockEntry.quantity || 0) + currentTransfer.quantity;
-        await ProductStock.update(toStockEntry.id, { quantity: newQuantity });
+        await ProductStocks.update(toStockEntry.id, { quantity: newQuantity });
       } else {
         // Criar nova entrada de estoque no setor destino
-        await ProductStock.create({
+        await ProductStocks.create({
           productId: currentTransfer.productId,
           productName: currentTransfer.productName,
           sectorId: currentTransfer.toSectorId,

@@ -14,7 +14,7 @@ export enum FinancialGroupTypeEnum {
  * Represents a FinancialGroup record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class FinancialGroup extends BaseEntity {
+export class FinancialGroups extends BaseEntity {
   name: string;
   type: FinancialGroupTypeEnum;
   description: string;

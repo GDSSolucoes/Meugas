@@ -1,63 +1,53 @@
 import { BaseEntity } from './BaseEntity';
 
 
-export enum CashMovementTypeEnum {
-  RECEITA = "receita",
-  DESPESA = "despesa",
-}
-
 /**
- * CashMovement Entity
+ * Acquirer Entity
  *
- * Represents a CashMovement record in the system.
+ * Represents a Acquirer record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class CashMovement extends BaseEntity {
-  cashAccountName: string;
-  type: CashMovementTypeEnum;
-  amount: number;
-  description: string;
-  movementDate: Date;
-  personName: string;
-  groupId: string;
-  groupName: string;
-  relatedDocId: string;
+export class Acquirers extends BaseEntity {
+  name: string;
+  feePercentage: number;
+  settlementDays: number;
   onDelete: any;
+  active: boolean;
 
   /**
-   * Static method to filter CashMovement records
+   * Static method to filter Acquirer records
    *
    * @param filters Object with filter criteria
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
-   * @returns Promise<CashMovement[]>
+   * @returns Promise<Acquirer[]>
    */
   static async filter(filters = {}, pagination = {}) {
     return super.filter.call(this, filters, pagination);
   }
 
   /**
-   * Static method to create a new CashMovement
+   * Static method to create a new Acquirer
    *
-   * @param data Object with CashMovement properties
-   * @returns Promise<CashMovement>
+   * @param data Object with Acquirer properties
+   * @returns Promise<Acquirer>
    */
   static async create(data) {
     return super.create.call(this, data);
   }
 
   /**
-   * Static method to update a CashMovement
+   * Static method to update a Acquirer
    *
    * @param id The entity ID
    * @param data Object with updated properties
-   * @returns Promise<CashMovement>
+   * @returns Promise<Acquirer>
    */
   static async update(id, data) {
     return super.update.call(this, id, data);
   }
 
   /**
-   * Static method to delete a CashMovement
+   * Static method to delete a Acquirer
    *
    * @param id The entity ID
    * @returns Promise<void>
@@ -67,10 +57,10 @@ export class CashMovement extends BaseEntity {
   }
 
   /**
-   * Static method to find a CashMovement by ID
+   * Static method to find a Acquirer by ID
    *
    * @param id The entity ID
-   * @returns Promise<CashMovement | null>
+   * @returns Promise<Acquirer | null>
    */
   static async findById(id) {
     return super.findById.call(this, id);

@@ -32,13 +32,13 @@ import {
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { createPageUrl } from "@/utils";
-import Sales from "./Sales";
+import SalesPage from "./Sales";
 import AccountsReceivable from "./AccountsReceivable";
-import CashMovements from "./CashMovements";
+import CashMovementsPage from "./CashMovements";
 import PaymentModal from "@/components/acerto/PaymentModal";
 import * as entities from "@/entities";
 
-export default function AcertoSetores() {
+export default function AcertoSetoresPage() {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState(null);
   const [setores, setSetores] = useState([]);
@@ -894,7 +894,7 @@ export default function AcertoSetores() {
         {/* Modal de Vendas */}
         <Dialog open={showSalesModal} onOpenChange={setShowSalesModal}>
           <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-            <Sales onSaleComplete={() => {
+            <SalesPage onSaleComplete={() => {
               setShowSalesModal(false);
               loadData();
             }} />
@@ -914,7 +914,7 @@ export default function AcertoSetores() {
         {/* Modal de Lançamentos Financeiros */}
         <Dialog open={showCashMovementsModal} onOpenChange={setShowCashMovementsModal}>
           <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-            <CashMovements onComplete={() => {
+            <CashMovementsPage onComplete={() => {
               setShowCashMovementsModal(false);
               loadData();
             }} />

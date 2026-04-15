@@ -10,8 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, Printer, X, LogOut, FileText } from "lucide-react";
-import { CashMovement } from "@/entities/CashMovement";
-import { CashAccount } from "@/entities/CashAccount";
+import { CashMovements } from "@/entities/CashMovements";
+import { CashAccounts } from "@/entities/CashAccounts";
 import { ContasAPagar } from "@/entities/ContasAPagar";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isFuture } from "date-fns";
@@ -124,7 +124,7 @@ export default function PagamentoModal({
         if (contaPagar.status === 'pago') continue;
 
         // Criar movimento de caixa (despesa)
-        await CashMovement.create({
+        await CashMovements.create({
           cashAccountId: contaSelecionada.id,
           cashAccountName: contaSelecionada.name,
           type: 'despesa',
@@ -149,7 +149,7 @@ export default function PagamentoModal({
 
       // Atualizar saldo da conta
       const novoSaldo = (contaSelecionada.balance || 0) - valorFinal;
-      await CashAccount.update(selectedAccountId, { balance: novoSaldo });
+      await CashAccounts.update(selectedAccountId, { balance: novoSaldo });
 
       toast({ title: "Sucesso", description: `${contas.length} conta(s) paga(s) com sucesso!` });
       setPaymentConfirmed(true);

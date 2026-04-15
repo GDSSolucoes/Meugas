@@ -40,7 +40,7 @@ api.interceptors.response.use(
         try {
           const rt = getRefreshToken()
           if (!rt) throw err
-          const r = await api.post('/api/auth/refresh', { refreshToken: rt })
+          const r = await api.post('/auth/refresh', { refreshToken: rt })
           setAccessToken(r.data.accessToken)
           pending.forEach(fn => fn(r.data.accessToken))
           pending = []
@@ -51,13 +51,16 @@ api.interceptors.response.use(
         } finally {
           isRefreshing = false
         }
-      }
-      return new Promise(resolve => {
-        pending.push(token => {
-          original.headers.Authorization = `Bearer ${token}`
-          resolve(api(original))
+        return new Promise(resolve => {
+          pending.push(token => {
+            original.headers.Authorization = `Bearer ${token}`
+            resolve(api(original))
+          })
         })
-      })
+      }
+      else {
+        throw err;
+      }
     }
     try {
       const msg = err?.response?.data?.error || err.message

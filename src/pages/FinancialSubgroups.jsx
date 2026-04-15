@@ -8,12 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Folder, X } from "lucide-react";
-import { FinancialSubgroup } from "@/entities/FinancialSubgroup";
-import { FinancialGroup } from "@/entities/FinancialGroup";
-import { User } from "@/entities/User";
+import { FinancialSubgroups } from "@/entities/FinancialSubgroups";
+import { FinancialGroups } from "@/entities/FinancialGroups";
+import { Users } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function FinancialSubgroups() {
+export default function FinancialSubgroupsPage() {
   const { toast } = useToast();
   const [subgroups, setSubgroups] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -41,10 +41,10 @@ export default function FinancialSubgroups() {
 
   const loadData = useCallback(async () => {
     try {
-      const user = await User.me();
+      const user = await Users.me();
       const [subgroupsData, groupsData] = await Promise.all([
-        FinancialSubgroup.filter({ companyId: user.companyId }, '-createdDate'),
-        FinancialGroup.filter({ companyId: user.companyId, active: true })
+        FinancialSubgroups.filter({ companyId: user.companyId }, '-createdDate'),
+        FinancialGroups.filter({ companyId: user.companyId, active: true })
       ]);
       setSubgroups(subgroupsData);
       setGroups(groupsData);
@@ -67,7 +67,7 @@ export default function FinancialSubgroups() {
         return;
       }
 
-      const user = await User.me();
+      const user = await Users.me();
       const groupData = {
         ...newGroup,
         name: newGroup.name.toUpperCase(),
@@ -78,10 +78,10 @@ export default function FinancialSubgroups() {
         active: true
       };
 
-      const savedGroup = await FinancialGroup.create(groupData);
+      const savedGroup = await FinancialGroups.create(groupData);
       
       // Recarregar grupos
-      const updatedGroups = await FinancialGroup.filter({ companyId: user.companyId, active: true });
+      const updatedGroups = await FinancialGroups.filter({ companyId: user.companyId, active: true });
       setGroups(updatedGroups);
       
       // Selecionar automaticamente o novo grupo
@@ -111,7 +111,7 @@ export default function FinancialSubgroups() {
   const handleDelete = async (subgroupId) => {
     if (window.confirm("Tem certeza que deseja excluir este subgrupo?")) {
       try {
-        await FinancialSubgroup.delete(subgroupId);
+        await FinancialSubgroups.delete(subgroupId);
         loadData(); // Reload data after deletion
         toast({ title: "Sucesso", description: "Subgrupo excluído." });
       } catch (error) {
@@ -128,7 +128,7 @@ export default function FinancialSubgroups() {
         toast({ title: "Erro", description: "O grupo financeiro é obrigatório.", variant: "destructive" });
         return;
       }
-      const user = await User.me();
+      const user = await Users.me();
       const selectedGroup = groups.find(g => g.id === currentSubgroup.financialGroupId);
       
       const subgroupData = {
@@ -141,10 +141,10 @@ export default function FinancialSubgroups() {
 
       if (isEditing) {
         const { id, ...dataToUpdate } = subgroupData;
-        await FinancialSubgroup.update(id, dataToUpdate);
+        await FinancialSubgroups.update(id, dataToUpdate);
         toast({ title: "Sucesso", description: "Subgrupo financeiro atualizado com sucesso." });
       } else {
-        await FinancialSubgroup.create(subgroupData);
+        await FinancialSubgroups.create(subgroupData);
         toast({ title: "Sucesso", description: "Subgrupo financeiro criado com sucesso." });
       }
 

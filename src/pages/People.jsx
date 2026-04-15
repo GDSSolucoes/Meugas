@@ -4,18 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, Edit, Trash2, Search, Phone, MapPin, Gift } from "lucide-react";
-import { Person } from "@/entities/Person";
-import { Order } from "@/entities/Order";
-import { Sale } from "@/entities/Sale";
-import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { Plus, UsersIcon, Edit, Trash2, Search, Phone, MapPin, Gift } from "lucide-react";
+import { Persons } from "@/entities/Persons";
+import { Orders } from "@/entities/Orders";
+import { Sales } from "@/entities/Sales";
+import { AccountsReceivables } from "@/entities/AccountsReceivables";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { User } from "@/entities/User";
+import { Users } from "@/entities/Users";
 import { format, parseISO } from 'date-fns';
 
-export default function People() {
+export default function PeoplePage() {
   const { toast } = useToast();
   const [people, setPeople] = useState([]);
   const [filteredPeople, setFilteredPeople] = useState([]);
@@ -29,8 +29,8 @@ export default function People() {
   const loadPeople = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await User.me();
-      const data = await Person.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await Users.me();
+      const data = await Persons.filter({ companyId: user.companyId }, '-createdDate');
       setPeople(data);
       setFilteredPeople(data);
     } catch (error) {
@@ -64,9 +64,9 @@ export default function People() {
   const checkPersonMovements = async (personId) => {
     try {
       const [orders, sales, receivables] = await Promise.all([
-        Order.list().then(orders => orders.filter(o => o.personId === personId)),
-        Sale.list().then(sales => sales.filter(s => s.personId === personId)),
-        AccountsReceivable.list().then(acc => acc.filter(a => a.personId === personId))
+        Orders.list().then(orders => orders.filter(o => o.personId === personId)),
+        Sales.list().then(sales => sales.filter(s => s.personId === personId)),
+        AccountsReceivables.list().then(acc => acc.filter(a => a.personId === personId))
       ]);
 
       return {
@@ -97,7 +97,7 @@ export default function People() {
       }
 
       if (window.confirm(`Tem certeza que deseja excluir ${person.name}?\n\nEsta ação não pode ser desfeita.`)) {
-        await Person.delete(person.id);
+        await Persons.delete(person.id);
         loadPeople();
         toast({ title: "Sucesso", description: "Pessoa excluída com sucesso!" });
       }
@@ -158,7 +158,7 @@ export default function People() {
           <Card className="bg-white/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{people.length}</div>
@@ -168,7 +168,7 @@ export default function People() {
           <Card className="bg-white/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
+              <UsersIcon className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{clientes}</div>
@@ -178,7 +178,7 @@ export default function People() {
           <Card className="bg-white/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Fornecedores</CardTitle>
-              <Users className="h-4 w-4 text-green-500" />
+              <UsersIcon className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{fornecedores}</div>
@@ -188,7 +188,7 @@ export default function People() {
           <Card className="bg-white/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pontos de Venda</CardTitle>
-              <Users className="h-4 w-4 text-purple-500" />
+              <UsersIcon className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pontosVenda}</div>
@@ -198,7 +198,7 @@ export default function People() {
           <Card className="bg-white/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Conveniadas</CardTitle>
-              <Users className="h-4 w-4 text-amber-500" />
+              <UsersIcon className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{conveniadas}</div>

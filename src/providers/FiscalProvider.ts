@@ -7,7 +7,7 @@ export class FiscalProvider {
     }
 
     try {
-      const response = await api.post('/api/fiscal/emit-nfe', {
+      const response = await api.post('/fiscal/emit-nfe', {
         saleId,
         facilitadorId
       });
@@ -24,7 +24,7 @@ export class FiscalProvider {
     }
 
     try {
-      const response = await api.post('/api/fiscal/emit-nfce', {
+      const response = await api.post('/fiscal/emit-nfce', {
         saleId,
         facilitadorId
       });
@@ -41,7 +41,7 @@ export class FiscalProvider {
     }
 
     try {
-      const response = await api.post('/api/fiscal/cancel-note', {
+      const response = await api.post('/fiscal/cancel-note', {
         saleId,
         tipoNota,
         justificativa
@@ -59,7 +59,7 @@ export class FiscalProvider {
     }
 
     try {
-      const response = await api.post('/api/fiscal/download-danfe', {
+      const response = await api.post('/fiscal/download-danfe', {
         saleId,
         type
       });
@@ -76,7 +76,7 @@ export class FiscalProvider {
     }
 
     try {
-      const response = await api.post('/api/fiscal/download-xml', {
+      const response = await api.post('/fiscal/download-xml', {
         saleId,
         type
       });
@@ -97,7 +97,7 @@ export class FiscalProvider {
     }
 
     try {
-      const response = await api.post('/api/fiscal/search-address', params);
+      const response = await api.post('/fiscal/search-address', params);
       return response.data;
     } catch (error) {
       console.error('Erro buscando endereço pelo logradouro:', error);

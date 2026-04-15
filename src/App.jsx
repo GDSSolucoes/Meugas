@@ -6,7 +6,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import Login from '@/pages/Login';
+import LoginPage from '@/pages/Login';
 import { apiEnabled } from '@/api/apiClient';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ApiErrorToaster from '@/lib/ApiErrorToaster';
@@ -35,7 +35,7 @@ const AuthenticatedApp = () => {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'authRequired') {
       if (apiEnabled) {
-        return <Login />;
+        return <LoginPage />;
       } else {
         navigateToLogin();
         return null;
@@ -62,7 +62,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

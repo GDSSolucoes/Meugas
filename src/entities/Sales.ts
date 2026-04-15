@@ -36,7 +36,7 @@ export interface SalePaymentMethodsItem {
  * Represents a Sale record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Sale extends BaseEntity {
+export class Sales extends BaseEntity {
   saleNumber: string;
   onDelete: any;
   personName: string;

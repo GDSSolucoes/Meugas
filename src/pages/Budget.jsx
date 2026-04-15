@@ -14,7 +14,7 @@ import { createPageUrl } from "@/utils";
 import { User } from "@/entities";
 import * as entities from "@/entities";
 
-export default function Budget() {
+export default function BudgetPage() {
   const { toast } = useToast();
   const nomeInputRef = React.useRef(null);
   const codigoInputRef = React.useRef(null);

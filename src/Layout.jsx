@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   LayoutGrid,
-  Users,
+  Users as UsersIcon,  
   Package,
   UserCheck,
   Wallet,
@@ -46,15 +46,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster"; // Importar o Toaster
 
-import { User } from "@/entities/User";
-import { Company } from "@/entities/Company"; // Import correto da entidade Company
+import { Users } from "@/entities/Users";
+import { Companies } from "@/entities/Companies"; // Import correto da entidade Company
 
-const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165fLogo5.png";
+const logoUrl = "/public/assets/logo.png";
 
 const modulePedidos = [
   { title: "Pedidos", url: createPageUrl("Orders"), icon: ClipboardList },
   { title: "Acompanhamento", url: createPageUrl("OrderTracking"), icon: TrendingUp },
-  { title: "Cadastro de Pessoas", url: createPageUrl("People") + "?module=pedidos", icon: Users },
+  { title: "Cadastro de Pessoas", url: createPageUrl("People") + "?module=pedidos", icon: UsersIcon },
   { title: "Dashboard Pedidos", url: createPageUrl("PedidosDashboard"), icon: LayoutGrid },
   { title: "Configurações", url: createPageUrl("OrderConfig"), icon: Settings },
 ];
@@ -71,9 +71,9 @@ const moduleGerencial = [
       { title: "Produtos", url: createPageUrl("Products"), icon: Package },
       { title: "Setor Master", url: createPageUrl("SectorMaster"), icon: Warehouse },
       { title: "Setores", url: createPageUrl("Sectors"), icon: Warehouse },
-      { title: "Pessoas", url: createPageUrl("People"), icon: Users },
+      { title: "Pessoas", url: createPageUrl("People"), icon: UsersIcon },
       { title: "Funcionários", url: createPageUrl("Employees"), icon: UserCheck },
-      { title: "Usuários", url: createPageUrl("Users"), icon: Users },
+      { title: "Usuários", url: createPageUrl("Users"), icon: UsersIcon },
       { title: "Contas/Caixa", url: createPageUrl("CashAccounts"), icon: Wallet },
       { title: "Tipos Pagamento", url: createPageUrl("PaymentTypes"), icon: CreditCard },
       { title: "Adquirentes", url: createPageUrl("Acquirers"), icon: CreditCard },
@@ -106,7 +106,7 @@ const moduleGerencial = [
     items: [
       { title: "Relatório de Estoque", url: createPageUrl("StockReport"), icon: BarChart3 },
       { title: "Produtos", url: createPageUrl("ProductsReport"), icon: Package },
-      { title: "Pessoas", url: createPageUrl("PeopleReport"), icon: Users },
+      { title: "Pessoas", url: createPageUrl("PeopleReport"), icon: UsersIcon },
       { title: "Funcionários", url: createPageUrl("EmployeesReport"), icon: UserCheck },
       { title: "Vendas", url: createPageUrl("SalesReport"), icon: Receipt },
       { title: "Pedidos", url: createPageUrl("OrdersReport"), icon: ClipboardList },
@@ -135,19 +135,19 @@ export default function Layout({ children, currentPageName }) {
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await User.me();
+        const user = await Users.me();
         
         // LÓGICA DE AUTO-VÍNCULO: Se o usuário não tem companyId, tentar encontrar uma empresa pelo email
         if (!user.companyId && user.email) {
           try {
-            const companies = await Company.list();
+            const companies = await Companies.list();
             const matchingCompany = companies.find(company => 
               company.adminEmail === user.email && company.status === 'ativa'
             );
             
             if (matchingCompany) {
               // Auto-vincular usuário à empresa encontrada
-              await User.updateMyUserData({
+              await Users.updateMyUserData({
                 companyId: matchingCompany.id,
                 companyName: matchingCompany.name,
                 userType: 'admin'
@@ -156,7 +156,7 @@ export default function Layout({ children, currentPageName }) {
               console.log(`✅ Usuário ${user.email} vinculado automaticamente à empresa ${matchingCompany.name}`);
               
               // Recarregar os dados do usuário com o vínculo atualizado
-              const updatedUser = await User.me();
+              const updatedUser = await Users.me();
               setCurrentUser(updatedUser);
               return; // Sair da função para evitar o setCurrentUser duplo
             }
@@ -185,7 +185,7 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = async () => {
     if (window.confirm("Tem certeza que deseja sair do sistema?")) {
       try {
-        await User.logout();
+        await Users.logout();
       } catch (error) {
         console.error("Erro ao fazer logout:", error);
       }

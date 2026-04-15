@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, UserCheck, Edit, Trash2 } from "lucide-react";
-import { Employee } from "@/entities/Employee";
+import { Employees } from "@/entities/Employees";
 import { format, parseISO } from "date-fns";
-import { User } from "@/entities/User";
+import { Users } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function Employees() {
+export default function EmployeesPage() {
   const { toast } = useToast();
   const [employees, setEmployees] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -41,8 +41,8 @@ export default function Employees() {
 
   const loadData = async () => {
     try {
-      const user = await User.me();
-      const employeesData = await Employee.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await Users.me();
+      const employeesData = await Employees.filter({ companyId: user.companyId }, '-createdDate');
       setEmployees(employeesData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -64,7 +64,7 @@ export default function Employees() {
   const handleDelete = async (employeeId) => {
     if (window.confirm("Tem certeza que deseja deletar este funcionário?")) {
       try {
-        await Employee.delete(employeeId);
+        await Employees.delete(employeeId);
         loadData();
         toast({ title: "Sucesso", description: "Funcionário excluído." });
       } catch (error) {
@@ -78,7 +78,7 @@ export default function Employees() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const user = await User.me();
+      const user = await Users.me();
       
       const employeeData = {
         ...currentEmployee,
@@ -90,10 +90,10 @@ export default function Employees() {
 
       if (isEditing) {
         const { id, ...dataToUpdate } = employeeData;
-        await Employee.update(id, dataToUpdate);
+        await Employees.update(id, dataToUpdate);
         toast({ title: "Sucesso", description: "Funcionário atualizado com sucesso." });
       } else {
-        await Employee.create(employeeData);
+        await Employees.create(employeeData);
         toast({ title: "Sucesso", description: "Funcionário cadastrado com sucesso." });
       }
 

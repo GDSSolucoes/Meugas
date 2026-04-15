@@ -6,9 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Users, Edit, Info } from "lucide-react";
-import { User } from "@/entities/User";
-import { Company } from "@/entities/Company"; // Importar a entidade Company
+import { UsersIcon, Edit, Info } from "lucide-react";
+import { Users } from "@/entities/Users";
+import { Companies } from "@/entities/Companies"; // Importar a entidade Company
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast"; // Importar useToast
 
@@ -23,7 +23,7 @@ export default function UsersPage() {
   
   const loadData = useCallback(async () => { // Renamed from loadUsers
     try {
-      const user = await User.me();
+      const user = await Users.me();
       setCurrentUser(user);
 
       // Verificar se o usuário tem permissão para acessar esta página
@@ -42,19 +42,19 @@ export default function UsersPage() {
       if (user.email === 'brasileirosilvia@gmail.com') { // Condição para super admin
         // Super admin vê todos os usuários e empresas
         [usersData, companiesData] = await Promise.all([
-          User.list('-createdDate'),
-          Company.list('name') // Carregar todas as empresas em ordem alfabética
+          Users.list('-createdDate'),
+          Companies.list('name') // Carregar todas as empresas em ordem alfabética
         ]);
       } else {
         // Admin da empresa vê usuários da sua empresa E usuários sem empresa
-        const allUsers = await User.list();
+        const allUsers = await Users.list();
         const usersOfCompany = user.companyId ? allUsers.filter(u => u.companyId === user.companyId) : [];
         const usersWithoutCompany = allUsers.filter(u => !u.companyId);
         
         usersData = [...usersOfCompany, ...usersWithoutCompany];
         
         // Carregar apenas a empresa do admin, se ele tiver uma
-        companiesData = user.companyId ? await Company.filter({ id: user.companyId }) : [];
+        companiesData = user.companyId ? await Companies.filter({ id: user.companyId }) : [];
       }
 
       setUsers(usersData);
@@ -98,7 +98,7 @@ export default function UsersPage() {
         userData.companyName = null; // Explicitly set to null if companyId is null or empty
       }
       
-      const updatedUser = await User.update(id, userData);
+      const updatedUser = await Users.update(id, userData);
       console.log('Usuário atualizado:', updatedUser);
       
       toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });
@@ -140,7 +140,7 @@ export default function UsersPage() {
         <div className="max-w-7xl mx-auto">
           <Card className="bg-red-50 border-red-200">
             <CardContent className="p-6 text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-red-500" />
+              <UsersIcon className="w-16 h-16 mx-auto mb-4 text-red-500" />
               <h2 className="text-xl font-bold text-red-800 mb-2">Acesso Restrito</h2>
               <p className="text-red-600">Apenas administradores podem gerenciar usuários.</p>
             </CardContent>
@@ -196,7 +196,7 @@ export default function UsersPage() {
           <Card className="mb-8 bg-white/90 backdrop-blur-sm border-slate-200/60">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
+                <UsersIcon className="w-5 h-5" />
                 Editar Usuário
               </CardTitle>
             </CardHeader>

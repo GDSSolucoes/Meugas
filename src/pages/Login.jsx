@@ -3,7 +3,7 @@ import { api, apiEnabled } from '@/api/apiClient'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/AuthContext'
 
-export default function Login() {
+export default function LoginPage() {
   const [mode, setMode] = useState('email')
   const [email, setEmail] = useState('')
   const [cpf, setCpf] = useState('')
@@ -20,7 +20,7 @@ export default function Login() {
     try {
       if (!apiEnabled) throw new Error('API desabilitada')
       const payload = mode === 'email' ? { email, password } : { cpf, password }
-      const r = await api.post('/api/auth/login', payload)
+      const r = await api.post('/auth/login', payload)
       localStorage.setItem('accessToken', r.data.accessToken)
       localStorage.setItem('refreshToken', r.data.refreshToken)
       checkAppState();

@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, DollarSign, Calendar, Phone } from "lucide-react";
-import { Employee } from "@/entities/Employee";
+import { Employees } from "@/entities/Employees";
 import { format, parseISO } from "date-fns";
-import { User } from "@/entities/User";
+import { Users } from "@/entities/Users";
 
-export default function EmployeesReport() {
+export default function EmployeesReportPage() {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,12 +18,12 @@ export default function EmployeesReport() {
 
   const loadEmployees = async () => {
     try {
-      const user = await User.me();
+      const user = await Users.me();
       if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Employee.filter({ companyId: user.companyId }, '-createdDate');
+      const data = await Employees.filter({ companyId: user.companyId }, '-createdDate');
       setEmployees(data);
     } catch (error) {
       console.error("Erro ao carregar funcionários:", error);

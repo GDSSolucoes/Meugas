@@ -1,61 +1,65 @@
 import { BaseEntity } from './BaseEntity';
 
 
-export enum AccountsReceivableStatusEnum {
-  PENDENTE = "pendente",
-  PAGO = "pago",
-  VENCIDO = "vencido",
-}
-
 /**
- * AccountsReceivable Entity
+ * Fueling Entity
  *
- * Represents a AccountsReceivable record in the system.
+ * Represents a Fueling record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class AccountsReceivable extends BaseEntity {
+export class Fuelings extends BaseEntity {
+  vehicleId: string;
+  vehiclePlate: string;
+  vehicleDescription: string;
+  fleetNumber: string;
+  driverId: string;
+  driverName: string;
+  fuelingDate: Date;
+  currentKm: number;
+  liters: number;
+  totalValue: number;
+  pricePerLiter: number;
+  kmTraveled: number;
+  consumption: number;
+  costPerKm: number;
+  createExpense: boolean;
+  cashMovementId: string;
   onDelete: any;
-  personName: string;
-  installmentNumber: number;
-  description: string;
-  dueDate: Date;
-  amount: number;
-  paymentDate: Date;
 
   /**
-   * Static method to filter AccountsReceivable records
+   * Static method to filter Fueling records
    *
    * @param filters Object with filter criteria
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
-   * @returns Promise<AccountsReceivable[]>
+   * @returns Promise<Fueling[]>
    */
   static async filter(filters = {}, pagination = {}) {
     return super.filter.call(this, filters, pagination);
   }
 
   /**
-   * Static method to create a new AccountsReceivable
+   * Static method to create a new Fueling
    *
-   * @param data Object with AccountsReceivable properties
-   * @returns Promise<AccountsReceivable>
+   * @param data Object with Fueling properties
+   * @returns Promise<Fueling>
    */
   static async create(data) {
     return super.create.call(this, data);
   }
 
   /**
-   * Static method to update a AccountsReceivable
+   * Static method to update a Fueling
    *
    * @param id The entity ID
    * @param data Object with updated properties
-   * @returns Promise<AccountsReceivable>
+   * @returns Promise<Fueling>
    */
   static async update(id, data) {
     return super.update.call(this, id, data);
   }
 
   /**
-   * Static method to delete a AccountsReceivable
+   * Static method to delete a Fueling
    *
    * @param id The entity ID
    * @returns Promise<void>
@@ -65,10 +69,10 @@ export class AccountsReceivable extends BaseEntity {
   }
 
   /**
-   * Static method to find a AccountsReceivable by ID
+   * Static method to find a Fueling by ID
    *
    * @param id The entity ID
-   * @returns Promise<AccountsReceivable | null>
+   * @returns Promise<Fueling | null>
    */
   static async findById(id) {
     return super.findById.call(this, id);

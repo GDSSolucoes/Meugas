@@ -20,17 +20,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { CashMovement } from "@/entities/CashMovement";
-import { CashAccount } from "@/entities/CashAccount";
-import { Person } from "@/entities/Person";
-import { Sector } from "@/entities/Sector";
-import { SectorMaster } from "@/entities/SectorMaster";
-import { FinancialGroup } from "@/entities/FinancialGroup";
-import { FinancialSubgroup } from "@/entities/FinancialSubgroup";
-import { PaymentType } from "@/entities/PaymentType";
-import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { CashMovements } from "@/entities/CashMovements";
+import { CashAccounts } from "@/entities/CashAccounts";
+import { Persons } from "@/entities/Persons";
+import { Sectors } from "@/entities/Sectors";
+import { SectorMasters } from "@/entities/SectorMasters";
+import { FinancialGroups } from "@/entities/FinancialGroups";
+import { FinancialSubgroups } from "@/entities/FinancialSubgroups";
+import { PaymentTypes } from "@/entities/PaymentTypes";
+import { AccountsReceivables } from "@/entities/AccountsReceivables";
 import { ContasAPagar } from "@/entities/ContasAPagar";
-import { User as UserEntity } from "@/entities/User";
+import { Users as UserEntity } from "@/entities/Users";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { Link } from "react-router-dom";
@@ -39,7 +39,7 @@ import FuelingModal from "@/components/financial/FuelingModal";
 import ContasAPagarModal from "@/components/financial/ContasAPagarModal";
 import AccountsReceivableFullModal from "@/components/financial/AccountsReceivableFullModal";
 
-export default function CashMovements({ onComplete }) {
+export default function CashMovementsPage({ onComplete }) {
   const { toast } = useToast();
   
   // Data states
@@ -169,13 +169,13 @@ export default function CashMovements({ onComplete }) {
       }
 
       const [accountsData, sectorsData, sectorMastersData, peopleData, groupsData, subgroupsData, paymentTypesData] = await Promise.all([
-        CashAccount.filter({ companyId, active: true }),
-        Sector.filter({ companyId, active: true }),
-        SectorMaster.filter({ companyId }),
-        Person.filter({ companyId }),
-        FinancialGroup.filter({ companyId, active: true }),
-        FinancialSubgroup.filter({ companyId, active: true }),
-        PaymentType.filter({ companyId, active: true }),
+        CashAccounts.filter({ companyId, active: true }),
+        Sectors.filter({ companyId, active: true }),
+        SectorMasters.filter({ companyId }),
+        Persons.filter({ companyId }),
+        FinancialGroups.filter({ companyId, active: true }),
+        FinancialSubgroups.filter({ companyId, active: true }),
+        PaymentTypes.filter({ companyId, active: true }),
       ]);
       
       setCashAccounts(accountsData);
@@ -241,7 +241,7 @@ export default function CashMovements({ onComplete }) {
         const account = cashAccounts.find(a => a.id === selectedAccount);
         if (!account) return;
 
-        const allMovements = await CashMovement.filter({ 
+        const allMovements = await CashMovements.filter({ 
           companyId: currentUser.companyId, 
           cashAccountId: selectedAccount 
         });
@@ -442,8 +442,8 @@ export default function CashMovements({ onComplete }) {
         ? -selectedMovement.amount 
         : selectedMovement.amount;
       
-      await CashMovement.delete(selectedMovement.id);
-      await CashAccount.update(selectedAccount, { 
+      await CashMovements.delete(selectedMovement.id);
+      await CashAccounts.update(selectedAccount, { 
         balance: (account?.balance || 0) + balanceChange 
       });
       
@@ -571,12 +571,12 @@ export default function CashMovements({ onComplete }) {
       };
 
       if (selectedMovement) {
-        await CashMovement.update(selectedMovement.id, movementData);
+        await CashMovements.update(selectedMovement.id, movementData);
       } else {
-        await CashMovement.create(movementData);
+        await CashMovements.create(movementData);
         
         const balanceChange = movementType === 'receita' ? Number(formData.amount) : -Number(formData.amount);
-        await CashAccount.update(selectedAccount, { 
+        await CashAccounts.update(selectedAccount, { 
           balance: (account?.balance || 0) + balanceChange 
         });
       }
@@ -677,7 +677,7 @@ export default function CashMovements({ onComplete }) {
       for (const installment of calculatedInstallments) {
         if (installment.isEntry && installment.amount > 0) {
           // Entrada vai direto para o caixa
-          await CashMovement.create({
+          await CashMovements.create({
             cashAccountId: selectedAccount,
             cashAccountName: account?.name || '',
             type: movementType,
@@ -703,13 +703,13 @@ export default function CashMovements({ onComplete }) {
           
           // Atualiza saldo da conta
           const balanceChange = movementType === 'receita' ? Number(installment.amount) : -Number(installment.amount);
-          await CashAccount.update(selectedAccount, { 
+          await CashAccounts.update(selectedAccount, { 
             balance: (account?.balance || 0) + balanceChange 
           });
         } else if (!installment.isEntry) {
           // Parcelas vão para contas a pagar/receber
           if (activeTab === 'receber') {
-            await AccountsReceivable.create({
+            await AccountsReceivables.create({
               personId: formData.personId,
               personName: formData.personName,
               description: `${formData.description} - ${installment.description}`,
@@ -815,7 +815,7 @@ export default function CashMovements({ onComplete }) {
       const fromAccount = cashAccounts.find(a => a.id === transferData.fromAccountId);
       const toAccount = cashAccounts.find(a => a.id === transferData.toAccountId);
 
-      await CashMovement.create({
+      await CashMovements.create({
         cashAccountId: transferData.fromAccountId,
         cashAccountName: fromAccount?.name || '',
         type: 'despesa',
@@ -836,7 +836,7 @@ export default function CashMovements({ onComplete }) {
         createdByName: currentUser.fullName
       });
 
-      await CashMovement.create({
+      await CashMovements.create({
         cashAccountId: transferData.toAccountId,
         cashAccountName: toAccount?.name || '',
         type: 'receita',
@@ -857,10 +857,10 @@ export default function CashMovements({ onComplete }) {
         createdByName: currentUser.fullName
       });
 
-      await CashAccount.update(transferData.fromAccountId, {
+      await CashAccounts.update(transferData.fromAccountId, {
         balance: (fromAccount?.balance || 0) - Number(transferData.amount)
       });
-      await CashAccount.update(transferData.toAccountId, {
+      await CashAccounts.update(transferData.toAccountId, {
         balance: (toAccount?.balance || 0) + Number(transferData.amount)
       });
 
