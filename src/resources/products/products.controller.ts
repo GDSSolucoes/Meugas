@@ -1,38 +1,66 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { ProductsService } from './products.service'
-import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger'
+import { ApiTags, ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport'
 import { CurrentUser } from '../../auth/current-user.decorator'
 import { ProductsPostDto } from './dto/products.post.dto'
 import { ProductsUpdateDto } from './dto/products.update.dto'
 import { RlsService } from '../../database/rls/rls.service'
+import { Roles } from '../../auth/roles.decorator'
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard'
+import { RolesGuard } from '../../auth/roles.guard'
+import { products } from '../../database/schemas'
+import { BaseCrudController } from '../../common/base-crud.controller'
 
 @ApiTags('Products')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin', 'user')
 @Controller('products')
-export class ProductsController {
-  constructor(private readonly service: ProductsService, private readonly rls: RlsService) {}
-
-  @Get()
-  async list(@CurrentUser() user: any, @Query('q') q?: string) {
-    return this.service.list(user.companyId, q)
+export class ProductsController extends BaseCrudController<typeof products> {
+  constructor(protected readonly service: ProductsService) {
+    super(service, 'products', true)
   }
 
-  @Get(':id')
-  async get(@CurrentUser() user: any, @Param('id') id: string) {
-    return this.service.get(user.companyId, id)
-  }
 
   @Post()
   @ApiBody({ type: ProductsPostDto })
-  async create(@CurrentUser() user: any, @Body() body: ProductsPostDto) {
-    return this.service.create(user.companyId, body)
+  @ApiOperation({ summary: `Create Products` })
+  @ApiResponse({ status: 201, description: `Products created`, type: ProductsPostDto })
+  async create(@Body() data: ProductsPostDto) {
+    return super.create(data)
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: `Get Products by ID` })
+  @ApiResponse({ status: 200, description: `Products retrieved`, type: ProductsPostDto })
+  async get(@Param('id') id: string) {
+    return super.get(id)
+  }
+
+  @Get()
+  @ApiOperation({ summary: `List Products` })
+  @ApiResponse({ status: 200, description: `List of products`, type: [ProductsPostDto] })
+  @ApiQuery({ name: 'page', required: false, type: 'string', description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: 'string', description: 'Items per page (default: 10)' })
+  @ApiQuery({ name: 'q', required: false, type: 'string', description: 'Search query' })
+  async list() {
+    return super.list()
   }
 
   @Put(':id')
   @ApiBody({ type: ProductsUpdateDto })
-  async update(@CurrentUser() user: any, @Param('id') id: string, @Body() body: ProductsUpdateDto) {
-    return this.service.update(user.companyId, id, body)
+  @ApiOperation({ summary: `Update Products` })
+  @ApiResponse({ status: 201, description: `Products updated`, type: ProductsUpdateDto })
+  async update(@Param('id') id: string, @Body() data: ProductsUpdateDto) {
+    return super.update(id, data)
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @ApiOperation({ summary: `Delete Products` })
+  @ApiResponse({ status: 200, description: `Products deleted` })
+  async delete(@Param('id') id: string) {
+    return super.delete(id)
   }
 }
