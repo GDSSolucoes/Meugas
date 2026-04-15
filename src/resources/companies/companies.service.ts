@@ -1,36 +1,23 @@
-import { Inject, Injectable } from '@nestjs/common'
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
+import { Injectable } from '@nestjs/common'
 import { companies } from '../../database/schemas'
 import { eq } from 'drizzle-orm'
-import { CompanyPostDto } from './dto/company.post.dto'
 import { CompanyUpdateDto } from './dto/company.update.dto'
+import { BaseCrudService } from '../../common/base-crud.service'
+import { RequestContextService } from '../../database/request-context.service'
 
 @Injectable()
-export class CompaniesService {
-  constructor(@Inject('DB') private readonly db: NodePgDatabase) {}
+export class CompaniesService extends BaseCrudService<typeof companies> {
+  constructor(requestContext: RequestContextService) {
+    super(requestContext, companies, true) // hasCompanyId = true
+  }
 
   async listByIds(ids: string[]) {
-    const rows = await this.db.select().from(companies)
+    const rows = await this.getDb().select().from(companies)
     return rows.filter(r => ids.includes(r.id))
   }
 
   async get(id: string) {
-    const rows = await this.db.select().from(companies).where(eq(companies.id, id))
+    const rows = await this.getDb().select().from(companies).where(eq(companies.id, id))
     return rows[0] || null
-  }
-
-  async update(id: string, data: Partial<CompanyUpdateDto>) {
-    await this.db.update(companies).set({
-      ...data
-    }).where(eq(companies.id, id))
-    return this.get(id)
-  }
-
-  async create(data: CompanyPostDto, user: any) {
-    const rows = await this.db.insert(companies).values({
-      ...data,
-      createdByName: user.name
-    }).returning()
-    return rows[0]
   }
 }

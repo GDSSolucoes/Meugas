@@ -1,36 +1,62 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
 import { CompaniesService } from './companies.service'
-import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger'
-import { AuthGuard } from '@nestjs/passport'
+import { ApiTags, ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger'
 import { RolesGuard } from '../../auth/roles.guard'
 import { Roles } from '../../auth/roles.decorator'
 import { CompanyPostDto } from './dto/company.post.dto'
 import { CompanyUpdateDto } from './dto/company.update.dto'
-import { CurrentUser } from '../../auth/current-user.decorator'
+import { companies } from '../../database/schemas'
+import { BaseCrudController } from '../../common/base-crud.controller'
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard'
 
 @ApiTags('Companies')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin', 'user')
 @Controller('companies')
-export class CompaniesController {
-  constructor(private readonly service: CompaniesService) {}
-
-  @Get(':id')
-  async get(@Param('id') id: string) {
-    return this.service.get(id)
+export class CompaniesController extends BaseCrudController<typeof companies> {
+  constructor(protected readonly service: CompaniesService) {
+    super(service, 'companies', false) // hasCompanyId = false
   }
 
   @Post()
-  @Roles('admin')
-  @ApiBody({ type: CompanyPostDto })
-  async create(@Body() body: CompanyPostDto, @CurrentUser() user: any) {
-    return this.service.create(body, user)
-  }
-
-  @Put(':id')
-  @Roles('admin')
-  @ApiBody({ type: CompanyUpdateDto })
-  async update(@Param('id') id: string, @Body() body: CompanyUpdateDto) {
-    return this.service.update(id, body)
-  }
+    @ApiBody({ type: CompanyPostDto })
+    @ApiOperation({ summary: `Create Company` })
+    @ApiResponse({ status: 201, description: `Company created`, type: CompanyPostDto })
+    async create(@Body() data: CompanyPostDto) {
+      return super.create(data)
+    }
+  
+    @Get(':id')
+    @ApiOperation({ summary: `Get Company by ID` })
+    @ApiResponse({ status: 200, description: `Company retrieved`, type: CompanyPostDto })
+    async get(@Param('id') id: string) {
+      return super.get(id)
+    }
+  
+    @Get()
+    @ApiOperation({ summary: `List Companies` })
+    @ApiResponse({ status: 200, description: `List of companies`, type: [CompanyPostDto] })
+    @ApiQuery({ name: 'page', required: false, type: 'string', description: 'Page number (default: 1)' })
+    @ApiQuery({ name: 'limit', required: false, type: 'string', description: 'Items per page (default: 10)' })
+    @ApiQuery({ name: 'q', required: false, type: 'string', description: 'Search query' })
+    async list() {
+      return super.list()
+    }
+  
+    @Put(':id')
+    @ApiBody({ type: CompanyUpdateDto })
+    @ApiOperation({ summary: `Update Company` })
+    @ApiResponse({ status: 201, description: `Company updated`, type: CompanyUpdateDto })
+    async update(@Param('id') id: string, @Body() data: CompanyUpdateDto) {
+      return super.update(id, data)
+    }
+  
+    @Delete(':id')
+    @Roles('admin')
+    @ApiOperation({ summary: `Delete Company` })
+    @ApiResponse({ status: 200, description: `Company deleted` })
+    async delete(@Param('id') id: string) {
+      return super.delete(id)
+    }
 }
