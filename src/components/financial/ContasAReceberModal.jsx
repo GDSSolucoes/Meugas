@@ -12,12 +12,12 @@ import {
   DollarSign, Search, LogOut, Printer, Edit, Trash2, 
   CheckSquare, Square, FileText, RefreshCw
 } from "lucide-react";
-import { AccountsReceivables } from "@/entities/AccountsReceivables";
-import { CashAccounts } from "@/entities/CashAccounts";
-import { CashMovements } from "@/entities/CashMovements";
-import { FinancialGroups } from "@/entities/FinancialGroups";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { Sectors } from "@/entities/Sectors";
+import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { CashAccount } from "@/entities/CashAccount";
+import { CashMovement } from "@/entities/CashMovement";
+import { FinancialGroup } from "@/entities/FinancialGroup";
+import { PaymentType } from "@/entities/PaymentType";
+import { Sector } from "@/entities/Sector";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
 import RenegociacaoModal from "./RenegociacaoModal";
@@ -134,9 +134,9 @@ export default function ContasAReceberModal({
     setIsLoading(true);
     try {
       const [contasData, paymentTypesData, sectorsData] = await Promise.all([
-        AccountsReceivables.filter({ companyId: currentUser.companyId }, '-dueDate'),
-        PaymentTypes.filter({ companyId: currentUser.companyId, active: true }),
-        Sectors.filter({ companyId: currentUser.companyId, active: true })
+        AccountsReceivable.filter({ companyId: currentUser.companyId }, { sort: '-dueDate' }),
+        PaymentType.filter({ companyId: currentUser.companyId, active: true }),
+        Sector.filter({ companyId: currentUser.companyId, active: true })
       ]);
       setContas(contasData);
       setPaymentTypes(paymentTypesData);
@@ -308,7 +308,7 @@ export default function ContasAReceberModal({
     
     try {
       for (const conta of contasToDelete) {
-        await AccountsReceivables.delete(conta.id);
+        await AccountsReceivable.delete(conta.id);
       }
       toast({ title: "Sucesso", description: `${contasToDelete.length} conta(s) excluída(s) com sucesso!` });
       setIsDeleteConfirmOpen(false);
@@ -509,9 +509,9 @@ export default function ContasAReceberModal({
       }
 
       // Buscar ou criar grupo financeiro
-      let revenueGroup = await FinancialGroups.filter({ name: 'Receitas de Contas a Receber', companyId: currentUser.companyId });
+      let revenueGroup = await FinancialGroup.filter({ name: 'Receitas de Contas a Receber', companyId: currentUser.companyId });
       if (revenueGroup.length === 0) {
-        revenueGroup = [await FinancialGroups.create({ 
+        revenueGroup = [await FinancialGroup.create({ 
           name: 'Receitas de Contas a Receber', 
           type: 'receita', 
           active: true,
@@ -529,7 +529,7 @@ export default function ContasAReceberModal({
         if (!conta || conta.status === 'pago') continue;
 
         // Criar movimento de caixa
-        await CashMovements.create({
+        await CashMovement.create({
           cashAccountId: receivingAccount.id,
           cashAccountName: receivingAccount.name,
           type: 'receita',
@@ -546,7 +546,7 @@ export default function ContasAReceberModal({
         });
 
         // Atualizar status da conta
-        await AccountsReceivables.update(contaId, {
+        await AccountsReceivable.update(contaId, {
           status: 'pago',
           paymentDate: paidDate,
         });
@@ -556,7 +556,7 @@ export default function ContasAReceberModal({
 
       // Atualizar saldo da conta
       const newBalance = (receivingAccount.balance || 0) + totalBaixado;
-      await CashAccounts.update(receivingAccount.id, { balance: newBalance });
+      await CashAccount.update(receivingAccount.id, { balance: newBalance });
 
       toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) baixada(s) com sucesso!` });
       setIsBaixaOpen(false);

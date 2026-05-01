@@ -1,5 +1,4 @@
 import { api, apiEnabled } from '@/api/apiClient';
-import { inherits } from 'node:util';
 
 export interface FilterOptions {
   [key: string]: any;
@@ -17,6 +16,11 @@ export class BaseEntity {
   id?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  companyId: string;
+  companyName: string;
+  createdByName: string;
+  active: boolean = true;
+  onDelete: any;
 
   constructor(data?: Partial<BaseEntity>) {
     if (data) {
@@ -30,8 +34,9 @@ export class BaseEntity {
    * @param pagination - Pagination options
    * @returns Promise<Entity[]>
    */
-  static async filter<T extends BaseEntity>(
+  static async _filter<T extends BaseEntity>(
     this: new (data?: T) => T,
+    baseUrl: string,
     filters: FilterOptions = {},
     pagination?: PaginationOptions
   ): Promise<T[]> {
@@ -58,9 +63,8 @@ export class BaseEntity {
         if (pagination.order) params.append('order', pagination.order);
       }
 
-      const endpoint = `/${this.name.toLowerCase()}`;
       const queryString = params.toString();
-      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+      const url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
 
       const response = await api.get(url);
       // a API por padrão retorna um objeto null ou um objeto com { data: T[], totalPages: number, page: number, limit: number }
@@ -79,8 +83,9 @@ export class BaseEntity {
    * @param data - Entity data to create
    * @returns Promise<Entity>
    */
-  static async create<T extends BaseEntity>(
+  static async _create<T extends BaseEntity>(
     this: new (data?: T) => T,
+    baseUrl: string,
     data: Partial<T>
   ): Promise<T> {
     if (!apiEnabled) {
@@ -88,8 +93,7 @@ export class BaseEntity {
     }
 
     try {
-      const endpoint = `/${this.name.toLowerCase()}s`;
-      const response = await api.post(endpoint, data);
+      const response = await api.post(baseUrl, data);
       return new this(response.data);
     } catch (error) {
       console.error(`Erro ao criar ${this.name}:`, error);
@@ -103,8 +107,9 @@ export class BaseEntity {
    * @param data - Updated entity data
    * @returns Promise<Entity>
    */
-  static async update<T extends BaseEntity>(
+  static async _update<T extends BaseEntity>(
     this: new (data?: T) => T,
+    baseUrl: string,
     id: string,
     data: Partial<T>
   ): Promise<T> {
@@ -113,7 +118,7 @@ export class BaseEntity {
     }
 
     try {
-      const endpoint = `/${this.name.toLowerCase()}s/${id}`;
+      const endpoint = `${baseUrl}/${id}`;
       const response = await api.put(endpoint, data);
       return new this(response.data);
     } catch (error) {
@@ -127,8 +132,9 @@ export class BaseEntity {
    * @param id - Entity ID
    * @returns Promise<void>
    */
-  static async delete<T extends BaseEntity>(
+  static async _delete<T extends BaseEntity>(
     this: new (data?: T) => T,
+    baseUrl: string,
     id: string
   ): Promise<void> {
     if (!apiEnabled) {
@@ -136,7 +142,7 @@ export class BaseEntity {
     }
 
     try {
-      const endpoint = `/${this.name.toLowerCase()}s/${id}`;
+      const endpoint = `${baseUrl}/${id}`;
       await api.delete(endpoint);
     } catch (error) {
       console.error(`Erro ao deletar ${this.name}:`, error);
@@ -149,8 +155,9 @@ export class BaseEntity {
    * @param id - Entity ID
    * @returns Promise<Entity | null>
    */
-  static async findById<T extends BaseEntity>(
+  static async _findById<T extends BaseEntity>(
     this: new (data?: T) => T,
+    baseUrl: string,
     id: string
   ): Promise<T | null> {
     if (!apiEnabled) {
@@ -158,7 +165,7 @@ export class BaseEntity {
     }
 
     try {
-      const endpoint = `/${this.name.toLowerCase()}s/${id}`;
+      const endpoint = `${baseUrl}/${id}`;
       const response = await api.get(endpoint);
       return new this(response.data);
     } catch (error) {

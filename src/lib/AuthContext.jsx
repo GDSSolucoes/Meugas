@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { appParams } from "@/lib/app-params";
 import { api, apiEnabled } from "@/api/apiClient";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 
 const AuthContext = createContext();
 
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     try {
       setIsLoadingAuth(true);
-      const r = await Users.me();
+      const r = await User.me();
       if (r.data && r.data.id) {
         setUser(r.data);
         setIsAuthenticated(true);

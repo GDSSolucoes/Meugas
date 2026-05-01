@@ -7,14 +7,15 @@ import { BaseEntity } from './BaseEntity';
  * Represents a Sector record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Sectors extends BaseEntity {
+export class Sector extends BaseEntity {
   name: string;
+  employeeId: string;
   employeeName: string;
   phone: string;
   isOwnStock: boolean;
+  masterSectorId: string;
   masterSectorName: string;
-  onDelete: any;
-  active: boolean;
+  static baseUrl: string = "/sectors";
 
   /**
    * Static method to filter Sector records
@@ -23,8 +24,8 @@ export class Sectors extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Sector[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<Sector> = {}, pagination = {}) : Promise<Sector[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Sector[]>;
   }
 
   /**
@@ -33,8 +34,8 @@ export class Sectors extends BaseEntity {
    * @param data Object with Sector properties
    * @returns Promise<Sector>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<Sector>): Promise<Sector> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Sector>;
   }
 
   /**
@@ -44,8 +45,8 @@ export class Sectors extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Sector>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<Sector>): Promise<Sector> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Sector>;
   }
 
   /**
@@ -54,8 +55,8 @@ export class Sectors extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -64,7 +65,7 @@ export class Sectors extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Sector | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string  ): Promise<Sector | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Sector | null>;
   }
 }

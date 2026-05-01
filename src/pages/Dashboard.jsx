@@ -9,11 +9,11 @@ import {
   AlertTriangle, 
   UsersIcon
 } from "lucide-react";
-import { Orders } from "@/entities/Orders";
-import { Products } from "@/entities/Products";
-import { Persons } from "@/entities/Persons";
-import { Sales } from "@/entities/Sales";
-import { Users } from "@/entities/Users"; // Added User import
+import { Order } from "@/entities/Order";
+import { Product } from "@/entities/Product";
+import { Person } from "@/entities/Person";
+import { Sale } from "@/entities/Sale";
+import { User } from "@/entities/User"; // Added User import
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -32,9 +32,8 @@ export default function DashboardPage() {
   }, []);
 
   const loadStats = async () => {
-    ;
     try {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       // DEBUG: Verificar companyId do usuário
@@ -43,10 +42,10 @@ export default function DashboardPage() {
       console.log('User companyName:', user.companyName);
       
       const [orders, products, people, sales] = await Promise.all([
-        Orders.filter({ companyId: user.companyId }).catch(() => []),
-        Products.filter({ companyId: user.companyId }).catch(() => []),
-        Persons.filter({ companyId: user.companyId, type: 'cliente' }).catch(() => []),
-        Sales.filter({ companyId: user.companyId }).catch(() => [])
+        Order.filter({ companyId: user.companyId }).catch(() => []),
+        Product.filter({ companyId: user.companyId }).catch(() => []),
+        Person.filter({ companyId: user.companyId, type: 'cliente' }).catch(() => []),
+        Sale.filter({ companyId: user.companyId }).catch(() => [])
       ]);
 
       console.log('Dados filtrados:');

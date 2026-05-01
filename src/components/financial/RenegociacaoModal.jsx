@@ -9,9 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   RefreshCw, Save, Printer, X, LogOut, Edit, Trash2, Calculator, CheckCircle, AlertCircle
 } from "lucide-react";
-import { AccountsReceivables } from "@/entities/AccountsReceivables";
-import { CashMovements } from "@/entities/CashMovements";
-import { CashAccounts } from "@/entities/CashAccounts";
+import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { CashMovement } from "@/entities/CashMovement";
+import { CashAccount } from "@/entities/CashAccount";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, addDays } from "date-fns";
 
@@ -180,7 +180,7 @@ export default function RenegociacaoModal({
       
       // 1. Baixar contas originais como "renegociadas"
       for (const conta of contasSelecionadas) {
-        await AccountsReceivables.update(conta.id, {
+        await AccountsReceivable.update(conta.id, {
           status: 'renegociado',
           paymentDate: dataRenegociacao,
           renegociacaoObservacao: `Renegociada em ${format(parseISO(dataRenegociacao), 'dd/MM/yyyy')}`
@@ -191,7 +191,7 @@ export default function RenegociacaoModal({
       if (valorDinheiro > 0 && contaDestinoId) {
         const contaDestino = cashAccounts.find(c => c.id === contaDestinoId);
         
-        await CashMovements.create({
+        await CashMovement.create({
           cashAccountId: contaDestinoId,
           cashAccountName: contaDestino?.name || '',
           type: 'receita',
@@ -208,14 +208,14 @@ export default function RenegociacaoModal({
         });
         
         // Atualizar saldo da conta
-        await CashAccounts.update(contaDestinoId, {
+        await CashAccount.update(contaDestinoId, {
           balance: (contaDestino?.balance || 0) + valorDinheiro
         });
       }
       
       // 3. Criar novas contas a receber para cada parcela
       for (const parcela of parcelas) {
-        await AccountsReceivables.create({
+        await AccountsReceivable.create({
           personId: contasSelecionadas[0]?.personId,
           personName: contasSelecionadas[0]?.personName,
           description: `Renegociação - Parcela ${String(parcela.numero).padStart(3, '0')}/${String(parcelas.length).padStart(3, '0')}`,

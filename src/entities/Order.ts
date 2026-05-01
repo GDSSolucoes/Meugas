@@ -26,8 +26,7 @@ export interface OrderItemsItem {
   total?: number;
 }
 
-export class Orders extends BaseEntity {
-  companyId!: string;
+export class Order extends BaseEntity {
   orderNumber!: string;
   personId!: string;
   personName?: string;
@@ -46,13 +45,13 @@ export class Orders extends BaseEntity {
   attendedAt?: Date;
   finalizedAt?: Date;
   cancelledAt?: Date;
+  canal: string;
+  urgente: boolean;
+  convenio: boolean;
   cancellationReason?: string;
-  companyName?: string;
-  createdByName?: string;
-  active!: boolean;
-  deleted?: boolean;
+  static baseUrl: string = "/orders";
 
-  constructor(data?: Partial<Orders>) {
+  constructor(data?: Partial<Order>) {
     super(data);
     if (data) {
       // Convert date strings to Date objects
@@ -106,17 +105,29 @@ export class Orders extends BaseEntity {
    */
   static async filterByCompany(
     filters: { companyId?: string; status?: OrdersStatusEnum; [key: string]: any } = {}
-  ): Promise<Orders[]> {
+  ): Promise<Order[]> {
     if (!filters.companyId) {
       throw new Error('companyId é obrigatório para filtrar pedidos');
     }
-    return super.filter.call(this, filters) as Promise<Orders[]>;
+    return super._filter.call(this, this.baseUrl, filters) as Promise<Order[]>;
+  }
+
+  static async filter(filters: Partial<Order> = {}, pagination = {}) : Promise<Order[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Order[]>;
+  }
+
+  static async findById(id: string): Promise<Order | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Order | null>;
+  }
+
+  static async create(data: Partial<Order>): Promise<Order> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Order>;
   }
 
   /**
    * Create order with validation
    */
-  static async createWithValidation(data: Partial<Orders>): Promise<Orders> {
+  static async createWithValidation(data: Partial<Order>): Promise<Order> {
     if (!data.companyId) {
       throw new Error('companyId é obrigatório para criar pedido');
     }
@@ -126,14 +137,14 @@ export class Orders extends BaseEntity {
     if (!data.personId) {
       throw new Error('personId é obrigatório');
     }
-    return super.create.call(this, data) as Promise<Orders>;
+    return super._create.call(this, this.baseUrl, data) as Promise<Order>;
   }
 
   /**
    * Update order status
    */
-  static async updateStatus(id: string, newStatus: OrdersStatusEnum): Promise<Orders> {
-    const updates: Partial<Orders> = { status: newStatus };
+  static async updateStatus(id: string, newStatus: OrdersStatusEnum): Promise<Order> {
+    const updates: Partial<Order> = { status: newStatus };
 
     if (newStatus === OrdersStatusEnum.EM_ATENDIMENTO) {
       updates.attendedAt = new Date();
@@ -143,16 +154,25 @@ export class Orders extends BaseEntity {
       updates.cancelledAt = new Date();
     }
 
-    return super.update.call(this, id, updates) as Promise<Orders>;
+    return super._update.call(this, this.baseUrl, id, updates) as Promise<Order>;
+  }
+
+  static async update(id: string, data: Partial<Order>): Promise<Order> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Order>;
+  }
+
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
    * Cancel order with reason
    */
-  static async cancel(id: string, reason: string): Promise<Orders> {
+  static async cancel(id: string, reason: string): Promise<Order> {
     return this.updateStatus(id, OrdersStatusEnum.CANCELADO).then(order => {
       order.cancellationReason = reason;
       return order;
     });
   }
 }
+

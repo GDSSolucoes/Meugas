@@ -72,7 +72,7 @@ export default function ProductPickupManagementPage() {
       setCurrentUser(user);
       
       const [pickupsData, peopleData, productsData, salesData, sectorsData] = await Promise.all([
-        entities.ProductPickup.filter({ companyId: user.companyId }, '-saleDate'),
+        entities.ProductPickup.filter({ companyId: user.companyId }, { sort: '-saleDate' }),
         entities.Person.filter({ companyId: user.companyId }),
         entities.Product.filter({ companyId: user.companyId, active: true }),
         entities.Sale.filter({ companyId: user.companyId }),

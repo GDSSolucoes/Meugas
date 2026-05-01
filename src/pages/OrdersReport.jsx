@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, TrendingUp, CheckCircle, Clock, Filter } from "lucide-react";
-import { Orders } from "@/entities/Orders";
-import { Employees } from "@/entities/Employees";
+import { Order } from "@/entities/Order";
+import { Employee } from "@/entities/Employee";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 
 export default function OrdersReportPage() {
   const [allOrders, setAllOrders] = useState([]);
@@ -45,14 +45,14 @@ export default function OrdersReportPage() {
 
   const loadData = async () => {
     try {
-      const user = await Users.me();
+      const user = await User.me();
       if (!user.companyId) {
         setIsLoading(false);
         return;
       }
       const [ordersData, employeesData] = await Promise.all([
-        Orders.filter({ companyId: user.companyId }, '-createdDate'),
-        Employees.filter({ companyId: user.companyId, position: 'entregador', active: true })
+        Order.filter({ companyId: user.companyId },{ sort: '-createdDate'}),
+        Employee.filter({ companyId: user.companyId, position: 'entregador', active: true })
       ]);
       setAllOrders(ordersData);
       setEmployees(employeesData);

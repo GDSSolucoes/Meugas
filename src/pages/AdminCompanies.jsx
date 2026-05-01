@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Building2, Edit, Trash2, Ban, CheckCircle, AlertCircle, UsersIcon, DollarSign, Home, Database } from "lucide-react";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -56,7 +56,7 @@ export default function AdminCompaniesPage() {
 
   const loadCompanies = useCallback(async () => {
     try {
-      const user = await Users.me();
+      const user = await User.me();
       
       if (user.email !== 'brasileirosilvia@gmail.com') {
         toast({
@@ -73,7 +73,8 @@ export default function AdminCompaniesPage() {
       
       const active = companiesData.filter(c => c.status === 'ativa').length;
       const suspended = companiesData.filter(c => c.status === 'suspensaPagamento').length;
-      const totalRevenue = 0//companiesData.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
+      debugger;
+      const totalRevenue = companiesData.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
       
       setStats({
         totalCompanies: companiesData.length,
@@ -150,7 +151,7 @@ export default function AdminCompaniesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await Users.me();
+      const user = await User.me();
       
       if (isEditing) {
         const { id, ...companyData } = currentCompany;
@@ -163,7 +164,7 @@ export default function AdminCompaniesPage() {
         // AUTOMATICAMENTE vincular o usuário administrador à empresa criada
         try {
           // Buscar se o usuário já existe
-          const allUsers = await Users.list();
+          const allUsers = await User.list();
           const existingUser = allUsers.find(u => u.email === currentCompany.adminEmail);
           
           if (existingUser) {

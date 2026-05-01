@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { UsersIcon, Edit, Info } from "lucide-react";
-import { Users } from "@/entities/Users";
-import { Companies } from "@/entities/Companies"; // Importar a entidade Company
+import { User } from "@/entities/User";
+import { Company } from "@/entities/Company"; // Importar a entidade Company
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast"; // Importar useToast
 
@@ -23,7 +23,7 @@ export default function UsersPage() {
   
   const loadData = useCallback(async () => { // Renamed from loadUsers
     try {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
 
       // Verificar se o usuário tem permissão para acessar esta página
@@ -42,19 +42,19 @@ export default function UsersPage() {
       if (user.email === 'brasileirosilvia@gmail.com') { // Condição para super admin
         // Super admin vê todos os usuários e empresas
         [usersData, companiesData] = await Promise.all([
-          Users.list('-createdDate'),
-          Companies.list('name') // Carregar todas as empresas em ordem alfabética
+          User.list('-createdDate'),
+          Company.filter({}, { sort: 'name' }) // Carregar todas as empresas em ordem alfabética
         ]);
       } else {
         // Admin da empresa vê usuários da sua empresa E usuários sem empresa
-        const allUsers = await Users.list();
+        const allUsers = await User.list();
         const usersOfCompany = user.companyId ? allUsers.filter(u => u.companyId === user.companyId) : [];
         const usersWithoutCompany = allUsers.filter(u => !u.companyId);
         
         usersData = [...usersOfCompany, ...usersWithoutCompany];
         
         // Carregar apenas a empresa do admin, se ele tiver uma
-        companiesData = user.companyId ? await Companies.filter({ id: user.companyId }) : [];
+        companiesData = user.companyId ? await Company.filter({ id: user.companyId }) : [];
       }
 
       setUsers(usersData);
@@ -98,7 +98,7 @@ export default function UsersPage() {
         userData.companyName = null; // Explicitly set to null if companyId is null or empty
       }
       
-      const updatedUser = await Users.update(id, userData);
+      const updatedUser = await User.updateid, userData);
       console.log('Usuário atualizado:', updatedUser);
       
       toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });

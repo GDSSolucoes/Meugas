@@ -7,16 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, Filter, Loader2 } from "lucide-react";
-import { Sectors } from "@/entities/Sectors";
-import { Products } from "@/entities/Products";
-import { ProductStocks } from "@/entities/ProductStocks";
-import { Sales } from "@/entities/Sales";
-import { Purchases } from "@/entities/Purchases";
-import { StockTransfers } from "@/entities/StockTransfers";
-import { VasilhameLoans } from "@/entities/VasilhameLoans";
+import { Sector } from "@/entities/Sector";
+import { Product } from "@/entities/Product";
+import { ProductStock } from "@/entities/ProductStock";
+import { Sale } from "@/entities/Sale";
+import { Purchase } from "@/entities/Purchase";
+import { StockTransfer } from "@/entities/StockTransfer";
+import { VasilhameLoan } from "@/entities/VasilhameLoan";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, startOfDay, endOfDay, isBefore } from 'date-fns';
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 
 export default function StockReportPage() {
   const { toast } = useToast();
@@ -32,9 +32,9 @@ export default function StockReportPage() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const user = await Users.me();
+        const user = await User.me();
         setCurrentUser(user);
-        const sectorsData = await Sectors.filter({ companyId: user.companyId });
+        const sectorsData = await Sector.filter({ companyId: user.companyId });
         setSectors(sectorsData);
       } catch (error) {
         toast({ title: "Erro", description: "Falha ao carregar dados iniciais.", variant: "destructive" });
@@ -70,12 +70,12 @@ export default function StockReportPage() {
         allLoans,
         allPickups
       ] = await Promise.all([
-        Products.filter({ companyId }),
-        ProductStocks.filter({ companyId }),
-        Sales.filter({ companyId }),
-        Purchases.filter({ companyId }),
-        StockTransfers.filter({ companyId }),
-        VasilhameLoans.filter({ companyId }),
+        Product.filter({ companyId }),
+        ProductStock.filter({ companyId }),
+        Sale.filter({ companyId }),
+        Purchase.filter({ companyId }),
+        StockTransfer.filter({ companyId }),
+        VasilhameLoan.filter({ companyId }),
         // Assumindo que existe uma entidade para retiradas de produtos
         // Se não existir, pode usar uma lista vazia ou implementar
         Promise.resolve([]) // Placeholder for ProductPickup.list()

@@ -26,13 +26,13 @@ export interface BudgetItemsItem {
  * Represents a Budget record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Budgets extends BaseEntity {
+export class Budget extends BaseEntity {
   budgetNumber: string;
   customerData: BudgetCustomerData;
   items: BudgetItemsItem[];
   totalAmount: number;
   notes: string;
-  onDelete: any;
+  static baseUrl: string = "/budgets";
 
   /**
    * Static method to filter Budget records
@@ -41,8 +41,8 @@ export class Budgets extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Budget[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<Budget[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Budget[]>;
   }
 
   /**
@@ -51,8 +51,8 @@ export class Budgets extends BaseEntity {
    * @param data Object with Budget properties
    * @returns Promise<Budget>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data): Promise<Budget> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Budget>;
   }
 
   /**
@@ -62,8 +62,8 @@ export class Budgets extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Budget>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id, data): Promise<Budget> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Budget>;
   }
 
   /**
@@ -72,8 +72,8 @@ export class Budgets extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -82,7 +82,7 @@ export class Budgets extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Budget | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<Budget | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Budget | null>;
   }
 }

@@ -63,8 +63,7 @@ export default function SalesListPage() {
 
       const salesData = await entities.Sale.filter(
         { companyId: user.companyId },
-        '-createdDate',
-        500
+        {sort: '-createdDate', limit: 500}
       );
 
       setSales(salesData);

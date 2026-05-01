@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Package, AlertTriangle, Edit, Trash2, PackageOpen, Receipt, Info } from "lucide-react";
-import { Products } from "@/entities/Products";
-import { ProductStocks } from "@/entities/ProductStocks";
-import { Orders } from "@/entities/Orders";
-import { Users } from "@/entities/Users";
+import { Product } from "@/entities/Product";
+import { ProductStock } from "@/entities/ProductStock";
+import { Order } from "@/entities/Order";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function ProductsPage() {
@@ -59,12 +59,12 @@ export default function ProductsPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       const [productsData, stocksData] = await Promise.all([
-        Products.filter({ companyId: user.companyId }).catch(() => []),
-        ProductStocks.filter({ companyId: user.companyId }).catch(() => [])
+        Product.filter({ companyId: user.companyId }).catch(() => []),
+        ProductStock.filter({ companyId: user.companyId }).catch(() => [])
       ]);
       
       setProducts(productsData);
@@ -119,7 +119,7 @@ export default function ProductsPage() {
         return;
       }
 
-      const orders = await Orders.filter({ companyId: currentUser.companyId }).catch(() => []);
+      const orders = await Order.filter({ companyId: currentUser.companyId }).catch(() => []);
       const hasOrders = orders.some(order => 
         order.items && order.items.some(item => item.productId === productId)
       );
@@ -130,10 +130,10 @@ export default function ProductsPage() {
       }
 
       if (window.confirm("Tem certeza que deseja excluir este produto?")) {
-        await Products.delete(productId);
+        await Product.delete(productId);
         const stocksToDelete = productStocks.filter(stock => stock.productId === productId);
         for (const stock of stocksToDelete) {
-          await ProductStocks.delete(stock.id);
+          await ProductStock.delete(stock.id);
         }
         loadData();
         toast({ title: "Sucesso", description: "Produto excluído." });
@@ -148,7 +148,7 @@ export default function ProductsPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const user = await Users.me();
+      const user = await User.me();
       
       const productData = {
         ...currentProduct,
@@ -159,10 +159,10 @@ export default function ProductsPage() {
 
       if (isEditing) {
         const { id, ...dataToUpdate } = productData;
-        await Products.update(id, dataToUpdate);
+        await Product.update(id, dataToUpdate);
         toast({ title: "Sucesso", description: "Produto atualizado com sucesso." });
       } else {
-        const newProduct = await Products.create(productData);
+        const newProduct = await Product.create(productData);
         toast({ title: "Sucesso", description: "Produto cadastrado com sucesso." });
       }
 

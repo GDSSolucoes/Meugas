@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, ClipboardList, ArrowRight, LogOut, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 
 export default function HomePage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -14,7 +14,7 @@ export default function HomePage() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await Users.me();
+        const user = await User.me();
         setCurrentUser(user);
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
@@ -28,7 +28,7 @@ export default function HomePage() {
   const handleLogout = async () => {
     if (window.confirm("Tem certeza que deseja sair do sistema?")) {
       try {
-        await Users.logout();
+        await User.logout();
         // Optionally redirect to login page or update state if logout is successful
         // navigate('/login'); // Example if using react-router-dom navigate hook
       } catch (error) {
@@ -60,7 +60,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center relative">
             <div className="text-center flex-1">
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ae08dc18c137aca4217238/a483a165fLogo5.png" 
+                src="/assets/logo.png" 
                 alt="MeuGás Logo" 
                 className="mx-auto w-32 h-32 object-contain"
               />
@@ -87,7 +87,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <p className="text-xl text-slate-300">Sistema de Gestão Completo para Distribuidoras</p>
             <p className="text-lg text-slate-400 mt-2">
-              Bem-vindo, {currentUser?.fullName} - {isSuperAdmin ? 'Proprietário(a)' : (isAdmin ? 'Administrador' : 'Atendente')}
+              Bem-vindo, {currentUser?.name} - {isSuperAdmin ? 'Proprietário(a)' : (isAdmin ? 'Administrador' : 'Atendente')}
             </p>
             <p className="text-lg text-slate-400 mt-1">
               {isAtendente ? 'Acesse o módulo de pedidos' : 'Selecione o módulo que deseja acessar'}
@@ -134,7 +134,7 @@ export default function HomePage() {
             </Card>
 
             {/* Módulo Gerencial - só mostrar para admins */}
-            {isAdmin && (
+            {(isAdmin || isSuperAdmin)  && (
               <Card className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">

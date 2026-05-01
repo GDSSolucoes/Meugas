@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, UserCheck, Edit, Trash2 } from "lucide-react";
-import { Employees } from "@/entities/Employees";
+import { Employee } from "@/entities/Employee";
 import { format, parseISO } from "date-fns";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function EmployeesPage() {
@@ -41,8 +41,8 @@ export default function EmployeesPage() {
 
   const loadData = async () => {
     try {
-      const user = await Users.me();
-      const employeesData = await Employees.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await User.me();
+      const employeesData = await Employee.filter({ companyId: user.companyId }, { sort: '-createdDate' });
       setEmployees(employeesData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -64,7 +64,7 @@ export default function EmployeesPage() {
   const handleDelete = async (employeeId) => {
     if (window.confirm("Tem certeza que deseja deletar este funcionário?")) {
       try {
-        await Employees.delete(employeeId);
+        await Employee.delete(employeeId);
         loadData();
         toast({ title: "Sucesso", description: "Funcionário excluído." });
       } catch (error) {
@@ -78,7 +78,7 @@ export default function EmployeesPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const user = await Users.me();
+      const user = await User.me();
       
       const employeeData = {
         ...currentEmployee,
@@ -90,10 +90,10 @@ export default function EmployeesPage() {
 
       if (isEditing) {
         const { id, ...dataToUpdate } = employeeData;
-        await Employees.update(id, dataToUpdate);
+        await Employee.update(id, dataToUpdate);
         toast({ title: "Sucesso", description: "Funcionário atualizado com sucesso." });
       } else {
-        await Employees.create(employeeData);
+        await Employee.create(employeeData);
         toast({ title: "Sucesso", description: "Funcionário cadastrado com sucesso." });
       }
 

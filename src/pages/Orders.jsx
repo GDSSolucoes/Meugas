@@ -15,14 +15,14 @@ import {
   Edit,
   Gift, // Add Gift icon for birthday
 } from 'lucide-react';
-import { Orders } from "@/entities/Orders";
-import { Persons } from "@/entities/Persons";
-import { Products } from "@/entities/Products";
-import { Employees } from "@/entities/Employees";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { CashAccounts } from "@/entities/CashAccounts";
-import { AccountsReceivables } from "@/entities/AccountsReceivables";
-import { Users as UserEntity } from "@/entities/Users";
+import { Order } from "@/entities/Order";
+import { Person } from "@/entities/Person";
+import { Product } from "@/entities/Product";
+import { Employee } from "@/entities/Employee";
+import { PaymentType } from "@/entities/PaymentType";
+import { CashAccount } from "@/entities/CashAccount";
+import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { User as UserEntity } from "@/entities/User";
 import { format, parseISO, addDays } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -124,7 +124,7 @@ export default function OrdersPage() {
             if (payment.installments && payment.installments > 0 && payment.type !== 'avista') {
                 for (let i = 1; i <= payment.installments; i++) {
                     const baseDueDate = payment.dueDate ? new Date(payment.dueDate) : new Date(order.deliveryDate || new Date());
-                    await AccountsReceivables.create({
+                    await AccountsReceivable.create({
                         personId: order.personId,
                         personName: order.personName,
                         saleId: order.id, 
@@ -143,7 +143,7 @@ export default function OrdersPage() {
     } else {
         const paymentType = paymentTypes.find(pt => pt.id === currentOrder.paymentTypeId);
         if (paymentType && paymentType.type === 'aPrazo') {
-            await AccountsReceivables.create({
+            await AccountsReceivable.create({
                 personId: order.personId,
                 personName: order.personName,
                 saleId: order.id, 
@@ -244,11 +244,11 @@ export default function OrdersPage() {
       const companyId = user.companyId;
 
       const [allPeople, productsData, employeesData, paymentTypesData, cashAccountsData] = await Promise.all([
-        Persons.filter({ companyId: companyId }),
-        Products.filter({ companyId: companyId, active: true }),
-        Employees.filter({ companyId: companyId, position: 'entregador', active: true }),
-        PaymentTypes.filter({ companyId: companyId, active: true }),
-        CashAccounts.filter({ companyId: companyId, active: true }),
+        Person.filter({ companyId: companyId }),
+        Product.filter({ companyId: companyId, active: true }),
+        Employee.filter({ companyId: companyId, position: 'entregador', active: true }, { sort: 'name' }),
+        PaymentType.filter({ companyId: companyId, active: true }),
+        CashAccount.filter({ companyId: companyId, active: true }),
       ]);
 
       setPeople(allPeople.filter(p => p.type === 'cliente'));
@@ -275,11 +275,14 @@ export default function OrdersPage() {
     setShowHistoryModal(true);
     try {
       const user = await UserEntity.me();
-      const history = await Orders.filter(
-        { personId: customerFound.id, companyId: user.companyId },
-        '-createdDate',
-        12
-      );
+      const history = await Order.filter({
+        personId: customerFound.id, 
+        companyId: user.companyId,
+      }, 
+      {
+        sort: '-createdDate',
+        limit: 12
+      });
       setCustomerHistory(history);
     } catch (error) {
       console.error("Erro ao buscar histórico do cliente:", error);
@@ -315,13 +318,13 @@ export default function OrdersPage() {
           const currentPhones = Array.isArray(person.phone) ? person.phone : (person.phone ? [person.phone] : []);
           const updatedPhones = [...new Set([...currentPhones, newPhone])]; // Use Set to avoid duplicates and ensure array
 
-          await Persons.update(person.id, { phone: updatedPhones });
+          await Person.update(person.id, { phone: updatedPhones });
           
           toast({ title: "Sucesso", description: `Telefone ${newPhone} adicionado a ${person.name}.` });
 
           // Refresh local data to reflect the change
           const user = await UserEntity.me(); // Need user to get companyId
-          const updatedPeople = await Persons.filter({ companyId: user.companyId, type: 'cliente' }); // Filter by type to get only clients
+          const updatedPeople = await Person.filter({ companyId: user.companyId, type: 'cliente' }); // Filter by type to get only clients
           setPeople(updatedPeople);
           const updatedPerson = updatedPeople.find(p => p.id === person.id);
           
@@ -562,10 +565,10 @@ export default function OrdersPage() {
 
       if (isEditingCustomer) {
         const { id, ...customerData } = customerPayload;
-        savedCustomer = await Persons.update(id, customerData);
+        savedCustomer = await Person.update(id, customerData);
       } else {
         // Generate sequential person number for new customers
-        const allPersons = await Persons.filter({ companyId: user.companyId });
+        const allPersons = await Person.filter({ companyId: user.companyId });
         const maxPersonNumber = allPersons.reduce((max, person) => {
           const currentNum = parseInt(person.personNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
@@ -577,10 +580,10 @@ export default function OrdersPage() {
           personNumber: String(newPersonNumber)
         };
 
-        savedCustomer = await Persons.create(customerPayload);
+        savedCustomer = await Person.create(customerPayload);
       }
 
-      const refreshedPeople = await Persons.filter({ companyId: user.companyId, type: 'cliente' });
+      const refreshedPeople = await Person.filter({ companyId: user.companyId, type: 'cliente' });
       setPeople(refreshedPeople);
 
       const updatedCustomer = refreshedPeople.find(p => p.id === (savedCustomer.id || currentCustomer.id));
@@ -667,7 +670,7 @@ export default function OrdersPage() {
       const orderTotal = calcularTotal();
 
       // Lógica para numeração sequencial
-      const companyOrders = await Orders.filter({ companyId: user.companyId });
+      const companyOrders = await Order.filter({ companyId: user.companyId });
       const maxOrderNumber = companyOrders.reduce((max, order) => {
         const currentNum = parseInt(order.orderNumber, 10);
         return !isNaN(currentNum) && currentNum > max ? currentNum : max;
@@ -704,7 +707,7 @@ export default function OrdersPage() {
         createdByName: user.fullName
       };
 
-      const newOrder = await Orders.create(orderToSave);
+      const newOrder = await Order.create(orderToSave);
       
       console.log("Pedido criado com sucesso:", newOrder); // Debug log
       

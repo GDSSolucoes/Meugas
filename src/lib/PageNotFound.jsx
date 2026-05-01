@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Users } from '@/entities/Users';
+import { User } from '@/entities/User';
 
 
 export default function PageNotFound({}) {
@@ -11,7 +11,7 @@ export default function PageNotFound({}) {
         queryKey: ['user'],
         queryFn: async () => {
             try {
-                const user = await Users.me();
+                const user = await User.me();
                 return { user, isAuthenticated: true };
             } catch (error) {
                 return { user: null, isAuthenticated: false };

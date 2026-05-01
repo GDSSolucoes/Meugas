@@ -29,7 +29,7 @@ export enum FacilitadorTipoOperacaoEnum {
  * Represents a Facilitadore record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Facilitadores extends BaseEntity {
+export class Facilitador extends BaseEntity {
   empresaId: string;
   nome: string;
   tipoOperacao: FacilitadorTipoOperacaoEnum;
@@ -40,8 +40,7 @@ export class Facilitadores extends BaseEntity {
   cofinsSituacaoTributaria: string;
   ipiSituacaoTributaria: string;
   observacoes: string;
-  ativo: boolean;
-  onDelete: any;
+  static baseUrl: string = "/faciltadores";
 
   /**
    * Static method to filter Facilitadore records
@@ -50,8 +49,8 @@ export class Facilitadores extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Facilitadore[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<Facilitador> = {}, pagination = {}) : Promise<Facilitador[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Facilitador[]>;
   }
 
   /**
@@ -60,8 +59,8 @@ export class Facilitadores extends BaseEntity {
    * @param data Object with Facilitadore properties
    * @returns Promise<Facilitadore>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<Facilitador>): Promise<Facilitador> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Facilitador>;
   }
 
   /**
@@ -71,8 +70,8 @@ export class Facilitadores extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Facilitadore>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<Facilitador>): Promise<Facilitador> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Facilitador>;
   }
 
   /**
@@ -81,8 +80,8 @@ export class Facilitadores extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -91,7 +90,7 @@ export class Facilitadores extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Facilitadore | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<Facilitador | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Facilitador | null>;
   }
 }

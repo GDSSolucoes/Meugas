@@ -14,10 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { addMonths, format } from "date-fns";
-import { Users } from "@/entities/Users";
-import { CashAccounts } from "@/entities/CashAccounts";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { Acquirers } from "@/entities/Acquirers";
+import { User } from "@/entities/User";
+import { CashAccount } from "@/entities/CashAccount";
+import { PaymentType } from "@/entities/PaymentType";
+import { Acquirer } from "@/entities/Acquirer";
 
 export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) {
   const [paymentType, setPaymentType] = useState("");
@@ -82,17 +82,17 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const user = await Users.me();
+        const user = await User.me();
         const [accounts, types, acquirers] = await Promise.all([
-          CashAccounts.filter({ 
+          CashAccount.filter({ 
             companyId: user.companyId,
             active: true 
           }),
-          PaymentTypes.filter({ 
+          PaymentType.filter({ 
             companyId: user.companyId,
             active: true 
           }),
-          Acquirers.filter({ 
+          Acquirer.filter({ 
             companyId: user.companyId,
             active: true 
           }).catch(() => [])

@@ -14,7 +14,26 @@ export enum ContasAPagarStatusEnum {
  * Automatically generated entity class with CRUD operations.
  */
 export class ContasAPagar extends BaseEntity {
-  // No properties defined yet
+  supplierId: string;
+  supplierName: string;
+  description: string;
+  dueDate: Date;
+  amount: number;
+  installmentNumber: number;
+  status: ContasAPagarStatusEnum;
+  paymentTypeId: string;
+  paymentTypeName: string;
+  paymentDate: Date;
+  purchaseId: string;
+  nfeNumber: string;
+  groupId: string;
+  groupName: string;
+  subgroupId: string;
+  subgroupName: string;
+  documentNumber: string;
+  reagendamentoMotivo: string;
+  reagendamentoData: string;
+  static baseUrl: string = '/contasAPagar';
 
   /**
    * Static method to filter ContasAPagar records
@@ -23,8 +42,8 @@ export class ContasAPagar extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<ContasAPagar[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<ContasAPagar> = {}, pagination = {}) : Promise<ContasAPagar[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<ContasAPagar[]>;
   }
 
   /**
@@ -33,8 +52,8 @@ export class ContasAPagar extends BaseEntity {
    * @param data Object with ContasAPagar properties
    * @returns Promise<ContasAPagar>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<ContasAPagar>): Promise<ContasAPagar> {
+    return super._create.call(this, this.baseUrl, data) as Promise<ContasAPagar>;
   }
 
   /**
@@ -44,8 +63,8 @@ export class ContasAPagar extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<ContasAPagar>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<ContasAPagar>): Promise<ContasAPagar> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<ContasAPagar>;
   }
 
   /**
@@ -54,8 +73,8 @@ export class ContasAPagar extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -64,7 +83,7 @@ export class ContasAPagar extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<ContasAPagar | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<ContasAPagar | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<ContasAPagar | null>;
   }
 }

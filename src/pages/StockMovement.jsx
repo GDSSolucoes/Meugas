@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Warehouse, Save, Filter, ArrowRightLeft, BarChart3 } from "lucide-react";
-import { ProductStocks } from "@/entities/ProductStocks";
-import { Sectors } from "@/entities/Sectors";
-import { Products } from "@/entities/Products";
-import { Users } from "@/entities/Users";
+import { ProductStock } from "@/entities/ProductStock";
+import { Sector } from "@/entities/Sector";
+import { Product } from "@/entities/Product";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO } from 'date-fns';
 
@@ -31,11 +31,11 @@ export default function StockMovementPage() {
     const initializeAppData = async () => {
       setIsLoading(true);
       try {
-        const user = await Users.me();
+        const user = await User.me();
         setCurrentUser(user);
         setCompanyId(user.companyId);
 
-        const sectorData = await Sectors.filter({ companyId: user.companyId, active: true }); // Filter sectors by company
+        const sectorData = await Sector.filter({ companyId: user.companyId, active: true }); // Filter sectors by company
         setSectors(sectorData);
 
         // Define main sector as default or first available
@@ -71,9 +71,9 @@ export default function StockMovementPage() {
     setIsLoading(true);
     try {
       const [allProducts, existingStocksForSector, allSectors] = await Promise.all([
-        Products.filter({ companyId: companyId, active: true }), // Get only active products for the company
-        ProductStocks.filter({ sectorId: selectedSectorId, companyId: companyId }), // Get stocks specifically for the selected sector and company
-        Sectors.filter({ companyId: companyId }) // Re-fetch sectors to ensure up-to-date names, filtered by company
+        Product.filter({ companyId: companyId, active: true }), // Get only active products for the company
+        ProductStock.filter({ sectorId: selectedSectorId, companyId: companyId }), // Get stocks specifically for the selected sector and company
+        Sector.filter({ companyId: companyId }) // Re-fetch sectors to ensure up-to-date names, filtered by company
       ]);
 
       const currentSector = allSectors.find(s => s.id === selectedSectorId);
@@ -92,7 +92,7 @@ export default function StockMovementPage() {
       for (const product of allProducts) {
         // If an active product does not have an existing stock entry in the current sector, create one
         if (!existingProductIdsInSector.has(product.id)) {
-          const newStock = await ProductStocks.create({
+          const newStock = await ProductStock.create({
             productId: product.id,
             productName: product.name,
             sectorId: selectedSectorId,
@@ -142,7 +142,7 @@ export default function StockMovementPage() {
     try {
       // Ensure quantity is a number, default to 0 if not
       const updatedQuantity = Number(stock.quantity) || 0;
-      await ProductStocks.update(stock.id, {
+      await ProductStock.update(stock.id, {
         quantity: updatedQuantity,
         initialDate: stock.initialDate
       });

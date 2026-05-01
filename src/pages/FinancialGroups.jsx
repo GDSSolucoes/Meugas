@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, FolderKanban } from "lucide-react";
-import { FinancialGroups } from "@/entities/FinancialGroups";
-import { Users } from "@/entities/Users";
+import { FinancialGroup } from "@/entities/FinancialGroup";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function FinancialGroupsPage() {
@@ -31,8 +31,8 @@ export default function FinancialGroupsPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const user = await Users.me();
-      const data = await FinancialGroups.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await User.me();
+      const data = await FinancialGroup.filter({ companyId: user.companyId },{ sort: '-createdDate' });
       setFinancialGroups(data);
     } catch (error) {
       console.error("Erro ao carregar grupos financeiros:", error);
@@ -53,7 +53,7 @@ export default function FinancialGroupsPage() {
   const handleDelete = async (groupId) => {
     if (window.confirm("Tem certeza que deseja excluir este grupo?")) {
       try {
-        await FinancialGroups.delete(groupId);
+        await FinancialGroup.delete(groupId);
         loadData(); // Call loadData instead of setRefreshTrigger
         toast({ title: "Sucesso", description: "Grupo excluído." });
       } catch (error) {
@@ -66,7 +66,7 @@ export default function FinancialGroupsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await Users.me();
+      const user = await User.me();
       const groupData = {
         ...currentGroup,
         companyId: user.companyId,
@@ -76,10 +76,10 @@ export default function FinancialGroupsPage() {
 
       if (isEditing) {
         const { id, ...dataToUpdate } = groupData;
-        await FinancialGroups.update(id, dataToUpdate);
+        await FinancialGroup.update(id, dataToUpdate);
         toast({ title: "Sucesso", description: "Grupo financeiro atualizado com sucesso." });
       } else {
-        await FinancialGroups.create(groupData);
+        await FinancialGroup.create(groupData);
         toast({ title: "Sucesso", description: "Grupo financeiro criado com sucesso." });
       }
 

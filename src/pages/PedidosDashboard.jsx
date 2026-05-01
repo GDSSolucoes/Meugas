@@ -10,11 +10,11 @@ import {
   AlertCircle,
   Loader2 // Added for loading spinner
 } from "lucide-react";
-import { Orders } from "@/entities/Orders";
-import { Persons } from "@/entities/Persons";
-import { Users } from "@/entities/Users";
-import { Employees } from "@/entities/Employees"; // New import
-import { Products } from "@/entities/Products"; // New import, implied by outline usage
+import { Order } from "@/entities/Order";
+import { Person } from "@/entities/Person";
+import { User } from "@/entities/User";
+import { Employee } from "@/entities/Employee"; // New import
+import { Product } from "@/entities/Product"; // New import, implied by outline usage
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast"; // New import
@@ -35,7 +35,7 @@ export default function PedidosDashboardPage() {
   const loadData = useCallback(async () => { // Renamed from loadStats to loadData and wrapped in useCallback
     setIsLoading(true);
     try {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
       const companyId = user.companyId;
 
@@ -47,10 +47,10 @@ export default function PedidosDashboardPage() {
 
       // Fetch all necessary data for the dashboard
       const [ordersData, productsData, employeesData, peopleData] = await Promise.all([
-        Orders.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
-        Products.filter({ companyId }).catch(() => []),
-        Employees.filter({ companyId, position: 'entregador', active: true }).catch(() => []),
-        Persons.filter({ companyId, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
+        Order.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
+        Product.filter({ companyId }).catch(() => []),
+        Employee.filter({ companyId, position: 'entregador', active: true }).catch(() => []),
+        Person.filter({ companyId, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
       ]);
 
       setRecentOrders(ordersData.slice(0, 5)); // Set recent orders, taking the first 5
@@ -85,7 +85,7 @@ export default function PedidosDashboardPage() {
       return;
     }
     try {
-      await Orders.create({
+      await Order.create({
         ...order,
         companyId: currentUser.companyId,
         companyName: currentUser.companyName,

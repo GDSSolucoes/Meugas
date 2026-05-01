@@ -3,11 +3,11 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Orders } from "@/entities/Orders";
-import { Products } from "@/entities/Products";
-import { Employees } from "@/entities/Employees";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { Users } from "@/entities/Users"; 
+import { Order } from "@/entities/Order";
+import { Product } from "@/entities/Product";
+import { Employee } from "@/entities/Employee";
+import { PaymentType } from "@/entities/PaymentType";
+import { User } from "@/entities/User"; 
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -96,13 +96,13 @@ export default function OrderTrackingPage() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       const [ordersData, allEmployees, allPaymentTypes] = await Promise.all([
-        Orders.filter({ companyId: user.companyId }),
-        Employees.filter({ companyId: user.companyId, position: 'entregador', active: true }),
-        PaymentTypes.filter({ companyId: user.companyId, active: true })
+        Order.filter({ companyId: user.companyId }, { sort: '-createdDate' }),
+        Employee.filter({ companyId: user.companyId, position: 'entregador', active: true }, { sort: 'name' }),
+        PaymentType.filter({ companyId: user.companyId, active: true })
       ]);
       
       // Sort orders by created date (newest first)
@@ -178,7 +178,7 @@ export default function OrderTrackingPage() {
     }
 
     try {
-      await Orders.update(orderId, { employeeId: employee.id, employeeName: employee.name });
+      await Order.update(orderId, { employeeId: employee.id, employeeName: employee.name });
       setAllOrders(prevOrders =>
         prevOrders.map(order =>
           order.id === orderId
@@ -212,7 +212,7 @@ export default function OrderTrackingPage() {
     }
 
     try {
-      await Orders.update(orderId, { paymentTypeId: paymentType.id, paymentTypeName: paymentType.name });
+      await Order.update(orderId, { paymentTypeId: paymentType.id, paymentTypeName: paymentType.name });
       setAllOrders(prevOrders =>
         prevOrders.map(order =>
           order.id === orderId
@@ -250,7 +250,7 @@ export default function OrderTrackingPage() {
         status: newStatus,
         attendedAt: new Date().toISOString()
       };
-      const updatedOrder = await Orders.update(order.id, updateData);
+      const updatedOrder = await Order.update(order.id, updateData);
       setAllOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
       toast({
         title: "Sucesso",
@@ -275,16 +275,16 @@ export default function OrderTrackingPage() {
         status: 'finalizado',
         finalizedAt: new Date().toISOString()
       };
-      const updatedOrder = await Orders.update(order.id, updateData);
+      const updatedOrder = await Order.update(order.id, updateData);
       setAllOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
 
-      const allProducts = await Products.filter({ companyId: currentUser.companyId }); 
+      const allProducts = await Product.filter({ companyId: currentUser.companyId }); 
       for (const item of order.items) {
         try {
           const product = allProducts.find(p => p.id === item.productId);
           if (product) {
             const newStock = (product.stockQuantity || 0) - (item.quantity || 0);
-            await Products.update(product.id, { stockQuantity: Math.max(0, newStock) });
+            await Product.update(product.id, { stockQuantity: Math.max(0, newStock) });
           }
         } catch (productError) {
            console.error(`Erro ao atualizar estoque para o produto ID ${item.productId}:`, productError);
@@ -318,7 +318,7 @@ export default function OrderTrackingPage() {
         status: 'cancelado',
         canceledAt: new Date().toISOString()
       };
-      const updatedOrder = await Orders.update(order.id, updateData);
+      const updatedOrder = await Order.update(order.id, updateData);
       setAllOrders(prev => prev.map(o => o.id === order.id ? updatedOrder : o));
       toast({
         title: "Sucesso",

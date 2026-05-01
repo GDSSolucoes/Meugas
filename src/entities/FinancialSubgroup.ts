@@ -7,11 +7,12 @@ import { BaseEntity } from './BaseEntity';
  * Represents a FinancialSubgroup record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class FinancialSubgroups extends BaseEntity {
+export class FinancialSubgroup extends BaseEntity {
   name: string;
-  onDelete: any;
+  description?: string;
+  financialGroupId: string;
   financialGroupName: string;
-  active: boolean;
+  static baseUrl: string = "/financialSubgroups";
 
   /**
    * Static method to filter FinancialSubgroup records
@@ -20,8 +21,8 @@ export class FinancialSubgroups extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<FinancialSubgroup[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<FinancialSubgroup> = {}, pagination = {}) : Promise<FinancialSubgroup[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<FinancialSubgroup[]>;
   }
 
   /**
@@ -30,8 +31,8 @@ export class FinancialSubgroups extends BaseEntity {
    * @param data Object with FinancialSubgroup properties
    * @returns Promise<FinancialSubgroup>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<FinancialSubgroup>): Promise<FinancialSubgroup> {
+    return super._create.call(this, this.baseUrl, data) as Promise<FinancialSubgroup>;
   }
 
   /**
@@ -41,8 +42,8 @@ export class FinancialSubgroups extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<FinancialSubgroup>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<FinancialSubgroup>): Promise<FinancialSubgroup> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<FinancialSubgroup>;
   }
 
   /**
@@ -51,8 +52,8 @@ export class FinancialSubgroups extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -61,7 +62,7 @@ export class FinancialSubgroups extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<FinancialSubgroup | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<FinancialSubgroup | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<FinancialSubgroup | null>;
   }
 }

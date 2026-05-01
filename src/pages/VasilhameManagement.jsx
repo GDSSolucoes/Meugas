@@ -72,7 +72,7 @@ export default function VasilhameManagementPage() {
       setCurrentUser(user);
       
       const [loansData, peopleData, vasilhamesData, sectorsData, sectorMastersData] = await Promise.all([
-        entities.VasilhameLoan.filter({ companyId: user.companyId }, '-createdDate'),
+        entities.VasilhameLoan.filter({ companyId: user.companyId }, { sort: '-createdDate' }),
         entities.Person.filter({ companyId: user.companyId }),
         entities.Product.filter({ companyId: user.companyId, category: 'vasilhame', active: true }),
         entities.Sector.filter({ companyId: user.companyId, active: true }),

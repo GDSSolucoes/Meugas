@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, UsersIcon, Edit, Trash2, Search, Phone, MapPin, Gift } from "lucide-react";
-import { Persons } from "@/entities/Persons";
-import { Orders } from "@/entities/Orders";
-import { Sales } from "@/entities/Sales";
-import { AccountsReceivables } from "@/entities/AccountsReceivables";
+import { Person } from "@/entities/Person";
+import { Order } from "@/entities/Order";
+import { Sale } from "@/entities/Sale";
+import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 import { format, parseISO } from 'date-fns';
 
 export default function PeoplePage() {
@@ -29,8 +29,8 @@ export default function PeoplePage() {
   const loadPeople = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await Users.me();
-      const data = await Persons.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await User.me();
+      const data = await Person.filter({ companyId: user.companyId }, { sort: '-createdDate' });
       setPeople(data);
       setFilteredPeople(data);
     } catch (error) {
@@ -64,9 +64,9 @@ export default function PeoplePage() {
   const checkPersonMovements = async (personId) => {
     try {
       const [orders, sales, receivables] = await Promise.all([
-        Orders.list().then(orders => orders.filter(o => o.personId === personId)),
-        Sales.list().then(sales => sales.filter(s => s.personId === personId)),
-        AccountsReceivables.list().then(acc => acc.filter(a => a.personId === personId))
+        Order.filter({ personId: personId }),
+        Sale.filter({personId: personId}),
+        AccountsReceivable.filter({personId: personId})
       ]);
 
       return {
@@ -97,7 +97,7 @@ export default function PeoplePage() {
       }
 
       if (window.confirm(`Tem certeza que deseja excluir ${person.name}?\n\nEsta ação não pode ser desfeita.`)) {
-        await Persons.delete(person.id);
+        await Person.delete(person.id);
         loadPeople();
         toast({ title: "Sucesso", description: "Pessoa excluída com sucesso!" });
       }

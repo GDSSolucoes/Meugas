@@ -24,13 +24,13 @@ export default function FacilitadoresPage() {
     modeloFiscal: '55',
     tipoOperacao: 'venda',
     cfop: '5102',
-    regimeTributario: 'simplesNacional',
+    regimeTributario: 'simples_nacional',
     icmsSituacaoTributaria: '102',
     pisSituacaoTributaria: '07',
     cofinsSituacaoTributaria: '07',
     ipiSituacaoTributaria: '',
     observacoes: '',
-    ativo: true
+    active: true
   };
 
   const [currentFacilitador, setCurrentFacilitador] = useState(initialFacilitadorState);
@@ -43,7 +43,7 @@ export default function FacilitadoresPage() {
 
       const data = await entities.Facilitador.filter(
         { companyId: user.companyId },
-        '-createdDate'
+        { sort: '-createdDate' }
       );
       setFacilitadores(data);
     } catch (error) {
@@ -314,8 +314,8 @@ export default function FacilitadoresPage() {
                   <div>
                     <Label>Status</Label>
                     <Select
-                      value={currentFacilitador.ativo ? 'true' : 'false'}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, ativo: value === 'true' }))}
+                      value={currentFacilitador.active ? 'true' : 'false'}
+                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, active: value === 'true' }))}
                     >
                       <SelectTrigger>
                         <SelectValue />

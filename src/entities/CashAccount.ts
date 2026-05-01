@@ -12,14 +12,13 @@ export enum CashAccountTypeEnum {
  * Represents a CashAccount record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class CashAccounts extends BaseEntity {
+export class CashAccount extends BaseEntity {
   name: string;
   type: CashAccountTypeEnum;
   balance: number;
   initialBalance: number;
   initialBalanceDate: Date;
-  onDelete: any;
-  active: boolean;
+  static baseUrl: string = "/cashAccounts";
 
   /**
    * Static method to filter CashAccount records
@@ -28,8 +27,8 @@ export class CashAccounts extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<CashAccount[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<CashAccount[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<CashAccount[]>;
   }
 
   /**
@@ -38,8 +37,8 @@ export class CashAccounts extends BaseEntity {
    * @param data Object with CashAccount properties
    * @returns Promise<CashAccount>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data): Promise<CashAccount> {
+    return super._create.call(this, this.baseUrl, data) as Promise<CashAccount>;
   }
 
   /**
@@ -49,8 +48,8 @@ export class CashAccounts extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<CashAccount>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id, data): Promise<CashAccount> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<CashAccount>;
   }
 
   /**
@@ -59,8 +58,8 @@ export class CashAccounts extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -69,7 +68,7 @@ export class CashAccounts extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<CashAccount | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<CashAccount | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<CashAccount | null>;
   }
 }

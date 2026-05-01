@@ -1,5 +1,5 @@
 // Quick test to verify Person entity integration
-import { Persons } from './entities/Persons.js';
+import { Person } from './entities/Person.js';
 
 async function testPersonAPI() {
   console.log('Testing Person entity API integration...');
@@ -7,11 +7,11 @@ async function testPersonAPI() {
   try {
     // This will fail without proper authentication, but will test the structure
     console.log('Person class loaded successfully');
-    console.log('Person methods:', Object.getOwnPropertyNames(Persons));
-    console.log('Person static methods available:', typeof Persons.filter, typeof Persons.create);
+    console.log('Person methods:', Object.getOwnPropertyNames(Person));
+    console.log('Person static methods available:', typeof Person._filter, typeof Person._create);
 
     // Test constructor
-    const testPerson = new Persons({ name: 'Test', type: 'cliente' });
+    const testPerson = new Person({ name: 'Test', type: 'cliente' });
     console.log('Person instance created:', testPerson.name);
 
     console.log('✅ Person entity structure is correct!');

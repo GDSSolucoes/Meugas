@@ -13,7 +13,7 @@ export enum VasilhameLoanStatusEnum {
  * Represents a VasilhameLoan record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class VasilhameLoans extends BaseEntity {
+export class VasilhameLoan extends BaseEntity {
   onDelete: any;
   personName: string;
   vasilhameId: string;
@@ -22,6 +22,7 @@ export class VasilhameLoans extends BaseEntity {
   returnedQuantity: number;
   loanDate: Date;
   status: VasilhameLoanStatusEnum;
+  static baseUrl: string = "/vasilhameLoans";
 
   /**
    * Static method to filter VasilhameLoan records
@@ -30,8 +31,8 @@ export class VasilhameLoans extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<VasilhameLoan[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<VasilhameLoan[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<VasilhameLoan[]>;
   }
 
   /**
@@ -40,8 +41,8 @@ export class VasilhameLoans extends BaseEntity {
    * @param data Object with VasilhameLoan properties
    * @returns Promise<VasilhameLoan>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data): Promise<VasilhameLoan> {
+    return super._create.call(this, this.baseUrl, data) as Promise<VasilhameLoan>;
   }
 
   /**
@@ -51,8 +52,8 @@ export class VasilhameLoans extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<VasilhameLoan>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id, data): Promise<VasilhameLoan> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<VasilhameLoan>;
   }
 
   /**
@@ -61,8 +62,8 @@ export class VasilhameLoans extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -71,7 +72,7 @@ export class VasilhameLoans extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<VasilhameLoan | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<VasilhameLoan | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<VasilhameLoan | null>;
   }
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
-import { ProductStocks } from '@/entities/ProductStocks';
+import { ProductStock } from '@/entities/ProductStock';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function DataCleanupPage() {
@@ -22,7 +22,7 @@ export default function DataCleanupPage() {
         description: "Iniciando a limpeza dos registros de estoque."
       });
 
-      const allStocks = await ProductStocks.list();
+      const allStocks = await ProductStock.filter();
       
       if (allStocks.length === 0) {
         toast({
@@ -33,7 +33,7 @@ export default function DataCleanupPage() {
         return;
       }
       
-      await Promise.all(allStocks.map(stock => ProductStocks.delete(stock.id)));
+      await Promise.all(allStocks.map(stock => ProductStock.delete(stock.id)));
 
       toast({
         title: "Sucesso!",

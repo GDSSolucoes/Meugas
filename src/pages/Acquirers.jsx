@@ -7,9 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, CreditCard } from "lucide-react";
-import { Acquirers } from "@/entities/Acquirers";
+import { Acquirer } from "@/entities/Acquirer";
 import { User } from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
+import { some } from "lodash";
 
 export default function AcquirersPage() {
   const { toast } = useToast();
@@ -29,7 +30,7 @@ export default function AcquirersPage() {
   const loadAcquirers = useCallback(async () => {
     try {
       const user = await User.me();
-      const data = await Acquirers.filter({ companyId: user.companyId }, '-createdDate');
+      const data = await Acquirer.filter({ companyId: user.companyId },{sort: '-createdDate'});
       setAcquirers(data);
     } catch (error) {
       console.error("Erro ao carregar adquirentes:", error);
@@ -50,7 +51,7 @@ export default function AcquirersPage() {
   const handleDelete = async (acquirerId) => {
     if (window.confirm("Tem certeza que deseja excluir esta adquirente?")) {
       try {
-        await Acquirers.delete(acquirerId);
+        await Acquirer.delete(acquirerId);
         loadAcquirers();
         toast({ title: "Sucesso", description: "Adquirente excluída com sucesso." });
       } catch (error) {
@@ -72,9 +73,9 @@ export default function AcquirersPage() {
 
       if (isEditing) {
         const { id, ...data } = payload;
-        await Acquirers.update(id, data);
+        await Acquirer.update(id, data);
       } else {
-        await Acquirers.create({ ...payload, createdByName: user.fullName });
+        await Acquirer.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();

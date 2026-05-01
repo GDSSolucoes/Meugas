@@ -442,7 +442,7 @@ export default function SalesPage({ onSaleComplete }) {
         entities.Sector.filter({ companyId: companyId, active: true }),
         entities.PaymentType.filter({ companyId: companyId, active: true }),
         entities.CashAccount.filter({ companyId: companyId, active: true }),
-        entities.Order.filter({ companyId: companyId, status: ['pendente', 'emAtendimento', 'finalizado'] }, '-createdDate', 100).catch(() => [])
+        entities.Order.filter({ companyId: companyId, status: ['pendente', 'emAtendimento', 'finalizado'] }, { sort: '-createdDate', limit: 100 }).catch(() => [])
       ]);
 
       setPeople(allPeople.filter(p => p.type === 'cliente'));

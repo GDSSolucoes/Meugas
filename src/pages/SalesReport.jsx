@@ -5,9 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Receipt, DollarSign, TrendingUp, Filter } from "lucide-react";
-import { Sales } from "@/entities/Sales";
+import { Sale } from "@/entities/Sale";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 
 export default function SalesReportPage() {
   const [allSales, setAllSales] = useState([]);
@@ -35,8 +35,8 @@ export default function SalesReportPage() {
 
   const loadSales = async () => {
     try {
-      const user = await Users.me();
-      const data = await Sales.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await User.me();
+      const data = await Sale.filter({ companyId: user.companyId }, { sort: '-createdDate' });
       setAllSales(data);
     } catch (error) {
       console.error("Erro ao carregar vendas:", error);

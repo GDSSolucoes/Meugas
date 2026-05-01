@@ -13,16 +13,30 @@ export enum AccountsReceivableStatusEnum {
  * Represents a AccountsReceivable record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class AccountsReceivables extends BaseEntity {
-  onDelete: any;
+export class AccountsReceivable extends BaseEntity {
+  personId: string;
   personName: string;
   installmentNumber: number;
   description: string;
   dueDate: Date;
   amount: number;
   paymentDate: Date;
-  baseUrl: string = "/accountsReceivables";
+  saleId: string;
+  status: AccountsReceivableStatusEnum;
+  sectorId: string;
+  sectorName: string;
+  renegociacaoOrigem: string;
+  renegociacaoData: Date;
+  renegociacaoObservacao: string;
+  paymentTypeId: string;
+  paymentTypeName: string;
 
+  static baseUrl: string = "/accountsReceivables";
+
+
+  constructor(data?: Partial<AccountsReceivable>) {
+    super(data);
+  }
 
 
   /**
@@ -32,8 +46,8 @@ export class AccountsReceivables extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<AccountsReceivable[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<AccountsReceivable[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<AccountsReceivable[]>;
   }
 
   /**
@@ -42,8 +56,8 @@ export class AccountsReceivables extends BaseEntity {
    * @param data Object with AccountsReceivable properties
    * @returns Promise<AccountsReceivable>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data): Promise<AccountsReceivable> {
+    return super._create.call(this, this.baseUrl, data) as Promise<AccountsReceivable>;
   }
 
   /**
@@ -53,8 +67,8 @@ export class AccountsReceivables extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<AccountsReceivable>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id, data): Promise<AccountsReceivable> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<AccountsReceivable>;
   }
 
   /**
@@ -63,8 +77,8 @@ export class AccountsReceivables extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -73,7 +87,7 @@ export class AccountsReceivables extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<AccountsReceivable | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<AccountsReceivable | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<AccountsReceivable | null>;
   }
 }

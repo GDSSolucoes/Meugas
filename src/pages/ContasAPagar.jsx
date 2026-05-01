@@ -13,14 +13,14 @@ import {
   DollarSign, Search, LogOut, Printer, Edit, Trash2, CheckSquare, X, ArrowRight
 } from "lucide-react";
 import { ContasAPagar } from "@/entities/ContasAPagar";
-import { CashAccounts } from "@/entities/CashAccounts";
-import { CashMovements } from "@/entities/CashMovements";
-import { FinancialGroups } from "@/entities/FinancialGroups";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { Sectors } from "@/entities/Sectors";
-import { SectorMasters } from "@/entities/SectorMasters";
-import { Persons } from "@/entities/Persons";
-import { Users } from "@/entities/Users";
+import { CashAccount } from "@/entities/CashAccount";
+import { CashMovement } from "@/entities/CashMovement";
+import { FinancialGroup } from "@/entities/FinancialGroup";
+import { PaymentType } from "@/entities/PaymentType";
+import { Sector } from "@/entities/Sector";
+import { SectorMaster } from "@/entities/SectorMaster";
+import { Person } from "@/entities/Person";
+import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, differenceInDays } from "date-fns";
 import { createPageUrl } from "@/utils";
@@ -164,7 +164,7 @@ export default function ContasAPagarPage() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       if (!user?.companyId) {
@@ -173,13 +173,13 @@ export default function ContasAPagarPage() {
       }
 
       const [contasData, cashAccountsData, paymentTypesData, sectorsData, sectorMastersData, groupsData, suppliersData] = await Promise.all([
-        ContasAPagar.filter({ companyId: user.companyId }, '-dueDate'),
-        CashAccounts.filter({ companyId: user.companyId, active: true }),
-        PaymentTypes.filter({ companyId: user.companyId, active: true }),
-        Sectors.filter({ companyId: user.companyId, active: true }),
-        SectorMasters.filter({ companyId: user.companyId }),
-        FinancialGroups.filter({ companyId: user.companyId, type: 'despesa', active: true }),
-        Persons.filter({ companyId: user.companyId, type: 'fornecedor' })
+        ContasAPagar.filter({ companyId: user.companyId }, { sort: '-dueDate' }),
+        CashAccount.filter({ companyId: user.companyId, active: true }),
+        PaymentType.filter({ companyId: user.companyId, active: true }),
+        Sector.filter({ companyId: user.companyId, active: true }),
+        SectorMaster.filter({ companyId: user.companyId }),
+        FinancialGroup.filter({ companyId: user.companyId, type: 'despesa', active: true }),
+        Person.filter({ companyId: user.companyId, type: 'fornecedor' })
       ]);
       setContas(contasData);
       setCashAccounts(cashAccountsData);
@@ -387,7 +387,7 @@ export default function ContasAPagarPage() {
         if (!conta || conta.status === 'pago') continue;
 
         // Criar movimento de caixa (despesa)
-        await CashMovements.create({
+        await CashMovement.create({
           cashAccountId: payingAccount.id,
           cashAccountName: payingAccount.name,
           type: 'despesa',
@@ -412,7 +412,7 @@ export default function ContasAPagarPage() {
 
       // Atualizar saldo da conta
       const newBalance = (payingAccount.balance || 0) - totalPago;
-      await CashAccounts.update(payingAccount.id, { balance: newBalance });
+      await CashAccount.update(payingAccount.id, { balance: newBalance });
 
       toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) paga(s) com sucesso!` });
       setIsBaixaOpen(false);

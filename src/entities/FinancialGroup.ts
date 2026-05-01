@@ -14,12 +14,11 @@ export enum FinancialGroupTypeEnum {
  * Represents a FinancialGroup record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class FinancialGroups extends BaseEntity {
+export class FinancialGroup extends BaseEntity {
   name: string;
   type: FinancialGroupTypeEnum;
   description: string;
-  onDelete: any;
-  active: boolean;
+  static baseUrl: string = "/financialGroups";
 
   /**
    * Static method to filter FinancialGroup records
@@ -28,8 +27,8 @@ export class FinancialGroups extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<FinancialGroup[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<FinancialGroup> = {}, pagination = {}) : Promise<FinancialGroup[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<FinancialGroup[]>;
   }
 
   /**
@@ -38,8 +37,8 @@ export class FinancialGroups extends BaseEntity {
    * @param data Object with FinancialGroup properties
    * @returns Promise<FinancialGroup>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<FinancialGroup>): Promise<FinancialGroup> {
+    return super._create.call(this, this.baseUrl, data) as Promise<FinancialGroup>;
   }
 
   /**
@@ -49,8 +48,8 @@ export class FinancialGroups extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<FinancialGroup>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<FinancialGroup>): Promise<FinancialGroup> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<FinancialGroup>;
   }
 
   /**
@@ -59,8 +58,8 @@ export class FinancialGroups extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -69,7 +68,7 @@ export class FinancialGroups extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<FinancialGroup | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<FinancialGroup | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<FinancialGroup | null>;
   }
 }

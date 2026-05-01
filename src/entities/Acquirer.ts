@@ -7,12 +7,12 @@ import { BaseEntity } from './BaseEntity';
  * Represents a Acquirer record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Acquirers extends BaseEntity {
+export class Acquirer extends BaseEntity {
   name: string;
   feePercentage: number;
   settlementDays: number;
-  onDelete: any;
-  active: boolean;
+
+  static baseUrl: string = "/acquirers";
 
   /**
    * Static method to filter Acquirer records
@@ -21,8 +21,8 @@ export class Acquirers extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Acquirer[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<Acquirer[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Acquirer[]>;
   }
 
   /**
@@ -31,8 +31,8 @@ export class Acquirers extends BaseEntity {
    * @param data Object with Acquirer properties
    * @returns Promise<Acquirer>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data): Promise<Acquirer> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Acquirer>;
   }
 
   /**
@@ -42,8 +42,8 @@ export class Acquirers extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Acquirer>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id, data): Promise<Acquirer> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Acquirer>;
   }
 
   /**
@@ -52,8 +52,8 @@ export class Acquirers extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -62,7 +62,7 @@ export class Acquirers extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Acquirer | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<Acquirer | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Acquirer | null>;
   }
 }

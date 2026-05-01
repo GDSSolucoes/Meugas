@@ -18,8 +18,7 @@ export interface PersonAddress {
   zipcode?: string;
 }
 
-export class Persons extends BaseEntity {
-  companyId!: string;
+export class Person extends BaseEntity {
   personNumber?: string;
   name!: string;
   document?: string;
@@ -31,12 +30,9 @@ export class Persons extends BaseEntity {
   birthday?: Date;
   conveniadaId?: string;
   conveniadaName?: string;
-  companyName?: string;
-  createdByName?: string;
-  active!: boolean;
-  deleted?: boolean;
+  static baseUrl: string = "/persons";
 
-  constructor(data?: Partial<Persons>) {
+  constructor(data?: Partial<Person>) {
     super(data);
     if (data) {
       // Convert date strings to Date objects
@@ -66,7 +62,7 @@ export class Persons extends BaseEntity {
    * Check if person is active
    */
   get isActive(): boolean {
-    return this.active && !this.deleted;
+    return this.active;
   }
 
   /**
@@ -85,5 +81,25 @@ export class Persons extends BaseEntity {
       return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
     }
     return this.document;
+  }
+
+  static async filter(filters: Partial<Person> = {}, pagination = {}) : Promise<Person[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Person[]>;
+  }
+
+  static async create(data: Partial<Person>): Promise<Person> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Person>;
+  }
+
+  static async findById(id: string): Promise<Person | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Person | null>;
+  }
+  
+  static async update(id: string, data: Partial<Person>): Promise<Person> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Person>;
+  }
+
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 }

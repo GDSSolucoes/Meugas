@@ -123,7 +123,7 @@ export default function AcertoSetoresPage() {
       const [ordersData, setoresData, paymentTypesData, cashAccountsData] = await Promise.all([
         entities.Order.filter({ 
           companyId: user.companyId 
-        }, '-createdDate', 500),
+        }, { sort: '-createdDate', limit: 500 }),
         entities.Sector.filter({ 
           companyId: user.companyId,
           active: true 

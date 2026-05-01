@@ -15,7 +15,7 @@ export enum EmployeePositionEnum {
  * Represents a Employee record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Employees extends BaseEntity {
+export class Employee extends BaseEntity {
   name: string;
   document: string;
   email: string;
@@ -25,8 +25,7 @@ export class Employees extends BaseEntity {
   hireDate: Date;
   vacationStart: Date;
   vacationEnd: Date;
-  onDelete: any;
-  active: boolean;
+  static baseUrl: string = "/employees";
 
   /**
    * Static method to filter Employee records
@@ -35,8 +34,8 @@ export class Employees extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Employee[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<Employee> = {}, pagination = {}) : Promise<Employee[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Employee[]>;
   }
 
   /**
@@ -45,8 +44,8 @@ export class Employees extends BaseEntity {
    * @param data Object with Employee properties
    * @returns Promise<Employee>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<Employee>): Promise<Employee> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Employee>;
   }
 
   /**
@@ -56,8 +55,8 @@ export class Employees extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Employee>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<Employee>): Promise<Employee> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Employee>;
   }
 
   /**
@@ -66,8 +65,8 @@ export class Employees extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -76,7 +75,7 @@ export class Employees extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Employee | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<Employee | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Employee | null>;
   }
 }

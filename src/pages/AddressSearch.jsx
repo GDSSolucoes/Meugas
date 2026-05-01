@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Search, UserPlus, Trash2, Plus } from "lucide-react";
-import { Persons } from "@/entities/Persons";
+import { Person } from "@/entities/Person";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -45,7 +45,7 @@ export default function AddressSearchPage() {
   }, []);
 
   const loadPeople = async () => {
-    const data = await Persons.list('-createdDate');
+    const data = await Person.filter({ sort: '-createdDate' });
     setPeople(data);
   };
 
@@ -185,7 +185,7 @@ export default function AddressSearchPage() {
   const handleSavePerson = async (e) => {
     e.preventDefault();
     try {
-      const newPerson = await Persons.create(currentPerson);
+      const newPerson = await Person.create(currentPerson);
       setShowPersonForm(false);
       resetPersonForm();
       loadPeople();

@@ -13,14 +13,14 @@ import {
   DollarSign, Search, LogOut, Printer, Edit, Trash2, 
   CheckSquare, RefreshCw, X, ArrowRight
 } from "lucide-react";
-import { AccountsReceivables } from "@/entities/AccountsReceivables";
-import { CashAccounts } from "@/entities/CashAccounts";
-import { CashMovements } from "@/entities/CashMovements";
-import { FinancialGroups } from "@/entities/FinancialGroups";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { Sectors } from "@/entities/Sectors";
-import { Persons } from "@/entities/Persons";
-import { Employees } from "@/entities/Employees";
+import { AccountsReceivable } from "@/entities/AccountsReceivable";
+import { CashAccount } from "@/entities/CashAccount";
+import { CashMovement } from "@/entities/CashMovement";
+import { FinancialGroup } from "@/entities/FinancialGroup";
+import { PaymentType } from "@/entities/PaymentType";
+import { Sector } from "@/entities/Sector";
+import { Person } from "@/entities/Person";
+import { Employee } from "@/entities/Employee";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
 import RenegociacaoModal from "./RenegociacaoModal";
@@ -137,12 +137,12 @@ export default function AccountsReceivableFullModal({
     setIsLoading(true);
     try {
       const [contasData, cashAccountsData, paymentTypesData, sectorsData, peopleData, employeesData] = await Promise.all([
-        AccountsReceivables.filter({ companyId: currentUser.companyId }, '-dueDate'),
-        CashAccounts.filter({ companyId: currentUser.companyId, active: true }),
-        PaymentTypes.filter({ companyId: currentUser.companyId, active: true }),
-        Sectors.filter({ companyId: currentUser.companyId, active: true }),
-        Persons.filter({ companyId: currentUser.companyId }),
-        Employees.filter({ companyId: currentUser.companyId, active: true })
+        AccountsReceivable.filter({ companyId: currentUser.companyId }, { sort: '-dueDate' }),
+        CashAccount.filter({ companyId: currentUser.companyId, active: true }),
+        PaymentType.filter({ companyId: currentUser.companyId, active: true }),
+        Sector.filter({ companyId: currentUser.companyId, active: true }),
+        Person.filter({ companyId: currentUser.companyId }),
+        Employee.filter({ companyId: currentUser.companyId, active: true })
       ]);
       setContas(contasData);
       setCashAccounts(cashAccountsData);
@@ -287,7 +287,7 @@ export default function AccountsReceivableFullModal({
     
     try {
       for (const conta of contasToDelete) {
-        await AccountsReceivables.delete(conta.id);
+        await AccountsReceivable.delete(conta.id);
       }
       toast({ title: "Sucesso", description: `${contasToDelete.length} conta(s) excluída(s) com sucesso!` });
       setIsDeleteConfirmOpen(false);
@@ -330,9 +330,9 @@ export default function AccountsReceivableFullModal({
         return;
       }
 
-      let revenueGroup = await FinancialGroups.filter({ name: 'Receitas de Contas a Receber', companyId: currentUser.companyId });
+      let revenueGroup = await FinancialGroup.filter({ name: 'Receitas de Contas a Receber', companyId: currentUser.companyId });
       if (revenueGroup.length === 0) {
-        revenueGroup = [await FinancialGroups.create({ 
+        revenueGroup = [await FinancialGroup.create({ 
           name: 'Receitas de Contas a Receber', 
           type: 'receita', 
           active: true,
@@ -348,7 +348,7 @@ export default function AccountsReceivableFullModal({
         const conta = contas.find(c => c.id === contaId);
         if (!conta || conta.status === 'pago') continue;
 
-        await CashMovements.create({
+        await CashMovement.create({
           cashAccountId: receivingAccount.id,
           cashAccountName: receivingAccount.name,
           type: 'receita',
@@ -364,7 +364,7 @@ export default function AccountsReceivableFullModal({
           createdByName: currentUser.fullName,
         });
 
-        await AccountsReceivables.update(contaId, {
+        await AccountsReceivable.update(contaId, {
           status: 'pago',
           paymentDate: paidDate,
         });
@@ -373,7 +373,7 @@ export default function AccountsReceivableFullModal({
       }
 
       const newBalance = (receivingAccount.balance || 0) + totalBaixado;
-      await CashAccounts.update(receivingAccount.id, { balance: newBalance });
+      await CashAccount.update(receivingAccount.id, { balance: newBalance });
 
       toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) baixada(s) com sucesso!` });
       setIsBaixaOpen(false);

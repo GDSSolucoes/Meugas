@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { UsersIcon, UserCheck, Phone, MapPin, Gift } from "lucide-react";
-import { Persons } from "@/entities/Persons";
-import { Users } from "@/entities/Users";
+import { Person } from "@/entities/Person";
+import { User } from "@/entities/User";
 import { format, parseISO } from 'date-fns';
 
 export default function PeopleReportPage() {
@@ -18,12 +18,12 @@ export default function PeopleReportPage() {
 
   const loadPeople = async () => {
     try {
-      const user = await Users.me();
+      const user = await User.me();
       if (!user.companyId) {
         setIsLoading(false);
         return;
       }
-      const data = await Persons.filter({ companyId: user.companyId }, '-createdDate');
+      const data = await Person.filter({ companyId: user.companyId }, { sort: '-createdDate' });
       setPeople(data);
     } catch (error) {
       console.error("Erro ao carregar pessoas:", error);

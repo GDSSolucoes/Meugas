@@ -46,8 +46,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster"; // Importar o Toaster
 
-import { Users } from "@/entities/Users";
-import { Companies } from "@/entities/Companies"; // Import correto da entidade Company
+import { User } from "@/entities/User";
+import { Company } from "@/entities/Company"; // Import correto da entidade Company
 
 const logoUrl = "/public/assets/logo.png";
 
@@ -135,19 +135,19 @@ export default function Layout({ children, currentPageName }) {
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await Users.me();
+        const user = await User.me();
         
         // LÓGICA DE AUTO-VÍNCULO: Se o usuário não tem companyId, tentar encontrar uma empresa pelo email
         if (!user.companyId && user.email) {
           try {
-            const companies = await Companies.list();
+            const companies = await Company.filter();
             const matchingCompany = companies.find(company => 
               company.adminEmail === user.email && company.status === 'ativa'
             );
             
             if (matchingCompany) {
               // Auto-vincular usuário à empresa encontrada
-              await Users.updateMyUserData({
+              await User.updateMyUserData({
                 companyId: matchingCompany.id,
                 companyName: matchingCompany.name,
                 userType: 'admin'
@@ -156,7 +156,7 @@ export default function Layout({ children, currentPageName }) {
               console.log(`✅ Usuário ${user.email} vinculado automaticamente à empresa ${matchingCompany.name}`);
               
               // Recarregar os dados do usuário com o vínculo atualizado
-              const updatedUser = await Users.me();
+              const updatedUser = await User.me();
               setCurrentUser(updatedUser);
               return; // Sair da função para evitar o setCurrentUser duplo
             }
@@ -185,7 +185,7 @@ export default function Layout({ children, currentPageName }) {
   const handleLogout = async () => {
     if (window.confirm("Tem certeza que deseja sair do sistema?")) {
       try {
-        await Users.logout();
+        await User.logout();
       } catch (error) {
         console.error("Erro ao fazer logout:", error);
       }

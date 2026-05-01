@@ -219,7 +219,7 @@ export default function AccountsReceivablePage({ onComplete }) {
         peopleData,
         employeesData,
       ] = await Promise.all([
-        AccountsReceivable.filter({ companyId: user.companyId }, "-dueDate"),
+        AccountsReceivable.filter({ companyId: user.companyId }, {sort: "-dueDate"}),
         CashAccount.filter({ companyId: user.companyId, active: true }),
         PaymentType.filter({ companyId: user.companyId, active: true }),
         Sector.filter({ companyId: user.companyId, active: true }),

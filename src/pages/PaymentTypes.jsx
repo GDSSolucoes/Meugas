@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, CreditCard, Edit, Trash2 } from "lucide-react";
-import { PaymentTypes } from "@/entities/PaymentTypes";
-import { Users } from "@/entities/Users";
+import { PaymentType } from "@/entities/PaymentType";
+import { User } from "@/entities/User";
 
 export default function PaymentTypesPage() {
   const [paymentTypes, setPaymentTypes] = useState([]);
@@ -18,7 +18,7 @@ export default function PaymentTypesPage() {
   
   const initialPaymentTypeState = {
     name: '',
-    type: 'aVista',
+    type: 'dinheiro',
     maxInstallments: 1,
     daysInterval: 0,
     active: true,
@@ -35,8 +35,8 @@ export default function PaymentTypesPage() {
 
   const loadPaymentTypes = async () => {
     try {
-      const user = await Users.me();
-      const data = await PaymentTypes.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await User.me();
+      const data = await PaymentType.filter({ companyId: user.companyId }, { sort: '-createdDate' });
       setPaymentTypes(data);
     } catch (error) {
       console.error("Erro ao carregar tipos de pagamento:", error);
@@ -56,7 +56,7 @@ export default function PaymentTypesPage() {
   const handleDelete = async (paymentTypeId) => {
     if (window.confirm("Tem certeza que deseja deletar este tipo de pagamento?")) {
       try {
-        await PaymentTypes.delete(paymentTypeId);
+        await PaymentType.delete(paymentTypeId);
         loadPaymentTypes();
       } catch (error) {
         console.error("Erro ao deletar tipo de pagamento:", error);
@@ -67,7 +67,7 @@ export default function PaymentTypesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await Users.me();
+      const user = await User.me();
       const payload = {
         ...currentPaymentType,
         maxInstallments: Number(currentPaymentType.maxInstallments) || 1,
@@ -78,9 +78,9 @@ export default function PaymentTypesPage() {
 
       if (isEditing) {
         const { id, ...data } = payload;
-        await PaymentTypes.update(id, data);
+        await PaymentType.update(id, data);
       } else {
-        await PaymentTypes.create({ ...payload, createdByName: user.fullName });
+        await PaymentType.create({ ...payload, createdByName: user.fullName });
       }
       setShowForm(false);
       resetForm();
@@ -161,9 +161,13 @@ export default function PaymentTypesPage() {
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="aVista">À Vista</SelectItem>
-                        <SelectItem value="aPrazo">À Prazo</SelectItem>
-                        <SelectItem value="cartao">Cartão</SelectItem>
+                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                        <SelectItem value="pix">Pix</SelectItem>
+                        <SelectItem value="cartaoDebito">Cartão de Débito</SelectItem>
+                        <SelectItem value="cartaoCredito">Cartão de Crédito</SelectItem>
+                        <SelectItem value="boleto">Boleto</SelectItem>
+                        <SelectItem value="cheque">Cheque</SelectItem>
+                        <SelectItem value="convenio">Convênio</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

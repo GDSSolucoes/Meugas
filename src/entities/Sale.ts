@@ -36,10 +36,11 @@ export interface SalePaymentMethodsItem {
  * Represents a Sale record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Sales extends BaseEntity {
+export class Sale extends BaseEntity {
   saleNumber: string;
-  onDelete: any;
+  personId: string;
   personName: string;
+  sectorId: string;
   sectorName: string;
   status: SaleStatusEnum;
   saleDate: Date;
@@ -47,6 +48,7 @@ export class Sales extends BaseEntity {
   paymentMethods: SalePaymentMethodsItem[];
   totalAmount: number;
   notes: string;
+  orderId: string;
   orderNumber: string;
   conveniadaId: string;
   conveniadaName: string;
@@ -60,6 +62,7 @@ export class Sales extends BaseEntity {
   nfceDate: Date;
   nfceCancelada: boolean;
   nfceJustificativaCancelamento: string;
+  static baseUrl: string = "/sales";
 
   /**
    * Static method to filter Sale records
@@ -68,8 +71,8 @@ export class Sales extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Sale[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<Sale> = {}, pagination = {}) : Promise<Sale[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Sale[]>;
   }
 
   /**
@@ -78,8 +81,8 @@ export class Sales extends BaseEntity {
    * @param data Object with Sale properties
    * @returns Promise<Sale>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<Sale>): Promise<Sale> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Sale>;
   }
 
   /**
@@ -89,8 +92,8 @@ export class Sales extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Sale>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<Sale>): Promise<Sale> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Sale>;
   }
 
   /**
@@ -99,8 +102,8 @@ export class Sales extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -109,7 +112,7 @@ export class Sales extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Sale | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<Sale | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Sale | null>;
   }
 }

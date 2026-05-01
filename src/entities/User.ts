@@ -12,23 +12,22 @@ export enum userTypeEnum {
   SUPER_ADMIN = "superAdmin",
 }
 
-export class Users extends BaseEntity {
+export class User extends BaseEntity {
   email!: string;
   cpf?: string | null;
   name!: string;
-  companyId!: number;
   role!: string;
-  active!: boolean;
   userType!: userTypeEnum;
   phone?: string;
   department?: string;
   deleted?: boolean;
+  static baseUrl: string = "/users";
 
-  constructor(data?: Partial<Users>) {
+  constructor(data?: Partial<User>) {
     super(data);
   }
 
-  static async me(this: new (data?: any) => Users) {
+  static async me(this: new (data?: any) => User) {
     const r = await api.get(`/auth/me`);
     return new this(r.data);    
   }

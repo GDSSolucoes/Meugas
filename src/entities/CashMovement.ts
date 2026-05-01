@@ -12,17 +12,30 @@ export enum CashMovementTypeEnum {
  * Represents a CashMovement record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class CashMovements extends BaseEntity {
+export class CashMovement extends BaseEntity {
+  cashAccountId: string;
   cashAccountName: string;
   type: CashMovementTypeEnum;
-  amount: number;
   description: string;
+  amount: number;
   movementDate: Date;
+  personId: string;
   personName: string;
   groupId: string;
   groupName: string;
+  subgroupId: string;
+  subgroupName: string;
+  documentNumber: string;
+  competenceMonth: string;
   relatedDocId: string;
-  onDelete: any;
+  paymentTypeId: string;
+  paymentTypeName: string;
+  notes: string;
+  isAccounting: boolean;
+  sectorId: string;
+  sectorName: string;
+
+  static baseUrl: string = "/cashMovements";
 
   /**
    * Static method to filter CashMovement records
@@ -31,8 +44,8 @@ export class CashMovements extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<CashMovement[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<CashMovement[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<CashMovement[]>;
   }
 
   /**
@@ -41,8 +54,8 @@ export class CashMovements extends BaseEntity {
    * @param data Object with CashMovement properties
    * @returns Promise<CashMovement>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<CashMovement>): Promise<CashMovement> {
+    return super._create.call(this, this.baseUrl, data) as Promise<CashMovement>;
   }
 
   /**
@@ -52,8 +65,8 @@ export class CashMovements extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<CashMovement>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<CashMovement>): Promise<CashMovement> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<CashMovement>;
   }
 
   /**
@@ -62,8 +75,8 @@ export class CashMovements extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -72,7 +85,7 @@ export class CashMovements extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<CashMovement | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<CashMovement | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<CashMovement | null>;
   }
 }

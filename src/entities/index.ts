@@ -1,55 +1,57 @@
-import { AccountsReceivables } from "./AccountsReceivables";
-import { Acquirers } from "./Acquirers";
-import { Budgets } from "./Budgets";
-import { CashAccounts } from "./CashAccounts";
-import { CashMovements } from "./CashMovements";
-import { Companies } from "./Companies";
+import StockTransfer from "@/pages/StockTransfer";
+import { AccountsReceivable } from "./AccountsReceivable";
+import { Acquirer } from "./Acquirer";
+import { Budget } from "./Budget";
+import { CashAccount } from "./CashAccount";
+import { CashMovement } from "./CashMovement";
+import { Company } from "./Company";
 import { ContasAPagar } from "./ContasAPagar";
-import { Employees } from "./Employees";
-import { Facilitadores } from "./Facilitadores";
-import { FinancialGroups } from "./FinancialGroups";
-import { FinancialSubgroups } from "./FinancialSubgroups";
-import { Fuelings } from "./Fuelings";
-import { Orders } from "./Orders";
-import { PaymentTypes } from "./PaymentTypes";
-import { Persons } from "./Persons";
-import { Products } from "./Products";
-import { ProductPickups } from "./ProductPickups";
-import { ProductStocks } from "./ProductStocks";
-import { Purchases } from "./Purchases";
-import { Sales } from "./Sales";
-import { Sectors } from "./Sectors";
-import { SectorMasters } from "./SectorMasters";
-import { StockTransfers } from "./StockTransfers";
-import { Users } from "./Users";
-import { VasilhameLoans } from "./VasilhameLoans";
-import { Vehicles } from "./Vehicles";
+import { Employee } from "./Employee";
+import { Facilitador } from "./Facilitador";
+import { FinancialGroup } from "./FinancialGroup";
+import { FinancialSubgroup } from "./FinancialSubgroup";
+import { Fueling } from "./Fueling";
+import { Order } from "./Order";
+import { PaymentType } from "./PaymentType";
+import { Person } from "./Person";
+import { Product } from "./Product";
+
+import { ProductPickup } from "./ProductPickup";
+import { ProductStock } from "./ProductStock";
+import { Purchase } from "./Purchase";
+import { Sale } from "./Sale";
+import { Sector } from "./Sector";
+import { SectorMaster } from "./SectorMaster";
+
+import { User } from "./User";
+import { VasilhameLoan } from "./VasilhameLoan";
+import { Vehicle } from "./Vehicle";
 
 export {
-    AccountsReceivables as AccountsReceivable,
-    Acquirers as Acquirer,
-    Budgets as Budget,
-    CashAccounts as CashAccount,
-    CashMovements as CashMovement,
-    Companies as Company,
+    AccountsReceivable,
+    Acquirer,
+    Budget,
+    CashAccount,
+    CashMovement,
+    Company,
     ContasAPagar,
-    Employees as Employee,
-    Facilitadores as Facilitador,
-    FinancialGroups as FinancialGroup,
-    FinancialSubgroups as FinancialSubgroup,
-    Fuelings as Fueling,
-    Orders as Order,
-    PaymentTypes as PaymentType,
-    Persons as Person,
-    Products as Product,
-    ProductPickups as ProductPickup,
-    ProductStocks as ProductStock,
-    Purchases as Purchase,
-    Sales as Sale,
-    Sectors as Sector,
-    SectorMasters as SectorMaster,
-    StockTransfers as StockTransfer,
-    Users as User,
-    VasilhameLoans as VasilhameLoan,
-    Vehicles as Vehicle
+    Employee,
+    Facilitador,
+    FinancialGroup,
+    FinancialSubgroup,
+    Fueling,
+    Order,
+    PaymentType,
+    Person,
+    Product,
+    ProductPickup,
+    ProductStock,
+    Purchase,
+    Sale,
+    Sector,
+    SectorMaster,
+    StockTransfer,
+    User,
+    VasilhameLoan,
+    Vehicle
 };

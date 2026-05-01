@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Plus, Wallet, Edit, Trash2 } from "lucide-react";
-import { CashAccounts } from "@/entities/CashAccounts";
-import { Users } from "@/entities/Users";
+import { CashAccount } from "@/entities/CashAccount";
+import { User } from "@/entities/User";
 import { format } from "date-fns";
 
 export default function CashAccountsPage() {
@@ -36,8 +36,8 @@ export default function CashAccountsPage() {
 
   const loadAccounts = async () => {
     try {
-      const user = await Users.me();
-      const data = await CashAccounts.filter({ companyId: user.companyId }, '-createdDate');
+      const user = await User.me();
+      const data = await CashAccount.filter({ companyId: user.companyId }, {sort: '-createdDate'});
       setAccounts(data);
     } catch (error) {
       console.error("Erro ao carregar contas:", error);
@@ -58,7 +58,7 @@ export default function CashAccountsPage() {
   const handleDelete = async (accountId) => {
     if (window.confirm("Tem certeza que deseja deletar esta conta?")) {
       try {
-        await CashAccounts.delete(accountId);
+        await CashAccount.delete(accountId);
         loadAccounts();
       } catch (error) {
         console.error("Erro ao deletar conta:", error);
@@ -69,7 +69,7 @@ export default function CashAccountsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await Users.me();
+      const user = await User.me();
       
       if (isEditing) {
         const { id } = currentAccount;
@@ -91,7 +91,7 @@ export default function CashAccountsPage() {
           balance: newCurrentBalance,
         };
         
-        await CashAccounts.update(id, accountPayload);
+        await CashAccount.update(id, accountPayload);
       } else {
         // Creation of a new account
         const initialBalance = Number(currentAccount.initialBalance) || 0;
@@ -108,7 +108,7 @@ export default function CashAccountsPage() {
           companyName: user.companyName,
         };
         
-        await CashAccounts.create(accountPayload);
+        await CashAccount.create(accountPayload);
         
         // NÃO criar movimento automático - o saldo inicial já está definido na conta
         // Se necessário, movimentos podem ser criados manualmente depois

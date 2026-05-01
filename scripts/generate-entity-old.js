@@ -190,7 +190,7 @@ ${baseProperties}
    * @returns Promise<${className}[]>
    */
   static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+    return super.filter.call(this, this.baseUrl, filters, pagination);
   }
 
   /**
@@ -200,7 +200,7 @@ ${baseProperties}
    * @returns Promise<${className}>
    */
   static async create(data) {
-    return super.create.call(this, data);
+    return super.create.call(this, this.baseUrl, data);
   }
 
   /**
@@ -211,7 +211,7 @@ ${baseProperties}
    * @returns Promise<${className}>
    */
   static async update(id, data) {
-    return super.update.call(this, id, data);
+    return super.update.call(this, this.baseUrl, id, data);
   }
 
   /**
@@ -221,7 +221,7 @@ ${baseProperties}
    * @returns Promise<void>
    */
   static async delete(id) {
-    return super.delete.call(this, id);
+    return super.delete.call(this, this.baseUrl, id);
   }
 
   /**
@@ -231,7 +231,7 @@ ${baseProperties}
    * @returns Promise<${className} | null>
    */
   static async findById(id) {
-    return super.findById.call(this, id);
+    return super.findById.call(this, this.baseUrl, id);
   }
 }
 `;

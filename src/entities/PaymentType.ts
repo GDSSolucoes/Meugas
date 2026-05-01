@@ -17,13 +17,13 @@ export enum PaymentTypesTypeEnum {
  * Represents a PaymentType record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class PaymentTypes extends BaseEntity {
+export class PaymentType extends BaseEntity {
   name: string;
   type: PaymentTypesTypeEnum;
   maxInstallments: number;
   daysInterval: number;
-  onDelete: any;
-  active: boolean;
+
+  static baseUrl: string = "/paymentTypes";
 
   /**
    * Static method to filter PaymentType records
@@ -32,8 +32,8 @@ export class PaymentTypes extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<PaymentType[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters: Partial<PaymentType> = {}, pagination = {}) : Promise<PaymentType[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<PaymentType[]>;
   }
 
   /**
@@ -42,8 +42,8 @@ export class PaymentTypes extends BaseEntity {
    * @param data Object with PaymentType properties
    * @returns Promise<PaymentType>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data: Partial<PaymentType>): Promise<PaymentType> {
+    return super._create.call(this, this.baseUrl, data) as Promise<PaymentType>;
   }
 
   /**
@@ -53,8 +53,8 @@ export class PaymentTypes extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<PaymentType>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id: string, data: Partial<PaymentType>): Promise<PaymentType> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<PaymentType>;
   }
 
   /**
@@ -63,8 +63,8 @@ export class PaymentTypes extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id: string): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -73,7 +73,7 @@ export class PaymentTypes extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<PaymentType | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id: string): Promise<PaymentType | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<PaymentType | null>;
   }
 }

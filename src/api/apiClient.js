@@ -23,6 +23,10 @@ function setAccessToken(token) {
   localStorage.setItem('accessToken', token)
 }
 
+function setRefreshToken(token) {
+  localStorage.setItem('refreshToken', token)
+}
+
 api.interceptors.request.use(cfg => {
   const token = getAccessToken()
   if (token) cfg.headers.Authorization = `Bearer ${token}`
@@ -42,6 +46,7 @@ api.interceptors.response.use(
           if (!rt) throw err
           const r = await api.post('/auth/refresh', { refreshToken: rt })
           setAccessToken(r.data.accessToken)
+          setRefreshToken(r.data.refreshToken)
           pending.forEach(fn => fn(r.data.accessToken))
           pending = []
           return api(original)

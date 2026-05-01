@@ -16,7 +16,7 @@ export enum VehicleTypeEnum {
  * Represents a Vehicle record in the system.
  * Automatically generated entity class with CRUD operations.
  */
-export class Vehicles extends BaseEntity {
+export class Vehicle extends BaseEntity {
   plate: string;
   fleetNumber?: string;
   type: VehicleTypeEnum;
@@ -24,6 +24,7 @@ export class Vehicles extends BaseEntity {
   year?: number;
   color?: string;
   initialKm?: number;
+  static baseUrl: string = "/vehicles";
 
   /**
    * Static method to filter Vehicle records
@@ -32,8 +33,8 @@ export class Vehicles extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Vehicle[]>
    */
-  static async filter(filters = {}, pagination = {}) {
-    return super.filter.call(this, filters, pagination);
+  static async filter(filters = {}, pagination = {}) : Promise<Vehicle[]> {
+    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Vehicle[]>;
   }
 
   /**
@@ -42,8 +43,8 @@ export class Vehicles extends BaseEntity {
    * @param data Object with Vehicle properties
    * @returns Promise<Vehicle>
    */
-  static async create(data) {
-    return super.create.call(this, data);
+  static async create(data): Promise<Vehicle> {
+    return super._create.call(this, this.baseUrl, data) as Promise<Vehicle>;
   }
 
   /**
@@ -53,8 +54,8 @@ export class Vehicles extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Vehicle>
    */
-  static async update(id, data) {
-    return super.update.call(this, id, data);
+  static async update(id, data): Promise<Vehicle> {
+    return super._update.call(this, this.baseUrl, id, data) as Promise<Vehicle>;
   }
 
   /**
@@ -63,8 +64,8 @@ export class Vehicles extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id) {
-    return super.delete.call(this, id);
+  static async delete(id): Promise<void> {
+    return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
   /**
@@ -73,7 +74,7 @@ export class Vehicles extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Vehicle | null>
    */
-  static async findById(id) {
-    return super.findById.call(this, id);
+  static async findById(id): Promise<Vehicle | null> {
+    return super._findById.call(this, this.baseUrl, id) as Promise<Vehicle | null>;
   }
 }

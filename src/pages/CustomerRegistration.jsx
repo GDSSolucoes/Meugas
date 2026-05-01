@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus, Plus, Trash2, Loader2 } from "lucide-react";
-import { Persons } from "@/entities/Persons";
+import { Person } from "@/entities/Person";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users } from "@/entities/Users";
+import { User } from "@/entities/User";
 import FiscalProvider from "@/providers/FiscalProvider";
 
 const initialPersonState = {
@@ -51,7 +51,7 @@ export default function CustomerRegistrationPage() {
   const loadConveniadas = async (companyId) => {
     if (!companyId) return;
     try {
-      const allPeople = await Persons.filter({ companyId: companyId });
+      const allPeople = await Person.filter({ companyId: companyId });
       setConveniadas(allPeople.filter(p => p.type === 'conveniada' && p.active));
     } catch (error) {
       console.error("Erro ao carregar conveniadas:", error);
@@ -61,7 +61,7 @@ export default function CustomerRegistrationPage() {
   const loadPersonForEditing = useCallback(async (personId, companyId) => {
     if (!personId || !companyId) return;
     try {
-      const allPeople = await Persons.filter({ companyId: companyId });
+      const allPeople = await Person.filter({ companyId: companyId });
       const personToEdit = allPeople.find(p => p.id === personId);
       if (personToEdit) {
         // Ensure phone array is at least [''] if empty from backend
@@ -99,7 +99,7 @@ export default function CustomerRegistrationPage() {
 
   useEffect(() => {
     const initialize = async () => {
-      const user = await Users.me();
+      const user = await User.me();
       setCurrentUser(user);
       
       // Check URL parameter to determine module context
@@ -254,7 +254,7 @@ export default function CustomerRegistrationPage() {
 
       if (isEditing) {
         const { id, ...personData } = personToSave;
-        await Persons.update(id, personData);
+        await Person.update(id, personData);
         alert("Pessoa atualizada com sucesso!");
         
         if (isFromGerencial) {
@@ -264,7 +264,7 @@ export default function CustomerRegistrationPage() {
         }
       } else {
         // Generate sequential person number for new persons
-        const allPersons = await Persons.filter({ companyId: currentUser.companyId });
+        const allPersons = await Person.filter({ companyId: currentUser.companyId });
         const maxPersonNumber = allPersons.reduce((max, person) => {
           const currentNum = parseInt(person.personNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
@@ -276,7 +276,7 @@ export default function CustomerRegistrationPage() {
           personNumber: String(newPersonNumber)
         };
 
-        const newPerson = await Persons.create(personToSave); // Store the returned new person object
+        const newPerson = await Person.create(personToSave); // Store the returned new person object
         alert(isFromGerencial ? "Pessoa cadastrada com sucesso!" : "Cliente cadastrado com sucesso!");
         
         // Verificar se deve retornar para outra tela com a pessoa selecionada
