@@ -29,15 +29,15 @@ export const purchases = pgTable(
     supplierName: text("supplier_name"),
     invoiceNumber: text("invoice_number"),
     items: json("items").$type<PurchaseItemsItem[]>(),
-    totalAmount: numeric("total_amount").notNull(),
-    purchaseDate: date("purchase_date"),
+    totalAmount: numeric("total_amount", { mode : "number"}).notNull(),
+    purchaseDate: date("purchase_date", { mode : "date"}),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("purchases_tenant_isolation", {

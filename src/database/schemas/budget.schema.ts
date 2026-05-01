@@ -37,7 +37,7 @@ export const budgets = pgTable(
     budgetNumber: text("budget_number").notNull(),
     customerData: json("customer_data").$type<BudgetCustomerData>(),
     items: json("items").$type<BudgetItemsItem[]>(),
-    totalAmount: numeric("total_amount").default("0"),
+    totalAmount: numeric("total_amount", { mode : "number"}).default(0),
     notes: text("notes"),
     companyId: uuid("company_id")
       .notNull()
@@ -45,7 +45,7 @@ export const budgets = pgTable(
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("budgets_tenant_isolation", {

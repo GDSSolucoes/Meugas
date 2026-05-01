@@ -71,8 +71,8 @@ export const companies = pgTable(
     parametrosFiscais:
       json("parametros_fiscais").$type<CompanyParametrosFiscais>(),
     planType: PlanTypePGEnum("plan_type").default(PlanTypeEnum.BASIC),
-    monthlyFee: numeric("monthly_fee"),
-    dueDate: date("due_date"),
+    monthlyFee: numeric("monthly_fee", {mode: "number"}),
+    dueDate: date("due_date", { mode : "date"}),
     status: CompanyStatusPGEnum("status").default(CompanyStatusEnum.ATIVA),
     suspensionReason: text("suspension_reason"),
     adminName: text("admin_name").notNull(),
@@ -80,7 +80,7 @@ export const companies = pgTable(
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     notes: text("notes"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("companies_tenant_isolation", {

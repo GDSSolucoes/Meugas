@@ -37,21 +37,21 @@ export const accountsReceivables = pgTable(
     saleId: uuid("sale_id").references(() => sales.id, {
       onDelete: "set null",
     }),
-    installmentNumber: numeric("installment_number").default("1"),
+    installmentNumber: numeric("installment_number", { mode : "number"}).default(1),
     description: text("description").notNull(),
-    dueDate: date("due_date").notNull(),
-    amount: numeric("amount").notNull(),
+    dueDate: date("due_date", {mode: "date"}).notNull(),
+    amount: numeric("amount", {mode: "number"}).notNull(),
     status: AccountsReceivableStatusPGEnum("status")
       .notNull()
       .default(AccountsReceivableStatusEnum.PENDENTE),
-    paymentDate: date("payment_date"),
+    paymentDate: date("payment_date", { mode : "date"}),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("accountsReceivables_tenant_isolation", {

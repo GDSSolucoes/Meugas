@@ -1,4 +1,4 @@
-import { CompanyBaseDto } from './company.base.dto'
+import { CompanyBaseDto } from './companies.base.dto'
 
 export class CompanyPostDto extends CompanyBaseDto {
 }

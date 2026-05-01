@@ -31,9 +31,9 @@ export const cashMovements = pgTable(
     }),
     cashAccountName: text("cash_account_name"),
     type: CashMovementTypePGEnum("type").notNull(),
-    amount: numeric("amount").notNull(),
+    amount: numeric("amount", { mode : "number"}).notNull(),
     description: text("description").notNull(),
-    movementDate: date("movement_date"),
+    movementDate: date("movement_date", { mode : "date"}),
     personId: uuid("person_id").references(() => persons.id, {
       onDelete: "set null",
     }),
@@ -47,7 +47,7 @@ export const cashMovements = pgTable(
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("cashMovements_tenant_isolation", {

@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src/**/*.ts --quiet",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "drizzle:gen": "drizzle-kit generate:pg --config drizzle.config.ts",
+    "drizzle:gen": "drizzle-kit generate --config drizzle.config.ts",
     "drizzle:push": "drizzle-kit push:pg --config drizzle.config.ts",
     "drizzle:introspect": "drizzle-kit introspect:pg --config drizzle.config.ts"
   },

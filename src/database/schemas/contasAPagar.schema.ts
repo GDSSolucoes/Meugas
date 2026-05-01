@@ -28,17 +28,17 @@ export const contasAPagar = pgTable(
     supplierId: uuid("supplier_id"),
     supplierName: text("supplier_name"),
     description: text("description").notNull(),
-    dueDate: date("due_date").notNull(),
-    amount: numeric("amount").notNull(),
+    dueDate: date("due_date", { mode : "date"}).notNull(),
+    amount: numeric("amount", { mode : "number"}).notNull(),
     status: contasAPagarStatusPGEnum("status").default(ContasAPagarStatusEnum.ABERTO),
-    paymentDate: date("payment_date"),
+    paymentDate: date("payment_date", { mode : "date"}),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("contasAPagar_tenant_isolation", {

@@ -16,8 +16,8 @@ export const acquirers = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
-    feePercentage: numeric("fee_percentage").default("0"),
-    settlementDays: numeric("settlement_days").default("1"),
+    feePercentage: numeric("fee_percentage", { mode : "number"}).default(0),
+    settlementDays: numeric("settlement_days", { mode : "number"}).default(1),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
@@ -25,7 +25,7 @@ export const acquirers = pgTable(
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     active: boolean("active").default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("acquirers_tenant_isolation", {

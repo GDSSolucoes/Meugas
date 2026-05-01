@@ -29,15 +29,15 @@ export const stockTransfers = pgTable(
       .notNull()
       .references(() => sectors.id, { onDelete: "cascade" }),
     toSectorName: text("to_sector_name"),
-    quantity: numeric("quantity").notNull(),
-    transferDate: timestamp("transfer_date", { withTimezone: true }),
+    quantity: numeric("quantity", { mode : "number"}).notNull(),
+    transferDate: timestamp("transfer_date", { mode : "date",  withTimezone: true }),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("stockTransfers_tenant_isolation", {

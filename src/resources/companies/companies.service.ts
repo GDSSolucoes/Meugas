@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { companies } from '../../database/schemas'
 import { eq } from 'drizzle-orm'
-import { CompanyUpdateDto } from './dto/company.update.dto'
+import { CompanyUpdateDto } from './dto/companies.update.dto'
 import { BaseCrudService } from '../../common/base-crud.service'
 import { RequestContextService } from '../../database/request-context.service'
 

@@ -26,9 +26,9 @@ export const cashAccounts = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     type: CashAccountTypePGEnum("type").notNull(),
-    balance: numeric("balance").default("0"),
-    initialBalance: numeric("initial_balance").default("0"),
-    initialBalanceDate: date("initial_balance_date"),
+    balance: numeric("balance", { mode : "number"}).default(0),
+    initialBalance: numeric("initial_balance", { mode : "number"}).default(0),
+    initialBalanceDate: date("initial_balance_date", { mode : "date"}),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
@@ -36,7 +36,7 @@ export const cashAccounts = pgTable(
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     active: boolean("active").default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("cashAccounts_tenant_isolation", {

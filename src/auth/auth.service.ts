@@ -29,7 +29,8 @@ export class AuthService {
       const decoded = await this.jwt.verifyAsync(token, { secret: process.env.REFRESH_SECRET! })
       const payload = { ...decoded }
       const accessToken = await this.jwt.signAsync(payload, { secret: process.env.JWT_SECRET!, expiresIn: process.env.JWT_EXPIRES_IN || '15m' })
-      return { accessToken }
+      const refreshToken = await this.jwt.signAsync(payload, { secret: process.env.REFRESH_SECRET!, expiresIn: process.env.REFRESH_EXPIRES_IN || '7d' })
+      return { accessToken, refreshToken }
     } catch {
       throw new UnauthorizedException()
     }

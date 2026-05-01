@@ -61,10 +61,10 @@ export const sales = pgTable(
     }),
     sectorName: text("sector_name"),
     status: saleStatusPGEnum("status").default(SaleStatusEnum.CONCLUIDA),
-    saleDate: date("sale_date"),
+    saleDate: date("sale_date", { mode : "date"}),
     items: json("items").$type<SaleItemsItem[]>(),
     paymentMethods: json("payment_methods").$type<SalePaymentMethodsItem[]>(),
-    totalAmount: numeric("total_amount").notNull(),
+    totalAmount: numeric("total_amount", { mode : "number"}).notNull(),
     notes: text("notes"),
     orderId: uuid("order_id").references(() => orders.id, {
       onDelete: "set null",
@@ -74,17 +74,17 @@ export const sales = pgTable(
     conveniadaName: text("conveniada_name"),
     nfeNumber: text("nfe_number"),
     nfeKey: text("nfe_key"),
-    nfeDate: timestamp("nfe_date", { withTimezone: true }),
+    nfeDate: timestamp("nfe_date", { mode : "date",  withTimezone: true }),
     nfeCancelada: boolean("nfe_cancelada").default(false),
-    nfeDataCancelamento: timestamp("nfe_data_cancelamento", {
+    nfeDataCancelamento: timestamp("nfe_data_cancelamento", { mode : "date", 
       withTimezone: true,
     }),
     nfeJustificativaCancelamento: text("nfe_justificativa_cancelamento"),
     nfceNumber: text("nfce_number"),
     nfceKey: text("nfce_key"),
-    nfceDate: timestamp("nfce_date", { withTimezone: true }),
+    nfceDate: timestamp("nfce_date", { mode : "date",  withTimezone: true }),
     nfceCancelada: boolean("nfce_cancelada").default(false),
-    nfceDataCancelamento: timestamp("nfce_data_cancelamento", {
+    nfceDataCancelamento: timestamp("nfce_data_cancelamento", { mode : "date", 
       withTimezone: true,
     }),
     nfceJustificativaCancelamento: text("nfce_justificativa_cancelamento"),
@@ -94,7 +94,7 @@ export const sales = pgTable(
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("productStocks_tenant_isolation", {

@@ -36,9 +36,9 @@ export const vasilhameLoans = pgTable(
     personName: text("person_name"),
     vasilhameId: uuid("vasilhame_id").notNull(),
     vasilhameName: text("vasilhame_name"),
-    loanQuantity: numeric("loan_quantity").notNull(),
-    returnedQuantity: numeric("returned_quantity").default("0"),
-    loanDate: date("loan_date"),
+    loanQuantity: numeric("loan_quantity", { mode : "number"}).notNull(),
+    returnedQuantity: numeric("returned_quantity", { mode : "number"}).default(0),
+    loanDate: date("loan_date", { mode : "date"}),
     status: vasilhameLoanStatusPGEnum("status").default(VasilhameLoanStatusEnum.PENDENTE),
     companyId: uuid("company_id")
       .notNull()
@@ -46,7 +46,7 @@ export const vasilhameLoans = pgTable(
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("vasilhameLoans_tenant_isolation", {

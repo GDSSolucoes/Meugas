@@ -61,12 +61,12 @@ export const orders = pgTable(
     cashAccountName: text("cash_account_name"),
     status: ordersStatusPGEnum("status").default(OrdersStatusEnum.PENDENTE),
     items: json("items").$type<OrderItemsItem[]>(),
-    totalAmount: numeric("total_amount").default("0"),
-    deliveryDate: date("delivery_date"),
+    totalAmount: numeric("total_amount", { mode : "number"}).default(0),
+    deliveryDate: date("delivery_date", { mode : "date"}),
     notes: text("notes"),
-    attendedAt: timestamp("attended_at", { withTimezone: true }),
-    finalizedAt: timestamp("finalized_at", { withTimezone: true }),
-    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    attendedAt: timestamp("attended_at", { mode : "date",  withTimezone: true }),
+    finalizedAt: timestamp("finalized_at", { mode : "date",  withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { mode : "date",  withTimezone: true }),
     cancellationReason: text("cancellation_reason"),
     companyId: uuid("company_id")
       .notNull()
@@ -74,7 +74,7 @@ export const orders = pgTable(
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("orders_tenant_isolation", {

@@ -1,9 +1,15 @@
 import { Module, Global, Scope } from '@nestjs/common'
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
+import { Pool, types } from 'pg'
 import { RlsService } from './rls/rls.service'
 import { RequestContextService } from './request-context.service'
 import { RlsInterceptor } from './rls/rls.interceptor'
+
+// Configura o driver do Postgres para converter tipos numeric (1700) e bigint (20) para number
+// Por padrão, o pg retorna esses tipos como string para evitar perda de precisão em números gigantes.
+// Para este sistema, converter para number é seguro e evita problemas de concatenação no frontend.
+types.setTypeParser(1700, (val) => (val === null ? null : parseFloat(val)));
+types.setTypeParser(20, (val) => (val === null ? null : parseInt(val, 10)));
 
 @Global()
 @Module({

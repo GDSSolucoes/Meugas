@@ -28,8 +28,8 @@ export const paymentTypes = pgTable("paymentTypes", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   type: paymentTypesTypePGEnum("type").notNull(),
-  maxInstallments: numeric("max_installments").default("1"),
-  daysInterval: numeric("days_interval").default("30"),
+  maxInstallments: numeric("max_installments", { mode : "number"}).default(1),
+  daysInterval: numeric("days_interval", { mode : "number"}).default(30),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "cascade" }),
@@ -37,7 +37,7 @@ export const paymentTypes = pgTable("paymentTypes", {
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
 },
   (table) => [
     pgPolicy("paymentTypes_tenant_isolation", {

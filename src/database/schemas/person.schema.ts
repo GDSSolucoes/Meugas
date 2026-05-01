@@ -48,15 +48,15 @@ export const persons = pgTable(
     phone: json("phone").$type<string[]>(),
     type: personTypePGEnum("type").notNull(),
     address: json("address").$type<PersonAddress>(),
-    glpConsumptionDays: numeric("glp_consumption_days"),
-    birthday: date("birthday"),
+    glpConsumptionDays: numeric("glp_consumption_days", { mode : "number"}),
+    birthday: date("birthday", { mode : "date"}),
     conveniadaId: text("conveniada_id"),
     conveniadaName: text("conveniada_name"),
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     active: boolean("active").default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("persons_tenant_isolation", {

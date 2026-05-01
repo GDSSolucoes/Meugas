@@ -38,10 +38,10 @@ export const productPickups = pgTable(
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
     productName: text("product_name"),
-    pickupQuantity: numeric("pickup_quantity").notNull(),
-    collectedQuantity: numeric("collected_quantity").default("0"),
-    collectedDate: date("collected_date"),
-    saleDate: date("sale_date"),
+    pickupQuantity: numeric("pickup_quantity", { mode : "number"}).notNull(),
+    collectedQuantity: numeric("collected_quantity", { mode : "number"}).default(0),
+    collectedDate: date("collected_date", { mode : "date"}),
+    saleDate: date("sale_date", { mode : "date"}),
     sectorId: uuid("sector_id").references(() => sectors.id, { onDelete: "set null" }),
     sectorName: text("sector_name"),
     notaFiscal: text("nota_fiscal"),
@@ -53,7 +53,7 @@ export const productPickups = pgTable(
     companyName: text("company_name"),
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("productPickups_tenant_isolation", {

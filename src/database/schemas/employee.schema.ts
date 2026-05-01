@@ -32,10 +32,10 @@ export const employees = pgTable(
     email: text("email"),
     phone: text("phone"),
     position: EmployeePositionPGEnum("position").notNull(),
-    salary: numeric("salary"),
-    hireDate: date("hire_date"),
-    vacationStart: date("vacation_start"),
-    vacationEnd: date("vacation_end"),
+    salary: numeric("salary", { mode : "number"}),
+    hireDate: date("hire_date", { mode : "date"}),
+    vacationStart: date("vacation_start", { mode : "date"}),
+    vacationEnd: date("vacation_end", { mode : "date"}),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
@@ -43,7 +43,7 @@ export const employees = pgTable(
     deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     active: boolean("active").default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },
   (table) => [
     pgPolicy("employees_tenant_isolation", {
