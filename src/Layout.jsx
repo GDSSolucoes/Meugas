@@ -147,7 +147,9 @@ export default function Layout({ children, currentPageName }) {
             
             if (matchingCompany) {
               // Auto-vincular usuário à empresa encontrada
-              await User.updateMyUserData({
+              await User.updateMyUserData(
+                user.id,
+                {
                 companyId: matchingCompany.id,
                 companyName: matchingCompany.name,
                 userType: 'admin'

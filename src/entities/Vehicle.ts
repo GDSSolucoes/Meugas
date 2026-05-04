@@ -33,7 +33,7 @@ export class Vehicle extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Vehicle[]>
    */
-  static async filter(filters = {}, pagination = {}) : Promise<Vehicle[]> {
+  static async filter(filters: Partial<Vehicle> = {}, pagination = {}) : Promise<Vehicle[]> {
     return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Vehicle[]>;
   }
 
@@ -43,7 +43,7 @@ export class Vehicle extends BaseEntity {
    * @param data Object with Vehicle properties
    * @returns Promise<Vehicle>
    */
-  static async create(data): Promise<Vehicle> {
+  static async create(data: Partial<Vehicle>): Promise<Vehicle> {
     return super._create.call(this, this.baseUrl, data) as Promise<Vehicle>;
   }
 
@@ -54,7 +54,7 @@ export class Vehicle extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Vehicle>
    */
-  static async update(id, data): Promise<Vehicle> {
+  static async update(id: string, data: Partial<Vehicle>): Promise<Vehicle> {
     return super._update.call(this, this.baseUrl, id, data) as Promise<Vehicle>;
   }
 
@@ -64,7 +64,7 @@ export class Vehicle extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id): Promise<void> {
+  static async delete(id: string): Promise<void> {
     return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
@@ -74,7 +74,7 @@ export class Vehicle extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Vehicle | null>
    */
-  static async findById(id): Promise<Vehicle | null> {
+  static async findById(id: string): Promise<Vehicle | null> {
     return super._findById.call(this, this.baseUrl, id) as Promise<Vehicle | null>;
   }
 }

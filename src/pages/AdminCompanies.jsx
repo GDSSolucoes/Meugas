@@ -164,12 +164,11 @@ export default function AdminCompaniesPage() {
         // AUTOMATICAMENTE vincular o usuário administrador à empresa criada
         try {
           // Buscar se o usuário já existe
-          const allUsers = await User.list();
-          const existingUser = allUsers.find(u => u.email === currentCompany.adminEmail);
+          const existingUser = await User.filter({ email: currentCompany.adminEmail });
           
-          if (existingUser) {
+          if (existingUser.length > 0) {
             // Usuário já existe, apenas atualizar o vínculo com a empresa
-            await Users.update(existingUser.id, {
+            await User.updateMyUserData(existingUser[0].id, {
               companyId: newCompany.id,
               companyName: newCompany.name,
               userType: 'admin' // Garantir que é admin da empresa

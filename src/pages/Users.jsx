@@ -42,12 +42,12 @@ export default function UsersPage() {
       if (user.email === 'brasileirosilvia@gmail.com') { // Condição para super admin
         // Super admin vê todos os usuários e empresas
         [usersData, companiesData] = await Promise.all([
-          User.list('-createdDate'),
+          User.filter({}, { sort: '-createdDate' }),
           Company.filter({}, { sort: 'name' }) // Carregar todas as empresas em ordem alfabética
         ]);
       } else {
         // Admin da empresa vê usuários da sua empresa E usuários sem empresa
-        const allUsers = await User.list();
+        const allUsers = await User.filter({});
         const usersOfCompany = user.companyId ? allUsers.filter(u => u.companyId === user.companyId) : [];
         const usersWithoutCompany = allUsers.filter(u => !u.companyId);
         
@@ -98,7 +98,7 @@ export default function UsersPage() {
         userData.companyName = null; // Explicitly set to null if companyId is null or empty
       }
       
-      const updatedUser = await User.updateid, userData);
+      const updatedUser = await User.update(id, userData);
       console.log('Usuário atualizado:', updatedUser);
       
       toast({ title: "Sucesso", description: "Usuário atualizado com sucesso." });

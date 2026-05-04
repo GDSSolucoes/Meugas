@@ -14,7 +14,8 @@ export enum VasilhameLoanStatusEnum {
  * Automatically generated entity class with CRUD operations.
  */
 export class VasilhameLoan extends BaseEntity {
-  onDelete: any;
+  saleId: string;
+  personId: string;
   personName: string;
   vasilhameId: string;
   vasilhameName: string;
@@ -31,7 +32,7 @@ export class VasilhameLoan extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<VasilhameLoan[]>
    */
-  static async filter(filters = {}, pagination = {}) : Promise<VasilhameLoan[]> {
+  static async filter(filters: Partial<VasilhameLoan> = {}, pagination = {}) : Promise<VasilhameLoan[]> {
     return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<VasilhameLoan[]>;
   }
 
@@ -41,7 +42,7 @@ export class VasilhameLoan extends BaseEntity {
    * @param data Object with VasilhameLoan properties
    * @returns Promise<VasilhameLoan>
    */
-  static async create(data): Promise<VasilhameLoan> {
+  static async create(data: Partial<VasilhameLoan>): Promise<VasilhameLoan> {
     return super._create.call(this, this.baseUrl, data) as Promise<VasilhameLoan>;
   }
 
@@ -52,7 +53,7 @@ export class VasilhameLoan extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<VasilhameLoan>
    */
-  static async update(id, data): Promise<VasilhameLoan> {
+  static async update(id: string, data: Partial<VasilhameLoan>): Promise<VasilhameLoan> {
     return super._update.call(this, this.baseUrl, id, data) as Promise<VasilhameLoan>;
   }
 
@@ -62,7 +63,7 @@ export class VasilhameLoan extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id): Promise<void> {
+  static async delete(id: string): Promise<void> {
     return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
@@ -72,7 +73,7 @@ export class VasilhameLoan extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<VasilhameLoan | null>
    */
-  static async findById(id): Promise<VasilhameLoan | null> {
+  static async findById(id: string): Promise<VasilhameLoan | null> {
     return super._findById.call(this, this.baseUrl, id) as Promise<VasilhameLoan | null>;
   }
 }
