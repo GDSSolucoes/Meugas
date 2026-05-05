@@ -22,23 +22,30 @@ export enum PaymentTypesTypeEnum {
   CONVENIO = "convenio",
 }
 
-export const paymentTypesTypePGEnum = pgEnum("payment_types_type_enum", PaymentTypesTypeEnum);
+export const paymentTypesTypePGEnum = pgEnum(
+  "payment_types_type_enum",
+  PaymentTypesTypeEnum,
+);
 
-export const paymentTypes = pgTable("paymentTypes", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  type: paymentTypesTypePGEnum("type").notNull(),
-  maxInstallments: numeric("max_installments", { mode : "number"}).default(1),
-  daysInterval: numeric("days_interval", { mode : "number"}).default(30),
-  companyId: uuid("company_id")
-    .notNull()
-    .references(() => companies.id, { onDelete: "cascade" }),
-  companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
+export const paymentTypes = pgTable(
+  "paymentTypes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    type: paymentTypesTypePGEnum("type").notNull(),
+    maxInstallments: numeric("max_installments", { mode: "number" }).default(1),
+    daysInterval: numeric("days_interval", { mode: "number" }).default(30),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    companyName: text("company_name"),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
-},
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
+  },
   (table) => [
     pgPolicy("paymentTypes_tenant_isolation", {
       for: "all",
@@ -49,5 +56,5 @@ export const paymentTypes = pgTable("paymentTypes", {
     }),
     index("paymentTypes_company_id_index").on(table.companyId),
     index("paymentTypes_type_index").on(table.type),
-  ],);
-
+  ],
+);

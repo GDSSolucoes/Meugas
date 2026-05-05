@@ -198,7 +198,7 @@ export class FuelingModule {}
 
 ## Observações Importantes
 
-1. **Fields Required**: Todo schema deve ter `deleted` (boolean, default false)
+1. **Fields Required**: Todo schema deve ter `active` (boolean, default true)
 2. **Company Isolation**: Se a entidade é multi-tenant, passe `true` como `hasCompanyId`
 3. **Custom Logic**: Extend `BaseCrudService` para adicionar lógica específica
 4. **Search Fields**: Customize em cada Service se necessário

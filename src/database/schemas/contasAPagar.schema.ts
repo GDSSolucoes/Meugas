@@ -12,6 +12,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
+import { paymentTypes } from "./paymentType.schema";
+import { purchases } from "./purchase.schema";
 
 export enum ContasAPagarStatusEnum {
   ABERTO = "aberto",
@@ -30,13 +32,27 @@ export const contasAPagar = pgTable(
     description: text("description").notNull(),
     dueDate: date("due_date", { mode : "date"}).notNull(),
     amount: numeric("amount", { mode : "number"}).notNull(),
+    installmentNumber: numeric("installment_number", { mode : "number"}),
     status: contasAPagarStatusPGEnum("status").default(ContasAPagarStatusEnum.ABERTO),
+    paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
+      onDelete: "set null",
+    }),
+    paymentTypeName: text("payment_type_name"),
     paymentDate: date("payment_date", { mode : "date"}),
+    purchaseId: uuid("purchase_id").references(() => purchases.id, { onDelete: "set null" }),
+    nfeNumber: text("nfe_number"),
+    groupId: uuid("group_id"),
+    groupName: text("group_name"),
+    subgroupId: uuid("subgroup_id"),
+    subgroupName: text("subgroup_name"),
+    documentNumber: text("document_number"),
+    reagendamentoMotivo: text("reagendamento_motivo"),
+    reagendamentoData: date("reagendamento_data", { mode : "date"}),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },

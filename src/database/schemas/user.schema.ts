@@ -40,7 +40,6 @@ export const users = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name").default(""),
-    deleted: boolean("deleted").default(false),
     active: boolean("active").default(true),
     passwordHash: text("password_hash").notNull(),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),

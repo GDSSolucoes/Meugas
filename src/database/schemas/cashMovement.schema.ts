@@ -14,6 +14,7 @@ import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { persons } from "./person.schema";
 import { cashAccounts } from "./cashAccount.schema";
+import { paymentTypes } from "./paymentType.schema";
 
 export enum CashMovementTypeEnum {
   RECEITA = "receita",
@@ -40,12 +41,24 @@ export const cashMovements = pgTable(
     personName: text("person_name"),
     groupId: uuid("group_id"),
     groupName: text("group_name"),
+    subgroupId: uuid("subgroup_id"),
+    subgroupName: text("subgroup_name"),
+    documentNumber: text("document_number"),
+    competenceMonth: text("competence_month"),
+    paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
+      onDelete: "set null",
+    }),
+    paymentTypeName: text("payment_type_name"),
+    notes: text("notes"),
+    isAccounting: boolean("is_accounting").default(false),
     relatedDocId: uuid("related_doc_id"),
+    sectorId: uuid("sector_id"),
+    sectorName: text("sector_name"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },

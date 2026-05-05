@@ -55,7 +55,7 @@ export class FacilitadorEsBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  ativo!: boolean
+  active!: boolean
 
   @ApiProperty()
   @IsOptional()

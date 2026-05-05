@@ -55,12 +55,11 @@ export const facilitadores = pgTable(
     cofinsSituacaoTributaria: text("cofins_situacao_tributaria"),
     ipiSituacaoTributaria: text("ipi_situacao_tributaria"),
     observacoes: text("observacoes"),
-    ativo: boolean("ativo").default(true),
+    active: boolean("active").default(true),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },

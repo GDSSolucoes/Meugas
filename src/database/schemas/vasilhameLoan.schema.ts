@@ -44,7 +44,7 @@ export const vasilhameLoans = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },

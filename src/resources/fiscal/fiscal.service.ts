@@ -228,7 +228,7 @@ export class FiscalService {
       throw new NotFoundException('Facilitador fiscal não encontrado')
     }
 
-    if (!facilitador.ativo) {
+    if (!facilitador.active) {
       throw new BadRequestException('Facilitador fiscal está inativo')
     }
 

@@ -17,6 +17,7 @@ export const stockTransfers = pgTable(
   "stockTransfers",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    transferNumber: text("transfer_number"),
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
@@ -31,11 +32,12 @@ export const stockTransfers = pgTable(
     toSectorName: text("to_sector_name"),
     quantity: numeric("quantity", { mode : "number"}).notNull(),
     transferDate: timestamp("transfer_date", { mode : "date",  withTimezone: true }),
+    notes: text("notes"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },

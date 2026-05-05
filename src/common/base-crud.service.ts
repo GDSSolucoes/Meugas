@@ -13,7 +13,7 @@ export type BaseTableConfig = {
   columns: {
     // 1. Colunas OBRIGATÓRIAS que seu motor genérico usa
     id: AnyPgColumn;
-    deleted: AnyPgColumn;
+    active: AnyPgColumn;
     createdAt: AnyPgColumn;
     
     
@@ -43,8 +43,8 @@ export class BaseCrudService<T extends BasePgTable> {
 
   protected getBaseWhere(): SQL {
     // O RLS já filtra por company_id automaticamente quando políticas estão ativas
-    // Apenas filtramos por deleted = false
-    return eq(this.table.deleted, false);
+    // Apenas filtramos por active = true
+    return eq(this.table.active, true);
   }
 
   async list(
@@ -159,7 +159,7 @@ export class BaseCrudService<T extends BasePgTable> {
     const db = this.getDb();
     const result = await db
       .update(this.table as any)
-      .set({ deleted: true } as any)
+      .set({ active: false } as any)
       .where(and(this.getBaseWhere(), eq((this.table as any).id, id)))
       .returning();
     return (result as any[])[0];

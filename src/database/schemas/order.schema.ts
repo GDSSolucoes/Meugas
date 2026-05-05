@@ -68,11 +68,14 @@ export const orders = pgTable(
     finalizedAt: timestamp("finalized_at", { mode : "date",  withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { mode : "date",  withTimezone: true }),
     cancellationReason: text("cancellation_reason"),
+    canal: text("canal"),
+    urgente: boolean("urgente").default(false),
+    convenio: boolean("convenio").default(false),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
-    deleted: boolean("deleted").default(false),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
   },

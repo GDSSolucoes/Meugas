@@ -77,7 +77,7 @@ export const companies = pgTable(
     suspensionReason: text("suspension_reason"),
     adminName: text("admin_name").notNull(),
     adminEmail: text("admin_email").notNull(),
-    deleted: boolean("deleted").default(false),
+    active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),

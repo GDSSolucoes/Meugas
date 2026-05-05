@@ -26,7 +26,7 @@ export class GetOrdersReportHandler implements IQueryHandler<GetOrdersReportQuer
       .where(
         and(
           eq(orders.companyId, companyId),
-          eq(orders.deleted, false),
+          eq(orders.active, true),
           gte(orders.createdAt, startDate),
           lte(orders.createdAt, endDate)
         )
