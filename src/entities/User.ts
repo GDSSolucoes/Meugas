@@ -10,18 +10,17 @@ export enum userRoleEnum {
 export enum userTypeEnum {
   ATENDENTE = "atendente",
   ADMIN = "admin",
-  SUPER_ADMIN = "superAdmin",
+  SUPER_ADMIN = "super_admin",
 }
 
 export class User extends BaseEntity {
   email!: string;
   cpf?: string | null;
   name!: string;
-  role!: string;
+  role!: userRoleEnum;
   userType!: userTypeEnum;
   phone?: string;
   department?: string;
-  deleted?: boolean;
   static baseUrl: string = "/users";
 
   constructor(data?: Partial<User>) {

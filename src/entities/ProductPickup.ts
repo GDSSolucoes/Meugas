@@ -3,8 +3,8 @@ import { BaseEntity } from './BaseEntity';
 
 export enum ProductPickupStatusEnum {
   PENDENTE = "pendente",
-  RETIRADO_PARCIAL = "retiradoParcial",
-  RETIRADO_TOTAL = "retiradoTotal",
+  RETIRADO_PARCIAL = "retirado_parcial",
+  RETIRADO_TOTAL = "retirado_total",
 }
 
 /**
@@ -37,8 +37,13 @@ export class ProductPickup extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<ProductPickup[]>
    */
-  static async filter(filters = {}, pagination = {}) : Promise<ProductPickup[]> {
-    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<ProductPickup[]>;
+  static async filter(filters: Partial<ProductPickup> = {}, pagination = {}): Promise<ProductPickup[]> {
+    return super._filter.call(
+      this,
+      this.baseUrl,
+      filters,
+      pagination
+    ) as Promise<ProductPickup[]>;
   }
 
   /**
@@ -47,7 +52,7 @@ export class ProductPickup extends BaseEntity {
    * @param data Object with ProductPickup properties
    * @returns Promise<ProductPickup>
    */
-  static async create(data): Promise<ProductPickup> {
+  static async create(data: Partial<ProductPickup>): Promise<ProductPickup> {
     return super._create.call(this, this.baseUrl, data) as Promise<ProductPickup>;
   }
 
@@ -58,7 +63,7 @@ export class ProductPickup extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<ProductPickup>
    */
-  static async update(id, data): Promise<ProductPickup> {
+  static async update(id: string, data: Partial<ProductPickup>): Promise<ProductPickup> {
     return super._update.call(this, this.baseUrl, id, data) as Promise<ProductPickup>;
   }
 
@@ -68,7 +73,7 @@ export class ProductPickup extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id): Promise<void> {
+  static async delete(id: string): Promise<void> {
     return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
@@ -78,7 +83,7 @@ export class ProductPickup extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<ProductPickup | null>
    */
-  static async findById(id): Promise<ProductPickup | null> {
+  static async findById(id: string): Promise<ProductPickup | null> {
     return super._findById.call(this, this.baseUrl, id) as Promise<ProductPickup | null>;
   }
 }

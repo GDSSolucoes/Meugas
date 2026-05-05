@@ -300,7 +300,7 @@ export default function PaymentModal({ open, onOpenChange, pedido, onConfirm }) 
                   const selectedType = paymentTypes.find(t => t.id === value);
                   if (selectedType) {
                     // Se for cartão, sempre A Prazo
-                    if (selectedType.type === 'cartaoDebito' || selectedType.type === 'cartaoCredito') {
+                    if (selectedType.type === 'cartao_debito' || selectedType.type === 'cartao_credito') {
                       setPaymentOption('prazo');
                     } else {
                       setPaymentOption(selectedType.maxInstallments > 1 ? 'prazo' : 'vista');

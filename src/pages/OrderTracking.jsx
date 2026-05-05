@@ -68,7 +68,7 @@ const FilterSection = ({ employees, filters, onFilterChange }) => (
             <SelectContent>
               <SelectItem value="all">Todos os Status</SelectItem>
               <SelectItem value="pendente">Pendente</SelectItem>
-              <SelectItem value="emAtendimento">Em Atendimento</SelectItem>
+              <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
               <SelectItem value="finalizado">Finalizado</SelectItem>
               <SelectItem value="cancelado">Cancelado</SelectItem>
             </SelectContent>
@@ -158,7 +158,7 @@ export default function OrderTrackingPage() {
 
   const pendingOrders = useMemo(() => filteredOrders.filter(o => o.status === 'pendente'), [filteredOrders]);
 
-  const inProgressOrders = useMemo(() => filteredOrders.filter(o => o.status === 'emAtendimento'), [filteredOrders]);
+  const inProgressOrders = useMemo(() => filteredOrders.filter(o => o.status === 'em_atendimento'), [filteredOrders]);
   // Atualizado: Finalizados agora inclui os Cancelados
   const completedOrders = useMemo(() => filteredOrders.filter(o => o.status === 'finalizado' || o.status === 'cancelado'), [filteredOrders]);
 
@@ -235,11 +235,11 @@ export default function OrderTrackingPage() {
   };
 
   const handleUpdateStatus = async (order, newStatus) => {
-    if (newStatus === 'emAtendimento' && !order.employeeId) {
+    if (newStatus === 'em_atendimento' && !order.employeeId) {
       toast({ title: "Atenção", description: "Selecione um entregador antes de enviar para entrega.", variant: "destructive" });
       return;
     }
-    if (newStatus === 'emAtendimento' && !order.paymentTypeId) {
+    if (newStatus === 'em_atendimento' && !order.paymentTypeId) {
       toast({ title: "Atenção", description: "Selecione uma forma de pagamento antes de enviar para entrega.", variant: "destructive" });
       return;
     }
@@ -342,7 +342,7 @@ export default function OrderTrackingPage() {
     const getBadge = (status) => {
         switch(status) {
             case 'pendente': return <Badge className="bg-yellow-100 text-yellow-800 text-xs">Pendente</Badge>;
-            case 'emAtendimento': return <Badge className="bg-blue-100 text-blue-800 text-xs">Em Atendimento</Badge>;
+            case 'em_atendimento': return <Badge className="bg-blue-100 text-blue-800 text-xs">Em Atendimento</Badge>;
             case 'finalizado': return <Badge className="bg-green-100 text-green-800 text-xs">Finalizado</Badge>;
             case 'cancelado': return <Badge className="bg-red-100 text-red-800 text-xs">Cancelado</Badge>;
             default: return <Badge className="text-xs">{status}</Badge>
@@ -352,7 +352,7 @@ export default function OrderTrackingPage() {
     // Define personAddress directly from the order object.
     const personAddress = order.personAddress || {};
 
-    const isOrderActionable = order.status === 'pendente' || order.status === 'emAtendimento';
+    const isOrderActionable = order.status === 'pendente' || order.status === 'em_atendimento';
     
     const cardClassName = order.status === 'cancelado' 
       ? "bg-red-50 border-red-200 shadow-md hover:shadow-lg transition-shadow" 
@@ -498,7 +498,7 @@ export default function OrderTrackingPage() {
           </CardContent>
           <CardFooter className="flex justify-end gap-2 pt-2">
             {/* Botão de Cancelar - para pedidos pendentes e em atendimento */}
-            {(order.status === 'pendente' || order.status === 'emAtendimento') && (
+            {(order.status === 'pendente' || order.status === 'em_atendimento') && (
                <Button
                  onClick={() => onCancel(order)}
                  disabled={isLoading}
@@ -512,7 +512,7 @@ export default function OrderTrackingPage() {
             
             {order.status === 'pendente' && (
                <Button
-                 onClick={() => onStart(order, 'emAtendimento')}
+                 onClick={() => onStart(order, 'em_atendimento')}
                  disabled={isLoading}
                  className="bg-blue-600 hover:bg-blue-700 text-xs h-8 px-3"
                 >
@@ -520,7 +520,7 @@ export default function OrderTrackingPage() {
                  Enviar para Entrega
                </Button>
             )}
-            {order.status === 'emAtendimento' && (
+            {order.status === 'em_atendimento' && (
                <Button
                  onClick={() => onFinalize(order)}
                  disabled={isLoading}

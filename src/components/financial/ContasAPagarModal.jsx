@@ -462,7 +462,7 @@ export default function ContasAPagarModal({
       setShowFornecedorSearch(true);
       return;
     }
-    // Se o campo de NF está ativo, abre modal de NF
+    // Se o campo de NF está active, abre modal de NF
     if (activeSearchField === 'nf') {
       setShowNFSearch(true);
       return;

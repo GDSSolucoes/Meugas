@@ -1,5 +1,4 @@
-import { BaseEntity } from './BaseEntity';
-
+import { BaseEntity } from "./BaseEntity";
 
 export enum ProductCategoriesEnum {
   EQUIPAMENTO = "equipamento",
@@ -30,7 +29,7 @@ export class Product extends BaseEntity {
   icmsOrigem: number;
   benegicioFiscal?: string;
   anpCodigo?: string;
-  anpDescricao?: string
+  anpDescricao?: string;
   valorSemIcmsKg?: number;
   kgPorUnidadeGlp?: number;
   percentualGnNacional: number;
@@ -39,10 +38,8 @@ export class Product extends BaseEntity {
   pesoLiquido?: number;
   pesoBruto?: number;
   informacoesAdicionaisNfe?: string;
-  
 
-
-  static baseUrl: string = '/products';
+  static baseUrl: string = "/products";
 
   /**
    * Static method to filter Products records
@@ -51,8 +48,13 @@ export class Product extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Products[]>
    */
-  static async filter(filters = {}, pagination = {}) : Promise<Product[]> {
-    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Product[]>;
+  static async filter(filters: Partial<Product> = {}, pagination = {}): Promise<Product[]> {
+    return super._filter.call(
+      this,
+      this.baseUrl,
+      filters,
+      pagination,
+    ) as Promise<Product[]>;
   }
 
   /**
@@ -61,7 +63,7 @@ export class Product extends BaseEntity {
    * @param data Object with Products properties
    * @returns Promise<Products>
    */
-  static async create(data): Promise<Product> {
+  static async create(data: Partial<Product>): Promise<Product> {
     return super._create.call(this, this.baseUrl, data) as Promise<Product>;
   }
 
@@ -72,7 +74,7 @@ export class Product extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<Products>
    */
-  static async update(id, data): Promise<Product> {
+  static async update(id: string, data: Partial<Product>): Promise<Product> {
     return super._update.call(this, this.baseUrl, id, data) as Promise<Product>;
   }
 
@@ -82,7 +84,7 @@ export class Product extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id): Promise<void> {
+  static async delete(id: string): Promise<void> {
     return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
@@ -92,7 +94,11 @@ export class Product extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<Products | null>
    */
-  static async findById(id): Promise<Product | null> {
-    return super._findById.call(this, this.baseUrl, id) as Promise<Product | null>;
+  static async findById(id: string): Promise<Product | null> {
+    return super._findById.call(
+      this,
+      this.baseUrl,
+      id,
+    ) as Promise<Product | null>;
   }
 }

@@ -44,7 +44,7 @@ export class CashMovement extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<CashMovement[]>
    */
-  static async filter(filters = {}, pagination = {}) : Promise<CashMovement[]> {
+  static async filter(filters: Partial<CashMovement> = {}, pagination = {}) : Promise<CashMovement[]> {
     return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<CashMovement[]>;
   }
 
@@ -75,7 +75,7 @@ export class CashMovement extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<void>
    */
-  static async delete(id): Promise<void> {
+  static async delete(id: string): Promise<void> {
     return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
 
@@ -85,7 +85,7 @@ export class CashMovement extends BaseEntity {
    * @param id The entity ID
    * @returns Promise<CashMovement | null>
    */
-  static async findById(id): Promise<CashMovement | null> {
+  static async findById(id: string): Promise<CashMovement | null> {
     return super._findById.call(this, this.baseUrl, id) as Promise<CashMovement | null>;
   }
 }

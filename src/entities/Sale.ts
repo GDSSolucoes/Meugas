@@ -56,11 +56,13 @@ export class Sale extends BaseEntity {
   nfeKey: string;
   nfeDate: Date;
   nfeCancelada: boolean;
+  nfeDataCancelamento: Date;
   nfeJustificativaCancelamento: string;
   nfceNumber: string;
   nfceKey: string;
   nfceDate: Date;
   nfceCancelada: boolean;
+  nfceDataCancelamento: Date;
   nfceJustificativaCancelamento: string;
   static baseUrl: string = "/sales";
 

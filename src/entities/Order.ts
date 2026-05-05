@@ -2,7 +2,7 @@ import { BaseEntity } from './BaseEntity';
 
 export enum OrdersStatusEnum {
   PENDENTE = 'pendente',
-  EM_ATENDIMENTO = 'emAtendimento',
+  EM_ATENDIMENTO = 'em_atendimento',
   FINALIZADO = 'finalizado',
   CANCELADO = 'cancelado',
 }
@@ -45,10 +45,10 @@ export class Order extends BaseEntity {
   attendedAt?: Date;
   finalizedAt?: Date;
   cancelledAt?: Date;
+  cancellationReason?: string;
   canal: string;
   urgente: boolean;
   convenio: boolean;
-  cancellationReason?: string;
   static baseUrl: string = "/orders";
 
   constructor(data?: Partial<Order>) {

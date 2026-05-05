@@ -126,7 +126,7 @@ export default function ProductPickupManagementPage() {
     
     // Filtro por status do produto
     if (tipoProduto === 'aRetirar') {
-      filtered = filtered.filter(p => p.status === 'pendente' || (p.status === 'retiradoParcial' && (p.pickupQuantity || 0) > (p.collectedQuantity || 0)));
+      filtered = filtered.filter(p => p.status === 'pendente' || (p.status === 'retirado_parcial' && (p.pickupQuantity || 0) > (p.collectedQuantity || 0)));
     } else {
       // Retirados entre datas - considera TODAS as retiradas (parciais e totais) com data
       filtered = filtered.filter(p => {
@@ -148,11 +148,11 @@ export default function ProductPickupManagementPage() {
     
     // Calcular totais
     const aRetirar = filtered
-      .filter(p => p.status !== 'retiradoTotal')
+      .filter(p => p.status !== 'retirado_total')
       .reduce((sum, p) => sum + ((p.pickupQuantity || 0) - (p.collectedQuantity || 0)), 0);
     
     const retirados = filtered
-      .filter(p => p.status === 'retiradoTotal')
+      .filter(p => p.status === 'retirado_total')
       .reduce((sum, p) => sum + (p.collectedQuantity || 0), 0);
     
     setTotalARetirar(aRetirar);
@@ -200,7 +200,7 @@ export default function ProductPickupManagementPage() {
       toast({ title: "Atenção", description: "Selecione um registro para dar baixa.", variant: "destructive" });
       return;
     }
-    if (pickupToUse.status === 'retiradoTotal') {
+    if (pickupToUse.status === 'retirado_total') {
       toast({ title: "Atenção", description: "Este produto já foi totalmente retirado.", variant: "destructive" });
       return;
     }
@@ -248,7 +248,7 @@ export default function ProductPickupManagementPage() {
     try {
       const novaQtdeColetada = (selectedPickup.collectedQuantity || 0) + qtde;
       const totalPendente = selectedPickup.pickupQuantity || 0;
-      const novoStatus = novaQtdeColetada >= totalPendente ? 'retiradoTotal' : 'retiradoParcial';
+      const novoStatus = novaQtdeColetada >= totalPendente ? 'retirado_total' : 'retirado_parcial';
       
       const sector = sectors.find(s => s.id === sectorBaixa);
       

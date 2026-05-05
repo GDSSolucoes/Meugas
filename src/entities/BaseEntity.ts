@@ -168,7 +168,7 @@ export class BaseEntity {
       const endpoint = `${baseUrl}/${id}`;
       const response = await api.get(endpoint);
       return new this(response.data);
-    } catch (error) {
+    } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
       }

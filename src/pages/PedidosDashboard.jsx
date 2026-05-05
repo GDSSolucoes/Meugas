@@ -56,7 +56,7 @@ export default function PedidosDashboardPage() {
       setRecentOrders(ordersData.slice(0, 5)); // Set recent orders, taking the first 5
 
       const pending = ordersData.filter(o => o.status === 'pendente').length;
-      const inProgress = ordersData.filter(o => o.status === 'emAtendimento').length;
+      const inProgress = ordersData.filter(o => o.status === 'em_atendimento').length;
       const completed = ordersData.filter(o => o.status === 'finalizado').length;
 
       setStats({
@@ -216,7 +216,7 @@ export default function PedidosDashboardPage() {
                        <span>Pedido #{order.id} - {order.customerName}</span>
                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                          order.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' :
-                         order.status === 'emAtendimento' ? 'bg-blue-100 text-blue-800' :
+                         order.status === 'em_atendimento' ? 'bg-blue-100 text-blue-800' :
                          'bg-green-100 text-green-800'
                        }`}>
                          {order.status.replace('_', ' ').toUpperCase()}

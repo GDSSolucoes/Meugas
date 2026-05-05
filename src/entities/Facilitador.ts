@@ -32,6 +32,7 @@ export enum FacilitadorTipoOperacaoEnum {
 export class Facilitador extends BaseEntity {
   empresaId: string;
   nome: string;
+  modeloFiscal: FacilitadorModeloFiscalEnum;
   tipoOperacao: FacilitadorTipoOperacaoEnum;
   cfop: string;
   regimeTributario: FacilitadorRegimeTributarioEnum;

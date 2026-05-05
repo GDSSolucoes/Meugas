@@ -153,7 +153,7 @@ export default function PurchasesPage() {
     if (currentPurchase.paymentTypeId && currentPurchase.installments > 0 && !isNaN(currentPurchase.finalTotal)) {
       const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.paymentTypeId);
       if (selectedPaymentType) {
-        const isImmediatePayment = ['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
+        const isImmediatePayment = ['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
 
         // If it's an immediate payment type, ensure installments is 1
         if (isImmediatePayment && currentPurchase.installments !== 1) {
@@ -292,7 +292,7 @@ export default function PurchasesPage() {
     const paymentType = paymentTypes.find(pt => pt.id === paymentTypeId);
     if (!paymentType) return;
 
-    const isImmediatePayment = ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+    const isImmediatePayment = ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
     const maxInstallments = paymentType.maxInstallments || 1;
     const installments = isImmediatePayment ? 1 : maxInstallments;
 
@@ -403,7 +403,7 @@ export default function PurchasesPage() {
 
       // Verificar se é pagamento a prazo
       const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.paymentTypeId);
-      const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
+      const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
 
       if (isAPrazo && currentPurchase.installmentsDetails.length > 0) {
         // Registrar cada parcela em Contas a Pagar
@@ -805,7 +805,7 @@ export default function PurchasesPage() {
 
                 {currentPurchase.paymentTypeId && (() => {
                   const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPurchase.paymentTypeId);
-                  const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
+                  const isAPrazo = selectedPaymentType && !['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
 
                   return isAPrazo && (
                     <>

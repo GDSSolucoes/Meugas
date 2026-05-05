@@ -20,7 +20,7 @@ export default function CashAccountsPage() {
   
   const initialAccountState = {
     name: '',
-    type: 'caixaFisico', // Added type with a default value
+    type: 'caixa_fisico', // Added type with a default value
     balance: 0,
     initialBalance: 0,
     initialBalanceDate: format(new Date(), 'yyyy-MM-dd'),
@@ -189,8 +189,8 @@ export default function CashAccountsPage() {
                     >
                       <SelectTrigger className="bg-white/80"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="caixaFisico">Caixa Físico</SelectItem>
-                        <SelectItem value="contaBancaria">Conta Bancária</SelectItem>
+                        <SelectItem value="caixa_fisico">Caixa Físico</SelectItem>
+                        <SelectItem value="conta_bancaria">Conta Bancária</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

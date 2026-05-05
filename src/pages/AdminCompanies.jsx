@@ -72,7 +72,7 @@ export default function AdminCompaniesPage() {
       setCompanies(companiesData);
       
       const active = companiesData.filter(c => c.status === 'ativa').length;
-      const suspended = companiesData.filter(c => c.status === 'suspensaPagamento').length;
+      const suspended = companiesData.filter(c => c.status === 'suspensa_pagamento').length;
       debugger;
       const totalRevenue = companiesData.reduce((sum, c) => sum + (c.monthlyFee || 0), 0);
       
@@ -123,7 +123,7 @@ export default function AdminCompaniesPage() {
     try {
       const updateData = { 
         status: newStatus,
-        suspensionReason: newStatus === 'suspensaPagamento' ? reason : ''
+        suspensionReason: newStatus === 'suspensa_pagamento' ? reason : ''
       };
       await Company.update(companyId, updateData);
       loadCompanies();
@@ -131,7 +131,7 @@ export default function AdminCompaniesPage() {
       const statusLabels = {
         'ativa': 'ativada',
         'inativa': 'inativada',
-        'suspensaPagamento': 'suspensa'
+        'suspensa_pagamento': 'suspensa'
       };
       
       toast({
@@ -221,7 +221,7 @@ export default function AdminCompaniesPage() {
     const configs = {
       ativa: { color: "bg-green-100 text-green-800", label: "Ativa" },
       inativa: { color: "bg-gray-100 text-gray-800", label: "Inativa" },
-      suspensaPagamento: { color: "bg-red-100 text-red-800", label: "Suspensa" }
+      suspensa_pagamento: { color: "bg-red-100 text-red-800", label: "Suspensa" }
     };
     const config = configs[status] || configs.inativa;
     return <Badge className={config.color}>{config.label}</Badge>;
@@ -573,7 +573,7 @@ export default function AdminCompaniesPage() {
                               size="icon" 
                               onClick={() => {
                                 const reason = prompt("Motivo da suspensão:");
-                                if (reason) handleStatusChange(company.id, 'suspensaPagamento', reason);
+                                if (reason) handleStatusChange(company.id, 'suspensa_pagamento', reason);
                               }}
                               className="hover:bg-red-100"
                             >
@@ -581,7 +581,7 @@ export default function AdminCompaniesPage() {
                             </Button>
                           )}
                           
-                          {company.status === 'suspensaPagamento' && (
+                          {company.status === 'suspensa_pagamento' && (
                             <Button 
                               variant="ghost" 
                               size="icon" 

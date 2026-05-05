@@ -4,8 +4,8 @@ import { BaseEntity } from './BaseEntity';
 export enum PaymentTypesTypeEnum {
   DINHEIRO = "dinheiro",
   PIX = "pix",
-  CARTAO_DEBITO = "cartaoDebito",
-  CARTAO_CREDITO = "cartaoCredito",
+  CARTAO_DEBITO = "cartao_debito",
+  CARTAO_CREDITO = "cartao_credito",
   BOLETO = "boleto",
   CHEQUE = "cheque",
   CONVENIO = "convenio",

@@ -3,8 +3,8 @@ import { BaseEntity } from './BaseEntity';
 
 export enum VasilhameLoanStatusEnum {
   PENDENTE = "pendente",
-  DEVOLVIDO_PARCIAL = "devolvidoParcial",
-  DEVOLVIDO_TOTAL = "devolvidoTotal",
+  DEVOLVIDO_PARCIAL = "devolvido_parcial",
+  DEVOLVIDO_TOTAL = "devolvido_total",
 }
 
 /**

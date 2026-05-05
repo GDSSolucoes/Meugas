@@ -3,7 +3,7 @@ import { BaseEntity } from './BaseEntity';
 export enum PersonType {
   CLIENTE = 'cliente',
   FORNECEDOR = 'fornecedor',
-  PONTO_VENDA = 'pontoVenda',
+  PONTO_VENDA = 'ponto_venda',
   CONVENIADA = 'conveniada'
 }
 

@@ -132,11 +132,11 @@ export default function VasilhameManagementPage() {
 
     // Filtro por Período
     if (periodoTipo === 'aDevolver') {
-      filtered = filtered.filter(loan => loan.status !== 'devolvidoTotal' && loan.status !== 'devolvidoParcial');
+      filtered = filtered.filter(loan => loan.status !== 'devolvido_total' && loan.status !== 'devolvido_parcial');
     } else {
       // Devolvidos entre datas
       filtered = filtered.filter(loan => {
-        if (loan.status !== 'devolvidoTotal') return false;
+        if (loan.status !== 'devolvido_total') return false;
         if (!loan.returnDate) return false;
         
         const returnDate = parseISO(loan.returnDate);
@@ -201,7 +201,7 @@ export default function VasilhameManagementPage() {
       toast({ title: "Atenção", description: "Selecione um registro para modificar.", variant: "destructive" });
       return;
     }
-    setModDevolvido(selectedLoan.status === 'devolvidoTotal');
+    setModDevolvido(selectedLoan.status === 'devolvido_total');
     setModDataDevolucao(selectedLoan.returnDate || format(new Date(), 'yyyy-MM-dd'));
     setShowModificarModal(true);
   };
@@ -211,7 +211,7 @@ export default function VasilhameManagementPage() {
 
     try {
       await entities.VasilhameLoan.update(selectedLoan.id, {
-        status: modDevolvido ? 'devolvidoTotal' : 'pendente',
+        status: modDevolvido ? 'devolvido_total' : 'pendente',
         returnedQuantity: modDevolvido ? selectedLoan.loanQuantity : 0,
         returnDate: modDevolvido ? modDataDevolucao : null
       });
@@ -285,13 +285,13 @@ export default function VasilhameManagementPage() {
           </thead>
           <tbody>
             ${dataToprint.map(loan => `
-              <tr class="${loan.status === 'devolvidoTotal' ? 'devolvido' : 'pendente'}">
+              <tr class="${loan.status === 'devolvido_total' ? 'devolvido' : 'pendente'}">
                 <td>${loan.loanDate ? format(parseISO(loan.loanDate), 'dd/MM/yyyy') : '-'}</td>
                 <td>${loan.saleId?.slice(-6) || '-'}</td>
                 <td>${loan.personName || '-'}</td>
                 <td>${loan.vasilhameName || '-'}</td>
                 <td>${loan.loanQuantity || 0}</td>
-                <td class="text-center">${loan.status === 'devolvidoTotal' ? 'Sim' : 'Não'}</td>
+                <td class="text-center">${loan.status === 'devolvido_total' ? 'Sim' : 'Não'}</td>
                 <td>${loan.returnDate ? format(parseISO(loan.returnDate), 'dd/MM/yyyy') : '-'}</td>
               </tr>
             `).join('')}
@@ -311,7 +311,7 @@ export default function VasilhameManagementPage() {
   };
 
   const getRowColor = (loan) => {
-    if (loan.status === 'devolvidoTotal') return 'bg-green-50';
+    if (loan.status === 'devolvido_total') return 'bg-green-50';
     // Verificar se é venda antiga (mais de 30 dias)
     if (loan.loanDate) {
       const loanDate = parseISO(loan.loanDate);
@@ -325,7 +325,7 @@ export default function VasilhameManagementPage() {
   };
 
   const handleRowDoubleClick = (loan) => {
-    if (loan.status === 'devolvidoTotal') return;
+    if (loan.status === 'devolvido_total') return;
     setSelectedLoan(loan);
     setQtdeBaixar('');
     setBaixaError('');
@@ -351,12 +351,12 @@ export default function VasilhameManagementPage() {
     try {
       const novaQtdeDevolvida = (selectedLoan.returnedQuantity || 0) + qtde;
       const totalEmprestado = selectedLoan.loanQuantity || 0;
-      const novoStatus = novaQtdeDevolvida >= totalEmprestado ? 'devolvidoTotal' : 'devolvidoParcial';
+      const novoStatus = novaQtdeDevolvida >= totalEmprestado ? 'devolvido_total' : 'devolvido_parcial';
 
       await entities.VasilhameLoan.update(selectedLoan.id, {
         status: novoStatus,
         returnedQuantity: novaQtdeDevolvida,
-        returnDate: novoStatus === 'devolvidoTotal' ? format(new Date(), 'yyyy-MM-dd') : selectedLoan.returnDate
+        returnDate: novoStatus === 'devolvido_total' ? format(new Date(), 'yyyy-MM-dd') : selectedLoan.returnDate
       });
 
       toast({ title: "Sucesso", description: `Baixa de ${qtde} vasilhame(s) realizada com sucesso.` });
@@ -621,7 +621,7 @@ export default function VasilhameManagementPage() {
                             <TableCell className="text-xs">{loan.vasilhameName || '-'}</TableCell>
                             <TableCell className="text-xs text-center">{loan.loanQuantity || 0}</TableCell>
                             <TableCell className="text-xs text-center">
-                              {loan.status === 'devolvidoTotal' ? (
+                              {loan.status === 'devolvido_total' ? (
                                 <Badge className="bg-green-100 text-green-800 text-xs">Sim</Badge>
                               ) : (
                                 <Badge className="bg-yellow-100 text-yellow-800 text-xs">Não</Badge>

@@ -27,7 +27,7 @@ export default function UsersPage() {
       setCurrentUser(user);
 
       // Verificar se o usuário tem permissão para acessar esta página
-      if (user.userType !== 'admin' && user.userType !== 'superAdmin') {
+      if (user.userType !== 'admin' && user.userType !== 'super_admin') {
         toast({
           title: "Acesso Negado",
           description: "Você não tem permissão para gerenciar usuários.",
@@ -120,9 +120,9 @@ export default function UsersPage() {
   };
 
   const getUserTypeBadge = (userType) => {
-    // Adicionado superAdmin para o badge também, caso necessário.
-    // O outline não especifica badge para superAdmin, então manter admin para superAdmin.
-    return userType === 'admin' || userType === 'superAdmin'
+    // Adicionado super_admin para o badge também, caso necessário.
+    // O outline não especifica badge para super_admin, então manter admin para super_admin.
+    return userType === 'admin' || userType === 'super_admin'
       ? <Badge className="bg-purple-100 text-purple-800">Administrador</Badge>
       : <Badge className="bg-blue-100 text-blue-800">Atendente</Badge>;
   };
@@ -134,7 +134,7 @@ export default function UsersPage() {
   };
 
   // Se o currentUser foi carregado e não tem permissão, renderizar mensagem de acesso restrito
-  if (currentUser && currentUser.userType !== 'admin' && currentUser.userType !== 'superAdmin') {
+  if (currentUser && currentUser.userType !== 'admin' && currentUser.userType !== 'super_admin') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-7xl mx-auto">

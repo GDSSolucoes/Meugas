@@ -41,7 +41,7 @@ export default function PaymentModal({
   const isOverpaid = remaining < -0.01;
 
   const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPayment.paymentTypeId);
-  const isCashPayment = selectedPaymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(selectedPaymentType.type);
+  const isCashPayment = selectedPaymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
   const isInstallmentPayment = selectedPaymentType && !isCashPayment && currentPayment.installments > 1;
 
   // Gerar parcelas quando o usuário clicar no botão
@@ -140,7 +140,7 @@ export default function PaymentModal({
     }
 
     const paymentType = paymentTypes.find(pt => pt.id === currentPayment.paymentTypeId);
-    const isCash = ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType?.type);
+    const isCash = ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType?.type);
 
     if (isCash && !currentPayment.cashAccountId) {
       alert('Selecione uma conta/caixa para pagamento à vista');

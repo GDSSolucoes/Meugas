@@ -378,11 +378,11 @@ export default function PagamentoModal({
                   <Label htmlFor="fpCheque" className="text-sm cursor-pointer">Cheque</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cartaoDebito" id="fpDebito" />
+                  <RadioGroupItem value="cartao_debito" id="fpDebito" />
                   <Label htmlFor="fpDebito" className="text-sm cursor-pointer">Cartão Débito</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cartaoCredito" id="fpCredito" />
+                  <RadioGroupItem value="cartao_credito" id="fpCredito" />
                   <Label htmlFor="fpCredito" className="text-sm cursor-pointer">Cartão Crédito</Label>
                 </div>
               </RadioGroup>
@@ -460,7 +460,7 @@ export default function PagamentoModal({
                 </div>
               )}
 
-              {(formaPagamento === 'cartaoDebito' || formaPagamento === 'cartaoCredito') && (
+              {(formaPagamento === 'cartao_debito' || formaPagamento === 'cartao_credito') && (
                 <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t">
                   <div>
                     <Label className="text-xs">Bandeira:</Label>
@@ -478,7 +478,7 @@ export default function PagamentoModal({
                     <Label className="text-xs">Nº Transação:</Label>
                     <Input value={numeroTransacaoCartao} onChange={(e) => setNumeroTransacaoCartao(e.target.value)} className="h-8" disabled={paymentConfirmed} />
                   </div>
-                  {formaPagamento === 'cartaoCredito' && (
+                  {formaPagamento === 'cartao_credito' && (
                     <div>
                       <Label className="text-xs">Nº Parcelas:</Label>
                       <Input type="number" min="1" value={numeroParcelas} onChange={(e) => setNumeroParcelas(parseInt(e.target.value) || 1)} className="h-8" disabled={paymentConfirmed} />

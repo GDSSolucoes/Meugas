@@ -70,7 +70,7 @@ export default function OrdersReportPage() {
   const getBadge = (status) => {
     switch(status) {
       case 'pendente': return <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>;
-      case 'emAtendimento': return <Badge className="bg-blue-100 text-blue-800">Em Atendimento</Badge>;
+      case 'em_atendimento': return <Badge className="bg-blue-100 text-blue-800">Em Atendimento</Badge>;
       case 'finalizado': return <Badge className="bg-green-100 text-green-800">Finalizado</Badge>;
       default: return <Badge>{status}</Badge>;
     }
@@ -78,7 +78,7 @@ export default function OrdersReportPage() {
 
   const totalOrders = filteredOrders.length;
   const pendingOrders = filteredOrders.filter(o => o.status === 'pendente').length;
-  const inProgressOrders = filteredOrders.filter(o => o.status === 'emAtendimento').length;
+  const inProgressOrders = filteredOrders.filter(o => o.status === 'em_atendimento').length;
   const completedOrders = filteredOrders.filter(o => o.status === 'finalizado').length;
   const totalValue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
@@ -141,7 +141,7 @@ export default function OrdersReportPage() {
                   <SelectContent>
                     <SelectItem value="all">Todos os Status</SelectItem>
                     <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="emAtendimento">Em Atendimento</SelectItem>
+                    <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
                     <SelectItem value="finalizado">Finalizado</SelectItem>
                   </SelectContent>
                 </Select>

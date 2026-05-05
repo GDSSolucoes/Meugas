@@ -261,9 +261,9 @@ export default function FacilitadoresPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="simplesNacional">Simples Nacional</SelectItem>
-                        <SelectItem value="lucroPresumido">Lucro Presumido</SelectItem>
-                        <SelectItem value="lucroReal">Lucro Real</SelectItem>
+                        <SelectItem value="simples_nacional">Simples Nacional</SelectItem>
+                        <SelectItem value="lucro_presumido">Lucro Presumido</SelectItem>
+                        <SelectItem value="lucro_real">Lucro Real</SelectItem>
                         <SelectItem value="mei">MEI</SelectItem>
                       </SelectContent>
                     </Select>

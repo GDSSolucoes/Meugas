@@ -44,7 +44,7 @@ const initialSaleState = {
 // Helper function to generate installment details
 const generateInstallmentDetails = (paymentMethod, paymentTypes, saleDate) => {
   const paymentType = paymentTypes.find(pt => pt.id === paymentMethod.paymentTypeId);
-  const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+  const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
   const amount = parseFloat(paymentMethod.amount) || 0;
   const installments = parseInt(paymentMethod.installments) || 1;
 
@@ -129,7 +129,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
     currentPaymentMethod[field] = value;
 
     const paymentType = paymentTypes.find(pt => pt.id === currentPaymentMethod.paymentTypeId);
-    const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+    const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
 
     if (field === 'paymentTypeId') {
       currentPaymentMethod.paymentTypeName = paymentType?.name || '';
@@ -228,7 +228,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, totalAmount, paymentTypes, c
           <div className="space-y-3">
             {paymentMethods.map((payment, index) => {
               const paymentType = paymentTypes.find(pt => pt.id === payment.paymentTypeId);
-              const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+              const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
 
               return (
                 <div key={index} className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50">
@@ -442,7 +442,7 @@ export default function SalesPage({ onSaleComplete }) {
         entities.Sector.filter({ companyId: companyId, active: true }),
         entities.PaymentType.filter({ companyId: companyId, active: true }),
         entities.CashAccount.filter({ companyId: companyId, active: true }),
-        entities.Order.filter({ companyId: companyId, status: ['pendente', 'emAtendimento', 'finalizado'] }, { sort: '-createdDate', limit: 100 }).catch(() => [])
+        entities.Order.filter({ companyId: companyId, status: ['pendente', 'em_atendimento', 'finalizado'] }, { sort: '-createdDate', limit: 100 }).catch(() => [])
       ]);
 
       setPeople(allPeople.filter(p => p.type === 'cliente'));
@@ -832,7 +832,7 @@ export default function SalesPage({ onSaleComplete }) {
       for (const paymentMethod of payments) {
         const paymentType = paymentTypes.find(p => p.id === paymentMethod.paymentTypeId);
 
-        const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartaoDebito'].includes(paymentType.type);
+        const isImmediatePaymentType = paymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType.type);
         if (paymentMethod.installments === 1 && isImmediatePaymentType && paymentMethod.cashAccountId) {
           try {
             const cashAccount = cashAccounts.find(ca => ca.id === paymentMethod.cashAccountId);
@@ -864,7 +864,7 @@ export default function SalesPage({ onSaleComplete }) {
           }
         }
 
-        const isAPrazoPaymentType = paymentType && ['boleto', 'cheque', 'cartaoCredito', 'convenio'].includes(paymentType.type);
+        const isAPrazoPaymentType = paymentType && ['boleto', 'cheque', 'cartao_credito', 'convenio'].includes(paymentType.type);
         if (isAPrazoPaymentType && paymentMethod.installmentsDetails && paymentMethod.installmentsDetails.length > 0) {
           const targetPersonId = (paymentType?.type === 'convenio' && savedSale.conveniadaId) ?
             savedSale.conveniadaId : savedSale.personId;
@@ -964,7 +964,7 @@ export default function SalesPage({ onSaleComplete }) {
                     <SelectItem value={null}>🆕 Nova Venda</SelectItem>
                     {orders.map(order => (
                       <SelectItem key={order.id} value={order.id}>
-                        #{order.orderNumber} - {order.personName} - R$ {order.totalAmount.toFixed(2)} - {order.status === 'pendente' ? '⏳ Pendente' : order.status === 'emAtendimento' ? '🚚 Em Atendimento' : '✅ Finalizado'}
+                        #{order.orderNumber} - {order.personName} - R$ {order.totalAmount.toFixed(2)} - {order.status === 'pendente' ? '⏳ Pendente' : order.status === 'em_atendimento' ? '🚚 Em Atendimento' : '✅ Finalizado'}
                       </SelectItem>
                     ))}
                   </SelectContent>
