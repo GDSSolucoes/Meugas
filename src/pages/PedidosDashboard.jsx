@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import {
   TrendingUp,
   Package,
   AlertCircle,
-  Loader2 // Added for loading spinner
+  Loader2, // Added for loading spinner
 } from "lucide-react";
 import { Order } from "@/entities/Order";
 import { Person } from "@/entities/Person";
@@ -26,13 +25,14 @@ export default function PedidosDashboardPage() {
     pendingOrders: 0,
     inProgressOrders: 0,
     completedOrders: 0,
-    totalCustomers: 0
+    totalCustomers: 0,
   });
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // New state for loading
   const [recentOrders, setRecentOrders] = useState([]); // New state for recent orders
 
-  const loadData = useCallback(async () => { // Renamed from loadStats to loadData and wrapped in useCallback
+  const loadData = useCallback(async () => {
+    // Renamed from loadStats to loadData and wrapped in useCallback
     setIsLoading(true);
     try {
       const user = await User.me();
@@ -40,35 +40,52 @@ export default function PedidosDashboardPage() {
       const companyId = user.companyId;
 
       if (!companyId) {
-        toast({ title: "Erro", description: "Usuário não está vinculado a uma empresa.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "Usuário não está vinculado a uma empresa.",
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
 
       // Fetch all necessary data for the dashboard
-      const [ordersData, productsData, employeesData, peopleData] = await Promise.all([
-        Order.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
-        Product.filter({ companyId }).catch(() => []),
-        Employee.filter({ companyId, position: 'entregador', active: true }).catch(() => []),
-        Person.filter({ companyId, type: 'cliente' }).catch(() => []) // Ensure robustness with .catch
-      ]);
+      const [ordersData, productsData, employeesData, peopleData] =
+        await Promise.all([
+          Order.filter({ companyId }).catch(() => []), // Ensure robustness with .catch
+          Product.filter({ companyId }).catch(() => []),
+          Employee.filter({
+            companyId,
+            position: "entregador",
+            active: true,
+          }).catch(() => []),
+          Person.filter({ companyId, type: "cliente" }).catch(() => []), // Ensure robustness with .catch
+        ]);
 
       setRecentOrders(ordersData.slice(0, 5)); // Set recent orders, taking the first 5
 
-      const pending = ordersData.filter(o => o.status === 'pendente').length;
-      const inProgress = ordersData.filter(o => o.status === 'em_atendimento').length;
-      const completed = ordersData.filter(o => o.status === 'finalizado').length;
+      const pending = ordersData.filter((o) => o.status === "pendente").length;
+      const inProgress = ordersData.filter(
+        (o) => o.status === "em_atendimento",
+      ).length;
+      const completed = ordersData.filter(
+        (o) => o.status === "finalizado",
+      ).length;
 
       setStats({
         totalOrders: ordersData.length,
         pendingOrders: pending,
         inProgressOrders: inProgress,
         completedOrders: completed,
-        totalCustomers: peopleData.length // Use peopleData for total customers
+        totalCustomers: peopleData.length, // Use peopleData for total customers
       });
     } catch (error) {
       console.error("Erro ao carregar dados do dashboard:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar os dados.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +98,11 @@ export default function PedidosDashboardPage() {
   // New function for saving a quick order
   const handleSaveOrder = async (order) => {
     if (!currentUser) {
-      toast({ title: "Erro", description: "Usuário não autenticado.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive",
+      });
       return;
     }
     try {
@@ -89,13 +110,20 @@ export default function PedidosDashboardPage() {
         ...order,
         companyId: currentUser.companyId,
         companyName: currentUser.companyName,
-        createdByName: currentUser.fullName
+        createdByName: currentUser.name,
       });
-      toast({ title: "Sucesso", description: "Pedido rápido salvo com sucesso!" });
+      toast({
+        title: "Sucesso",
+        description: "Pedido rápido salvo com sucesso!",
+      });
       loadData(); // Reload data after saving
     } catch (error) {
       console.error("Erro ao salvar pedido rápido:", error);
-      toast({ title: "Erro", description: "Não foi possível salvar o pedido.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o pedido.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -115,68 +143,83 @@ export default function PedidosDashboardPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">Módulo Pedidos</h1>
-            <p className="text-slate-600 text-lg">Gestão completa de pedidos e entregas</p>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">
+              Módulo Pedidos
+            </h1>
+            <p className="text-slate-600 text-lg">
+              Gestão completa de pedidos e entregas
+            </p>
           </div>
           {/* Example of adding a quick order button, if applicable and a form exists */}
-          {/* <Button onClick={() => handleSaveOrder({ /* dummy order data */ /* })}>
+          {/* <Button onClick={() => handleSaveOrder({ /* dummy order data */
+          /* })}>
             Novo Pedido Rápido
           </Button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
-                <ClipboardList className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalOrders}</div>
-                {/* <p className="text-xs text-muted-foreground">+5% hoje</p> Keep or remove as needed, based on data availability */}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pedidos Pendentes</CardTitle>
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-500">{stats.pendingOrders}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Em Atendimento</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.inProgressOrders}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Finalizados</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.completedOrders}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-                <UsersIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total de Pedidos
+              </CardTitle>
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              {/* <p className="text-xs text-muted-foreground">+5% hoje</p> Keep or remove as needed, based on data availability */}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Pedidos Pendentes
+              </CardTitle>
+              <AlertCircle className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-500">
+                {stats.pendingOrders}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Em Atendimento
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.inProgressOrders}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Finalizados</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.completedOrders}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60">
             <CardHeader>
-              <CardTitle className="text-xl font-bold text-slate-800">Ações Rápidas</CardTitle>
+              <CardTitle className="text-xl font-bold text-slate-800">
+                Ações Rápidas
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -204,12 +247,16 @@ export default function PedidosDashboardPage() {
 
           <Card className="lg:col-span-2 bg-white/80 backdrop-blur-sm border-slate-200/60">
             <CardHeader>
-              <CardTitle className="text-xl font-bold text-slate-800">Visão Geral dos Pedidos</CardTitle>
+              <CardTitle className="text-xl font-bold text-slate-800">
+                Visão Geral dos Pedidos
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-               <p className="text-sm text-slate-600">Acompanhe o status dos pedidos em tempo real.</p>
-               {/* You can render recentOrders here if needed, e.g.: */}
-               {/* {recentOrders.length > 0 ? (
+              <p className="text-sm text-slate-600">
+                Acompanhe o status dos pedidos em tempo real.
+              </p>
+              {/* You can render recentOrders here if needed, e.g.: */}
+              {/* {recentOrders.length > 0 ? (
                  <ul className="mt-4 space-y-2">
                    {recentOrders.map(order => (
                      <li key={order.id} className="flex justify-between items-center text-sm">

@@ -3,15 +3,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  DollarSign, Search, LogOut, Printer, Edit, Trash2, 
-  CheckSquare, RefreshCw, X, ArrowRight
+import {
+  DollarSign,
+  Search,
+  LogOut,
+  Printer,
+  Edit,
+  Trash2,
+  CheckSquare,
+  RefreshCw,
+  X,
+  ArrowRight,
 } from "lucide-react";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { CashAccount } from "@/entities/CashAccount";
@@ -26,9 +53,18 @@ import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
 import RenegociacaoModal from "./RenegociacaoModal";
 
 // Dialog de Baixa
-function BaixaDialog({ isOpen, onClose, onConfirm, cashAccounts, contas, totalSelecionado }) {
-  const [selectedAccountId, setSelectedAccountId] = useState('');
-  const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+function BaixaDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  cashAccounts,
+  contas,
+  totalSelecionado,
+}) {
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [paymentDate, setPaymentDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
 
   useEffect(() => {
     if (cashAccounts.length > 0) {
@@ -45,29 +81,54 @@ function BaixaDialog({ isOpen, onClose, onConfirm, cashAccounts, contas, totalSe
           <DialogTitle>Baixar Contas a Receber</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <p><strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)</p>
-          <p><strong>Valor Total:</strong> <span className="text-green-600 font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalSelecionado)}</span></p>
+          <p>
+            <strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)
+          </p>
+          <p>
+            <strong>Valor Total:</strong>{" "}
+            <span className="text-green-600 font-bold">
+              {new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(totalSelecionado)}
+            </span>
+          </p>
           <div>
             <Label>Data do Recebimento</Label>
-            <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+            <Input
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+            />
           </div>
           <div>
             <Label>Conta/Caixa de Destino *</Label>
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+            <Select
+              value={selectedAccountId}
+              onValueChange={setSelectedAccountId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a conta..." />
               </SelectTrigger>
               <SelectContent>
-                {cashAccounts.map(account => (
-                  <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
+                {cashAccounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onConfirm(selectedAccountId, paymentDate)} disabled={!selectedAccountId} className="bg-green-600 hover:bg-green-700">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => onConfirm(selectedAccountId, paymentDate)}
+            disabled={!selectedAccountId}
+            className="bg-green-600 hover:bg-green-700"
+          >
             Confirmar Recebimento
           </Button>
         </DialogFooter>
@@ -76,11 +137,11 @@ function BaixaDialog({ isOpen, onClose, onConfirm, cashAccounts, contas, totalSe
   );
 }
 
-export default function AccountsReceivableFullModal({ 
-  open, 
-  onOpenChange, 
+export default function AccountsReceivableFullModal({
+  open,
+  onOpenChange,
   currentUser,
-  onPaymentComplete 
+  onPaymentComplete,
 }) {
   const { toast } = useToast();
   const [contas, setContas] = useState([]);
@@ -102,47 +163,59 @@ export default function AccountsReceivableFullModal({
   const [tipoSacado, setTipoSacado] = useState({
     cliente: true,
     pontoVenda: false,
-    conveniada: false
+    conveniada: false,
   });
   const [sacadoSelecionado, setSacadoSelecionado] = useState(null);
   const [showSacadoSearch, setShowSacadoSearch] = useState(false);
-  const [sacadoSearchTerm, setSacadoSearchTerm] = useState('');
+  const [sacadoSearchTerm, setSacadoSearchTerm] = useState("");
 
   // Pesquisa - Método de pesquisa
-  const [metodoPesquisa, setMetodoPesquisa] = useState('codigoVenda');
-  const [codigoPesquisa, setCodigoPesquisa] = useState('');
+  const [metodoPesquisa, setMetodoPesquisa] = useState("codigoVenda");
+  const [codigoPesquisa, setCodigoPesquisa] = useState("");
   const [showCodigoSearch, setShowCodigoSearch] = useState(false);
 
   // Período
   const [usarPeriodo, setUsarPeriodo] = useState(false);
-  const [dataInicio, setDataInicio] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
-  const [dataFinal, setDataFinal] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [dataInicio, setDataInicio] = useState(
+    format(startOfMonth(new Date()), "yyyy-MM-dd"),
+  );
+  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
 
   // Filtros
-  const [filtroConta, setFiltroConta] = useState('todas');
-  const [filtroSetor, setFiltroSetor] = useState('todos');
-  const [filtroTipoPagto, setFiltroTipoPagto] = useState('todos');
-  const [filtroRespCobranca, setFiltroRespCobranca] = useState('todos');
+  const [filtroConta, setFiltroConta] = useState("todas");
+  const [filtroSetor, setFiltroSetor] = useState("todos");
+  const [filtroTipoPagto, setFiltroTipoPagto] = useState("todos");
+  const [filtroRespCobranca, setFiltroRespCobranca] = useState("todos");
   const [statusContas, setStatusContas] = useState({
     naoPagas: true,
     pagas: false,
-    emCobranca: false
+    emCobranca: false,
   });
 
   // Ordenação
-  const [ordenacao, setOrdenacao] = useState('vencimento');
+  const [ordenacao, setOrdenacao] = useState("vencimento");
 
   const loadData = useCallback(async () => {
     if (!currentUser?.companyId) return;
     setIsLoading(true);
     try {
-      const [contasData, cashAccountsData, paymentTypesData, sectorsData, peopleData, employeesData] = await Promise.all([
-        AccountsReceivable.filter({ companyId: currentUser.companyId }, { sort: '-dueDate' }),
+      const [
+        contasData,
+        cashAccountsData,
+        paymentTypesData,
+        sectorsData,
+        peopleData,
+        employeesData,
+      ] = await Promise.all([
+        AccountsReceivable.filter(
+          { companyId: currentUser.companyId },
+          { sort: "-dueDate" },
+        ),
         CashAccount.filter({ companyId: currentUser.companyId, active: true }),
         PaymentType.filter({ companyId: currentUser.companyId, active: true }),
         Sector.filter({ companyId: currentUser.companyId, active: true }),
         Person.filter({ companyId: currentUser.companyId }),
-        Employee.filter({ companyId: currentUser.companyId, active: true })
+        Employee.filter({ companyId: currentUser.companyId, active: true }),
       ]);
       setContas(contasData);
       setCashAccounts(cashAccountsData);
@@ -152,7 +225,11 @@ export default function AccountsReceivableFullModal({
       setEmployees(employeesData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar as contas a receber.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as contas a receber.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -166,67 +243,86 @@ export default function AccountsReceivableFullModal({
     }
   }, [open, loadData]);
 
-  const tiposSacadoSelecionados = [tipoSacado.cliente, tipoSacado.pontoVenda, tipoSacado.conveniada].filter(Boolean).length;
+  const tiposSacadoSelecionados = [
+    tipoSacado.cliente,
+    tipoSacado.pontoVenda,
+    tipoSacado.conveniada,
+  ].filter(Boolean).length;
 
-  const filteredPeople = people.filter(p => {
-    if (tipoSacado.cliente && p.type === 'cliente') return true;
-    if (tipoSacado.pontoVenda && p.type === 'pontoVenda') return true;
-    if (tipoSacado.conveniada && p.type === 'conveniada') return true;
+  const filteredPeople = people.filter((p) => {
+    if (tipoSacado.cliente && p.type === "cliente") return true;
+    if (tipoSacado.pontoVenda && p.type === "pontoVenda") return true;
+    if (tipoSacado.conveniada && p.type === "conveniada") return true;
     return false;
   });
 
   const applyFiltersAndShow = () => {
     const today = startOfDay(new Date());
-    
-    const filtered = contas.filter(c => {
-      const dueDate = parseISO(c.dueDate);
-      const isPaga = c.status === 'pago';
-      const isEmCobranca = c.status === 'emCobranca';
-      
-      if (!statusContas.naoPagas && !isPaga && !isEmCobranca) return false;
-      if (!statusContas.pagas && isPaga) return false;
-      if (!statusContas.emCobranca && isEmCobranca) return false;
 
-      if (sacadoSelecionado) {
-        if (c.personId !== sacadoSelecionado.id) return false;
-      }
+    const filtered = contas
+      .filter((c) => {
+        const dueDate = c.dueDate;
+        const isPaga = c.status === "pago";
+        const isEmCobranca = c.status === "emCobranca";
 
-      if (codigoPesquisa) {
-        const term = codigoPesquisa.toLowerCase();
-        if (metodoPesquisa === 'codigoVenda') {
-          if (!c.saleId?.toLowerCase().includes(term) && !c.id?.toLowerCase().includes(term)) return false;
+        if (!statusContas.naoPagas && !isPaga && !isEmCobranca) return false;
+        if (!statusContas.pagas && isPaga) return false;
+        if (!statusContas.emCobranca && isEmCobranca) return false;
+
+        if (sacadoSelecionado) {
+          if (c.personId !== sacadoSelecionado.id) return false;
         }
-        if (metodoPesquisa === 'notaFiscal') {
-          if (!c.nfeNumber?.toLowerCase().includes(term)) return false;
+
+        if (codigoPesquisa) {
+          const term = codigoPesquisa.toLowerCase();
+          if (metodoPesquisa === "codigoVenda") {
+            if (
+              !c.saleId?.toLowerCase().includes(term) &&
+              !c.id?.toLowerCase().includes(term)
+            )
+              return false;
+          }
+          if (metodoPesquisa === "notaFiscal") {
+            if (!c.nfeNumber?.toLowerCase().includes(term)) return false;
+          }
+          if (metodoPesquisa === "documento") {
+            if (!c.personDocument?.toLowerCase().includes(term)) return false;
+          }
         }
-        if (metodoPesquisa === 'documento') {
-          if (!c.personDocument?.toLowerCase().includes(term)) return false;
+
+        if (usarPeriodo) {
+          const inicio = new Date(dataInicio + "T00:00:00");
+          const fim = new Date(dataFinal + "T23:59:59");
+          if (dueDate < inicio || dueDate > fim) return false;
         }
-      }
 
-      if (usarPeriodo) {
-        const inicio = new Date(dataInicio + 'T00:00:00');
-        const fim = new Date(dataFinal + 'T23:59:59');
-        if (dueDate < inicio || dueDate > fim) return false;
-      }
+        if (filtroConta !== "todas" && c.cashAccountId !== filtroConta)
+          return false;
+        if (filtroSetor !== "todos" && c.sectorId !== filtroSetor) return false;
+        if (filtroTipoPagto !== "todos" && c.paymentTypeId !== filtroTipoPagto)
+          return false;
+        if (
+          filtroRespCobranca !== "todos" &&
+          c.respCobrancaId !== filtroRespCobranca
+        )
+          return false;
 
-      if (filtroConta !== 'todas' && c.cashAccountId !== filtroConta) return false;
-      if (filtroSetor !== 'todos' && c.sectorId !== filtroSetor) return false;
-      if (filtroTipoPagto !== 'todos' && c.paymentTypeId !== filtroTipoPagto) return false;
-      if (filtroRespCobranca !== 'todos' && c.respCobrancaId !== filtroRespCobranca) return false;
-
-      return true;
-    }).map(c => {
-      const dueDate = parseISO(c.dueDate);
-      const isVencida = c.status === 'pendente' && isBefore(dueDate, today);
-      const isEmCobranca = c.status === 'emCobranca';
-      return { ...c, isVencida: isVencida, isEmCobranca: isEmCobranca };
-    }).sort((a, b) => {
-      if (ordenacao === 'vencimento') return new Date(a.dueDate) - new Date(b.dueDate);
-      if (ordenacao === 'codigo') return (a.id || '').localeCompare(b.id || '');
-      if (ordenacao === 'valor') return (b.amount || 0) - (a.amount || 0);
-      return 0;
-    });
+        return true;
+      })
+      .map((c) => {
+        const dueDate = c.dueDate;
+        const isVencida = c.status === "pendente" && isBefore(dueDate, today);
+        const isEmCobranca = c.status === "emCobranca";
+        return { ...c, isVencida: isVencida, isEmCobranca: isEmCobranca };
+      })
+      .sort((a, b) => {
+        if (ordenacao === "vencimento")
+          return new Date(a.dueDate) - new Date(b.dueDate);
+        if (ordenacao === "codigo")
+          return (a.id || "").localeCompare(b.id || "");
+        if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
+        return 0;
+      });
 
     setDisplayedContas(filtered);
     setShowResults(true);
@@ -235,26 +331,36 @@ export default function AccountsReceivableFullModal({
   const filteredContas = showResults ? displayedContas : [];
 
   const totais = {
-    recebido: contas.filter(c => c.status === 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
-    aReceber: filteredContas.filter(c => c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
-    vencido: filteredContas.filter(c => c.isVencida).reduce((sum, c) => sum + (c.amount || 0), 0),
-    aVencer: filteredContas.filter(c => !c.isVencida && c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
+    recebido: contas
+      .filter((c) => c.status === "pago")
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
+    aReceber: filteredContas
+      .filter((c) => c.status !== "pago")
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
+    vencido: filteredContas
+      .filter((c) => c.isVencida)
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
+    aVencer: filteredContas
+      .filter((c) => !c.isVencida && c.status !== "pago")
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
     selecionado: selectedContas.reduce((sum, id) => {
-      const conta = contas.find(c => c.id === id);
+      const conta = contas.find((c) => c.id === id);
       return sum + (conta?.amount || 0);
-    }, 0)
+    }, 0),
   };
 
   const toggleSelectConta = (contaId) => {
-    setSelectedContas(prev => 
-      prev.includes(contaId) 
-        ? prev.filter(id => id !== contaId)
-        : [...prev, contaId]
+    setSelectedContas((prev) =>
+      prev.includes(contaId)
+        ? prev.filter((id) => id !== contaId)
+        : [...prev, contaId],
     );
   };
 
   const selectAll = () => {
-    setSelectedContas(filteredContas.filter(c => c.status === 'pendente').map(c => c.id));
+    setSelectedContas(
+      filteredContas.filter((c) => c.status === "pendente").map((c) => c.id),
+    );
   };
 
   const handleRowClick = (conta) => {
@@ -265,7 +371,9 @@ export default function AccountsReceivableFullModal({
 
   const getSelectedContasForAction = () => {
     if (selectedContas.length > 0) {
-      return selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean);
+      return selectedContas
+        .map((id) => contas.find((c) => c.id === id))
+        .filter(Boolean);
     }
     if (selectedContaForAction) {
       return [selectedContaForAction];
@@ -275,7 +383,11 @@ export default function AccountsReceivableFullModal({
 
   const handleExcluir = () => {
     if (!hasSelection) {
-      toast({ title: "Atenção", description: "Selecione uma conta para excluir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione uma conta para excluir.",
+        variant: "destructive",
+      });
       return;
     }
     setIsDeleteConfirmOpen(true);
@@ -284,12 +396,15 @@ export default function AccountsReceivableFullModal({
   const confirmExcluir = async () => {
     const contasToDelete = getSelectedContasForAction();
     if (contasToDelete.length === 0) return;
-    
+
     try {
       for (const conta of contasToDelete) {
         await AccountsReceivable.delete(conta.id);
       }
-      toast({ title: "Sucesso", description: `${contasToDelete.length} conta(s) excluída(s) com sucesso!` });
+      toast({
+        title: "Sucesso",
+        description: `${contasToDelete.length} conta(s) excluída(s) com sucesso!`,
+      });
       setIsDeleteConfirmOpen(false);
       setSelectedContaForAction(null);
       setSelectedContas([]);
@@ -297,21 +412,36 @@ export default function AccountsReceivableFullModal({
       if (showResults) applyFiltersAndShow();
     } catch (error) {
       console.error("Erro ao excluir conta:", error);
-      toast({ title: "Erro", description: "Não foi possível excluir a(s) conta(s).", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a(s) conta(s).",
+        variant: "destructive",
+      });
     }
   };
 
   const handleModificar = () => {
     if (!hasSelection) {
-      toast({ title: "Atenção", description: "Selecione uma conta para modificar.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione uma conta para modificar.",
+        variant: "destructive",
+      });
       return;
     }
-    toast({ title: "Info", description: "Funcionalidade de modificação em desenvolvimento." });
+    toast({
+      title: "Info",
+      description: "Funcionalidade de modificação em desenvolvimento.",
+    });
   };
 
   const handleBaixar = () => {
     if (selectedContas.length === 0) {
-      toast({ title: "Atenção", description: "Selecione pelo menos uma conta para baixar.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione pelo menos uma conta para baixar.",
+        variant: "destructive",
+      });
       return;
     }
     setIsBaixaOpen(true);
@@ -319,39 +449,54 @@ export default function AccountsReceivableFullModal({
 
   const handleConfirmBaixa = async (cashAccountId, paidDate) => {
     if (!cashAccountId || !currentUser) {
-      toast({ title: "Erro", description: "Dados incompletos para baixar as contas.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Dados incompletos para baixar as contas.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     try {
-      const receivingAccount = cashAccounts.find(acc => acc.id === cashAccountId);
+      const receivingAccount = cashAccounts.find(
+        (acc) => acc.id === cashAccountId,
+      );
       if (!receivingAccount) {
-        toast({ title: "Erro", description: "Conta de caixa selecionada não encontrada.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "Conta de caixa selecionada não encontrada.",
+          variant: "destructive",
+        });
         return;
       }
 
-      let revenueGroup = await FinancialGroup.filter({ name: 'Receitas de Contas a Receber', companyId: currentUser.companyId });
+      let revenueGroup = await FinancialGroup.filter({
+        name: "Receitas de Contas a Receber",
+        companyId: currentUser.companyId,
+      });
       if (revenueGroup.length === 0) {
-        revenueGroup = [await FinancialGroup.create({ 
-          name: 'Receitas de Contas a Receber', 
-          type: 'receita', 
-          active: true,
-          companyId: currentUser.companyId,
-          companyName: currentUser.companyName,
-          createdByName: currentUser.fullName
-        })];
+        revenueGroup = [
+          await FinancialGroup.create({
+            name: "Receitas de Contas a Receber",
+            type: "receita",
+            active: true,
+            companyId: currentUser.companyId,
+            companyName: currentUser.companyName,
+            createdByName: currentUser.name,
+          }),
+        ];
       }
 
       let totalBaixado = 0;
 
       for (const contaId of selectedContas) {
-        const conta = contas.find(c => c.id === contaId);
-        if (!conta || conta.status === 'pago') continue;
+        const conta = contas.find((c) => c.id === contaId);
+        if (!conta || conta.status === "pago") continue;
 
         await CashMovement.create({
           cashAccountId: receivingAccount.id,
           cashAccountName: receivingAccount.name,
-          type: 'receita',
+          type: "receita",
           description: `Recebimento: ${conta.description}`,
           amount: conta.amount,
           personId: conta.personId,
@@ -361,11 +506,11 @@ export default function AccountsReceivableFullModal({
           groupName: revenueGroup[0].name,
           companyId: currentUser.companyId,
           companyName: currentUser.companyName,
-          createdByName: currentUser.fullName,
+          createdByName: currentUser.name,
         });
 
         await AccountsReceivable.update(contaId, {
-          status: 'pago',
+          status: "pago",
           paymentDate: paidDate,
         });
 
@@ -375,24 +520,35 @@ export default function AccountsReceivableFullModal({
       const newBalance = (receivingAccount.balance || 0) + totalBaixado;
       await CashAccount.update(receivingAccount.id, { balance: newBalance });
 
-      toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) baixada(s) com sucesso!` });
+      toast({
+        title: "Sucesso",
+        description: `${selectedContas.length} conta(s) baixada(s) com sucesso!`,
+      });
       setIsBaixaOpen(false);
       setSelectedContas([]);
       loadData();
-      
+
       if (onPaymentComplete) {
         onPaymentComplete(cashAccountId);
       }
     } catch (error) {
       console.error("Erro ao baixar contas:", error);
-      toast({ title: "Erro", description: `Não foi possível baixar as contas. ${error.message}`, variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: `Não foi possível baixar as contas. ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
   const handleImprimir = () => {
     const contasToPrint = getSelectedContasForAction();
     if (contasToPrint.length === 0) {
-      toast({ title: "Atenção", description: "Selecione ao menos uma conta para imprimir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione ao menos uma conta para imprimir.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -419,7 +575,7 @@ export default function AccountsReceivableFullModal({
       </head>
       <body>
         <h1>Relatório de Contas a Receber</h1>
-        <p class="subtitle">Emitido em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+        <p class="subtitle">Emitido em: ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
         
         <table>
           <thead>
@@ -435,23 +591,27 @@ export default function AccountsReceivableFullModal({
             </tr>
           </thead>
           <tbody>
-            ${contasToPrint.map(conta => `
+            ${contasToPrint
+              .map(
+                (conta) => `
               <tr>
-                <td>${conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yyyy') : '-'}</td>
-                <td>${conta.saleId?.slice(-6) || '-'}</td>
-                <td>${conta.nfeNumber || '-'}</td>
-                <td>${format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</td>
+                <td>${conta.createdAt ? format(conta.createdAt, "dd/MM/yyyy") : "-"}</td>
+                <td>${conta.saleId?.slice(-6) || "-"}</td>
+                <td>${conta.nfeNumber || "-"}</td>
+                <td>${format(conta.dueDate, "dd/MM/yyyy")}</td>
                 <td class="text-right">${formatCurrency(conta.amount)}</td>
-                <td>${conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</td>
-                <td class="text-right">${conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</td>
-                <td>${conta.personName || '-'}</td>
+                <td>${conta.paymentDate ? format(conta.paymentDate, "dd/MM/yyyy") : "-"}</td>
+                <td class="text-right">${conta.status === "pago" ? formatCurrency(conta.amount) : "-"}</td>
+                <td>${conta.personName || "-"}</td>
               </tr>
-            `).join('')}
+            `,
+              )
+              .join("")}
             <tr class="total-row">
               <td colspan="4" class="text-right"><strong>TOTAL:</strong></td>
               <td class="text-right"><strong>${formatCurrency(contasToPrint.reduce((sum, c) => sum + (c.amount || 0), 0))}</strong></td>
               <td></td>
-              <td class="text-right"><strong>${formatCurrency(contasToPrint.filter(c => c.status === 'pago').reduce((sum, c) => sum + (c.amount || 0), 0))}</strong></td>
+              <td class="text-right"><strong>${formatCurrency(contasToPrint.filter((c) => c.status === "pago").reduce((sum, c) => sum + (c.amount || 0), 0))}</strong></td>
               <td></td>
             </tr>
           </tbody>
@@ -464,13 +624,17 @@ export default function AccountsReceivableFullModal({
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
 
   const handlePesquisarClick = () => {
-    if (metodoPesquisa === 'notaFiscal' || metodoPesquisa === 'codigoVenda' || metodoPesquisa === 'documento') {
+    if (
+      metodoPesquisa === "notaFiscal" ||
+      metodoPesquisa === "codigoVenda" ||
+      metodoPesquisa === "documento"
+    ) {
       setShowCodigoSearch(true);
     } else if (tiposSacadoSelecionados > 0 && !sacadoSelecionado) {
       setShowSacadoSearch(true);
@@ -478,23 +642,46 @@ export default function AccountsReceivableFullModal({
   };
 
   const getRowColor = (conta) => {
-    if (conta.status === 'pago') return 'bg-green-50';
-    if (conta.status === 'emCobranca') return 'bg-blue-50';
-    if (conta.isVencida) return 'bg-red-50';
-    return '';
+    if (conta.status === "pago") return "bg-green-50";
+    if (conta.status === "emCobranca") return "bg-blue-50";
+    if (conta.isVencida) return "bg-red-50";
+    return "";
   };
 
-  const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value || 0);
 
   const getCodigoSearchData = () => {
-    if (metodoPesquisa === 'codigoVenda') {
-      return contas.map(c => ({ id: c.id, label: c.saleId || c.id, extra: c.personName, conta: c }));
+    if (metodoPesquisa === "codigoVenda") {
+      return contas.map((c) => ({
+        id: c.id,
+        label: c.saleId || c.id,
+        extra: c.personName,
+        conta: c,
+      }));
     }
-    if (metodoPesquisa === 'notaFiscal') {
-      return contas.filter(c => c.nfeNumber).map(c => ({ id: c.id, label: c.nfeNumber, extra: c.personName, conta: c }));
+    if (metodoPesquisa === "notaFiscal") {
+      return contas
+        .filter((c) => c.nfeNumber)
+        .map((c) => ({
+          id: c.id,
+          label: c.nfeNumber,
+          extra: c.personName,
+          conta: c,
+        }));
     }
-    if (metodoPesquisa === 'documento') {
-      return contas.filter(c => c.personDocument).map(c => ({ id: c.id, label: c.personDocument, extra: c.personName, conta: c }));
+    if (metodoPesquisa === "documento") {
+      return contas
+        .filter((c) => c.personDocument)
+        .map((c) => ({
+          id: c.id,
+          label: c.personDocument,
+          extra: c.personName,
+          conta: c,
+        }));
     }
     return [];
   };
@@ -509,12 +696,14 @@ export default function AccountsReceivableFullModal({
           </DialogTitle>
         </DialogHeader>
 
-        <BaixaDialog 
+        <BaixaDialog
           isOpen={isBaixaOpen}
           onClose={() => setIsBaixaOpen(false)}
           onConfirm={handleConfirmBaixa}
           cashAccounts={cashAccounts}
-          contas={selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean)}
+          contas={selectedContas
+            .map((id) => contas.find((c) => c.id === id))
+            .filter(Boolean)}
           totalSelecionado={totais.selecionado}
         />
 
@@ -525,47 +714,61 @@ export default function AccountsReceivableFullModal({
             <div className="col-span-4">
               <Card className="bg-white border-slate-300 h-full">
                 <CardContent className="p-3">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Pesquisa</h4>
-                  
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                    Pesquisa
+                  </h4>
+
                   <div className="mb-2">
                     <Label className="text-xs font-medium">Tipo Sacado:</Label>
                     <div className="flex gap-2 mt-1">
                       <div className="flex items-center gap-1">
-                        <Checkbox 
-                          id="modalCliente" 
+                        <Checkbox
+                          id="modalCliente"
                           checked={tipoSacado.cliente}
-                          onCheckedChange={(v) => setTipoSacado(p => ({...p, cliente: v}))}
+                          onCheckedChange={(v) =>
+                            setTipoSacado((p) => ({ ...p, cliente: v }))
+                          }
                         />
-                        <label htmlFor="modalCliente" className="text-xs">Cliente</label>
+                        <label htmlFor="modalCliente" className="text-xs">
+                          Cliente
+                        </label>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Checkbox 
-                          id="modalPontoVenda" 
+                        <Checkbox
+                          id="modalPontoVenda"
                           checked={tipoSacado.pontoVenda}
-                          onCheckedChange={(v) => setTipoSacado(p => ({...p, pontoVenda: v}))}
+                          onCheckedChange={(v) =>
+                            setTipoSacado((p) => ({ ...p, pontoVenda: v }))
+                          }
                         />
-                        <label htmlFor="modalPontoVenda" className="text-xs">Pto.Venda</label>
+                        <label htmlFor="modalPontoVenda" className="text-xs">
+                          Pto.Venda
+                        </label>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Checkbox 
-                          id="modalConveniada" 
+                        <Checkbox
+                          id="modalConveniada"
                           checked={tipoSacado.conveniada}
-                          onCheckedChange={(v) => setTipoSacado(p => ({...p, conveniada: v}))}
+                          onCheckedChange={(v) =>
+                            setTipoSacado((p) => ({ ...p, conveniada: v }))
+                          }
                         />
-                        <label htmlFor="modalConveniada" className="text-xs">Convênio</label>
+                        <label htmlFor="modalConveniada" className="text-xs">
+                          Convênio
+                        </label>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-1 mt-2">
                       <div className="flex-1 relative">
-                        <Input 
-                          value={sacadoSelecionado?.name || ''}
+                        <Input
+                          value={sacadoSelecionado?.name || ""}
                           readOnly
                           placeholder="Use o botão Pesquisar"
                           className="h-7 text-xs pr-6 bg-slate-50"
                         />
                         {sacadoSelecionado && (
-                          <button 
+                          <button
                             onClick={() => setSacadoSelecionado(null)}
                             className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                           >
@@ -577,33 +780,51 @@ export default function AccountsReceivableFullModal({
                   </div>
 
                   <div className="border-t border-slate-200 pt-2">
-                    <Label className="text-xs font-medium mb-1 block">Pesquisar por:</Label>
-                    <RadioGroup value={metodoPesquisa} onValueChange={setMetodoPesquisa} className="flex gap-2 mb-2">
+                    <Label className="text-xs font-medium mb-1 block">
+                      Pesquisar por:
+                    </Label>
+                    <RadioGroup
+                      value={metodoPesquisa}
+                      onValueChange={setMetodoPesquisa}
+                      className="flex gap-2 mb-2"
+                    >
                       <div className="flex items-center gap-1">
-                        <RadioGroupItem value="codigoVenda" id="modalCodigoVenda" />
-                        <label htmlFor="modalCodigoVenda" className="text-xs">Cód.Venda</label>
+                        <RadioGroupItem
+                          value="codigoVenda"
+                          id="modalCodigoVenda"
+                        />
+                        <label htmlFor="modalCodigoVenda" className="text-xs">
+                          Cód.Venda
+                        </label>
                       </div>
                       <div className="flex items-center gap-1">
-                        <RadioGroupItem value="notaFiscal" id="modalNotaFiscal" />
-                        <label htmlFor="modalNotaFiscal" className="text-xs">NF</label>
+                        <RadioGroupItem
+                          value="notaFiscal"
+                          id="modalNotaFiscal"
+                        />
+                        <label htmlFor="modalNotaFiscal" className="text-xs">
+                          NF
+                        </label>
                       </div>
                       <div className="flex items-center gap-1">
                         <RadioGroupItem value="documento" id="modalDocumento" />
-                        <label htmlFor="modalDocumento" className="text-xs">Doc</label>
+                        <label htmlFor="modalDocumento" className="text-xs">
+                          Doc
+                        </label>
                       </div>
                     </RadioGroup>
-                    
+
                     <div className="flex gap-1">
                       <div className="flex-1 relative">
-                        <Input 
+                        <Input
                           value={codigoPesquisa}
                           readOnly
                           placeholder="Use o botão Pesquisar"
                           className="h-7 text-xs pr-6 bg-slate-50"
                         />
                         {codigoPesquisa && (
-                          <button 
-                            onClick={() => setCodigoPesquisa('')}
+                          <button
+                            onClick={() => setCodigoPesquisa("")}
                             className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                           >
                             <X className="w-3 h-3" />
@@ -620,29 +841,45 @@ export default function AccountsReceivableFullModal({
             <div className="col-span-4">
               <Card className="bg-white border-slate-300 h-full">
                 <CardContent className="p-3">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Filtros</h4>
-                  
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                    Filtros
+                  </h4>
+
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div>
                       <Label className="text-xs">Conta:</Label>
-                      <Select value={filtroConta} onValueChange={setFiltroConta}>
-                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <Select
+                        value={filtroConta}
+                        onValueChange={setFiltroConta}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="todas">Todas</SelectItem>
-                          {cashAccounts.map(acc => (
-                            <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                          {cashAccounts.map((acc) => (
+                            <SelectItem key={acc.id} value={acc.id}>
+                              {acc.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <Label className="text-xs">Setor:</Label>
-                      <Select value={filtroSetor} onValueChange={setFiltroSetor}>
-                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <Select
+                        value={filtroSetor}
+                        onValueChange={setFiltroSetor}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="todos">Todos</SelectItem>
-                          {sectors.map(s => (
-                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          {sectors.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -651,48 +888,67 @@ export default function AccountsReceivableFullModal({
 
                   <div className="flex items-center gap-3 pt-1 border-t border-slate-200">
                     <div className="flex items-center gap-1">
-                      <Checkbox 
-                        id="modalNaoPaga" 
+                      <Checkbox
+                        id="modalNaoPaga"
                         checked={statusContas.naoPagas}
-                        onCheckedChange={(v) => setStatusContas(p => ({...p, naoPagas: v}))}
+                        onCheckedChange={(v) =>
+                          setStatusContas((p) => ({ ...p, naoPagas: v }))
+                        }
                       />
-                      <label htmlFor="modalNaoPaga" className="text-xs">Não Paga</label>
+                      <label htmlFor="modalNaoPaga" className="text-xs">
+                        Não Paga
+                      </label>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Checkbox 
-                        id="modalPaga" 
+                      <Checkbox
+                        id="modalPaga"
                         checked={statusContas.pagas}
-                        onCheckedChange={(v) => setStatusContas(p => ({...p, pagas: v}))}
+                        onCheckedChange={(v) =>
+                          setStatusContas((p) => ({ ...p, pagas: v }))
+                        }
                       />
-                      <label htmlFor="modalPaga" className="text-xs">Paga</label>
+                      <label htmlFor="modalPaga" className="text-xs">
+                        Paga
+                      </label>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Checkbox 
-                        id="modalEmCobranca" 
+                      <Checkbox
+                        id="modalEmCobranca"
                         checked={statusContas.emCobranca}
-                        onCheckedChange={(v) => setStatusContas(p => ({...p, emCobranca: v}))}
+                        onCheckedChange={(v) =>
+                          setStatusContas((p) => ({ ...p, emCobranca: v }))
+                        }
                       />
-                      <label htmlFor="modalEmCobranca" className="text-xs">Cobrança</label>
+                      <label htmlFor="modalEmCobranca" className="text-xs">
+                        Cobrança
+                      </label>
                     </div>
                   </div>
 
                   <div className="border-t border-slate-200 pt-2 mt-2">
                     <div className="flex items-center gap-2">
-                      <Checkbox 
-                        id="modalUsarPeriodo" 
+                      <Checkbox
+                        id="modalUsarPeriodo"
                         checked={usarPeriodo}
                         onCheckedChange={setUsarPeriodo}
                       />
-                      <label htmlFor="modalUsarPeriodo" className="text-xs font-medium">Período</label>
-                      <div className={`flex gap-1 ${!usarPeriodo ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <Input 
-                          type="date" 
+                      <label
+                        htmlFor="modalUsarPeriodo"
+                        className="text-xs font-medium"
+                      >
+                        Período
+                      </label>
+                      <div
+                        className={`flex gap-1 ${!usarPeriodo ? "opacity-50 pointer-events-none" : ""}`}
+                      >
+                        <Input
+                          type="date"
                           value={dataInicio}
                           onChange={(e) => setDataInicio(e.target.value)}
                           className="h-6 text-xs w-28"
                         />
-                        <Input 
-                          type="date" 
+                        <Input
+                          type="date"
                           value={dataFinal}
                           onChange={(e) => setDataFinal(e.target.value)}
                           className="h-6 text-xs w-28"
@@ -710,7 +966,9 @@ export default function AccountsReceivableFullModal({
                 <CardContent className="p-3">
                   <div className="flex gap-4">
                     <div>
-                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Legenda</h4>
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                        Legenda
+                      </h4>
                       <div className="space-y-1">
                         <div className="flex items-center gap-1">
                           <div className="w-3 h-3 bg-red-400 rounded"></div>
@@ -728,25 +986,43 @@ export default function AccountsReceivableFullModal({
                     </div>
 
                     <div className="border-l border-slate-200 pl-4">
-                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Ordenação</h4>
-                      <RadioGroup value={ordenacao} onValueChange={setOrdenacao} className="space-y-1">
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                        Ordenação
+                      </h4>
+                      <RadioGroup
+                        value={ordenacao}
+                        onValueChange={setOrdenacao}
+                        className="space-y-1"
+                      >
                         <div className="flex items-center gap-1">
-                          <RadioGroupItem value="vencimento" id="modalOrdVencimento" />
-                          <label htmlFor="modalOrdVencimento" className="text-xs">Vencimento</label>
+                          <RadioGroupItem
+                            value="vencimento"
+                            id="modalOrdVencimento"
+                          />
+                          <label
+                            htmlFor="modalOrdVencimento"
+                            className="text-xs"
+                          >
+                            Vencimento
+                          </label>
                         </div>
                         <div className="flex items-center gap-1">
                           <RadioGroupItem value="codigo" id="modalOrdCodigo" />
-                          <label htmlFor="modalOrdCodigo" className="text-xs">Código</label>
+                          <label htmlFor="modalOrdCodigo" className="text-xs">
+                            Código
+                          </label>
                         </div>
                         <div className="flex items-center gap-1">
                           <RadioGroupItem value="valor" id="modalOrdValor" />
-                          <label htmlFor="modalOrdValor" className="text-xs">Valor</label>
+                          <label htmlFor="modalOrdValor" className="text-xs">
+                            Valor
+                          </label>
                         </div>
                       </RadioGroup>
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     className="w-full mt-3 bg-black hover:bg-gray-800 text-white text-xs h-8 gap-1"
                     onClick={applyFiltersAndShow}
                   >
@@ -764,76 +1040,130 @@ export default function AccountsReceivableFullModal({
                 <div className="flex items-center justify-center h-40 text-slate-500 text-sm p-8">
                   <div className="text-center">
                     <Search className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    <p>Clique em <strong>Pesquisar</strong> para exibir as contas</p>
+                    <p>
+                      Clique em <strong>Pesquisar</strong> para exibir as contas
+                    </p>
                   </div>
                 </div>
               ) : (
-              <Table>
-                <TableHeader className="bg-slate-100 sticky top-0">
-                  <TableRow>
-                    <TableHead className="w-8 text-xs">S</TableHead>
-                    <TableHead className="text-xs w-20">Data</TableHead>
-                    <TableHead className="text-xs w-20">Código</TableHead>
-                    <TableHead className="text-xs w-20">N Fiscal</TableHead>
-                    <TableHead className="text-xs w-12">Parc</TableHead>
-                    <TableHead className="text-xs w-24">Dt Vencto</TableHead>
-                    <TableHead className="text-xs w-24 text-right">Valor</TableHead>
-                    <TableHead className="text-xs w-24">Dt Receb.</TableHead>
-                    <TableHead className="text-xs w-24 text-right">Vl Receb.</TableHead>
-                    <TableHead className="text-xs w-20">Situação</TableHead>
-                    <TableHead className="text-xs">Sacado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
+                <Table>
+                  <TableHeader className="bg-slate-100 sticky top-0">
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">Carregando...</TableCell>
+                      <TableHead className="w-8 text-xs">S</TableHead>
+                      <TableHead className="text-xs w-20">Data</TableHead>
+                      <TableHead className="text-xs w-20">Código</TableHead>
+                      <TableHead className="text-xs w-20">N Fiscal</TableHead>
+                      <TableHead className="text-xs w-12">Parc</TableHead>
+                      <TableHead className="text-xs w-24">Dt Vencto</TableHead>
+                      <TableHead className="text-xs w-24 text-right">
+                        Valor
+                      </TableHead>
+                      <TableHead className="text-xs w-24">Dt Receb.</TableHead>
+                      <TableHead className="text-xs w-24 text-right">
+                        Vl Receb.
+                      </TableHead>
+                      <TableHead className="text-xs w-20">Situação</TableHead>
+                      <TableHead className="text-xs">Sacado</TableHead>
                     </TableRow>
-                  ) : filteredContas.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8 text-slate-500">
-                        Nenhuma conta encontrada com os filtros selecionados.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredContas.map(conta => (
-                      <TableRow 
-                        key={conta.id} 
-                        className={`${getRowColor(conta)} hover:bg-slate-100 cursor-pointer ${selectedContaForAction?.id === conta.id ? 'ring-2 ring-blue-500' : ''}`}
-                        onClick={() => handleRowClick(conta)}
-                      >
-                        <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                          <Checkbox 
-                            checked={selectedContas.includes(conta.id)}
-                            onCheckedChange={() => toggleSelectConta(conta.id)}
-                            disabled={conta.status === 'pago'}
-                          />
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={11} className="text-center py-8">
+                          Carregando...
                         </TableCell>
-                        <TableCell className="text-xs">{conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yy') : '-'}</TableCell>
-                        <TableCell className="text-xs font-mono">{conta.saleId?.slice(-6) || conta.id?.slice(-6)}</TableCell>
-                        <TableCell className="text-xs">{conta.nfeNumber || '-'}</TableCell>
-                        <TableCell className="text-xs text-center">{conta.installmentNumber || '1'}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</TableCell>
-                        <TableCell className="text-xs text-right font-mono">{formatCurrency(conta.amount)}</TableCell>
-                        <TableCell className="text-xs">{conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</TableCell>
-                        <TableCell className="text-xs text-right font-mono">{conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</TableCell>
-                        <TableCell className="text-xs">
-                          {conta.status === 'pago' ? (
-                            <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
-                          ) : conta.status === 'emCobranca' ? (
-                            <Badge className="bg-blue-100 text-blue-800 text-xs">Cobrança</Badge>
-                          ) : conta.isVencida ? (
-                            <Badge className="bg-red-100 text-red-800 text-xs">Vencido</Badge>
-                          ) : (
-                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">Aberto</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs">{conta.personName}</TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : filteredContas.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={11}
+                          className="text-center py-8 text-slate-500"
+                        >
+                          Nenhuma conta encontrada com os filtros selecionados.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredContas.map((conta) => (
+                        <TableRow
+                          key={conta.id}
+                          className={`${getRowColor(conta)} hover:bg-slate-100 cursor-pointer ${selectedContaForAction?.id === conta.id ? "ring-2 ring-blue-500" : ""}`}
+                          onClick={() => handleRowClick(conta)}
+                        >
+                          <TableCell
+                            className="text-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedContas.includes(conta.id)}
+                              onCheckedChange={() =>
+                                toggleSelectConta(conta.id)
+                              }
+                              disabled={conta.status === "pago"}
+                            />
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.createdAt
+                              ? format(
+                                  conta.createdAt,
+                                  "dd/MM/yy",
+                                )
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {conta.saleId?.slice(-6) || conta.id?.slice(-6)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.nfeNumber || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-center">
+                            {conta.installmentNumber || "1"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {format(conta.dueDate, "dd/MM/yyyy")}
+                          </TableCell>
+                          <TableCell className="text-xs text-right font-mono">
+                            {formatCurrency(conta.amount)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.paymentDate
+                              ? format(
+                                  conta.paymentDate,
+                                  "dd/MM/yyyy",
+                                )
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-right font-mono">
+                            {conta.status === "pago"
+                              ? formatCurrency(conta.amount)
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.status === "pago" ? (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Pago
+                              </Badge>
+                            ) : conta.status === "emCobranca" ? (
+                              <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                Cobrança
+                              </Badge>
+                            ) : conta.isVencida ? (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                Vencido
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                Aberto
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.personName}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               )}
             </div>
           </div>
@@ -842,23 +1172,33 @@ export default function AccountsReceivableFullModal({
           <div className="grid grid-cols-5 gap-3 p-2 bg-slate-50 rounded-lg border">
             <div className="text-center">
               <p className="text-xs text-slate-600">Recebido:</p>
-              <p className="text-sm font-bold text-green-600">{formatCurrency(totais.recebido)}</p>
+              <p className="text-sm font-bold text-green-600">
+                {formatCurrency(totais.recebido)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">A receber:</p>
-              <p className="text-sm font-bold text-blue-600">{formatCurrency(totais.aReceber)}</p>
+              <p className="text-sm font-bold text-blue-600">
+                {formatCurrency(totais.aReceber)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">Total Vencido:</p>
-              <p className="text-sm font-bold text-red-600">{formatCurrency(totais.vencido)}</p>
+              <p className="text-sm font-bold text-red-600">
+                {formatCurrency(totais.vencido)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">Total a Vencer:</p>
-              <p className="text-sm font-bold text-blue-600">{formatCurrency(totais.aVencer)}</p>
+              <p className="text-sm font-bold text-blue-600">
+                {formatCurrency(totais.aVencer)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">Total Selecionado:</p>
-              <p className="text-sm font-bold text-green-700">{formatCurrency(totais.selecionado)}</p>
+              <p className="text-sm font-bold text-green-700">
+                {formatCurrency(totais.selecionado)}
+              </p>
             </div>
           </div>
         </div>
@@ -866,41 +1206,51 @@ export default function AccountsReceivableFullModal({
         {/* BARRA DE AÇÕES */}
         <div className="bg-slate-100 -mx-6 -mb-6 px-4 py-2 mt-3 border-t">
           <div className="flex flex-wrap gap-1 items-center">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 text-xs gap-1" 
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
               disabled={!hasSelection}
               onClick={handleModificar}
             >
               <Edit className="w-3 h-3" /> Modificar
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 text-xs gap-1" 
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
               disabled={!hasSelection}
               onClick={handleExcluir}
             >
               <Trash2 className="w-3 h-3" /> Excluir
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={handlePesquisarClick}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={handlePesquisarClick}
+            >
               <Search className="w-3 h-3" /> Pesquisar
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={() => onOpenChange(false)}
+            >
               <LogOut className="w-3 h-3" /> Sair
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 text-xs gap-1" 
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
               disabled={!hasSelection}
               onClick={handleImprimir}
             >
               <Printer className="w-3 h-3" /> Imprimir
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="h-8 text-xs gap-1 bg-green-600 hover:bg-green-700"
               onClick={handleBaixar}
               disabled={selectedContas.length === 0}
@@ -910,19 +1260,29 @@ export default function AccountsReceivableFullModal({
 
             <div className="w-px h-6 bg-slate-400 mx-1" />
 
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="h-8 text-xs gap-1"
               disabled={selectedContas.length === 0}
               onClick={() => setIsRenegociacaoOpen(true)}
             >
               <RefreshCw className="w-3 h-3" /> Renegocia
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={selectAll}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={selectAll}
+            >
               <CheckSquare className="w-3 h-3" /> Selecionar
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setSelectedContas([])}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={() => setSelectedContas([])}
+            >
               <X className="w-3 h-3" /> Desmarcar
             </Button>
           </div>
@@ -933,15 +1293,18 @@ export default function AccountsReceivableFullModal({
           <DialogContent className="max-w-2xl max-h-[80vh]">
             <DialogHeader>
               <DialogTitle>
-                Pesquisar {[
-                  tipoSacado.cliente && 'Clientes',
-                  tipoSacado.pontoVenda && 'Pontos de Venda',
-                  tipoSacado.conveniada && 'Convênios'
-                ].filter(Boolean).join(', ')}
+                Pesquisar{" "}
+                {[
+                  tipoSacado.cliente && "Clientes",
+                  tipoSacado.pontoVenda && "Pontos de Venda",
+                  tipoSacado.conveniada && "Convênios",
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Input 
+              <Input
                 placeholder="Digite o nome para buscar..."
                 value={sacadoSearchTerm}
                 onChange={(e) => setSacadoSearchTerm(e.target.value)}
@@ -960,40 +1323,57 @@ export default function AccountsReceivableFullModal({
                   </TableHeader>
                   <TableBody>
                     {filteredPeople
-                      .filter(p => {
+                      .filter((p) => {
                         if (!sacadoSearchTerm) return true;
                         const term = sacadoSearchTerm.toLowerCase();
-                        return p.name?.toLowerCase().includes(term) || 
-                               p.document?.toLowerCase().includes(term);
+                        return (
+                          p.name?.toLowerCase().includes(term) ||
+                          p.document?.toLowerCase().includes(term)
+                        );
                       })
-                      .map(p => (
-                        <TableRow 
-                          key={p.id} 
+                      .map((p) => (
+                        <TableRow
+                          key={p.id}
                           className="cursor-pointer hover:bg-blue-50"
                           onDoubleClick={() => {
                             setSacadoSelecionado(p);
                             setShowSacadoSearch(false);
-                            setSacadoSearchTerm('');
+                            setSacadoSearchTerm("");
                             setTimeout(() => applyFiltersAndShow(), 100);
                           }}
                         >
-                          <TableCell className="text-xs font-mono">{p.personNumber || p.id?.slice(-6)}</TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {p.personNumber || p.id?.slice(-6)}
+                          </TableCell>
                           <TableCell className="text-xs">{p.name}</TableCell>
                           <TableCell className="text-xs">
                             <Badge variant="outline" className="text-xs">
-                              {p.type === 'cliente' ? 'Cliente' : p.type === 'pontoVenda' ? 'Pto. Venda' : 'Convênio'}
+                              {p.type === "cliente"
+                                ? "Cliente"
+                                : p.type === "pontoVenda"
+                                  ? "Pto. Venda"
+                                  : "Convênio"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-xs">{p.document || '-'}</TableCell>
+                          <TableCell className="text-xs">
+                            {p.document || "-"}
+                          </TableCell>
                         </TableRow>
                       ))}
                   </TableBody>
                 </Table>
               </div>
-              <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+              <p className="text-xs text-slate-500">
+                Dê duplo clique para selecionar
+              </p>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowSacadoSearch(false)}>Fechar</Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowSacadoSearch(false)}
+              >
+                Fechar
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1003,11 +1383,16 @@ export default function AccountsReceivableFullModal({
           <DialogContent className="max-w-2xl max-h-[80vh]">
             <DialogHeader>
               <DialogTitle>
-                Pesquisar {metodoPesquisa === 'codigoVenda' ? 'Código de Venda' : metodoPesquisa === 'notaFiscal' ? 'Nota Fiscal' : 'Documento'}
+                Pesquisar{" "}
+                {metodoPesquisa === "codigoVenda"
+                  ? "Código de Venda"
+                  : metodoPesquisa === "notaFiscal"
+                    ? "Nota Fiscal"
+                    : "Documento"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Input 
+              <Input
                 placeholder="Filtrar..."
                 value={codigoPesquisa}
                 onChange={(e) => setCodigoPesquisa(e.target.value)}
@@ -1018,23 +1403,33 @@ export default function AccountsReceivableFullModal({
                 <Table>
                   <TableHeader className="bg-slate-50 sticky top-0">
                     <TableRow>
-                      <TableHead className="text-xs">{metodoPesquisa === 'codigoVenda' ? 'Código' : metodoPesquisa === 'notaFiscal' ? 'Nota Fiscal' : 'Documento'}</TableHead>
+                      <TableHead className="text-xs">
+                        {metodoPesquisa === "codigoVenda"
+                          ? "Código"
+                          : metodoPesquisa === "notaFiscal"
+                            ? "Nota Fiscal"
+                            : "Documento"}
+                      </TableHead>
                       <TableHead className="text-xs">Sacado</TableHead>
                       <TableHead className="text-xs">Vencimento</TableHead>
-                      <TableHead className="text-xs text-right">Valor</TableHead>
+                      <TableHead className="text-xs text-right">
+                        Valor
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {getCodigoSearchData()
-                      .filter(item => {
+                      .filter((item) => {
                         if (!codigoPesquisa) return true;
                         const term = codigoPesquisa.toLowerCase();
-                        return item.label?.toLowerCase().includes(term) || 
-                               item.extra?.toLowerCase().includes(term);
+                        return (
+                          item.label?.toLowerCase().includes(term) ||
+                          item.extra?.toLowerCase().includes(term)
+                        );
                       })
-                      .map(item => (
-                        <TableRow 
-                          key={item.id} 
+                      .map((item) => (
+                        <TableRow
+                          key={item.id}
                           className="cursor-pointer hover:bg-blue-50"
                           onDoubleClick={() => {
                             setCodigoPesquisa(item.label);
@@ -1042,19 +1437,39 @@ export default function AccountsReceivableFullModal({
                             setTimeout(() => applyFiltersAndShow(), 100);
                           }}
                         >
-                          <TableCell className="text-xs font-mono">{item.label?.slice(-8) || '-'}</TableCell>
-                          <TableCell className="text-xs">{item.extra}</TableCell>
-                          <TableCell className="text-xs">{item.conta.dueDate ? format(parseISO(item.conta.dueDate), 'dd/MM/yyyy') : '-'}</TableCell>
-                          <TableCell className="text-xs text-right">{formatCurrency(item.conta.amount)}</TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {item.label?.slice(-8) || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {item.extra}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {item.conta.dueDate
+                              ? format(
+                                  item.conta.dueDate,
+                                  "dd/MM/yyyy",
+                                )
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-right">
+                            {formatCurrency(item.conta.amount)}
+                          </TableCell>
                         </TableRow>
                       ))}
                   </TableBody>
                 </Table>
               </div>
-              <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+              <p className="text-xs text-slate-500">
+                Dê duplo clique para selecionar
+              </p>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCodigoSearch(false)}>Fechar</Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowCodigoSearch(false)}
+              >
+                Fechar
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1066,7 +1481,9 @@ export default function AccountsReceivableFullModal({
           currentUser={currentUser}
           sectors={sectors}
           cashAccounts={cashAccounts}
-          contasSelecionadas={selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean)}
+          contasSelecionadas={selectedContas
+            .map((id) => contas.find((c) => c.id === id))
+            .filter(Boolean)}
           onRenegociacaoComplete={() => {
             loadData();
             setSelectedContas([]);
@@ -1075,32 +1492,57 @@ export default function AccountsReceivableFullModal({
         />
 
         {/* Modal de Confirmação de Exclusão */}
-        <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <Dialog
+          open={isDeleteConfirmOpen}
+          onOpenChange={setIsDeleteConfirmOpen}
+        >
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Confirmar Exclusão</DialogTitle>
             </DialogHeader>
             <div className="py-4">
               <p className="text-center text-slate-600">
-                Tem certeza que deseja excluir {getSelectedContasForAction().length > 1 ? 'estas contas a receber' : 'esta conta a receber'}?
+                Tem certeza que deseja excluir{" "}
+                {getSelectedContasForAction().length > 1
+                  ? "estas contas a receber"
+                  : "esta conta a receber"}
+                ?
               </p>
               {getSelectedContasForAction().length > 0 && (
                 <div className="mt-4 p-3 bg-slate-50 rounded-lg text-sm space-y-2 max-h-40 overflow-auto">
-                  {getSelectedContasForAction().map(conta => (
+                  {getSelectedContasForAction().map((conta) => (
                     <div key={conta.id} className="border-b pb-2 last:border-0">
-                      <p><strong>Cliente:</strong> {conta.personName}</p>
-                      <p><strong>Valor:</strong> {formatCurrency(conta.amount)}</p>
-                      <p><strong>Vencimento:</strong> {format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</p>
+                      <p>
+                        <strong>Cliente:</strong> {conta.personName}
+                      </p>
+                      <p>
+                        <strong>Valor:</strong> {formatCurrency(conta.amount)}
+                      </p>
+                      <p>
+                        <strong>Vencimento:</strong>{" "}
+                        {format(conta.dueDate, "dd/MM/yyyy")}
+                      </p>
                     </div>
                   ))}
                   {getSelectedContasForAction().length > 1 && (
-                    <p className="font-bold pt-2">Total: {formatCurrency(getSelectedContasForAction().reduce((sum, c) => sum + (c.amount || 0), 0))}</p>
+                    <p className="font-bold pt-2">
+                      Total:{" "}
+                      {formatCurrency(
+                        getSelectedContasForAction().reduce(
+                          (sum, c) => sum + (c.amount || 0),
+                          0,
+                        ),
+                      )}
+                    </p>
                   )}
                 </div>
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+              >
                 Não
               </Button>
               <Button variant="destructive" onClick={confirmExcluir}>

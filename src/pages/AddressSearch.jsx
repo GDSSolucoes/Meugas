@@ -45,7 +45,7 @@ export default function AddressSearchPage() {
   }, []);
 
   const loadPeople = async () => {
-    const data = await Person.filter({ sort: '-createdDate' });
+    const data = await Person.filter({ sort: '-createdAt' });
     setPeople(data);
   };
 

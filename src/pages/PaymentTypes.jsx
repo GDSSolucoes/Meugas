@@ -3,8 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, CreditCard, Edit, Trash2 } from "lucide-react";
@@ -15,19 +28,21 @@ export default function PaymentTypesPage() {
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const initialPaymentTypeState = {
-    name: '',
-    type: 'dinheiro',
+    name: "",
+    type: "dinheiro",
     maxInstallments: 1,
     daysInterval: 0,
     active: true,
-    createdByName: '',
-    companyId: '',
-    companyName: ''
+    createdByName: "",
+    companyId: "",
+    companyName: "",
   };
-  
-  const [currentPaymentType, setCurrentPaymentType] = useState(initialPaymentTypeState);
+
+  const [currentPaymentType, setCurrentPaymentType] = useState(
+    initialPaymentTypeState,
+  );
 
   useEffect(() => {
     loadPaymentTypes();
@@ -36,7 +51,10 @@ export default function PaymentTypesPage() {
   const loadPaymentTypes = async () => {
     try {
       const user = await User.me();
-      const data = await PaymentType.filter({ companyId: user.companyId }, { sort: '-createdDate' });
+      const data = await PaymentType.filter(
+        { companyId: user.companyId },
+        { sort: "-createdAt" },
+      );
       setPaymentTypes(data);
     } catch (error) {
       console.error("Erro ao carregar tipos de pagamento:", error);
@@ -54,7 +72,9 @@ export default function PaymentTypesPage() {
   };
 
   const handleDelete = async (paymentTypeId) => {
-    if (window.confirm("Tem certeza que deseja deletar este tipo de pagamento?")) {
+    if (
+      window.confirm("Tem certeza que deseja deletar este tipo de pagamento?")
+    ) {
       try {
         await PaymentType.delete(paymentTypeId);
         loadPaymentTypes();
@@ -73,14 +93,14 @@ export default function PaymentTypesPage() {
         maxInstallments: Number(currentPaymentType.maxInstallments) || 1,
         daysInterval: Number(currentPaymentType.daysInterval) || 0,
         companyId: user.companyId,
-        companyName: user.companyName
+        companyName: user.companyName,
       };
 
       if (isEditing) {
         const { id, ...data } = payload;
         await PaymentType.update(id, data);
       } else {
-        await PaymentType.create({ ...payload, createdByName: user.fullName });
+        await PaymentType.create({ ...payload, createdByName: user.name });
       }
       setShowForm(false);
       resetForm();
@@ -94,7 +114,7 @@ export default function PaymentTypesPage() {
     setCurrentPaymentType(initialPaymentTypeState);
     setIsEditing(false);
   };
-  
+
   const handleCancel = () => {
     setShowForm(false);
     resetForm();
@@ -104,26 +124,43 @@ export default function PaymentTypesPage() {
     const info = {
       aVista: { label: "À Vista", color: "bg-green-100 text-green-800" },
       aPrazo: { label: "À Prazo", color: "bg-blue-100 text-blue-800" },
-      cartao: { label: "Cartão", color: "bg-purple-100 text-purple-800" }
+      cartao: { label: "Cartão", color: "bg-purple-100 text-purple-800" },
     };
-    return <Badge className={info[type]?.color || info.aVista.color}>{info[type]?.label || type}</Badge>;
+    return (
+      <Badge className={info[type]?.color || info.aVista.color}>
+        {info[type]?.label || type}
+      </Badge>
+    );
   };
 
-  const isAPrazo = (type) => type === 'aPrazo';
-  const isCartao = (type) => type === 'cartao';
+  const isAPrazo = (type) => type === "aPrazo";
+  const isCartao = (type) => type === "cartao";
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(to bottom right, #f2f1ed, #95b4df)' }}>
+    <div
+      className="min-h-screen p-6"
+      style={{
+        background: "linear-gradient(to bottom right, #f2f1ed, #95b4df)",
+      }}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Tipos de Pagamento</h1>
-            <p className="text-slate-600">Gerencie as formas de pagamento aceitas</p>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+              Tipos de Pagamento
+            </h1>
+            <p className="text-slate-600">
+              Gerencie as formas de pagamento aceitas
+            </p>
           </div>
-          <Button 
-            onClick={() => { setShowForm(true); setIsEditing(false); resetForm(); }}
+          <Button
+            onClick={() => {
+              setShowForm(true);
+              setIsEditing(false);
+              resetForm();
+            }}
             className="shadow-lg text-white"
-            style={{ backgroundColor: '#e78b3a' }}
+            style={{ backgroundColor: "#e78b3a" }}
           >
             <Plus className="w-5 h-5 mr-2" />
             Novo Tipo
@@ -135,7 +172,9 @@ export default function PaymentTypesPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
-                {isEditing ? 'Editar Tipo de Pagamento' : 'Cadastrar Novo Tipo de Pagamento'}
+                {isEditing
+                  ? "Editar Tipo de Pagamento"
+                  : "Cadastrar Novo Tipo de Pagamento"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -145,7 +184,12 @@ export default function PaymentTypesPage() {
                     <Label>Nome *</Label>
                     <Input
                       value={currentPaymentType.name}
-                      onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
+                      onChange={(e) =>
+                        setCurrentPaymentType((prev) => ({
+                          ...prev,
+                          name: e.target.value.toUpperCase(),
+                        }))
+                      }
                       required
                       className="bg-white/80"
                       placeholder="Ex: Cartão Visa, Dinheiro, Pix da Casa..."
@@ -155,7 +199,12 @@ export default function PaymentTypesPage() {
                     <Label>Tipo *</Label>
                     <Select
                       value={currentPaymentType.type}
-                      onValueChange={(value) => setCurrentPaymentType(prev => ({ ...prev, type: value }))}
+                      onValueChange={(value) =>
+                        setCurrentPaymentType((prev) => ({
+                          ...prev,
+                          type: value,
+                        }))
+                      }
                     >
                       <SelectTrigger className="bg-white/80">
                         <SelectValue placeholder="Selecione o tipo" />
@@ -163,8 +212,12 @@ export default function PaymentTypesPage() {
                       <SelectContent>
                         <SelectItem value="dinheiro">Dinheiro</SelectItem>
                         <SelectItem value="pix">Pix</SelectItem>
-                        <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                        <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                        <SelectItem value="cartao_debito">
+                          Cartão de Débito
+                        </SelectItem>
+                        <SelectItem value="cartao_credito">
+                          Cartão de Crédito
+                        </SelectItem>
                         <SelectItem value="boleto">Boleto</SelectItem>
                         <SelectItem value="cheque">Cheque</SelectItem>
                         <SelectItem value="convenio">Convênio</SelectItem>
@@ -178,45 +231,70 @@ export default function PaymentTypesPage() {
                       type="number"
                       min="1"
                       value={currentPaymentType.maxInstallments}
-                      onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, maxInstallments: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentPaymentType((prev) => ({
+                          ...prev,
+                          maxInstallments: e.target.value,
+                        }))
+                      }
                       className="bg-white/80"
                       placeholder="1"
                     />
-                     <p className="text-xs text-slate-500 mt-1">
-                        Use 1 para pagamentos à vista.
-                     </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Use 1 para pagamentos à vista.
+                    </p>
                   </div>
-                  {(isAPrazo(currentPaymentType.type) || isCartao(currentPaymentType.type)) && (
-                     <div>
-                       <Label>Intervalo de Dias para 1º Venc.</Label>
-                       <Input
-                         type="number"
-                         min="0"
-                         value={currentPaymentType.daysInterval}
-                         onChange={(e) => setCurrentPaymentType(prev => ({ ...prev, daysInterval: e.target.value }))}
-                         className="bg-white/80"
-                         placeholder="Ex: 30"
-                       />
-                       <p className="text-xs text-slate-500 mt-1">
-                          Dias a somar na data da venda/compra para o 1º vencimento.
-                       </p>
-                     </div>
+                  {(isAPrazo(currentPaymentType.type) ||
+                    isCartao(currentPaymentType.type)) && (
+                    <div>
+                      <Label>Intervalo de Dias para 1º Venc.</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={currentPaymentType.daysInterval}
+                        onChange={(e) =>
+                          setCurrentPaymentType((prev) => ({
+                            ...prev,
+                            daysInterval: e.target.value,
+                          }))
+                        }
+                        className="bg-white/80"
+                        placeholder="Ex: 30"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Dias a somar na data da venda/compra para o 1º
+                        vencimento.
+                      </p>
+                    </div>
                   )}
                   <div className="flex items-center space-x-2 pt-6">
                     <Switch
                       id="active-switch"
                       checked={currentPaymentType.active}
-                      onCheckedChange={(checked) => setCurrentPaymentType(prev => ({ ...prev, active: checked }))}
+                      onCheckedChange={(checked) =>
+                        setCurrentPaymentType((prev) => ({
+                          ...prev,
+                          active: checked,
+                        }))
+                      }
                     />
                     <Label htmlFor="active-switch">Ativo</Label>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <Button type="submit" className="text-white hover:opacity-90" style={{ backgroundColor: '#223f61' }}>
-                    {isEditing ? 'Salvar Alterações' : 'Salvar'}
+                  <Button
+                    type="submit"
+                    className="text-white hover:opacity-90"
+                    style={{ backgroundColor: "#223f61" }}
+                  >
+                    {isEditing ? "Salvar Alterações" : "Salvar"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleCancel}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                  >
                     Cancelar
                   </Button>
                 </div>
@@ -244,28 +322,53 @@ export default function PaymentTypesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paymentTypes.map(pt => (
+                  {paymentTypes.map((pt) => (
                     <TableRow key={pt.id}>
                       <TableCell className="font-medium">{pt.name}</TableCell>
                       <TableCell>{getTypeBadge(pt.type)}</TableCell>
                       <TableCell>
-                        {pt.maxInstallments > 1 
-                          ? <Badge variant="outline">A Prazo ({pt.maxInstallments}x)</Badge>
-                          : <Badge variant="outline">À Vista</Badge>
-                        }
+                        {pt.maxInstallments > 1 ? (
+                          <Badge variant="outline">
+                            A Prazo ({pt.maxInstallments}x)
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">À Vista</Badge>
+                        )}
                       </TableCell>
-                      <TableCell>{(isAPrazo(pt.type) || isCartao(pt.type)) ? `${pt.daysInterval || 0} dias` : '-'}</TableCell>
                       <TableCell>
-                        <Badge className={pt.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                        {isAPrazo(pt.type) || isCartao(pt.type)
+                          ? `${pt.daysInterval || 0} dias`
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            pt.active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }
+                        >
                           {pt.active ? "Ativo" : "Inativo"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-500">{pt.createdByName}</TableCell>
+                      <TableCell className="text-xs text-slate-500">
+                        {pt.createdByName}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(pt)} className="mr-2 hover:bg-blue-100">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(pt)}
+                          className="mr-2 hover:bg-blue-100"
+                        >
                           <Edit className="w-4 h-4 text-blue-600" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(pt.id)} className="hover:bg-red-100">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(pt.id)}
+                          className="hover:bg-red-100"
+                        >
                           <Trash2 className="w-4 h-4 text-red-600" />
                         </Button>
                       </TableCell>
@@ -273,7 +376,10 @@ export default function PaymentTypesPage() {
                   ))}
                   {paymentTypes.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-slate-500"
+                      >
                         Nenhum tipo de pagamento cadastrado ainda
                       </TableCell>
                     </TableRow>

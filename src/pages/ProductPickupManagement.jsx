@@ -1,16 +1,42 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { 
-  Search, X, LogOut, Printer, ArrowDown, Trash2, ArrowRight, Check
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Search,
+  X,
+  LogOut,
+  Printer,
+  ArrowDown,
+  Trash2,
+  ArrowRight,
+  Check,
 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
@@ -19,7 +45,7 @@ import { createPageUrl } from "@/utils";
 
 export default function ProductPickupManagementPage() {
   const { toast } = useToast();
-  
+
   // Data states
   const [pickups, setPickups] = useState([]);
   const [displayedPickups, setDisplayedPickups] = useState([]);
@@ -31,21 +57,23 @@ export default function ProductPickupManagementPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPickup, setSelectedPickup] = useState(null);
-  
+
   // Filtros
   const [filtrarCliente, setFiltrarCliente] = useState(true);
   const [filtrarPontoVenda, setFiltrarPontoVenda] = useState(false);
-  const [clienteInput, setClienteInput] = useState('');
-  
-  const [produtoInput, setProdutoInput] = useState('');
-  
-  const [tipoProduto, setTipoProduto] = useState('aRetirar'); // 'aRetirar', 'retiradosEntre'
-  const [dataInicial, setDataInicial] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [dataFinal, setDataFinal] = useState(format(new Date(), 'yyyy-MM-dd'));
-  
-  const [codigoVendaInput, setCodigoVendaInput] = useState('');
-  const [codigoVendaLabel, setCodigoVendaLabel] = useState('TODAS');
-  
+  const [clienteInput, setClienteInput] = useState("");
+
+  const [produtoInput, setProdutoInput] = useState("");
+
+  const [tipoProduto, setTipoProduto] = useState("aRetirar"); // 'aRetirar', 'retiradosEntre'
+  const [dataInicial, setDataInicial] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
+  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  const [codigoVendaInput, setCodigoVendaInput] = useState("");
+  const [codigoVendaLabel, setCodigoVendaLabel] = useState("TODAS");
+
   // Modais
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [showPrintConfirm, setShowPrintConfirm] = useState(false);
@@ -53,32 +81,36 @@ export default function ProductPickupManagementPage() {
   const [showClienteSearch, setShowClienteSearch] = useState(false);
   const [showProdutoSearch, setShowProdutoSearch] = useState(false);
   const [showVendaSearch, setShowVendaSearch] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [qtdeBaixar, setQtdeBaixar] = useState('');
-  const [sectorBaixa, setSectorBaixa] = useState('');
-  const [dataBaixa, setDataBaixa] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [notaFiscal, setNotaFiscal] = useState('');
-  const [pedido, setPedido] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [qtdeBaixar, setQtdeBaixar] = useState("");
+  const [sectorBaixa, setSectorBaixa] = useState("");
+  const [dataBaixa, setDataBaixa] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [notaFiscal, setNotaFiscal] = useState("");
+  const [pedido, setPedido] = useState("");
   const [activeCaixa, setActiveCaixa] = useState(null); // 'cliente', 'produto', 'venda'
-  
+
   // Totais
   const [totalARetirar, setTotalARetirar] = useState(0);
   const [totalRetirados, setTotalRetirados] = useState(0);
-  
+
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       const user = await entities.User.me();
       setCurrentUser(user);
-      
-      const [pickupsData, peopleData, productsData, salesData, sectorsData] = await Promise.all([
-        entities.ProductPickup.filter({ companyId: user.companyId }, { sort: '-saleDate' }),
-        entities.Person.filter({ companyId: user.companyId }),
-        entities.Product.filter({ companyId: user.companyId, active: true }),
-        entities.Sale.filter({ companyId: user.companyId }),
-        entities.Sector.filter({ companyId: user.companyId, active: true })
-      ]);
-      
+
+      const [pickupsData, peopleData, productsData, salesData, sectorsData] =
+        await Promise.all([
+          entities.ProductPickup.filter(
+            { companyId: user.companyId },
+            { sort: "-saleDate" },
+          ),
+          entities.Person.filter({ companyId: user.companyId }),
+          entities.Product.filter({ companyId: user.companyId, active: true }),
+          entities.Sale.filter({ companyId: user.companyId }),
+          entities.Sector.filter({ companyId: user.companyId, active: true }),
+        ]);
+
       setPickups(pickupsData);
       setPeople(peopleData);
       setProducts(productsData);
@@ -86,7 +118,11 @@ export default function ProductPickupManagementPage() {
       setSectors(sectorsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar os dados.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -98,81 +134,95 @@ export default function ProductPickupManagementPage() {
 
   const applyFiltersAndShow = () => {
     let filtered = [...pickups];
-    
+
     // Filtro por cliente específico ou por tipo
     if (clienteInput) {
-      filtered = filtered.filter(p => p.personId === clienteInput);
+      filtered = filtered.filter((p) => p.personId === clienteInput);
     } else {
       // Filtrar por tipo se não há cliente específico
-      filtered = filtered.filter(p => {
-        const person = people.find(per => per.id === p.personId);
+      filtered = filtered.filter((p) => {
+        const person = people.find((per) => per.id === p.personId);
         if (!person) return false;
-        
-        const isCliente = person.type === 'cliente';
-        const isPontoVenda = person.type === 'pontoVenda';
-        
-        if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
+
+        const isCliente = person.type === "cliente";
+        const isPontoVenda = person.type === "pontoVenda";
+
+        if (filtrarCliente && filtrarPontoVenda)
+          return isCliente || isPontoVenda;
         if (filtrarCliente) return isCliente;
         if (filtrarPontoVenda) return isPontoVenda;
-        
+
         return false;
       });
     }
-    
+
     // Filtro por produto
     if (produtoInput) {
-      filtered = filtered.filter(p => p.productId === produtoInput);
+      filtered = filtered.filter((p) => p.productId === produtoInput);
     }
-    
+
     // Filtro por status do produto
-    if (tipoProduto === 'aRetirar') {
-      filtered = filtered.filter(p => p.status === 'pendente' || (p.status === 'retirado_parcial' && (p.pickupQuantity || 0) > (p.collectedQuantity || 0)));
+    if (tipoProduto === "aRetirar") {
+      filtered = filtered.filter(
+        (p) =>
+          p.status === "pendente" ||
+          (p.status === "retirado_parcial" &&
+            (p.pickupQuantity || 0) > (p.collectedQuantity || 0)),
+      );
     } else {
       // Retirados entre datas - considera TODAS as retiradas (parciais e totais) com data
-      filtered = filtered.filter(p => {
+      filtered = filtered.filter((p) => {
         if (!p.collectedDate) return false;
         if ((p.collectedQuantity || 0) === 0) return false;
 
-        const collectedDate = parseISO(p.collectedDate);
-        const start = startOfDay(parseISO(dataInicial));
-        const end = endOfDay(parseISO(dataFinal));
+        const collectedDate = p.collectedDate;
+        const start = startOfDay(dataInicial);
+        const end = endOfDay(dataFinal);
 
         return collectedDate >= start && collectedDate <= end;
       });
     }
-    
+
     // Filtro por código da venda
     if (codigoVendaInput) {
-      filtered = filtered.filter(p => p.saleId === codigoVendaInput);
+      filtered = filtered.filter((p) => p.saleId === codigoVendaInput);
     }
-    
+
     // Calcular totais
     const aRetirar = filtered
-      .filter(p => p.status !== 'retirado_total')
-      .reduce((sum, p) => sum + ((p.pickupQuantity || 0) - (p.collectedQuantity || 0)), 0);
-    
+      .filter((p) => p.status !== "retirado_total")
+      .reduce(
+        (sum, p) =>
+          sum + ((p.pickupQuantity || 0) - (p.collectedQuantity || 0)),
+        0,
+      );
+
     const retirados = filtered
-      .filter(p => p.status === 'retirado_total')
+      .filter((p) => p.status === "retirado_total")
       .reduce((sum, p) => sum + (p.collectedQuantity || 0), 0);
-    
+
     setTotalARetirar(aRetirar);
     setTotalRetirados(retirados);
-    
+
     setDisplayedPickups(filtered);
     setShowResults(true);
   };
 
   const handlePesquisar = () => {
     if (!activeCaixa) {
-      toast({ title: "Atenção", description: "Clique em uma das caixas de filtro primeiro.", variant: "default" });
+      toast({
+        title: "Atenção",
+        description: "Clique em uma das caixas de filtro primeiro.",
+        variant: "default",
+      });
       return;
     }
-    
-    if (activeCaixa === 'cliente') {
+
+    if (activeCaixa === "cliente") {
       setShowClienteSearch(true);
-    } else if (activeCaixa === 'produto') {
+    } else if (activeCaixa === "produto") {
       setShowProdutoSearch(true);
-    } else if (activeCaixa === 'venda') {
+    } else if (activeCaixa === "venda") {
       setShowVendaSearch(true);
     }
   };
@@ -180,12 +230,12 @@ export default function ProductPickupManagementPage() {
   const handleCancelar = () => {
     setFiltrarCliente(true);
     setFiltrarPontoVenda(false);
-    setClienteInput('');
-    setProdutoInput('');
-    setTipoProduto('aRetirar');
-    setDataInicial(format(new Date(), 'yyyy-MM-dd'));
-    setDataFinal(format(new Date(), 'yyyy-MM-dd'));
-    setCodigoVendaInput('');
+    setClienteInput("");
+    setProdutoInput("");
+    setTipoProduto("aRetirar");
+    setDataInicial(format(new Date(), "yyyy-MM-dd"));
+    setDataFinal(format(new Date(), "yyyy-MM-dd"));
+    setCodigoVendaInput("");
     setDisplayedPickups([]);
     setShowResults(false);
     setSelectedPickup(null);
@@ -195,113 +245,157 @@ export default function ProductPickupManagementPage() {
 
   const handleBaixar = (pickup = null) => {
     const pickupToUse = pickup || selectedPickup;
-    
+
     if (!pickupToUse) {
-      toast({ title: "Atenção", description: "Selecione um registro para dar baixa.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione um registro para dar baixa.",
+        variant: "destructive",
+      });
       return;
     }
-    if (pickupToUse.status === 'retirado_total') {
-      toast({ title: "Atenção", description: "Este produto já foi totalmente retirado.", variant: "destructive" });
+    if (pickupToUse.status === "retirado_total") {
+      toast({
+        title: "Atenção",
+        description: "Este produto já foi totalmente retirado.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (pickup) {
       setSelectedPickup(pickup);
     }
-    
+
     // Pré-preencher campos
-    const pendente = (pickupToUse.pickupQuantity || 0) - (pickupToUse.collectedQuantity || 0);
+    const pendente =
+      (pickupToUse.pickupQuantity || 0) - (pickupToUse.collectedQuantity || 0);
     setQtdeBaixar(pendente.toString());
-    setDataBaixa(format(new Date(), 'yyyy-MM-dd'));
-    setSectorBaixa(sectors.length > 0 ? sectors[0].id : '');
-    setNotaFiscal('');
-    setPedido('');
+    setDataBaixa(format(new Date(), "yyyy-MM-dd"));
+    setSectorBaixa(sectors.length > 0 ? sectors[0].id : "");
+    setNotaFiscal("");
+    setPedido("");
     setShowBaixaModal(true);
   };
 
   const handleConfirmarBaixa = async () => {
     if (!selectedPickup) return;
-    
+
     const qtde = parseInt(qtdeBaixar) || 0;
-    const pendente = (selectedPickup.pickupQuantity || 0) - (selectedPickup.collectedQuantity || 0);
-    
+    const pendente =
+      (selectedPickup.pickupQuantity || 0) -
+      (selectedPickup.collectedQuantity || 0);
+
     if (qtde <= 0) {
-      toast({ title: "Erro", description: "Informe uma quantidade válida.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Informe uma quantidade válida.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (qtde > pendente) {
-      toast({ title: "Erro", description: `Quantidade inválida. Máximo permitido: ${pendente}`, variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: `Quantidade inválida. Máximo permitido: ${pendente}`,
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (!sectorBaixa) {
-      toast({ title: "Erro", description: "Selecione o setor para baixa.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Selecione o setor para baixa.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (!dataBaixa) {
-      toast({ title: "Erro", description: "Informe a data de retirada.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Informe a data de retirada.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     try {
       const novaQtdeColetada = (selectedPickup.collectedQuantity || 0) + qtde;
       const totalPendente = selectedPickup.pickupQuantity || 0;
-      const novoStatus = novaQtdeColetada >= totalPendente ? 'retirado_total' : 'retirado_parcial';
-      
-      const sector = sectors.find(s => s.id === sectorBaixa);
-      
+      const novoStatus =
+        novaQtdeColetada >= totalPendente
+          ? "retirado_total"
+          : "retirado_parcial";
+
+      const sector = sectors.find((s) => s.id === sectorBaixa);
+
       await entities.ProductPickup.update(selectedPickup.id, {
         status: novoStatus,
         collectedQuantity: novaQtdeColetada,
         collectedDate: dataBaixa,
         sectorId: sectorBaixa,
-        sectorName: sector?.name || '',
+        sectorName: sector?.name || "",
         notaFiscal: notaFiscal,
-        pedido: pedido
+        pedido: pedido,
       });
-      
+
       // Salvar dados para impressão
-      const person = people.find(p => p.id === selectedPickup.personId);
+      const person = people.find((p) => p.id === selectedPickup.personId);
       setLastBaixaData({
         cliente: selectedPickup.personName,
-        clienteDoc: person?.document || '',
+        clienteDoc: person?.document || "",
         produto: selectedPickup.productName,
         quantidade: qtde,
         data: dataBaixa,
-        setor: sector?.name || '',
+        setor: sector?.name || "",
         notaFiscal: notaFiscal,
-        pedido: pedido
+        pedido: pedido,
       });
-      
-      toast({ title: "Sucesso", description: `Baixa de ${qtde} produto(s) realizada com sucesso.` });
+
+      toast({
+        title: "Sucesso",
+        description: `Baixa de ${qtde} produto(s) realizada com sucesso.`,
+      });
       setShowBaixaModal(false);
       setShowPrintConfirm(true);
-      
+
       await loadData();
       if (showResults) {
         setTimeout(() => applyFiltersAndShow(), 100);
       }
     } catch (error) {
       console.error("Erro ao dar baixa:", error);
-      toast({ title: "Erro", description: "Não foi possível realizar a baixa.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível realizar a baixa.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleExcluir = async () => {
     if (!selectedPickup) {
-      toast({ title: "Atenção", description: "Selecione um registro para excluir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione um registro para excluir.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (!window.confirm("Tem certeza que deseja excluir este registro?")) {
       return;
     }
-    
+
     try {
       await entities.ProductPickup.delete(selectedPickup.id);
-      toast({ title: "Sucesso", description: "Registro excluído com sucesso." });
+      toast({
+        title: "Sucesso",
+        description: "Registro excluído com sucesso.",
+      });
       setSelectedPickup(null);
       await loadData();
       if (showResults) {
@@ -309,13 +403,17 @@ export default function ProductPickupManagementPage() {
       }
     } catch (error) {
       console.error("Erro ao excluir:", error);
-      toast({ title: "Erro", description: "Não foi possível excluir o registro.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o registro.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleImprimirComprovante = () => {
     if (!lastBaixaData) return;
-    
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -341,7 +439,7 @@ export default function ProductPickupManagementPage() {
       </head>
       <body>
         <div class="header">
-          <h1>${currentUser?.companyName || 'EMPRESA'}</h1>
+          <h1>${currentUser?.companyName || "EMPRESA"}</h1>
           <p>Comprovante de Retirada de Produto</p>
           <p>Emitido em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
         </div>
@@ -352,12 +450,16 @@ export default function ProductPickupManagementPage() {
             <label>Cliente:</label>
             <span>${lastBaixaData.cliente}</span>
           </div>
-          ${lastBaixaData.clienteDoc ? `
+          ${
+            lastBaixaData.clienteDoc
+              ? `
           <div class="field">
             <label>CPF/CNPJ:</label>
             <span>${lastBaixaData.clienteDoc}</span>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
 
         <div class="section">
@@ -372,24 +474,32 @@ export default function ProductPickupManagementPage() {
           </div>
           <div class="field">
             <label>Data da Retirada:</label>
-            <span>${format(parseISO(lastBaixaData.data), 'dd/MM/yyyy')}</span>
+            <span>${format(lastBaixaData.data, "dd/MM/yyyy")}</span>
           </div>
           <div class="field">
             <label>Setor:</label>
             <span>${lastBaixaData.setor}</span>
           </div>
-          ${lastBaixaData.notaFiscal ? `
+          ${
+            lastBaixaData.notaFiscal
+              ? `
           <div class="field">
             <label>Nota Fiscal:</label>
             <span>${lastBaixaData.notaFiscal}</span>
           </div>
-          ` : ''}
-          ${lastBaixaData.pedido ? `
+          `
+              : ""
+          }
+          ${
+            lastBaixaData.pedido
+              ? `
           <div class="field">
             <label>Pedido:</label>
             <span>${lastBaixaData.pedido}</span>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
 
         <div class="signature">
@@ -407,10 +517,10 @@ export default function ProductPickupManagementPage() {
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
-    
+
     setShowPrintConfirm(false);
     setLastBaixaData(null);
     setSelectedPickup(null);
@@ -418,9 +528,13 @@ export default function ProductPickupManagementPage() {
 
   const handleImprimir = () => {
     const dataToPrint = showResults ? displayedPickups : [];
-    
+
     if (dataToPrint.length === 0) {
-      toast({ title: "Atenção", description: "Nenhum dado para imprimir. Execute a pesquisa primeiro.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Nenhum dado para imprimir. Execute a pesquisa primeiro.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -447,13 +561,13 @@ export default function ProductPickupManagementPage() {
       </head>
       <body>
         <h1>Produtos Vendidos a Retirar</h1>
-        <p class="subtitle">Emitido em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+        <p class="subtitle">Emitido em: ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
         
         <div class="filters">
           <strong>Filtros:</strong> 
-          Cliente: ${filtrarCliente ? 'Sim' : 'Não'} | 
-          Pto. Venda: ${filtrarPontoVenda ? 'Sim' : 'Não'} |
-          Status: ${tipoProduto === 'aRetirar' ? 'A Retirar' : `Retirados de ${format(parseISO(dataInicial), 'dd/MM/yyyy')} a ${format(parseISO(dataFinal), 'dd/MM/yyyy')}`}
+          Cliente: ${filtrarCliente ? "Sim" : "Não"} | 
+          Pto. Venda: ${filtrarPontoVenda ? "Sim" : "Não"} |
+          Status: ${tipoProduto === "aRetirar" ? "A Retirar" : `Retirados de ${format(dataInicial, "dd/MM/yyyy")} a ${format(dataFinal, "dd/MM/yyyy")}`}
         </div>
 
         <table>
@@ -468,16 +582,20 @@ export default function ProductPickupManagementPage() {
             </tr>
           </thead>
           <tbody>
-            ${dataToPrint.map(pickup => `
+            ${dataToPrint
+              .map(
+                (pickup) => `
               <tr>
-                <td>${pickup.saleDate ? format(parseISO(pickup.saleDate), 'dd/MM/yyyy') : '-'}</td>
-                <td>${pickup.saleId?.slice(-6) || '-'}</td>
-                <td>${pickup.personName || '-'}</td>
-                <td>${pickup.productName || '-'}</td>
+                <td>${pickup.saleDate ? format(pickup.saleDate, "dd/MM/yyyy") : "-"}</td>
+                <td>${pickup.saleId?.slice(-6) || "-"}</td>
+                <td>${pickup.personName || "-"}</td>
+                <td>${pickup.productName || "-"}</td>
                 <td>${pickup.pickupQuantity || 0}</td>
                 <td>${(pickup.pickupQuantity || 0) - (pickup.collectedQuantity || 0)}</td>
               </tr>
-            `).join('')}
+            `,
+              )
+              .join("")}
           </tbody>
         </table>
         
@@ -488,19 +606,19 @@ export default function ProductPickupManagementPage() {
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
 
-  const filteredPeople = people.filter(p => {
-    const isCliente = p.type === 'cliente';
-    const isPontoVenda = p.type === 'pontoVenda';
-    
+  const filteredPeople = people.filter((p) => {
+    const isCliente = p.type === "cliente";
+    const isPontoVenda = p.type === "pontoVenda";
+
     if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
     if (filtrarCliente) return isCliente;
     if (filtrarPontoVenda) return isPontoVenda;
-    
+
     return false;
   });
 
@@ -508,59 +626,77 @@ export default function ProductPickupManagementPage() {
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold text-slate-800">Produtos vendidos a retirar</h1>
+        <h1 className="text-xl font-bold text-slate-800">
+          Produtos vendidos a retirar
+        </h1>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 p-4 overflow-auto">
         <div className="max-w-full mx-auto space-y-4">
-          
           {/* SEÇÃO DE FILTROS */}
           <div className="grid grid-cols-2 gap-4">
-            
             {/* LADO ESQUERDO - Cliente/PDV */}
             <Card className="bg-white border-slate-300">
               <CardContent className="p-4 space-y-3">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="filtroCliente" 
+                    <Checkbox
+                      id="filtroCliente"
                       checked={filtrarCliente}
                       onCheckedChange={setFiltrarCliente}
                     />
-                    <Label htmlFor="filtroCliente" className="text-sm font-normal">Cliente</Label>
+                    <Label
+                      htmlFor="filtroCliente"
+                      className="text-sm font-normal"
+                    >
+                      Cliente
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="filtroPdv" 
+                    <Checkbox
+                      id="filtroPdv"
                       checked={filtrarPontoVenda}
                       onCheckedChange={setFiltrarPontoVenda}
                     />
-                    <Label htmlFor="filtroPdv" className="text-sm font-normal">Pto. Venda</Label>
+                    <Label htmlFor="filtroPdv" className="text-sm font-normal">
+                      Pto. Venda
+                    </Label>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 mt-3">
                   <Input
-                    value={clienteInput ? people.find(p => p.id === clienteInput)?.name || '' : ''}
+                    value={
+                      clienteInput
+                        ? people.find((p) => p.id === clienteInput)?.name || ""
+                        : ""
+                    }
                     onChange={() => {}}
                     placeholder={!clienteInput ? "Todos" : ""}
-                    className={`h-8 text-sm flex-1 cursor-pointer ${!clienteInput ? 'placeholder:text-red-500' : ''} ${activeCaixa === 'cliente' ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`h-8 text-sm flex-1 cursor-pointer ${!clienteInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "cliente" ? "ring-2 ring-blue-500" : ""}`}
                     readOnly
-                    onClick={() => setActiveCaixa('cliente')}
+                    onClick={() => setActiveCaixa("cliente")}
                   />
                 </div>
-                
+
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Produtos</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                    Produtos
+                  </h4>
                   <div className="flex items-center gap-2">
                     <Input
-                      value={produtoInput ? products.find(p => p.id === produtoInput)?.name || '' : ''}
+                      value={
+                        produtoInput
+                          ? products.find((p) => p.id === produtoInput)?.name ||
+                            ""
+                          : ""
+                      }
                       onChange={() => {}}
                       placeholder={!produtoInput ? "Todos" : ""}
-                      className={`h-8 text-sm flex-1 cursor-pointer ${!produtoInput ? 'placeholder:text-red-500' : ''} ${activeCaixa === 'produto' ? 'ring-2 ring-blue-500' : ''}`}
+                      className={`h-8 text-sm flex-1 cursor-pointer ${!produtoInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "produto" ? "ring-2 ring-blue-500" : ""}`}
                       readOnly
-                      onClick={() => setActiveCaixa('produto')}
+                      onClick={() => setActiveCaixa("produto")}
                     />
                   </div>
                 </div>
@@ -571,24 +707,42 @@ export default function ProductPickupManagementPage() {
             <Card className="bg-white border-slate-300">
               <CardContent className="p-4 space-y-4">
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Produtos</h4>
-                  <RadioGroup value={tipoProduto} onValueChange={setTipoProduto}>
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                    Produtos
+                  </h4>
+                  <RadioGroup
+                    value={tipoProduto}
+                    onValueChange={setTipoProduto}
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="aRetirar" id="prodRetirar" />
-                      <Label htmlFor="prodRetirar" className="text-sm font-normal">A retirar</Label>
+                      <Label
+                        htmlFor="prodRetirar"
+                        className="text-sm font-normal"
+                      >
+                        A retirar
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2 mb-2">
-                      <RadioGroupItem value="retiradosEntre" id="prodRetirados" />
-                      <Label htmlFor="prodRetirados" className="text-sm font-normal">Retirados entre</Label>
+                      <RadioGroupItem
+                        value="retiradosEntre"
+                        id="prodRetirados"
+                      />
+                      <Label
+                        htmlFor="prodRetirados"
+                        className="text-sm font-normal"
+                      >
+                        Retirados entre
+                      </Label>
                     </div>
                   </RadioGroup>
-                  
+
                   <div className="flex items-center gap-2 ml-6">
                     <Input
                       type="date"
                       value={dataInicial}
                       onChange={(e) => setDataInicial(e.target.value)}
-                      disabled={tipoProduto !== 'retiradosEntre'}
+                      disabled={tipoProduto !== "retiradosEntre"}
                       className="h-8 text-sm w-36"
                     />
                     <span className="text-sm text-slate-600">e</span>
@@ -596,28 +750,35 @@ export default function ProductPickupManagementPage() {
                       type="date"
                       value={dataFinal}
                       onChange={(e) => setDataFinal(e.target.value)}
-                      disabled={tipoProduto !== 'retiradosEntre'}
+                      disabled={tipoProduto !== "retiradosEntre"}
                       className="h-8 text-sm w-36"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">Código da Venda</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                    Código da Venda
+                  </h4>
                   <div className="flex items-center gap-2">
                     <Input
-                      value={codigoVendaInput ? sales.find(s => s.id === codigoVendaInput)?.saleNumber || '' : ''}
+                      value={
+                        codigoVendaInput
+                          ? sales.find((s) => s.id === codigoVendaInput)
+                              ?.saleNumber || ""
+                          : ""
+                      }
                       onChange={() => {}}
                       placeholder={!codigoVendaInput ? "Todas" : ""}
-                      className={`h-8 text-sm flex-1 cursor-pointer ${!codigoVendaInput ? 'placeholder:text-red-500' : ''} ${activeCaixa === 'venda' ? 'ring-2 ring-blue-500' : ''}`}
+                      className={`h-8 text-sm flex-1 cursor-pointer ${!codigoVendaInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "venda" ? "ring-2 ring-blue-500" : ""}`}
                       readOnly
-                      onClick={() => setActiveCaixa('venda')}
+                      onClick={() => setActiveCaixa("venda")}
                     />
                   </div>
-                  
-                  <Button 
+
+                  <Button
                     className="h-10 w-full text-white mt-3"
-                    style={{ backgroundColor: '#e78b3a' }}
+                    style={{ backgroundColor: "#e78b3a" }}
                     onClick={applyFiltersAndShow}
                   >
                     <ArrowRight className="w-5 h-5" />
@@ -635,7 +796,10 @@ export default function ProductPickupManagementPage() {
                   <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
                     <div className="text-center">
                       <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>Configure os filtros e clique no botão <strong>→</strong> para exibir os resultados.</p>
+                      <p>
+                        Configure os filtros e clique no botão{" "}
+                        <strong>→</strong> para exibir os resultados.
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -644,16 +808,28 @@ export default function ProductPickupManagementPage() {
                       <TableRow>
                         <TableHead className="text-xs w-24">Dt Venda</TableHead>
                         <TableHead className="text-xs w-20">Venda</TableHead>
-                        <TableHead className="text-xs">Cliente / Pto. Venda</TableHead>
+                        <TableHead className="text-xs">
+                          Cliente / Pto. Venda
+                        </TableHead>
                         <TableHead className="text-xs w-40">Produto</TableHead>
-                        <TableHead className="text-xs w-20 text-center">Vend.</TableHead>
-                        {tipoProduto === 'aRetirar' ? (
-                          <TableHead className="text-xs w-20 text-center">A Ret.</TableHead>
+                        <TableHead className="text-xs w-20 text-center">
+                          Vend.
+                        </TableHead>
+                        {tipoProduto === "aRetirar" ? (
+                          <TableHead className="text-xs w-20 text-center">
+                            A Ret.
+                          </TableHead>
                         ) : (
                           <>
-                            <TableHead className="text-xs w-20 text-center">Ret.</TableHead>
-                            <TableHead className="text-xs w-24">Dat Ret.</TableHead>
-                            <TableHead className="text-xs w-20 text-center">Saldo</TableHead>
+                            <TableHead className="text-xs w-20 text-center">
+                              Ret.
+                            </TableHead>
+                            <TableHead className="text-xs w-24">
+                              Dat Ret.
+                            </TableHead>
+                            <TableHead className="text-xs w-20 text-center">
+                              Saldo
+                            </TableHead>
                           </>
                         )}
                       </TableRow>
@@ -661,41 +837,63 @@ export default function ProductPickupManagementPage() {
                     <TableBody>
                       {isLoading ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">Carregando...</TableCell>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            Carregando...
+                          </TableCell>
                         </TableRow>
                       ) : displayedPickups.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                            Nenhum produto encontrado com os filtros selecionados.
+                          <TableCell
+                            colSpan={6}
+                            className="text-center py-8 text-slate-500"
+                          >
+                            Nenhum produto encontrado com os filtros
+                            selecionados.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        displayedPickups.map(pickup => (
-                          <TableRow 
+                        displayedPickups.map((pickup) => (
+                          <TableRow
                             key={pickup.id}
-                            className={`cursor-pointer hover:bg-slate-100 ${selectedPickup?.id === pickup.id ? 'bg-blue-100' : ''}`}
+                            className={`cursor-pointer hover:bg-slate-100 ${selectedPickup?.id === pickup.id ? "bg-blue-100" : ""}`}
                             onClick={() => setSelectedPickup(pickup)}
                             onDoubleClick={() => handleBaixar(pickup)}
                           >
                             <TableCell className="text-xs">
-                              {pickup.saleDate ? format(parseISO(pickup.saleDate), 'dd/MM/yyyy') : '-'}
+                              {pickup.saleDate
+                                ? format(pickup.saleDate, "dd/MM/yyyy")
+                                : "-"}
                             </TableCell>
-                            <TableCell className="text-xs font-mono">{pickup.saleId?.slice(-6) || '-'}</TableCell>
-                            <TableCell className="text-xs">{pickup.personName || '-'}</TableCell>
-                            <TableCell className="text-xs">{pickup.productName || '-'}</TableCell>
-                            <TableCell className="text-xs text-center">{pickup.pickupQuantity || 0}</TableCell>
-                            {tipoProduto === 'aRetirar' ? (
+                            <TableCell className="text-xs font-mono">
+                              {pickup.saleId?.slice(-6) || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {pickup.personName || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {pickup.productName || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs text-center">
+                              {pickup.pickupQuantity || 0}
+                            </TableCell>
+                            {tipoProduto === "aRetirar" ? (
                               <TableCell className="text-xs text-center">
-                                {(pickup.pickupQuantity || 0) - (pickup.collectedQuantity || 0)}
+                                {(pickup.pickupQuantity || 0) -
+                                  (pickup.collectedQuantity || 0)}
                               </TableCell>
                             ) : (
                               <>
-                                <TableCell className="text-xs text-center">{pickup.collectedQuantity || 0}</TableCell>
+                                <TableCell className="text-xs text-center">
+                                  {pickup.collectedQuantity || 0}
+                                </TableCell>
                                 <TableCell className="text-xs">
-                                  {pickup.collectedDate ? format(parseISO(pickup.collectedDate), 'dd/MM/yyyy') : '-'}
+                                  {pickup.collectedDate
+                                    ? format(pickup.collectedDate, "dd/MM/yyyy")
+                                    : "-"}
                                 </TableCell>
                                 <TableCell className="text-xs text-center">
-                                  {(pickup.pickupQuantity || 0) - (pickup.collectedQuantity || 0)}
+                                  {(pickup.pickupQuantity || 0) -
+                                    (pickup.collectedQuantity || 0)}
                                 </TableCell>
                               </>
                             )}
@@ -717,11 +915,15 @@ export default function ProductPickupManagementPage() {
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-slate-700">a Retirar</p>
-                    <p className="text-2xl font-bold text-slate-800">{totalARetirar}</p>
+                    <p className="text-2xl font-bold text-slate-800">
+                      {totalARetirar}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-700">Retirados</p>
-                    <p className="text-2xl font-bold text-slate-800">{totalRetirados}</p>
+                    <p className="text-2xl font-bold text-slate-800">
+                      {totalRetirados}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -733,35 +935,35 @@ export default function ProductPickupManagementPage() {
       {/* BARRA DE AÇÕES */}
       <div className="bg-slate-200 border-t border-slate-300 p-2">
         <div className="flex flex-wrap gap-1 items-center">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-8 text-xs gap-1"
             onClick={handleBaixar}
             disabled={!selectedPickup}
           >
             <ArrowDown className="w-3 h-3" /> Baixar
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-8 text-xs gap-1 text-red-600 hover:bg-red-50"
             onClick={handleExcluir}
             disabled={!selectedPickup}
           >
             <Trash2 className="w-3 h-3" /> Excluir
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-8 text-xs gap-1"
             onClick={handlePesquisar}
           >
             <Search className="w-3 h-3" /> Pesquisar
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-8 text-xs gap-1"
             onClick={handleCancelar}
           >
@@ -772,9 +974,9 @@ export default function ProductPickupManagementPage() {
               <LogOut className="w-3 h-3" /> Sair
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="h-8 text-xs gap-1"
             onClick={handleImprimir}
             disabled={!showResults || displayedPickups.length === 0}
@@ -799,7 +1001,7 @@ export default function ProductPickupManagementPage() {
                     <SelectValue placeholder="Selecione o setor..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {sectors.map(sector => (
+                    {sectors.map((sector) => (
                       <SelectItem key={sector.id} value={sector.id}>
                         {sector.name}
                       </SelectItem>
@@ -811,10 +1013,13 @@ export default function ProductPickupManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Qtde. a Baixar:</Label>
-                  <Input 
+                  <Input
                     type="number"
                     min="1"
-                    max={(selectedPickup.pickupQuantity || 0) - (selectedPickup.collectedQuantity || 0)}
+                    max={
+                      (selectedPickup.pickupQuantity || 0) -
+                      (selectedPickup.collectedQuantity || 0)
+                    }
                     value={qtdeBaixar}
                     onChange={(e) => setQtdeBaixar(e.target.value)}
                     className="h-9 mt-1"
@@ -823,19 +1028,19 @@ export default function ProductPickupManagementPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Retirado em:</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={dataBaixa}
                     onChange={(e) => setDataBaixa(e.target.value)}
                     className="h-9 mt-1"
-                    max={format(new Date(), 'yyyy-MM-dd')}
+                    max={format(new Date(), "yyyy-MM-dd")}
                   />
                 </div>
               </div>
 
               <div>
                 <Label className="text-sm font-medium">Nota Fiscal:</Label>
-                <Input 
+                <Input
                   type="text"
                   value={notaFiscal}
                   onChange={(e) => setNotaFiscal(e.target.value)}
@@ -846,7 +1051,7 @@ export default function ProductPickupManagementPage() {
 
               <div>
                 <Label className="text-sm font-medium">Pedido:</Label>
-                <Input 
+                <Input
                   type="text"
                   value={pedido}
                   onChange={(e) => setPedido(e.target.value)}
@@ -858,15 +1063,15 @@ export default function ProductPickupManagementPage() {
           )}
           <DialogFooter className="bg-slate-50 -mx-6 -mb-6 px-6 py-3 mt-4 rounded-b-lg">
             <div className="flex gap-2 ml-auto">
-              <Button 
-                onClick={handleConfirmarBaixa} 
+              <Button
+                onClick={handleConfirmarBaixa}
                 className="h-8 w-8 p-0 bg-[#6ac252] hover:bg-[#5cb143]"
                 title="Confirmar"
               >
                 <Check className="w-4 h-4" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowBaixaModal(false)}
                 className="h-8 w-8 p-0 bg-[#e88d44] hover:bg-[#d97d34] border-[#e88d44] text-white"
                 title="Cancelar"
@@ -885,7 +1090,7 @@ export default function ProductPickupManagementPage() {
             <DialogTitle>Pesquisar Cliente / Pto. Venda</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Digite o nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -904,35 +1109,50 @@ export default function ProductPickupManagementPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredPeople
-                    .filter(p => {
+                    .filter((p) => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return p.name?.toLowerCase().includes(term) || 
-                             p.document?.toLowerCase().includes(term);
+                      return (
+                        p.name?.toLowerCase().includes(term) ||
+                        p.document?.toLowerCase().includes(term)
+                      );
                     })
-                    .map(p => (
-                      <TableRow 
-                        key={p.id} 
+                    .map((p) => (
+                      <TableRow
+                        key={p.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => {
                           setClienteInput(p.id);
                           setShowClienteSearch(false);
-                          setSearchTerm('');
+                          setSearchTerm("");
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{p.personNumber || p.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {p.personNumber || p.id?.slice(-6)}
+                        </TableCell>
                         <TableCell className="text-xs">{p.name}</TableCell>
-                        <TableCell className="text-xs">{p.type === 'cliente' ? 'Cliente' : 'Pto. Venda'}</TableCell>
-                        <TableCell className="text-xs">{p.phone?.[0] || '-'}</TableCell>
+                        <TableCell className="text-xs">
+                          {p.type === "cliente" ? "Cliente" : "Pto. Venda"}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {p.phone?.[0] || "-"}
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowClienteSearch(false)}>Fechar</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowClienteSearch(false)}
+            >
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -949,8 +1169,8 @@ export default function ProductPickupManagementPage() {
             </p>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowPrintConfirm(false);
                 setLastBaixaData(null);
@@ -959,7 +1179,7 @@ export default function ProductPickupManagementPage() {
             >
               Não
             </Button>
-            <Button 
+            <Button
               onClick={handleImprimirComprovante}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -976,7 +1196,7 @@ export default function ProductPickupManagementPage() {
             <DialogTitle>Pesquisar Produto</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Digite o nome do produto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -994,34 +1214,47 @@ export default function ProductPickupManagementPage() {
                 </TableHeader>
                 <TableBody>
                   {products
-                    .filter(prod => {
+                    .filter((prod) => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return prod.name?.toLowerCase().includes(term) || 
-                             prod.code?.toLowerCase().includes(term);
+                      return (
+                        prod.name?.toLowerCase().includes(term) ||
+                        prod.code?.toLowerCase().includes(term)
+                      );
                     })
-                    .map(prod => (
-                      <TableRow 
-                        key={prod.id} 
+                    .map((prod) => (
+                      <TableRow
+                        key={prod.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => {
                           setProdutoInput(prod.id);
                           setShowProdutoSearch(false);
-                          setSearchTerm('');
+                          setSearchTerm("");
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{prod.code || prod.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {prod.code || prod.id?.slice(-6)}
+                        </TableCell>
                         <TableCell className="text-xs">{prod.name}</TableCell>
-                        <TableCell className="text-xs">{prod.category || '-'}</TableCell>
+                        <TableCell className="text-xs">
+                          {prod.category || "-"}
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowProdutoSearch(false)}>Fechar</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowProdutoSearch(false)}
+            >
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1033,7 +1266,7 @@ export default function ProductPickupManagementPage() {
             <DialogTitle>Pesquisar Código de Venda</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Digite o código da venda..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -1051,35 +1284,47 @@ export default function ProductPickupManagementPage() {
                 </TableHeader>
                 <TableBody>
                   {sales
-                    .filter(s => {
+                    .filter((s) => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return s.saleNumber?.toLowerCase().includes(term) || 
-                             s.personName?.toLowerCase().includes(term);
+                      return (
+                        s.saleNumber?.toLowerCase().includes(term) ||
+                        s.personName?.toLowerCase().includes(term)
+                      );
                     })
                     .slice(0, 50)
-                    .map(s => (
-                      <TableRow 
-                        key={s.id} 
+                    .map((s) => (
+                      <TableRow
+                        key={s.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => {
                           setCodigoVendaInput(s.id);
                           setShowVendaSearch(false);
-                          setSearchTerm('');
+                          setSearchTerm("");
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{s.saleNumber}</TableCell>
-                        <TableCell className="text-xs">{s.personName}</TableCell>
-                        <TableCell className="text-xs">{s.saleDate ? format(parseISO(s.saleDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {s.saleNumber}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {s.personName}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {s.saleDate ? format(s.saleDate, "dd/MM/yyyy") : "-"}
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowVendaSearch(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => setShowVendaSearch(false)}>
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

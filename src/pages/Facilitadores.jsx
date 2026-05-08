@@ -3,11 +3,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -20,20 +40,22 @@ export default function FacilitadoresPage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   const initialFacilitadorState = {
-    nome: '',
-    modeloFiscal: '55',
-    tipoOperacao: 'venda',
-    cfop: '5102',
-    regimeTributario: 'simples_nacional',
-    icmsSituacaoTributaria: '102',
-    pisSituacaoTributaria: '07',
-    cofinsSituacaoTributaria: '07',
-    ipiSituacaoTributaria: '',
-    observacoes: '',
-    active: true
+    nome: "",
+    modeloFiscal: "55",
+    tipoOperacao: "venda",
+    cfop: "5102",
+    regimeTributario: "simples_nacional",
+    icmsSituacaoTributaria: "102",
+    pisSituacaoTributaria: "07",
+    cofinsSituacaoTributaria: "07",
+    ipiSituacaoTributaria: "",
+    observacoes: "",
+    active: true,
   };
 
-  const [currentFacilitador, setCurrentFacilitador] = useState(initialFacilitadorState);
+  const [currentFacilitador, setCurrentFacilitador] = useState(
+    initialFacilitadorState,
+  );
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -43,7 +65,7 @@ export default function FacilitadoresPage() {
 
       const data = await entities.Facilitador.filter(
         { companyId: user.companyId },
-        { sort: '-createdDate' }
+        { sort: "-createdAt" },
       );
       setFacilitadores(data);
     } catch (error) {
@@ -51,7 +73,7 @@ export default function FacilitadoresPage() {
       toast({
         title: "Erro",
         description: "Não foi possível carregar os facilitadores.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -75,14 +97,14 @@ export default function FacilitadoresPage() {
         loadData();
         toast({
           title: "Sucesso",
-          description: "Facilitador excluído com sucesso."
+          description: "Facilitador excluído com sucesso.",
         });
       } catch (error) {
         console.error("Erro ao excluir facilitador:", error);
         toast({
           title: "Erro",
           description: "Não foi possível excluir o facilitador.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     }
@@ -96,7 +118,7 @@ export default function FacilitadoresPage() {
         ...currentFacilitador,
         companyId: currentUser.companyId,
         companyName: currentUser.companyName,
-        createdByName: currentUser.fullName
+        createdByName: currentUser.name,
       };
 
       if (isEditing) {
@@ -104,13 +126,13 @@ export default function FacilitadoresPage() {
         await entities.Facilitador.update(id, dataToUpdate);
         toast({
           title: "Sucesso",
-          description: "Facilitador atualizado com sucesso."
+          description: "Facilitador atualizado com sucesso.",
         });
       } else {
         await entities.Facilitador.create(facilitadorData);
         toast({
           title: "Sucesso",
-          description: "Facilitador cadastrado com sucesso."
+          description: "Facilitador cadastrado com sucesso.",
         });
       }
 
@@ -122,7 +144,7 @@ export default function FacilitadoresPage() {
       toast({
         title: "Erro",
         description: "Não foi possível salvar o facilitador.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -140,15 +162,25 @@ export default function FacilitadoresPage() {
   };
 
   const getModeloBadge = (modelo) => {
-    return modelo === '55' 
-      ? <Badge className="bg-blue-100 text-blue-800">NF-e (55)</Badge>
-      : <Badge className="bg-purple-100 text-purple-800">NFC-e (65)</Badge>;
+    return modelo === "55" ? (
+      <Badge className="bg-blue-100 text-blue-800">NF-e (55)</Badge>
+    ) : (
+      <Badge className="bg-purple-100 text-purple-800">NFC-e (65)</Badge>
+    );
   };
 
   const getStatusBadge = (ativo) => {
-    return ativo
-      ? <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1 inline" />Ativo</Badge>
-      : <Badge className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1 inline" />Inativo</Badge>;
+    return ativo ? (
+      <Badge className="bg-green-100 text-green-800">
+        <CheckCircle className="w-3 h-3 mr-1 inline" />
+        Ativo
+      </Badge>
+    ) : (
+      <Badge className="bg-red-100 text-red-800">
+        <XCircle className="w-3 h-3 mr-1 inline" />
+        Inativo
+      </Badge>
+    );
   };
 
   if (isLoading && !showForm) {
@@ -160,17 +192,30 @@ export default function FacilitadoresPage() {
   }
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(to bottom right, #f2f1ed, #95b4df)' }}>
+    <div
+      className="min-h-screen p-6"
+      style={{
+        background: "linear-gradient(to bottom right, #f2f1ed, #95b4df)",
+      }}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Facilitadores Fiscais</h1>
-            <p className="text-slate-600">Configure as operações fiscais para emissão de notas</p>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+              Facilitadores Fiscais
+            </h1>
+            <p className="text-slate-600">
+              Configure as operações fiscais para emissão de notas
+            </p>
           </div>
           <Button
-            onClick={() => { setShowForm(true); setIsEditing(false); resetForm(); }}
+            onClick={() => {
+              setShowForm(true);
+              setIsEditing(false);
+              resetForm();
+            }}
             className="text-white"
-            style={{ backgroundColor: '#e78b3a' }}
+            style={{ backgroundColor: "#e78b3a" }}
           >
             <Plus className="w-5 h-5 mr-2" />
             Novo Facilitador
@@ -182,7 +227,7 @@ export default function FacilitadoresPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                {isEditing ? 'Editar Facilitador' : 'Cadastrar Facilitador'}
+                {isEditing ? "Editar Facilitador" : "Cadastrar Facilitador"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -192,12 +237,18 @@ export default function FacilitadoresPage() {
                     <Label>Nome da Operação / Natureza *</Label>
                     <Input
                       value={currentFacilitador.nome}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, nome: e.target.value.toUpperCase() }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          nome: e.target.value.toUpperCase(),
+                        }))
+                      }
                       placeholder="Ex: VENDA DE MERCADORIAS"
                       required
                     />
                     <p className="text-xs text-slate-500 mt-1">
-                      Este nome aparecerá como "Natureza da Operação" na nota fiscal
+                      Este nome aparecerá como "Natureza da Operação" na nota
+                      fiscal
                     </p>
                   </div>
 
@@ -205,7 +256,12 @@ export default function FacilitadoresPage() {
                     <Label>Modelo Fiscal *</Label>
                     <Select
                       value={currentFacilitador.modeloFiscal}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, modeloFiscal: value }))}
+                      onValueChange={(value) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          modeloFiscal: value,
+                        }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -221,7 +277,12 @@ export default function FacilitadoresPage() {
                     <Label>Tipo de Operação *</Label>
                     <Select
                       value={currentFacilitador.tipoOperacao}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, tipoOperacao: value }))}
+                      onValueChange={(value) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          tipoOperacao: value,
+                        }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -232,7 +293,9 @@ export default function FacilitadoresPage() {
                         <SelectItem value="remessa">Remessa</SelectItem>
                         <SelectItem value="retorno">Retorno</SelectItem>
                         <SelectItem value="devolucao">Devolução</SelectItem>
-                        <SelectItem value="transferencia">Transferência</SelectItem>
+                        <SelectItem value="transferencia">
+                          Transferência
+                        </SelectItem>
                         <SelectItem value="outras">Outras</SelectItem>
                       </SelectContent>
                     </Select>
@@ -242,7 +305,12 @@ export default function FacilitadoresPage() {
                     <Label>CFOP *</Label>
                     <Input
                       value={currentFacilitador.cfop}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, cfop: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          cfop: e.target.value,
+                        }))
+                      }
                       placeholder="5102"
                       required
                     />
@@ -255,14 +323,23 @@ export default function FacilitadoresPage() {
                     <Label>Regime Tributário *</Label>
                     <Select
                       value={currentFacilitador.regimeTributario}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, regimeTributario: value }))}
+                      onValueChange={(value) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          regimeTributario: value,
+                        }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="simples_nacional">Simples Nacional</SelectItem>
-                        <SelectItem value="lucro_presumido">Lucro Presumido</SelectItem>
+                        <SelectItem value="simples_nacional">
+                          Simples Nacional
+                        </SelectItem>
+                        <SelectItem value="lucro_presumido">
+                          Lucro Presumido
+                        </SelectItem>
                         <SelectItem value="lucro_real">Lucro Real</SelectItem>
                         <SelectItem value="mei">MEI</SelectItem>
                       </SelectContent>
@@ -273,7 +350,12 @@ export default function FacilitadoresPage() {
                     <Label>CST ICMS *</Label>
                     <Input
                       value={currentFacilitador.icmsSituacaoTributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, icmsSituacaoTributaria: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          icmsSituacaoTributaria: e.target.value,
+                        }))
+                      }
                       placeholder="102"
                       required
                     />
@@ -286,7 +368,12 @@ export default function FacilitadoresPage() {
                     <Label>CST PIS *</Label>
                     <Input
                       value={currentFacilitador.pisSituacaoTributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, pisSituacaoTributaria: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          pisSituacaoTributaria: e.target.value,
+                        }))
+                      }
                       placeholder="07"
                       required
                     />
@@ -296,7 +383,12 @@ export default function FacilitadoresPage() {
                     <Label>CST COFINS *</Label>
                     <Input
                       value={currentFacilitador.cofinsSituacaoTributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, cofinsSituacaoTributaria: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          cofinsSituacaoTributaria: e.target.value,
+                        }))
+                      }
                       placeholder="07"
                       required
                     />
@@ -306,7 +398,12 @@ export default function FacilitadoresPage() {
                     <Label>CST IPI (Opcional)</Label>
                     <Input
                       value={currentFacilitador.ipiSituacaoTributaria}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, ipiSituacaoTributaria: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          ipiSituacaoTributaria: e.target.value,
+                        }))
+                      }
                       placeholder="53"
                     />
                   </div>
@@ -314,8 +411,13 @@ export default function FacilitadoresPage() {
                   <div>
                     <Label>Status</Label>
                     <Select
-                      value={currentFacilitador.active ? 'true' : 'false'}
-                      onValueChange={(value) => setCurrentFacilitador(prev => ({ ...prev, active: value === 'true' }))}
+                      value={currentFacilitador.active ? "true" : "false"}
+                      onValueChange={(value) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          active: value === "true",
+                        }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -331,7 +433,12 @@ export default function FacilitadoresPage() {
                     <Label>Observações</Label>
                     <Textarea
                       value={currentFacilitador.observacoes}
-                      onChange={(e) => setCurrentFacilitador(prev => ({ ...prev, observacoes: e.target.value }))}
+                      onChange={(e) =>
+                        setCurrentFacilitador((prev) => ({
+                          ...prev,
+                          observacoes: e.target.value,
+                        }))
+                      }
                       rows={3}
                       placeholder="Informações adicionais sobre este facilitador..."
                     />
@@ -339,10 +446,23 @@ export default function FacilitadoresPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isLoading}>
-                    {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar')}
+                  <Button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading
+                      ? "Salvando..."
+                      : isEditing
+                        ? "Salvar Alterações"
+                        : "Cadastrar"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={isLoading}
+                  >
                     Cancelar
                   </Button>
                 </div>
@@ -370,13 +490,21 @@ export default function FacilitadoresPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {facilitadores.map(facilitador => (
+                  {facilitadores.map((facilitador) => (
                     <TableRow key={facilitador.id}>
-                      <TableCell className="font-medium">{facilitador.nome}</TableCell>
-                      <TableCell>{getModeloBadge(facilitador.modeloFiscal)}</TableCell>
+                      <TableCell className="font-medium">
+                        {facilitador.nome}
+                      </TableCell>
+                      <TableCell>
+                        {getModeloBadge(facilitador.modeloFiscal)}
+                      </TableCell>
                       <TableCell>{facilitador.cfop}</TableCell>
-                      <TableCell className="text-xs">{facilitador.regimeTributario}</TableCell>
-                      <TableCell>{facilitador.icmsSituacaoTributaria}</TableCell>
+                      <TableCell className="text-xs">
+                        {facilitador.regimeTributario}
+                      </TableCell>
+                      <TableCell>
+                        {facilitador.icmsSituacaoTributaria}
+                      </TableCell>
                       <TableCell>{getStatusBadge(facilitador.ativo)}</TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -400,7 +528,10 @@ export default function FacilitadoresPage() {
                   ))}
                   {facilitadores.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-slate-500"
+                      >
                         Nenhum facilitador cadastrado
                       </TableCell>
                     </TableRow>
@@ -413,11 +544,14 @@ export default function FacilitadoresPage() {
 
         <Card className="mt-6 bg-blue-50 border-blue-200">
           <CardContent className="p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">💡 Dica sobre Facilitadores</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">
+              💡 Dica sobre Facilitadores
+            </h3>
             <p className="text-sm text-blue-800">
-              Os facilitadores são configurações pré-definidas para emissão de notas fiscais. 
-              Crie um facilitador para cada tipo de operação fiscal que sua empresa realiza.
-              Por exemplo: "VENDA DE GÁS" com CFOP 5102, ou "VENDA PARA CONSUMIDOR FINAL" para NFC-e.
+              Os facilitadores são configurações pré-definidas para emissão de
+              notas fiscais. Crie um facilitador para cada tipo de operação
+              fiscal que sua empresa realiza. Por exemplo: "VENDA DE GÁS" com
+              CFOP 5102, ou "VENDA PARA CONSUMIDOR FINAL" para NFC-e.
             </p>
           </CardContent>
         </Card>

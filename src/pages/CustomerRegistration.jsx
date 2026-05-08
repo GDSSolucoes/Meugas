@@ -3,7 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UserPlus, Plus, Trash2, Loader2 } from "lucide-react";
 import { Person } from "@/entities/Person";
 import { Link } from "react-router-dom";
@@ -12,29 +18,29 @@ import { User } from "@/entities/User";
 import FiscalProvider from "@/providers/FiscalProvider";
 
 const initialPersonState = {
-  name: '',
-  document: '',
-  email: '',
-  birthday: '',
-  phone: [''],
-  type: 'cliente',
+  name: "",
+  document: "",
+  email: "",
+  birthday: "",
+  phone: [""],
+  type: "cliente",
   address: {
-    zipcode: '',
-    street: '',
-    number: '',
-    complement: '', // Added new field
-    neighborhood: '',
-    referencePoint: '',
-    city: '',
-    state: ''
+    zipcode: "",
+    street: "",
+    number: "",
+    complement: "", // Added new field
+    neighborhood: "",
+    referencePoint: "",
+    city: "",
+    state: "",
   },
-  glpConsumptionDays: '', // Added new field
-  conveniadaId: '',
-  conveniadaName: '',
+  glpConsumptionDays: "", // Added new field
+  conveniadaId: "",
+  conveniadaName: "",
   active: true,
-  createdByName: '',
-  companyId: '',
-  companyName: ''
+  createdByName: "",
+  companyId: "",
+  companyName: "",
 };
 
 export default function CustomerRegistrationPage() {
@@ -52,69 +58,87 @@ export default function CustomerRegistrationPage() {
     if (!companyId) return;
     try {
       const allPeople = await Person.filter({ companyId: companyId });
-      setConveniadas(allPeople.filter(p => p.type === 'conveniada' && p.active));
+      setConveniadas(
+        allPeople.filter((p) => p.type === "conveniada" && p.active),
+      );
     } catch (error) {
       console.error("Erro ao carregar conveniadas:", error);
     }
   };
 
-  const loadPersonForEditing = useCallback(async (personId, companyId) => {
-    if (!personId || !companyId) return;
-    try {
-      const allPeople = await Person.filter({ companyId: companyId });
-      const personToEdit = allPeople.find(p => p.id === personId);
-      if (personToEdit) {
-        // Ensure phone array is at least [''] if empty from backend
-        if (!personToEdit.phone || personToEdit.phone.length === 0) {
-            personToEdit.phone = [''];
-        }
-        // Ensure address.complement exists
-        if (!personToEdit.address.complement) {
-          personToEdit.address.complement = '';
-        }
-        // Ensure glpConsumptionDays exists and is a number or empty string
-        if (typeof personToEdit.glpConsumptionDays === 'undefined' || personToEdit.glpConsumptionDays === null) {
-          personToEdit.glpConsumptionDays = '';
-        }
-        if (!personToEdit.birthday) {
-          personToEdit.birthday = '';
-        }
+  const loadPersonForEditing = useCallback(
+    async (personId, companyId) => {
+      if (!personId || !companyId) return;
+      try {
+        const allPeople = await Person.filter({ companyId: companyId });
+        const personToEdit = allPeople.find((p) => p.id === personId);
+        if (personToEdit) {
+          // Ensure phone array is at least [''] if empty from backend
+          if (!personToEdit.phone || personToEdit.phone.length === 0) {
+            personToEdit.phone = [""];
+          }
+          // Ensure address.complement exists
+          if (!personToEdit.address.complement) {
+            personToEdit.address.complement = "";
+          }
+          // Ensure glpConsumptionDays exists and is a number or empty string
+          if (
+            typeof personToEdit.glpConsumptionDays === "undefined" ||
+            personToEdit.glpConsumptionDays === null
+          ) {
+            personToEdit.glpConsumptionDays = "";
+          }
+          if (!personToEdit.birthday) {
+            personToEdit.birthday = "";
+          }
 
-        setCurrentPerson(personToEdit);
-        setIsEditing(true);
-      } else {
-        console.warn(`Pessoa com ID ${personId} não encontrada.`);
-        // Optionally, redirect or clear edit mode if not found
-        window.history.replaceState({}, document.title, window.location.pathname + (isFromGerencial ? '?module=gerencial' : ''));
+          setCurrentPerson(personToEdit);
+          setIsEditing(true);
+        } else {
+          console.warn(`Pessoa com ID ${personId} não encontrada.`);
+          // Optionally, redirect or clear edit mode if not found
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname +
+              (isFromGerencial ? "?module=gerencial" : ""),
+          );
+          setIsEditing(false);
+          setCurrentPerson(initialPersonState);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar pessoa para edição:", error);
+        // Fallback to creation mode or handle error display
         setIsEditing(false);
         setCurrentPerson(initialPersonState);
       }
-    } catch (error) {
-      console.error("Erro ao carregar pessoa para edição:", error);
-      // Fallback to creation mode or handle error display
-      setIsEditing(false);
-      setCurrentPerson(initialPersonState);
-    }
-  }, [isFromGerencial]);
+    },
+    [isFromGerencial],
+  );
 
   useEffect(() => {
     const initialize = async () => {
       const user = await User.me();
       setCurrentUser(user);
-      
+
       // Check URL parameter to determine module context
       const urlParams = new URLSearchParams(window.location.search);
-      const moduleParam = urlParams.get('module');
-      const editParam = urlParams.get('edit');
-      const typeParam = urlParams.get('type');
-      
-      setIsFromGerencial(moduleParam === 'gerencial');
-      
+      const moduleParam = urlParams.get("module");
+      const editParam = urlParams.get("edit");
+      const typeParam = urlParams.get("type");
+
+      setIsFromGerencial(moduleParam === "gerencial");
+
       // Se veio com tipo pré-definido, setar o tipo
-      if (typeParam && ['cliente', 'fornecedor', 'pontoVenda', 'conveniada'].includes(typeParam)) {
-        setCurrentPerson(prev => ({ ...prev, type: typeParam }));
+      if (
+        typeParam &&
+        ["cliente", "fornecedor", "pontoVenda", "conveniada"].includes(
+          typeParam,
+        )
+      ) {
+        setCurrentPerson((prev) => ({ ...prev, type: typeParam }));
       }
-      
+
       // Load conveniadas and person for editing based on current user's companyId
       if (user.companyId) {
         loadConveniadas(user.companyId);
@@ -127,9 +151,9 @@ export default function CustomerRegistrationPage() {
   }, [loadPersonForEditing]);
 
   const handleStreetChange = (value) => {
-    setCurrentPerson(prev => ({
+    setCurrentPerson((prev) => ({
       ...prev,
-      address: { ...prev.address, street: value.toUpperCase() }
+      address: { ...prev.address, street: value.toUpperCase() },
     }));
 
     if (debounceTimeout.current) {
@@ -137,14 +161,18 @@ export default function CustomerRegistrationPage() {
     }
 
     // Only search if street has at least 3 characters and city/state are provided
-    if (value.length >= 3 && currentPerson.address.city && currentPerson.address.state) {
+    if (
+      value.length >= 3 &&
+      currentPerson.address.city &&
+      currentPerson.address.state
+    ) {
       setIsAddressLoading(true);
       debounceTimeout.current = setTimeout(async () => {
         try {
           const suggestions = await FiscalProvider.searchAddressByStreet({
             state: currentPerson.address.state,
             city: currentPerson.address.city,
-            street: value
+            street: value,
           });
           setAddressSuggestions(suggestions || []);
         } catch (error) {
@@ -161,7 +189,7 @@ export default function CustomerRegistrationPage() {
   };
 
   const handleSelectAddress = (suggestion) => {
-    setCurrentPerson(prev => ({
+    setCurrentPerson((prev) => ({
       ...prev,
       address: {
         ...prev.address,
@@ -171,8 +199,8 @@ export default function CustomerRegistrationPage() {
         city: suggestion.city.toUpperCase(),
         state: suggestion.state.toUpperCase(),
         // Complement is not usually returned by CEP APIs, so it remains as is or empty
-        complement: prev.address.complement || '', 
-      }
+        complement: prev.address.complement || "",
+      },
     }));
     setAddressSuggestions([]); // Clear suggestions after selection
   };
@@ -183,43 +211,43 @@ export default function CustomerRegistrationPage() {
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
         if (!data.erro) {
-          setCurrentPerson(prev => ({
+          setCurrentPerson((prev) => ({
             ...prev,
             address: {
               ...prev.address,
-              street: (data.logradouro || '').toUpperCase(),
-              neighborhood: (data.bairro || '').toUpperCase(),
-              city: (data.localidade || '').toUpperCase(),
-              state: (data.uf || '').toUpperCase(),
-              complement: prev.address.complement || '' // Preserve existing complement if any, or keep empty
-            }
+              street: (data.logradouro || "").toUpperCase(),
+              neighborhood: (data.bairro || "").toUpperCase(),
+              city: (data.localidade || "").toUpperCase(),
+              state: (data.uf || "").toUpperCase(),
+              complement: prev.address.complement || "", // Preserve existing complement if any, or keep empty
+            },
           }));
         } else {
-            // Clear address fields if CEP search fails
-            setCurrentPerson(prev => ({
-                ...prev,
-                address: {
-                    street: '',
-                    neighborhood: '',
-                    city: '',
-                    state: '',
-                    complement: '' // Clear complement on failed CEP search
-                }
-            }));
-            console.warn("CEP não encontrado.");
+          // Clear address fields if CEP search fails
+          setCurrentPerson((prev) => ({
+            ...prev,
+            address: {
+              street: "",
+              neighborhood: "",
+              city: "",
+              state: "",
+              complement: "", // Clear complement on failed CEP search
+            },
+          }));
+          console.warn("CEP não encontrado.");
         }
       } catch (error) {
         console.error("Erro ao buscar CEP:", error);
         // Clear address fields on network error
-        setCurrentPerson(prev => ({
-            ...prev,
-            address: {
-                street: '',
-                neighborhood: '',
-                city: '',
-                state: '',
-                complement: '' // Clear complement on network error
-            }
+        setCurrentPerson((prev) => ({
+          ...prev,
+          address: {
+            street: "",
+            neighborhood: "",
+            city: "",
+            state: "",
+            complement: "", // Clear complement on network error
+          },
         }));
       }
     }
@@ -234,21 +262,23 @@ export default function CustomerRegistrationPage() {
     setIsLoading(true);
     try {
       // Filter out empty phone numbers before saving
-      const phonesToSave = currentPerson.phone.filter(phone => phone.trim() !== '');
-      
-      let personToSave = { 
-        ...currentPerson, 
-        phone: phonesToSave.length > 0 ? phonesToSave : [''],
+      const phonesToSave = currentPerson.phone.filter(
+        (phone) => phone.trim() !== "",
+      );
+
+      let personToSave = {
+        ...currentPerson,
+        phone: phonesToSave.length > 0 ? phonesToSave : [""],
         companyId: currentUser.companyId,
         companyName: currentUser.companyName,
-        createdByName: currentUser.fullName
+        createdByName: currentUser.name,
       };
-      
+
       // Ensure optional fields are null if empty
-      if (personToSave.glpConsumptionDays === '') {
+      if (personToSave.glpConsumptionDays === "") {
         personToSave.glpConsumptionDays = null;
       }
-      if (personToSave.birthday === '') {
+      if (personToSave.birthday === "") {
         personToSave.birthday = null;
       }
 
@@ -256,7 +286,7 @@ export default function CustomerRegistrationPage() {
         const { id, ...personData } = personToSave;
         await Person.update(id, personData);
         alert("Pessoa atualizada com sucesso!");
-        
+
         if (isFromGerencial) {
           window.location.href = createPageUrl("People"); // Redirect to the people list page
         } else {
@@ -264,28 +294,34 @@ export default function CustomerRegistrationPage() {
         }
       } else {
         // Generate sequential person number for new persons
-        const allPersons = await Person.filter({ companyId: currentUser.companyId });
+        const allPersons = await Person.filter({
+          companyId: currentUser.companyId,
+        });
         const maxPersonNumber = allPersons.reduce((max, person) => {
           const currentNum = parseInt(person.personNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
         }, 0);
         const newPersonNumber = maxPersonNumber + 1;
-        
+
         personToSave = {
           ...personToSave,
-          personNumber: String(newPersonNumber)
+          personNumber: String(newPersonNumber),
         };
 
         const newPerson = await Person.create(personToSave); // Store the returned new person object
-        alert(isFromGerencial ? "Pessoa cadastrada com sucesso!" : "Cliente cadastrado com sucesso!");
-        
+        alert(
+          isFromGerencial
+            ? "Pessoa cadastrada com sucesso!"
+            : "Cliente cadastrado com sucesso!",
+        );
+
         // Verificar se deve retornar para outra tela com a pessoa selecionada
         const urlParams = new URLSearchParams(window.location.search);
-        const returnTo = urlParams.get('return');
-        
-        if (returnTo === 'purchases' && currentPerson.type === 'fornecedor') {
+        const returnTo = urlParams.get("return");
+
+        if (returnTo === "purchases" && currentPerson.type === "fornecedor") {
           window.location.href = `${createPageUrl("Purchases")}?supplierId=${newPerson.id}`;
-        } else if (returnTo === 'cashMovements') {
+        } else if (returnTo === "cashMovements") {
           window.location.href = `${createPageUrl("CashMovements")}?personId=${newPerson.id}`;
         } else if (isFromGerencial) {
           resetForm(); // For gerencial, reset after creation
@@ -307,62 +343,69 @@ export default function CustomerRegistrationPage() {
     setAddressSuggestions([]); // Clear suggestions on reset
     // Clear URL parameters related to editing
     const urlParams = new URLSearchParams(window.location.search);
-    urlParams.delete('edit');
+    urlParams.delete("edit");
     // Also remove the 'return' parameter if it exists
-    urlParams.delete('return');
+    urlParams.delete("return");
     const newSearch = urlParams.toString();
-    const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+    const newUrl =
+      window.location.pathname + (newSearch ? `?${newSearch}` : "");
     window.history.replaceState({}, document.title, newUrl);
   };
 
   const handlePhoneChange = (index, value) => {
     const newPhones = [...currentPerson.phone];
     newPhones[index] = value;
-    setCurrentPerson(prev => ({ ...prev, phone: newPhones }));
+    setCurrentPerson((prev) => ({ ...prev, phone: newPhones }));
   };
 
   const addPhone = () => {
-    setCurrentPerson(prev => ({ ...prev, phone: [...prev.phone, ''] }));
+    setCurrentPerson((prev) => ({ ...prev, phone: [...prev.phone, ""] }));
   };
 
   const removePhone = (index) => {
-    setCurrentPerson(prev => {
+    setCurrentPerson((prev) => {
       const newPhones = prev.phone.filter((_, i) => i !== index);
       // Ensure there's always at least one empty phone input if all are removed
       if (newPhones.length === 0) {
-        return { ...prev, phone: [''] };
+        return { ...prev, phone: [""] };
       }
       return { ...prev, phone: newPhones };
     });
   };
 
   const handleConveniadaChange = (conveniadaId) => {
-    if (conveniadaId === 'none') { // 'none' is a custom value for 'Nenhuma'
-        setCurrentPerson(prev => ({
-            ...prev,
-            conveniadaId: '',
-            conveniadaName: ''
-        }));
+    if (conveniadaId === "none") {
+      // 'none' is a custom value for 'Nenhuma'
+      setCurrentPerson((prev) => ({
+        ...prev,
+        conveniadaId: "",
+        conveniadaName: "",
+      }));
     } else {
-        const conveniada = conveniadas.find(c => c.id === conveniadaId);
-        setCurrentPerson(prev => ({
-            ...prev,
-            conveniadaId: conveniada ? conveniada.id : '',
-            conveniadaName: conveniada ? conveniada.name : ''
-        }));
+      const conveniada = conveniadas.find((c) => c.id === conveniadaId);
+      setCurrentPerson((prev) => ({
+        ...prev,
+        conveniadaId: conveniada ? conveniada.id : "",
+        conveniadaName: conveniada ? conveniada.name : "",
+      }));
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto" onBlur={() => setTimeout(() => setAddressSuggestions([]), 200)}>
+      <div
+        className="max-w-4xl mx-auto"
+        onBlur={() => setTimeout(() => setAddressSuggestions([]), 200)}
+      >
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 mb-2">
               {isEditing ? "Editar Pessoa" : "Cadastro de Pessoas"}
             </h1>
             <p className="text-slate-600">
-              {isFromGerencial ? 'Cadastre clientes, fornecedores e pontos de venda' : 'Cadastre novos clientes para seus pedidos'}
+              {isFromGerencial
+                ? "Cadastre clientes, fornecedores e pontos de venda"
+                : "Cadastre novos clientes para seus pedidos"}
             </p>
           </div>
         </div>
@@ -382,7 +425,12 @@ export default function CustomerRegistrationPage() {
                   <Input
                     id="name"
                     value={currentPerson.name}
-                    onChange={(e) => setCurrentPerson(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
+                    onChange={(e) =>
+                      setCurrentPerson((prev) => ({
+                        ...prev,
+                        name: e.target.value.toUpperCase(),
+                      }))
+                    }
                     required
                     className="bg-white/80"
                   />
@@ -392,7 +440,12 @@ export default function CustomerRegistrationPage() {
                   <Input
                     id="document"
                     value={currentPerson.document}
-                    onChange={(e) => setCurrentPerson(prev => ({ ...prev, document: e.target.value }))}
+                    onChange={(e) =>
+                      setCurrentPerson((prev) => ({
+                        ...prev,
+                        document: e.target.value,
+                      }))
+                    }
                     className="bg-white/80"
                   />
                 </div>
@@ -402,25 +455,37 @@ export default function CustomerRegistrationPage() {
                     id="email"
                     type="email"
                     value={currentPerson.email}
-                    onChange={(e) => setCurrentPerson(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setCurrentPerson((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     className="bg-white/80"
                   />
                 </div>
                 <div>
-                    <Label htmlFor="birthday">Data de Aniversário</Label>
-                    <Input
-                        id="birthday"
-                        type="date"
-                        value={currentPerson.birthday || ''}
-                        onChange={(e) => setCurrentPerson(prev => ({ ...prev, birthday: e.target.value }))}
-                        className="bg-white/80"
-                    />
+                  <Label htmlFor="birthday">Data de Aniversário</Label>
+                  <Input
+                    id="birthday"
+                    type="date"
+                    value={currentPerson.birthday || ""}
+                    onChange={(e) =>
+                      setCurrentPerson((prev) => ({
+                        ...prev,
+                        birthday: e.target.value,
+                      }))
+                    }
+                    className="bg-white/80"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="type">Tipo *</Label>
                   <Select
                     value={currentPerson.type}
-                    onValueChange={(value) => setCurrentPerson(prev => ({ ...prev, type: value }))}
+                    onValueChange={(value) =>
+                      setCurrentPerson((prev) => ({ ...prev, type: value }))
+                    }
                   >
                     <SelectTrigger id="type" className="bg-white/80">
                       <SelectValue />
@@ -433,20 +498,24 @@ export default function CustomerRegistrationPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {currentPerson.type === 'cliente' && (
+                {currentPerson.type === "cliente" && (
                   <div>
-                    <Label htmlFor="conveniada">Empresa Conveniada (Opcional)</Label>
+                    <Label htmlFor="conveniada">
+                      Empresa Conveniada (Opcional)
+                    </Label>
                     <Select
-                      value={currentPerson.conveniadaId || 'none'}
+                      value={currentPerson.conveniadaId || "none"}
                       onValueChange={handleConveniadaChange}
                     >
                       <SelectTrigger id="conveniada" className="bg-white/80">
-                        <SelectValue placeholder="Selecione a empresa"/>
+                        <SelectValue placeholder="Selecione a empresa" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Nenhuma</SelectItem>
-                        {conveniadas.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        {conveniadas.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -461,18 +530,32 @@ export default function CustomerRegistrationPage() {
                     <div key={index} className="flex items-center gap-2">
                       <Input
                         value={phone}
-                        onChange={(e) => handlePhoneChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handlePhoneChange(index, e.target.value)
+                        }
                         placeholder="Ex: (11) 99999-9999"
                         className="bg-white/80"
                         type="tel"
                       />
-                      <Button type="button" variant="destructive" size="icon" onClick={() => removePhone(index)} disabled={currentPerson.phone.length === 1}>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removePhone(index)}
+                        disabled={currentPerson.phone.length === 1}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addPhone} className="mt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addPhone}
+                  className="mt-2"
+                >
                   <Plus className="w-4 h-4 mr-2" /> Adicionar Telefone
                 </Button>
               </div>
@@ -486,10 +569,10 @@ export default function CustomerRegistrationPage() {
                       id="zipcode"
                       value={currentPerson.address.zipcode}
                       onChange={(e) => {
-                        const cep = e.target.value.replace(/\D/g, '');
-                        setCurrentPerson(prev => ({
+                        const cep = e.target.value.replace(/\D/g, "");
+                        setCurrentPerson((prev) => ({
                           ...prev,
-                          address: { ...prev.address, zipcode: cep }
+                          address: { ...prev.address, zipcode: cep },
                         }));
                         if (cep.length === 8) {
                           searchAddressByCEP(cep);
@@ -524,7 +607,10 @@ export default function CustomerRegistrationPage() {
                             onClick={() => handleSelectAddress(suggestion)}
                           >
                             <p className="font-medium">{suggestion.street}</p>
-                            <p className="text-sm text-slate-500">{suggestion.neighborhood}, {suggestion.city} - {suggestion.cep}</p>
+                            <p className="text-sm text-slate-500">
+                              {suggestion.neighborhood}, {suggestion.city} -{" "}
+                              {suggestion.cep}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -535,10 +621,15 @@ export default function CustomerRegistrationPage() {
                     <Input
                       id="number"
                       value={currentPerson.address.number}
-                      onChange={(e) => setCurrentPerson(prev => ({
-                        ...prev,
-                        address: { ...prev.address, number: e.target.value.toUpperCase() }
-                      }))}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            number: e.target.value.toUpperCase(),
+                          },
+                        }))
+                      }
                       className="bg-white/80"
                     />
                   </div>
@@ -547,10 +638,15 @@ export default function CustomerRegistrationPage() {
                     <Input
                       id="complement"
                       value={currentPerson.address.complement}
-                      onChange={(e) => setCurrentPerson(prev => ({
-                        ...prev,
-                        address: { ...prev.address, complement: e.target.value.toUpperCase() }
-                      }))}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            complement: e.target.value.toUpperCase(),
+                          },
+                        }))
+                      }
                       placeholder="Apto, Bloco, Casa..."
                       className="bg-white/80"
                     />
@@ -560,10 +656,15 @@ export default function CustomerRegistrationPage() {
                     <Input
                       id="neighborhood"
                       value={currentPerson.address.neighborhood}
-                      onChange={(e) => setCurrentPerson(prev => ({
-                        ...prev,
-                        address: { ...prev.address, neighborhood: e.target.value.toUpperCase() }
-                      }))}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            neighborhood: e.target.value.toUpperCase(),
+                          },
+                        }))
+                      }
                       className="bg-white/80"
                     />
                   </div>
@@ -572,10 +673,15 @@ export default function CustomerRegistrationPage() {
                     <Input
                       id="referencePoint"
                       value={currentPerson.address.referencePoint}
-                      onChange={(e) => setCurrentPerson(prev => ({
-                        ...prev,
-                        address: { ...prev.address, referencePoint: e.target.value.toUpperCase() }
-                      }))}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            referencePoint: e.target.value.toUpperCase(),
+                          },
+                        }))
+                      }
                       className="bg-white/80"
                     />
                   </div>
@@ -584,10 +690,15 @@ export default function CustomerRegistrationPage() {
                     <Input
                       id="city"
                       value={currentPerson.address.city}
-                      onChange={(e) => setCurrentPerson(prev => ({
-                        ...prev,
-                        address: { ...prev.address, city: e.target.value.toUpperCase() }
-                      }))}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            city: e.target.value.toUpperCase(),
+                          },
+                        }))
+                      }
                       className="bg-white/80"
                     />
                   </div>
@@ -596,10 +707,15 @@ export default function CustomerRegistrationPage() {
                     <Input
                       id="state"
                       value={currentPerson.address.state}
-                      onChange={(e) => setCurrentPerson(prev => ({
-                        ...prev,
-                        address: { ...prev.address, state: e.target.value.toUpperCase() }
-                      }))}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            state: e.target.value.toUpperCase(),
+                          },
+                        }))
+                      }
                       className="bg-white/80"
                       maxLength={2}
                     />
@@ -608,30 +724,51 @@ export default function CustomerRegistrationPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">Informações Complementares</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Informações Complementares
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="glpConsumption">Consumo GLP (dias) - Opcional</Label>
+                    <Label htmlFor="glpConsumption">
+                      Consumo GLP (dias) - Opcional
+                    </Label>
                     <Input
                       id="glpConsumption"
                       type="number"
-                      value={currentPerson.glpConsumptionDays || ''}
-                      onChange={(e) => setCurrentPerson(prev => ({ 
-                        ...prev, 
-                        glpConsumptionDays: e.target.value === '' ? '' : parseInt(e.target.value, 10) || ''
-                      }))}
+                      value={currentPerson.glpConsumptionDays || ""}
+                      onChange={(e) =>
+                        setCurrentPerson((prev) => ({
+                          ...prev,
+                          glpConsumptionDays:
+                            e.target.value === ""
+                              ? ""
+                              : parseInt(e.target.value, 10) || "",
+                        }))
+                      }
                       placeholder="Ex: 30"
                       className="bg-white/80"
                       min="1"
                     />
-                    <p className="text-xs text-slate-500 mt-1">Frequência em dias para troca do botijão (opcional)</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Frequência em dias para troca do botijão (opcional)
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isLoading}>
-                  {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : (isFromGerencial ? 'Salvar Pessoa' : 'Salvar Cliente e Continuar'))}
+                <Button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? "Salvando..."
+                    : isEditing
+                      ? "Salvar Alterações"
+                      : isFromGerencial
+                        ? "Salvar Pessoa"
+                        : "Salvar Cliente e Continuar"}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancelar

@@ -3,7 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Plus, Edit, Trash2, Warehouse } from "lucide-react";
 import { SectorMaster } from "@/entities/SectorMaster";
 import { User } from "@/entities/User";
@@ -16,19 +23,28 @@ export default function SectorMasterPage() {
   const [isEditing, setIsEditing] = useState(false);
 
   const initialSectorMasterState = {
-    name: ''
+    name: "",
   };
 
-  const [currentSectorMaster, setCurrentSectorMaster] = useState(initialSectorMasterState);
+  const [currentSectorMaster, setCurrentSectorMaster] = useState(
+    initialSectorMasterState,
+  );
 
   const loadData = useCallback(async () => {
     try {
       const user = await User.me();
-      const sectorMastersData = await SectorMaster.filter({ companyId: user.companyId },{ sort: '-createdDate' });
+      const sectorMastersData = await SectorMaster.filter(
+        { companyId: user.companyId },
+        { sort: "-createdAt" },
+      );
       setSectorMasters(sectorMastersData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar os dados.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados.",
+        variant: "destructive",
+      });
     }
   }, [toast]);
 
@@ -50,7 +66,11 @@ export default function SectorMasterPage() {
         toast({ title: "Sucesso", description: "Setor master excluído." });
       } catch (error) {
         console.error("Erro ao excluir setor master:", error);
-        toast({ title: "Erro", description: "Não foi possível excluir o setor master.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o setor master.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -59,26 +79,33 @@ export default function SectorMasterPage() {
     e.preventDefault();
     try {
       const user = await User.me();
-      
+
       const payload = {
         ...currentSectorMaster,
         companyId: user.companyId,
-        companyName: user.companyName
+        companyName: user.companyName,
       };
 
       if (isEditing) {
         const { id, ...sectorMasterData } = payload;
         await SectorMaster.update(id, sectorMasterData);
       } else {
-        await SectorMaster.create({ ...payload, createdByName: user.fullName });
+        await SectorMaster.create({ ...payload, createdByName: user.name });
       }
       setShowForm(false);
       resetForm();
       loadData();
-      toast({ title: "Sucesso", description: `Setor master ${isEditing ? 'atualizado' : 'salvo'} com sucesso.` });
+      toast({
+        title: "Sucesso",
+        description: `Setor master ${isEditing ? "atualizado" : "salvo"} com sucesso.`,
+      });
     } catch (error) {
       console.error("Erro ao salvar setor master:", error);
-      toast({ title: "Erro", description: "Não foi possível salvar o setor master.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o setor master.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -93,14 +120,31 @@ export default function SectorMasterPage() {
   };
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(to bottom right, #f2f1ed, #95b4df)' }}>
+    <div
+      className="min-h-screen p-6"
+      style={{
+        background: "linear-gradient(to bottom right, #f2f1ed, #95b4df)",
+      }}
+    >
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Setor Master</h1>
-            <p className="text-slate-600">Gerencie os setores principais com estoque próprio.</p>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+              Setor Master
+            </h1>
+            <p className="text-slate-600">
+              Gerencie os setores principais com estoque próprio.
+            </p>
           </div>
-          <Button onClick={() => { setShowForm(true); setIsEditing(false); resetForm(); }} className="text-white" style={{ backgroundColor: '#e78b3a' }}>
+          <Button
+            onClick={() => {
+              setShowForm(true);
+              setIsEditing(false);
+              resetForm();
+            }}
+            className="text-white"
+            style={{ backgroundColor: "#e78b3a" }}
+          >
             <Plus className="w-5 h-5 mr-2" />
             Novo Setor Master
           </Button>
@@ -111,7 +155,7 @@ export default function SectorMasterPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Warehouse className="w-5 h-5" />
-                {isEditing ? 'Editar Setor Master' : 'Novo Setor Master'}
+                {isEditing ? "Editar Setor Master" : "Novo Setor Master"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -120,17 +164,32 @@ export default function SectorMasterPage() {
                   <Label>Descrição/Nome do Setor Master *</Label>
                   <Input
                     value={currentSectorMaster.name}
-                    onChange={(e) => setCurrentSectorMaster(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
+                    onChange={(e) =>
+                      setCurrentSectorMaster((prev) => ({
+                        ...prev,
+                        name: e.target.value.toUpperCase(),
+                      }))
+                    }
                     required
                     maxLength={40}
                     placeholder="Ex: Depósito Principal, Matriz..."
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" className="text-white hover:opacity-90" style={{ backgroundColor: '#223f61' }}>
-                    {isEditing ? 'Salvar Alterações' : 'Salvar'}
+                  <Button
+                    type="submit"
+                    className="text-white hover:opacity-90"
+                    style={{ backgroundColor: "#223f61" }}
+                  >
+                    {isEditing ? "Salvar Alterações" : "Salvar"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleCancel}>Cancelar</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -138,7 +197,9 @@ export default function SectorMasterPage() {
         )}
 
         <Card className="bg-white/90">
-          <CardHeader><CardTitle>Setores Master Cadastrados</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Setores Master Cadastrados</CardTitle>
+          </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
@@ -148,14 +209,24 @@ export default function SectorMasterPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sectorMasters.map(sectorMaster => (
+                {sectorMasters.map((sectorMaster) => (
                   <TableRow key={sectorMaster.id}>
-                    <TableCell className="font-medium">{sectorMaster.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {sectorMaster.name}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(sectorMaster)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(sectorMaster)}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(sectorMaster.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(sectorMaster.id)}
+                      >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
                     </TableCell>

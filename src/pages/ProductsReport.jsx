@@ -22,7 +22,7 @@ export default function ProductsReportPage() {
         setIsLoading(false);
         return;
       }
-      const data = await Product.filter({ companyId: user.companyId }, {sort: '-createdDate'});
+      const data = await Product.filter({ companyId: user.companyId }, {sort: '-createdAt'});
       setProducts(data);
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);

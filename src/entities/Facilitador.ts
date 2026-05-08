@@ -41,7 +41,7 @@ export class Facilitador extends BaseEntity {
   cofinsSituacaoTributaria: string;
   ipiSituacaoTributaria: string;
   observacoes: string;
-  static baseUrl: string = "/faciltadores";
+  static baseUrl: string = "/facilitadores";
 
   /**
    * Static method to filter Facilitadore records

@@ -3,7 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,7 +23,7 @@ import {
   Calendar,
   Download,
   XCircle,
-  FileCode // Added FileCode icon
+  FileCode, // Added FileCode icon
 } from "lucide-react";
 import * as entities from "@/entities";
 import FiscalProvider from "@/providers/FiscalProvider";
@@ -39,21 +46,20 @@ export default function SalesListPage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   const [filters, setFilters] = useState({
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: format(new Date(), 'yyyy-MM-dd'),
-    searchTerm: ''
+    startDate: format(new Date(), "yyyy-MM-dd"),
+    endDate: format(new Date(), "yyyy-MM-dd"),
+    searchTerm: "",
   });
 
   const [selectedSale, setSelectedSale] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelJustification, setCancelJustification] = useState('');
-  const [cancelTipoNota, setCancelTipoNota] = useState('');
+  const [cancelJustification, setCancelJustification] = useState("");
+  const [cancelTipoNota, setCancelTipoNota] = useState("");
   const [isEmittingNFe, setIsEmittingNFe] = useState(false);
   const [isEmittingNFCe, setIsEmittingNFCe] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -63,7 +69,7 @@ export default function SalesListPage() {
 
       const salesData = await entities.Sale.filter(
         { companyId: user.companyId },
-        {sort: '-createdDate', limit: 500}
+        { sort: "-createdAt", limit: 500 },
       );
 
       setSales(salesData);
@@ -73,7 +79,7 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: "Não foi possível carregar as vendas.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -93,8 +99,8 @@ export default function SalesListPage() {
 
     // Filtro de data
     if (filters.startDate && filters.endDate) {
-      filtered = filtered.filter(sale => {
-        const saleDate = sale.saleDate || sale.createdDate?.split('T')[0];
+      filtered = filtered.filter((sale) => {
+        const saleDate = sale.saleDate || sale.createdAt?.split("T")[0];
         return saleDate >= filters.startDate && saleDate <= filters.endDate;
       });
     }
@@ -102,9 +108,10 @@ export default function SalesListPage() {
     // Filtro de busca
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(sale =>
-        sale.saleNumber?.toLowerCase().includes(searchLower) ||
-        sale.personName?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (sale) =>
+          sale.saleNumber?.toLowerCase().includes(searchLower) ||
+          sale.personName?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -112,7 +119,7 @@ export default function SalesListPage() {
   };
 
   const handleFilterChange = (field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleViewDetails = (sale) => {
@@ -133,11 +140,11 @@ export default function SalesListPage() {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const blob = new Blob([byteArray], { type: "application/pdf" });
 
         // Criar link de download
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = result.filename || `DANFE_${sale.saleNumber}.pdf`;
         document.body.appendChild(a);
@@ -147,13 +154,13 @@ export default function SalesListPage() {
 
         toast({
           title: "Sucesso!",
-          description: "DANFE baixado com sucesso!"
+          description: "DANFE baixado com sucesso!",
         });
       } else {
         toast({
           title: "Erro",
           description: result.error || "Não foi possível baixar o DANFE.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -161,7 +168,7 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: error.message || "Não foi possível baixar o DANFE.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
@@ -181,13 +188,14 @@ export default function SalesListPage() {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/xml' });
+        const blob = new Blob([byteArray], { type: "application/xml" });
 
         // Criar link de download
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = result.filename || `${tipo.toUpperCase()}_${sale.saleNumber}.xml`;
+        a.download =
+          result.filename || `${tipo.toUpperCase()}_${sale.saleNumber}.xml`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -195,13 +203,13 @@ export default function SalesListPage() {
 
         toast({
           title: "Sucesso!",
-          description: "XML baixado com sucesso!"
+          description: "XML baixado com sucesso!",
         });
       } else {
         toast({
           title: "Erro",
           description: result.error || "Não foi possível baixar o XML.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -209,7 +217,7 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: error.message || "Não foi possível baixar o XML.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
@@ -219,7 +227,7 @@ export default function SalesListPage() {
   const handleOpenCancelModal = (sale, tipo) => {
     setSelectedSale(sale);
     setCancelTipoNota(tipo);
-    setCancelJustification('');
+    setCancelJustification("");
     setShowCancelModal(true);
   };
 
@@ -228,19 +236,23 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: "Justificativa deve ter no mínimo 15 caracteres.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setIsCancelling(true);
     try {
-      const result = await FiscalProvider.cancelFiscalNote(selectedSale.id, cancelTipoNota, cancelJustification);
+      const result = await FiscalProvider.cancelFiscalNote(
+        selectedSale.id,
+        cancelTipoNota,
+        cancelJustification,
+      );
 
       if (result.success) {
         toast({
           title: "Sucesso!",
-          description: result.message
+          description: result.message,
         });
 
         setShowCancelModal(false);
@@ -249,7 +261,7 @@ export default function SalesListPage() {
         toast({
           title: "Erro",
           description: result.error || "Não foi possível cancelar a nota.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -257,7 +269,7 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: error.message || "Não foi possível cancelar a nota.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsCancelling(false);
@@ -265,7 +277,9 @@ export default function SalesListPage() {
   };
 
   const handleEmitNFe = async (sale) => {
-    if (!window.confirm(`Deseja emitir NF-e para a venda ${sale.saleNumber}?`)) {
+    if (
+      !window.confirm(`Deseja emitir NF-e para a venda ${sale.saleNumber}?`)
+    ) {
       return;
     }
 
@@ -276,7 +290,7 @@ export default function SalesListPage() {
       if (result.success) {
         toast({
           title: "Sucesso!",
-          description: `NF-e ${result.nfeNumber} emitida com sucesso!`
+          description: `NF-e ${result.nfeNumber} emitida com sucesso!`,
         });
 
         // Recarregar dados
@@ -285,7 +299,7 @@ export default function SalesListPage() {
         toast({
           title: "Erro",
           description: result.error || "Não foi possível emitir a NF-e.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -293,7 +307,7 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: error.message || "Não foi possível emitir a NF-e.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsEmittingNFe(false);
@@ -301,7 +315,9 @@ export default function SalesListPage() {
   };
 
   const handleEmitNFCe = async (sale) => {
-    if (!window.confirm(`Deseja emitir NFC-e para a venda ${sale.saleNumber}?`)) {
+    if (
+      !window.confirm(`Deseja emitir NFC-e para a venda ${sale.saleNumber}?`)
+    ) {
       return;
     }
 
@@ -312,7 +328,7 @@ export default function SalesListPage() {
       if (result.success) {
         toast({
           title: "Sucesso!",
-          description: `NFC-e ${result.nfceNumber} emitida com sucesso!`
+          description: `NFC-e ${result.nfceNumber} emitida com sucesso!`,
         });
 
         // Recarregar dados
@@ -321,7 +337,7 @@ export default function SalesListPage() {
         toast({
           title: "Erro",
           description: result.error || "Não foi possível emitir a NFC-e.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -329,7 +345,7 @@ export default function SalesListPage() {
       toast({
         title: "Erro",
         description: error.message || "Não foi possível emitir a NFC-e.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsEmittingNFCe(false);
@@ -337,11 +353,15 @@ export default function SalesListPage() {
   };
 
   const getPaymentMethodsDisplay = (paymentMethods) => {
-    if (!paymentMethods || paymentMethods.length === 0) return 'Não especificado';
-    return paymentMethods.map(pm => pm.paymentTypeName).join(', ');
+    if (!paymentMethods || paymentMethods.length === 0)
+      return "Não especificado";
+    return paymentMethods.map((pm) => pm.paymentTypeName).join(", ");
   };
 
-  const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+  const totalSales = filteredSales.reduce(
+    (sum, sale) => sum + (sale.totalAmount || 0),
+    0,
+  );
 
   if (isLoading) {
     return (
@@ -356,7 +376,9 @@ export default function SalesListPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Vendas Realizadas</h1>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+              Vendas Realizadas
+            </h1>
             <p className="text-slate-600">Consulte e emita notas fiscais</p>
           </div>
         </div>
@@ -376,7 +398,9 @@ export default function SalesListPage() {
                 <Input
                   type="date"
                   value={filters.startDate}
-                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
                   className="bg-white"
                 />
               </div>
@@ -385,7 +409,9 @@ export default function SalesListPage() {
                 <Input
                   type="date"
                   value={filters.endDate}
-                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
                   className="bg-white"
                 />
               </div>
@@ -395,10 +421,15 @@ export default function SalesListPage() {
                   <Input
                     placeholder="Nº venda ou nome do cliente..."
                     value={filters.searchTerm}
-                    onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("searchTerm", e.target.value)
+                    }
                     className="bg-white"
                   />
-                  <Button onClick={applyFilters} className="bg-blue-600 hover:bg-blue-700">
+                  <Button
+                    onClick={applyFilters}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
                     <Search className="w-4 h-4" />
                   </Button>
                 </div>
@@ -414,7 +445,9 @@ export default function SalesListPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Total de Vendas</p>
-                  <p className="text-2xl font-bold text-slate-800">{filteredSales.length}</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {filteredSales.length}
+                  </p>
                 </div>
                 <Receipt className="w-10 h-10 text-blue-500" />
               </div>
@@ -441,7 +474,10 @@ export default function SalesListPage() {
                 <div>
                   <p className="text-sm text-slate-600">Ticket Médio</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    R$ {filteredSales.length > 0 ? (totalSales / filteredSales.length).toFixed(2) : '0.00'}
+                    R${" "}
+                    {filteredSales.length > 0
+                      ? (totalSales / filteredSales.length).toFixed(2)
+                      : "0.00"}
                   </p>
                 </div>
                 <Calendar className="w-10 h-10 text-purple-500" />
@@ -471,158 +507,196 @@ export default function SalesListPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSales.filter((sale, index, self) => 
-                    index === self.findIndex(s => s.id === sale.id)
-                  ).map(sale => (
-                    <TableRow key={sale.id}>
-                      <TableCell className="font-medium">{sale.saleNumber}</TableCell>
-                      <TableCell>
-                        {format(parseISO(sale.saleDate || sale.createdDate), 'dd/MM/yyyy', { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>{sale.personName}</TableCell>
-                      <TableCell>{sale.sectorName || '-'}</TableCell>
-                      <TableCell className="text-sm">
-                        {getPaymentMethodsDisplay(sale.paymentMethods)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-green-600">
-                        R$ {sale.totalAmount?.toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {sale.nfeNumber && (
-                            <Badge className={sale.nfeCancelada ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
-                              NF-e {sale.nfeNumber} {sale.nfeCancelada && '(Cancelada)'}
-                            </Badge>
+                  {filteredSales
+                    .filter(
+                      (sale, index, self) =>
+                        index === self.findIndex((s) => s.id === sale.id),
+                    )
+                    .map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell className="font-medium">
+                          {sale.saleNumber}
+                        </TableCell>
+                        <TableCell>
+                          {format(
+                            sale.saleDate
+                              ? parseISO(sale.saleDate)
+                              : parseISO(sale.createdAt),
+                            "dd/MM/yyyy",
+                            { locale: ptBR },
                           )}
-                          {sale.nfceNumber && (
-                            <Badge className={sale.nfceCancelada ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>
-                              NFC-e {sale.nfceNumber} {sale.nfceCancelada && '(Cancelada)'}
-                            </Badge>
-                          )}
-                          {!sale.nfeNumber && !sale.nfceNumber && (
-                            <Badge className="bg-yellow-100 text-yellow-800">
-                              Nota Pendente
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-1 justify-end flex-wrap">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewDetails(sale)}
-                            className="hover:bg-blue-100"
-                            title="Ver Detalhes"
-                          >
-                            <Eye className="w-4 h-4 text-blue-600" />
-                          </Button>
+                        </TableCell>
+                        <TableCell>{sale.personName}</TableCell>
+                        <TableCell>{sale.sectorName || "-"}</TableCell>
+                        <TableCell className="text-sm">
+                          {getPaymentMethodsDisplay(sale.paymentMethods)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-green-600">
+                          R$ {sale.totalAmount?.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {sale.nfeNumber && (
+                              <Badge
+                                className={
+                                  sale.nfeCancelada
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-green-100 text-green-800"
+                                }
+                              >
+                                NF-e {sale.nfeNumber}{" "}
+                                {sale.nfeCancelada && "(Cancelada)"}
+                              </Badge>
+                            )}
+                            {sale.nfceNumber && (
+                              <Badge
+                                className={
+                                  sale.nfceCancelada
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-blue-100 text-blue-800"
+                                }
+                              >
+                                NFC-e {sale.nfceNumber}{" "}
+                                {sale.nfceCancelada && "(Cancelada)"}
+                              </Badge>
+                            )}
+                            {!sale.nfeNumber && !sale.nfceNumber && (
+                              <Badge className="bg-yellow-100 text-yellow-800">
+                                Nota Pendente
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-1 justify-end flex-wrap">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetails(sale)}
+                              className="hover:bg-blue-100"
+                              title="Ver Detalhes"
+                            >
+                              <Eye className="w-4 h-4 text-blue-600" />
+                            </Button>
 
-                          {!sale.nfeNumber && !sale.nfceNumber && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEmitNFe(sale)}
-                                disabled={isEmittingNFe}
-                                className="hover:bg-green-100"
-                                title="Emitir NF-e"
-                              >
-                                <FileText className="w-4 h-4 text-green-600 mr-1" />
-                                <span className="text-xs">NF-e</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEmitNFCe(sale)}
-                                disabled={isEmittingNFCe}
-                                className="hover:bg-purple-100"
-                                title="Emitir NFC-e"
-                              >
-                                <Receipt className="w-4 h-4 text-purple-600 mr-1" />
-                                <span className="text-xs">NFC-e</span>
-                              </Button>
-                            </>
-                          )}
+                            {!sale.nfeNumber && !sale.nfceNumber && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEmitNFe(sale)}
+                                  disabled={isEmittingNFe}
+                                  className="hover:bg-green-100"
+                                  title="Emitir NF-e"
+                                >
+                                  <FileText className="w-4 h-4 text-green-600 mr-1" />
+                                  <span className="text-xs">NF-e</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEmitNFCe(sale)}
+                                  disabled={isEmittingNFCe}
+                                  className="hover:bg-purple-100"
+                                  title="Emitir NFC-e"
+                                >
+                                  <Receipt className="w-4 h-4 text-purple-600 mr-1" />
+                                  <span className="text-xs">NFC-e</span>
+                                </Button>
+                              </>
+                            )}
 
-                          {sale.nfeNumber && !sale.nfeCancelada && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDownloadDANFe(sale, 'nfe')}
-                                disabled={isDownloading}
-                                className="hover:bg-blue-100"
-                                title="Baixar PDF (DANFE)"
-                              >
-                                <Download className="w-4 h-4 text-blue-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDownloadXML(sale, 'nfe')} // New XML download button for NFe
-                                disabled={isDownloading}
-                                className="hover:bg-indigo-100"
-                                title="Baixar XML"
-                              >
-                                <FileCode className="w-4 h-4 text-indigo-600" />
-                              </Button>
-                              {currentUser?.userType === 'admin' && (
+                            {sale.nfeNumber && !sale.nfeCancelada && (
+                              <>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleOpenCancelModal(sale, 'nfe')}
-                                  className="hover:bg-red-100"
-                                  title="Cancelar NF-e"
+                                  onClick={() =>
+                                    handleDownloadDANFe(sale, "nfe")
+                                  }
+                                  disabled={isDownloading}
+                                  className="hover:bg-blue-100"
+                                  title="Baixar PDF (DANFE)"
                                 >
-                                  <XCircle className="w-4 h-4 text-red-600" />
+                                  <Download className="w-4 h-4 text-blue-600" />
                                 </Button>
-                              )}
-                            </>
-                          )}
-
-                          {sale.nfceNumber && !sale.nfceCancelada && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDownloadDANFe(sale, 'nfce')}
-                                disabled={isDownloading}
-                                className="hover:bg-blue-100"
-                                title="Baixar PDF (DANFE)"
-                              >
-                                <Download className="w-4 h-4 text-blue-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDownloadXML(sale, 'nfce')} // New XML download button for NFCe
-                                disabled={isDownloading}
-                                className="hover:bg-indigo-100"
-                                title="Baixar XML"
-                              >
-                                <FileCode className="w-4 h-4 text-indigo-600" />
-                              </Button>
-                              {currentUser?.userType === 'admin' && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleOpenCancelModal(sale, 'nfce')}
-                                  className="hover:bg-red-100"
-                                  title="Cancelar NFC-e"
+                                  onClick={() => handleDownloadXML(sale, "nfe")} // New XML download button for NFe
+                                  disabled={isDownloading}
+                                  className="hover:bg-indigo-100"
+                                  title="Baixar XML"
                                 >
-                                  <XCircle className="w-4 h-4 text-red-600" />
+                                  <FileCode className="w-4 h-4 text-indigo-600" />
                                 </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                                {currentUser?.userType === "admin" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleOpenCancelModal(sale, "nfe")
+                                    }
+                                    className="hover:bg-red-100"
+                                    title="Cancelar NF-e"
+                                  >
+                                    <XCircle className="w-4 h-4 text-red-600" />
+                                  </Button>
+                                )}
+                              </>
+                            )}
+
+                            {sale.nfceNumber && !sale.nfceCancelada && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleDownloadDANFe(sale, "nfce")
+                                  }
+                                  disabled={isDownloading}
+                                  className="hover:bg-blue-100"
+                                  title="Baixar PDF (DANFE)"
+                                >
+                                  <Download className="w-4 h-4 text-blue-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleDownloadXML(sale, "nfce")
+                                  } // New XML download button for NFCe
+                                  disabled={isDownloading}
+                                  className="hover:bg-indigo-100"
+                                  title="Baixar XML"
+                                >
+                                  <FileCode className="w-4 h-4 text-indigo-600" />
+                                </Button>
+                                {currentUser?.userType === "admin" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleOpenCancelModal(sale, "nfce")
+                                    }
+                                    className="hover:bg-red-100"
+                                    title="Cancelar NFC-e"
+                                  >
+                                    <XCircle className="w-4 h-4 text-red-600" />
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   {filteredSales.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                      <TableCell
+                        colSpan={8}
+                        className="text-center py-8 text-slate-500"
+                      >
                         Nenhuma venda encontrada para o período selecionado
                       </TableCell>
                     </TableRow>
@@ -639,12 +713,13 @@ export default function SalesListPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-red-600">
-              Cancelar {cancelTipoNota === 'nfe' ? 'NF-e' : 'NFC-e'}
+              Cancelar {cancelTipoNota === "nfe" ? "NF-e" : "NFC-e"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-slate-600">
-              Você está prestes a cancelar a nota fiscal. Esta ação é irreversível e será registrada na SEFAZ.
+              Você está prestes a cancelar a nota fiscal. Esta ação é
+              irreversível e será registrada na SEFAZ.
             </p>
             <div>
               <Label>Justificativa * (mínimo 15 caracteres)</Label>
@@ -661,7 +736,11 @@ export default function SalesListPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelModal(false)} disabled={isCancelling}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isCancelling}
+            >
               Voltar
             </Button>
             <Button
@@ -669,7 +748,7 @@ export default function SalesListPage() {
               disabled={isCancelling || cancelJustification.length < 15}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isCancelling ? 'Cancelando...' : 'Confirmar Cancelamento'}
+              {isCancelling ? "Cancelando..." : "Confirmar Cancelamento"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -688,9 +767,20 @@ export default function SalesListPage() {
               {/* Informações do Cliente */}
               <div className="p-4 bg-slate-50 rounded-lg">
                 <h3 className="font-semibold mb-2">Cliente</h3>
-                <p className="text-sm"><strong>Nome:</strong> {selectedSale.personName}</p>
-                <p className="text-sm"><strong>Data:</strong> {format(parseISO(selectedSale.saleDate || selectedSale.createdDate), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
-                <p className="text-sm"><strong>Setor:</strong> {selectedSale.sectorName || '-'}</p>
+                <p className="text-sm">
+                  <strong>Nome:</strong> {selectedSale.personName}
+                </p>
+                <p className="text-sm">
+                  <strong>Data:</strong>{" "}
+                  {format(
+                    selectedSale.saleDate ?? selectedSale.createdAt,
+                    "dd/MM/yyyy HH:mm",
+                    { locale: ptBR },
+                  )}
+                </p>
+                <p className="text-sm">
+                  <strong>Setor:</strong> {selectedSale.sectorName || "-"}
+                </p>
               </div>
 
               {/* Itens */}
@@ -709,8 +799,12 @@ export default function SalesListPage() {
                     {selectedSale.items?.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell>{item.productName}</TableCell>
-                        <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">R$ {item.unitPrice?.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          {item.quantity}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          R$ {item.unitPrice?.toFixed(2)}
+                        </TableCell>
                         <TableCell className="text-right font-semibold">
                           R$ {item.total?.toFixed(2)}
                         </TableCell>
@@ -727,7 +821,8 @@ export default function SalesListPage() {
                   {selectedSale.paymentMethods?.map((pm, index) => (
                     <div key={index} className="p-3 bg-slate-50 rounded">
                       <p className="text-sm">
-                        <strong>{pm.paymentTypeName}:</strong> R$ {pm.amount?.toFixed(2)}
+                        <strong>{pm.paymentTypeName}:</strong> R${" "}
+                        {pm.amount?.toFixed(2)}
                         {pm.installments > 1 && ` (${pm.installments}x)`}
                       </p>
                     </div>

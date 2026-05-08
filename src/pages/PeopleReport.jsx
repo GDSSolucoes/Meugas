@@ -1,12 +1,18 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { UsersIcon, UserCheck, Phone, MapPin, Gift } from "lucide-react";
 import { Person } from "@/entities/Person";
 import { User } from "@/entities/User";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO } from "date-fns";
 
 export default function PeopleReportPage() {
   const [people, setPeople] = useState([]);
@@ -23,7 +29,10 @@ export default function PeopleReportPage() {
         setIsLoading(false);
         return;
       }
-      const data = await Person.filter({ companyId: user.companyId }, { sort: '-createdDate' });
+      const data = await Person.filter(
+        { companyId: user.companyId },
+        { sort: "-createdAt" },
+      );
       setPeople(data);
     } catch (error) {
       console.error("Erro ao carregar pessoas:", error);
@@ -37,35 +46,41 @@ export default function PeopleReportPage() {
       cliente: "bg-blue-100 text-blue-800",
       fornecedor: "bg-green-100 text-green-800",
       pontoVenda: "bg-purple-100 text-purple-800",
-      conveniada: "bg-amber-100 text-amber-800"
+      conveniada: "bg-amber-100 text-amber-800",
     };
     const labels = {
       cliente: "Cliente",
       fornecedor: "Fornecedor",
       pontoVenda: "Ponto de Venda",
-      conveniada: "Conveniada"
+      conveniada: "Conveniada",
     };
     return <Badge className={colors[type]}>{labels[type]}</Badge>;
   };
 
-  const clientes = people.filter(p => p.type === 'cliente');
-  const fornecedores = people.filter(p => p.type === 'fornecedor');
-  const pontosVenda = people.filter(p => p.type === 'pontoVenda');
-  const conveniadas = people.filter(p => p.type === 'conveniada');
+  const clientes = people.filter((p) => p.type === "cliente");
+  const fornecedores = people.filter((p) => p.type === "fornecedor");
+  const pontosVenda = people.filter((p) => p.type === "pontoVenda");
+  const conveniadas = people.filter((p) => p.type === "conveniada");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Relatório de Pessoas</h1>
-          <p className="text-slate-600">Visão completa de clientes, fornecedores e pontos de venda</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">
+            Relatório de Pessoas
+          </h1>
+          <p className="text-slate-600">
+            Visão completa de clientes, fornecedores e pontos de venda
+          </p>
         </div>
 
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Pessoas</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Pessoas
+              </CardTitle>
               <UsersIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -85,7 +100,9 @@ export default function PeopleReportPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Fornecedores</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Fornecedores
+              </CardTitle>
               <UsersIcon className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -95,7 +112,9 @@ export default function PeopleReportPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pontos de Venda</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Pontos de Venda
+              </CardTitle>
               <UsersIcon className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
@@ -105,7 +124,9 @@ export default function PeopleReportPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Empresas Conveniadas</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Empresas Conveniadas
+              </CardTitle>
               <UsersIcon className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
@@ -135,20 +156,22 @@ export default function PeopleReportPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {people.map(person => (
+                    {people.map((person) => (
                       <TableRow key={person.id}>
-                        <TableCell className="font-medium">{person.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {person.name}
+                        </TableCell>
                         <TableCell>{getTypeBadge(person.type)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Phone className="w-3 h-3 text-slate-500" />
-                            {person.phone?.[0] || '-'}
+                            {person.phone?.[0] || "-"}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-slate-500" />
-                            {person.address?.city || '-'}
+                            {person.address?.city || "-"}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -156,15 +179,21 @@ export default function PeopleReportPage() {
                             {person.birthday ? (
                               <>
                                 <Gift className="w-3 h-3 text-pink-500" />
-                                {format(parseISO(person.birthday), 'dd/MM/yyyy')}
+                                {format(person.birthday, "dd/MM/yyyy")}
                               </>
                             ) : (
-                              '-'
+                              "-"
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={person.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                          <Badge
+                            className={
+                              person.active
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }
+                          >
                             {person.active ? "Ativo" : "Inativo"}
                           </Badge>
                         </TableCell>

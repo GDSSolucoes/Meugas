@@ -1,12 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, Printer, X, LogOut, FileText } from "lucide-react";
@@ -22,98 +41,129 @@ export default function PagamentoModal({
   contas = [],
   cashAccounts = [],
   currentUser,
-  onPaymentComplete
+  onPaymentComplete,
 }) {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   // Dados do pagamento
-  const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [selectedAccountId, setSelectedAccountId] = useState('');
-  const [desconto, setDesconto] = useState('');
-  const [jurosMulta, setJurosMulta] = useState('');
-  const [formaPagamento, setFormaPagamento] = useState('dinheiro');
-  const [observacoes, setObservacoes] = useState('');
+  const [paymentDate, setPaymentDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [desconto, setDesconto] = useState("");
+  const [jurosMulta, setJurosMulta] = useState("");
+  const [formaPagamento, setFormaPagamento] = useState("dinheiro");
+  const [observacoes, setObservacoes] = useState("");
 
   // Campos condicionais
-  const [bancoDestino, setBancoDestino] = useState('');
-  const [agencia, setAgencia] = useState('');
-  const [conta, setConta] = useState('');
-  const [numeroTransferencia, setNumeroTransferencia] = useState('');
-  const [chavePix, setChavePix] = useState('');
-  const [tipoChavePix, setTipoChavePix] = useState('');
-  const [idTransacaoPix, setIdTransacaoPix] = useState('');
-  const [numeroCheque, setNumeroCheque] = useState('');
-  const [dataCompensacao, setDataCompensacao] = useState('');
-  const [bandeira, setBandeira] = useState('');
-  const [numeroTransacaoCartao, setNumeroTransacaoCartao] = useState('');
+  const [bancoDestino, setBancoDestino] = useState("");
+  const [agencia, setAgencia] = useState("");
+  const [conta, setConta] = useState("");
+  const [numeroTransferencia, setNumeroTransferencia] = useState("");
+  const [chavePix, setChavePix] = useState("");
+  const [tipoChavePix, setTipoChavePix] = useState("");
+  const [idTransacaoPix, setIdTransacaoPix] = useState("");
+  const [numeroCheque, setNumeroCheque] = useState("");
+  const [dataCompensacao, setDataCompensacao] = useState("");
+  const [bandeira, setBandeira] = useState("");
+  const [numeroTransacaoCartao, setNumeroTransacaoCartao] = useState("");
   const [numeroParcelas, setNumeroParcelas] = useState(1);
 
   // Calcular valores
   const valorTotal = contas.reduce((sum, c) => sum + (c.amount || 0), 0);
-  const descontoNum = parseFloat(desconto.replace(',', '.')) || 0;
-  const jurosMultaNum = parseFloat(jurosMulta.replace(',', '.')) || 0;
+  const descontoNum = parseFloat(desconto.replace(",", ".")) || 0;
+  const jurosMultaNum = parseFloat(jurosMulta.replace(",", ".")) || 0;
   const valorFinal = valorTotal - descontoNum + jurosMultaNum;
 
   // Reset ao abrir
   useEffect(() => {
     if (open) {
-      setPaymentDate(format(new Date(), 'yyyy-MM-dd'));
-      setSelectedAccountId(cashAccounts.length > 0 ? cashAccounts[0].id : '');
-      setDesconto('');
-      setJurosMulta('');
-      setFormaPagamento('dinheiro');
-      setObservacoes('');
+      setPaymentDate(format(new Date(), "yyyy-MM-dd"));
+      setSelectedAccountId(cashAccounts.length > 0 ? cashAccounts[0].id : "");
+      setDesconto("");
+      setJurosMulta("");
+      setFormaPagamento("dinheiro");
+      setObservacoes("");
       setPaymentConfirmed(false);
       // Limpar campos condicionais
-      setBancoDestino('');
-      setAgencia('');
-      setConta('');
-      setNumeroTransferencia('');
-      setChavePix('');
-      setTipoChavePix('');
-      setIdTransacaoPix('');
-      setNumeroCheque('');
-      setDataCompensacao('');
-      setBandeira('');
-      setNumeroTransacaoCartao('');
+      setBancoDestino("");
+      setAgencia("");
+      setConta("");
+      setNumeroTransferencia("");
+      setChavePix("");
+      setTipoChavePix("");
+      setIdTransacaoPix("");
+      setNumeroCheque("");
+      setDataCompensacao("");
+      setBandeira("");
+      setNumeroTransacaoCartao("");
       setNumeroParcelas(1);
     }
   }, [open, cashAccounts]);
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value || 0);
   };
 
   const handleConfirmarPagamento = async () => {
     // Validações
     if (!paymentDate) {
-      toast({ title: "Erro", description: "Informe a data do pagamento.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Informe a data do pagamento.",
+        variant: "destructive",
+      });
       return;
     }
-    if (isFuture(new Date(paymentDate + 'T23:59:59'))) {
-      toast({ title: "Erro", description: "A data do pagamento não pode ser futura.", variant: "destructive" });
+    if (isFuture(new Date(paymentDate + "T23:59:59"))) {
+      toast({
+        title: "Erro",
+        description: "A data do pagamento não pode ser futura.",
+        variant: "destructive",
+      });
       return;
     }
     if (!selectedAccountId) {
-      toast({ title: "Erro", description: "Selecione a conta para débito.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Selecione a conta para débito.",
+        variant: "destructive",
+      });
       return;
     }
     if (valorFinal <= 0) {
-      toast({ title: "Erro", description: "O valor final deve ser maior que zero.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "O valor final deve ser maior que zero.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const contaSelecionada = cashAccounts.find(acc => acc.id === selectedAccountId);
+    const contaSelecionada = cashAccounts.find(
+      (acc) => acc.id === selectedAccountId,
+    );
     if (!contaSelecionada) {
-      toast({ title: "Erro", description: "Conta não encontrada.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Conta não encontrada.",
+        variant: "destructive",
+      });
       return;
     }
 
     // Verificar saldo
     if ((contaSelecionada.balance || 0) < valorFinal) {
-      toast({ title: "Erro", description: "Saldo insuficiente na conta selecionada.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Saldo insuficiente na conta selecionada.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -121,13 +171,13 @@ export default function PagamentoModal({
     try {
       // Processar cada conta
       for (const contaPagar of contas) {
-        if (contaPagar.status === 'pago') continue;
+        if (contaPagar.status === "pago") continue;
 
         // Criar movimento de caixa (despesa)
         await CashMovement.create({
           cashAccountId: contaSelecionada.id,
           cashAccountName: contaSelecionada.name,
-          type: 'despesa',
+          type: "despesa",
           description: `Pagamento: ${contaPagar.description || contaPagar.supplierName}`,
           amount: contaPagar.amount,
           personId: contaPagar.supplierId,
@@ -137,12 +187,12 @@ export default function PagamentoModal({
           notes: observacoes,
           companyId: currentUser.companyId,
           companyName: currentUser.companyName,
-          createdByName: currentUser.fullName,
+          createdByName: currentUser.name,
         });
 
         // Atualizar status da conta
         await ContasAPagar.update(contaPagar.id, {
-          status: 'pago',
+          status: "pago",
           paymentDate: paymentDate,
         });
       }
@@ -151,7 +201,10 @@ export default function PagamentoModal({
       const novoSaldo = (contaSelecionada.balance || 0) - valorFinal;
       await CashAccount.update(selectedAccountId, { balance: novoSaldo });
 
-      toast({ title: "Sucesso", description: `${contas.length} conta(s) paga(s) com sucesso!` });
+      toast({
+        title: "Sucesso",
+        description: `${contas.length} conta(s) paga(s) com sucesso!`,
+      });
       setPaymentConfirmed(true);
 
       if (onPaymentComplete) {
@@ -159,7 +212,11 @@ export default function PagamentoModal({
       }
     } catch (error) {
       console.error("Erro ao processar pagamento:", error);
-      toast({ title: "Erro", description: "Não foi possível processar o pagamento.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar o pagamento.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -194,38 +251,46 @@ export default function PagamentoModal({
       </head>
       <body>
         <h1>Comprovante de Pagamento</h1>
-        <p class="subtitle">Emitido em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+        <p class="subtitle">Emitido em: ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
         
         <div class="section">
           <div class="section-title">Dados do Pagamento</div>
           <div class="info-row">
             <span class="info-label">Data do Pagamento:</span>
-            <span class="info-value">${format(parseISO(paymentDate), 'dd/MM/yyyy')}</span>
+            <span class="info-value">${format(paymentDate, "dd/MM/yyyy")}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Conta Debitada:</span>
-            <span class="info-value">${cashAccounts.find(a => a.id === selectedAccountId)?.name || '-'}</span>
+            <span class="info-value">${cashAccounts.find((a) => a.id === selectedAccountId)?.name || "-"}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Forma de Pagamento:</span>
-            <span class="info-value">${formaPagamento.charAt(0).toUpperCase() + formaPagamento.slice(1).replace('_', ' ')}</span>
+            <span class="info-value">${formaPagamento.charAt(0).toUpperCase() + formaPagamento.slice(1).replace("_", " ")}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Valor Total:</span>
             <span class="info-value">${formatCurrency(valorTotal)}</span>
           </div>
-          ${descontoNum > 0 ? `
+          ${
+            descontoNum > 0
+              ? `
           <div class="info-row">
             <span class="info-label">Desconto:</span>
             <span class="info-value">- ${formatCurrency(descontoNum)}</span>
           </div>
-          ` : ''}
-          ${jurosMultaNum > 0 ? `
+          `
+              : ""
+          }
+          ${
+            jurosMultaNum > 0
+              ? `
           <div class="info-row">
             <span class="info-label">Juros/Multa:</span>
             <span class="info-value">+ ${formatCurrency(jurosMultaNum)}</span>
           </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
 
         <div class="section">
@@ -239,25 +304,33 @@ export default function PagamentoModal({
               </tr>
             </thead>
             <tbody>
-              ${contas.map(c => `
+              ${contas
+                .map(
+                  (c) => `
                 <tr>
-                  <td>${c.supplierName || '-'}</td>
-                  <td>${format(parseISO(c.dueDate), 'dd/MM/yyyy')}</td>
+                  <td>${c.supplierName || "-"}</td>
+                  <td>${format(c.dueDate, "dd/MM/yyyy")}</td>
                   <td class="text-right">${formatCurrency(c.amount)}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
         </div>
 
         <p class="total">Valor Final Pago: ${formatCurrency(valorFinal)}</p>
 
-        ${observacoes ? `
+        ${
+          observacoes
+            ? `
         <div class="section">
           <div class="section-title">Observações</div>
           <p>${observacoes}</p>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <p class="footer">Este documento é um comprovante de pagamento gerado pelo sistema.</p>
         
@@ -266,7 +339,7 @@ export default function PagamentoModal({
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
@@ -300,13 +373,19 @@ export default function PagamentoModal({
             </div>
             <div>
               <Label className="text-xs font-medium">Conta para Débito:</Label>
-              <Select value={selectedAccountId} onValueChange={setSelectedAccountId} disabled={paymentConfirmed}>
+              <Select
+                value={selectedAccountId}
+                onValueChange={setSelectedAccountId}
+                disabled={paymentConfirmed}
+              >
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Selecionar conta..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {cashAccounts.map(acc => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                  {cashAccounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -345,7 +424,9 @@ export default function PagamentoModal({
             </div>
             <div>
               <Label className="text-xs font-medium">Valor Final:</Label>
-              <div className={`h-9 px-3 flex items-center border rounded-md font-bold ${valorFinal > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+              <div
+                className={`h-9 px-3 flex items-center border rounded-md font-bold ${valorFinal > 0 ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}
+              >
                 {formatCurrency(valorFinal)}
               </div>
             </div>
@@ -354,7 +435,9 @@ export default function PagamentoModal({
           {/* Forma de Pagamento */}
           <Card className="border-slate-200">
             <CardContent className="p-4">
-              <Label className="text-xs font-semibold uppercase text-slate-600 mb-3 block">Forma de Pagamento</Label>
+              <Label className="text-xs font-semibold uppercase text-slate-600 mb-3 block">
+                Forma de Pagamento
+              </Label>
               <RadioGroup
                 value={formaPagamento}
                 onValueChange={setFormaPagamento}
@@ -363,62 +446,111 @@ export default function PagamentoModal({
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="dinheiro" id="fpDinheiro" />
-                  <Label htmlFor="fpDinheiro" className="text-sm cursor-pointer">Dinheiro</Label>
+                  <Label
+                    htmlFor="fpDinheiro"
+                    className="text-sm cursor-pointer"
+                  >
+                    Dinheiro
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="transferencia" id="fpTransferencia" />
-                  <Label htmlFor="fpTransferencia" className="text-sm cursor-pointer">Transferência</Label>
+                  <Label
+                    htmlFor="fpTransferencia"
+                    className="text-sm cursor-pointer"
+                  >
+                    Transferência
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="pix" id="fpPix" />
-                  <Label htmlFor="fpPix" className="text-sm cursor-pointer">PIX</Label>
+                  <Label htmlFor="fpPix" className="text-sm cursor-pointer">
+                    PIX
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="cheque" id="fpCheque" />
-                  <Label htmlFor="fpCheque" className="text-sm cursor-pointer">Cheque</Label>
+                  <Label htmlFor="fpCheque" className="text-sm cursor-pointer">
+                    Cheque
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="cartao_debito" id="fpDebito" />
-                  <Label htmlFor="fpDebito" className="text-sm cursor-pointer">Cartão Débito</Label>
+                  <Label htmlFor="fpDebito" className="text-sm cursor-pointer">
+                    Cartão Débito
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="cartao_credito" id="fpCredito" />
-                  <Label htmlFor="fpCredito" className="text-sm cursor-pointer">Cartão Crédito</Label>
+                  <Label htmlFor="fpCredito" className="text-sm cursor-pointer">
+                    Cartão Crédito
+                  </Label>
                 </div>
               </RadioGroup>
 
               {/* Campos condicionais */}
-              {formaPagamento === 'transferencia' && (
+              {formaPagamento === "transferencia" && (
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t">
                   <div>
                     <Label className="text-xs">Banco Destino:</Label>
-                    <Input value={bancoDestino} onChange={(e) => setBancoDestino(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={bancoDestino}
+                      onChange={(e) => setBancoDestino(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Nº Transferência:</Label>
-                    <Input value={numeroTransferencia} onChange={(e) => setNumeroTransferencia(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={numeroTransferencia}
+                      onChange={(e) => setNumeroTransferencia(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Agência:</Label>
-                    <Input value={agencia} onChange={(e) => setAgencia(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={agencia}
+                      onChange={(e) => setAgencia(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Conta:</Label>
-                    <Input value={conta} onChange={(e) => setConta(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={conta}
+                      onChange={(e) => setConta(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                 </div>
               )}
 
-              {formaPagamento === 'pix' && (
+              {formaPagamento === "pix" && (
                 <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t">
                   <div>
                     <Label className="text-xs">Chave PIX:</Label>
-                    <Input value={chavePix} onChange={(e) => setChavePix(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={chavePix}
+                      onChange={(e) => setChavePix(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Tipo de Chave:</Label>
-                    <Select value={tipoChavePix} onValueChange={setTipoChavePix} disabled={paymentConfirmed}>
-                      <SelectTrigger className="h-8"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <Select
+                      value={tipoChavePix}
+                      onValueChange={setTipoChavePix}
+                      disabled={paymentConfirmed}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="cpf">CPF</SelectItem>
                         <SelectItem value="cnpj">CNPJ</SelectItem>
@@ -430,42 +562,80 @@ export default function PagamentoModal({
                   </div>
                   <div>
                     <Label className="text-xs">ID Transação:</Label>
-                    <Input value={idTransacaoPix} onChange={(e) => setIdTransacaoPix(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={idTransacaoPix}
+                      onChange={(e) => setIdTransacaoPix(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                 </div>
               )}
 
-              {formaPagamento === 'cheque' && (
+              {formaPagamento === "cheque" && (
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t">
                   <div>
                     <Label className="text-xs">Banco:</Label>
-                    <Input value={bancoDestino} onChange={(e) => setBancoDestino(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={bancoDestino}
+                      onChange={(e) => setBancoDestino(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Nº Cheque:</Label>
-                    <Input value={numeroCheque} onChange={(e) => setNumeroCheque(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={numeroCheque}
+                      onChange={(e) => setNumeroCheque(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Agência:</Label>
-                    <Input value={agencia} onChange={(e) => setAgencia(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={agencia}
+                      onChange={(e) => setAgencia(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div>
                     <Label className="text-xs">Conta:</Label>
-                    <Input value={conta} onChange={(e) => setConta(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={conta}
+                      onChange={(e) => setConta(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs">Data de Compensação:</Label>
-                    <Input type="date" value={dataCompensacao} onChange={(e) => setDataCompensacao(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      type="date"
+                      value={dataCompensacao}
+                      onChange={(e) => setDataCompensacao(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
                 </div>
               )}
 
-              {(formaPagamento === 'cartao_debito' || formaPagamento === 'cartao_credito') && (
+              {(formaPagamento === "cartao_debito" ||
+                formaPagamento === "cartao_credito") && (
                 <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t">
                   <div>
                     <Label className="text-xs">Bandeira:</Label>
-                    <Select value={bandeira} onValueChange={setBandeira} disabled={paymentConfirmed}>
-                      <SelectTrigger className="h-8"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <Select
+                      value={bandeira}
+                      onValueChange={setBandeira}
+                      disabled={paymentConfirmed}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="visa">Visa</SelectItem>
                         <SelectItem value="mastercard">Mastercard</SelectItem>
@@ -476,12 +646,26 @@ export default function PagamentoModal({
                   </div>
                   <div>
                     <Label className="text-xs">Nº Transação:</Label>
-                    <Input value={numeroTransacaoCartao} onChange={(e) => setNumeroTransacaoCartao(e.target.value)} className="h-8" disabled={paymentConfirmed} />
+                    <Input
+                      value={numeroTransacaoCartao}
+                      onChange={(e) => setNumeroTransacaoCartao(e.target.value)}
+                      className="h-8"
+                      disabled={paymentConfirmed}
+                    />
                   </div>
-                  {formaPagamento === 'cartao_credito' && (
+                  {formaPagamento === "cartao_credito" && (
                     <div>
                       <Label className="text-xs">Nº Parcelas:</Label>
-                      <Input type="number" min="1" value={numeroParcelas} onChange={(e) => setNumeroParcelas(parseInt(e.target.value) || 1)} className="h-8" disabled={paymentConfirmed} />
+                      <Input
+                        type="number"
+                        min="1"
+                        value={numeroParcelas}
+                        onChange={(e) =>
+                          setNumeroParcelas(parseInt(e.target.value) || 1)
+                        }
+                        className="h-8"
+                        disabled={paymentConfirmed}
+                      />
                     </div>
                   )}
                 </div>
@@ -506,7 +690,9 @@ export default function PagamentoModal({
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="w-4 h-4 text-slate-600" />
-                <Label className="text-xs font-semibold uppercase text-slate-600">Contas a Pagar</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-600">
+                  Contas a Pagar
+                </Label>
               </div>
               <div className="max-h-36 overflow-auto border rounded">
                 <Table>
@@ -514,21 +700,33 @@ export default function PagamentoModal({
                     <TableRow>
                       <TableHead className="text-xs">Fornecedor</TableHead>
                       <TableHead className="text-xs w-24">Vencimento</TableHead>
-                      <TableHead className="text-xs w-24 text-right">Valor</TableHead>
+                      <TableHead className="text-xs w-24 text-right">
+                        Valor
+                      </TableHead>
                       <TableHead className="text-xs w-20">Situação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contas.map(c => (
+                    {contas.map((c) => (
                       <TableRow key={c.id}>
-                        <TableCell className="text-xs">{c.supplierName || '-'}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(c.dueDate), 'dd/MM/yyyy')}</TableCell>
-                        <TableCell className="text-xs text-right font-mono">{formatCurrency(c.amount)}</TableCell>
+                        <TableCell className="text-xs">
+                          {c.supplierName || "-"}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {format(c.dueDate, "dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono">
+                          {formatCurrency(c.amount)}
+                        </TableCell>
                         <TableCell className="text-xs">
                           {paymentConfirmed ? (
-                            <Badge className="bg-green-100 text-green-800 text-xs">Paga</Badge>
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              Paga
+                            </Badge>
                           ) : (
-                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">Não Paga</Badge>
+                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                              Não Paga
+                            </Badge>
                           )}
                         </TableCell>
                       </TableRow>
@@ -549,16 +747,24 @@ export default function PagamentoModal({
                 className="bg-green-600 hover:bg-green-700 gap-1"
               >
                 <DollarSign className="w-4 h-4" />
-                {isProcessing ? 'Processando...' : 'Confirmar Pagamento'}
+                {isProcessing ? "Processando..." : "Confirmar Pagamento"}
               </Button>
-              <Button variant="outline" onClick={handleClose} disabled={isProcessing}>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={isProcessing}
+              >
                 <X className="w-4 h-4 mr-1" />
                 Cancelar
               </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={handleImprimir} className="gap-1">
+              <Button
+                variant="outline"
+                onClick={handleImprimir}
+                className="gap-1"
+              >
                 <Printer className="w-4 h-4" />
                 Imprimir
               </Button>

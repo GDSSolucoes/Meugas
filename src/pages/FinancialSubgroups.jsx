@@ -3,8 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Folder, X } from "lucide-react";
@@ -23,18 +36,18 @@ export default function FinancialSubgroupsPage() {
   // Estados para o modal de cadastro rápido de grupo
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [newGroup, setNewGroup] = useState({
-    name: '',
-    type: 'despesa', // Default to 'despesa' as specified
-    description: ''
+    name: "",
+    type: "despesa", // Default to 'despesa' as specified
+    description: "",
   });
 
   const initialSubgroupState = {
-    name: '',
-    description: '',
-    financialGroupId: '',
-    financialGroupName: '',
+    name: "",
+    description: "",
+    financialGroupId: "",
+    financialGroupName: "",
     active: true,
-    createdByName: ''
+    createdByName: "",
   };
 
   const [currentSubgroup, setCurrentSubgroup] = useState(initialSubgroupState);
@@ -43,14 +56,21 @@ export default function FinancialSubgroupsPage() {
     try {
       const user = await User.me();
       const [subgroupsData, groupsData] = await Promise.all([
-        FinancialSubgroup.filter({ companyId: user.companyId }, { sort: '-createdDate' }),
-        FinancialGroup.filter({ companyId: user.companyId, active: true })
+        FinancialSubgroup.filter(
+          { companyId: user.companyId },
+          { sort: "-createdAt" },
+        ),
+        FinancialGroup.filter({ companyId: user.companyId, active: true }),
       ]);
       setSubgroups(subgroupsData);
       setGroups(groupsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar os dados.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados.",
+        variant: "destructive",
+      });
     }
   }, [toast]);
 
@@ -63,7 +83,11 @@ export default function FinancialSubgroupsPage() {
     try {
       // Basic validation for new group name
       if (!newGroup.name.trim()) {
-        toast({ title: "Erro", description: "O nome do grupo é obrigatório.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "O nome do grupo é obrigatório.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -74,31 +98,41 @@ export default function FinancialSubgroupsPage() {
         description: newGroup.description.toUpperCase(),
         companyId: user.companyId,
         companyName: user.companyName,
-        createdByName: user.fullName,
-        active: true
+        createdByName: user.name,
+        active: true,
       };
 
       const savedGroup = await FinancialGroup.create(groupData);
-      
+
       // Recarregar grupos
-      const updatedGroups = await FinancialGroup.filter({ companyId: user.companyId, active: true });
+      const updatedGroups = await FinancialGroup.filter({
+        companyId: user.companyId,
+        active: true,
+      });
       setGroups(updatedGroups);
-      
+
       // Selecionar automaticamente o novo grupo
-      setCurrentSubgroup(prev => ({
+      setCurrentSubgroup((prev) => ({
         ...prev,
         financialGroupId: savedGroup.id,
-        financialGroupName: savedGroup.name
+        financialGroupName: savedGroup.name,
       }));
 
       // Resetar form e fechar modal
-      setNewGroup({ name: '', type: 'despesa', description: '' });
+      setNewGroup({ name: "", type: "despesa", description: "" });
       setShowGroupModal(false);
-      
-      toast({ title: "Sucesso", description: "Grupo financeiro criado e selecionado!" });
+
+      toast({
+        title: "Sucesso",
+        description: "Grupo financeiro criado e selecionado!",
+      });
     } catch (error) {
       console.error("Erro ao salvar grupo:", error);
-      toast({ title: "Erro", description: "Não foi possível criar o grupo.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar o grupo.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -116,7 +150,11 @@ export default function FinancialSubgroupsPage() {
         toast({ title: "Sucesso", description: "Subgrupo excluído." });
       } catch (error) {
         console.error("Erro ao excluir subgrupo:", error);
-        toast({ title: "Erro", description: "Não foi possível excluir o subgrupo.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o subgrupo.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -125,27 +163,39 @@ export default function FinancialSubgroupsPage() {
     e.preventDefault();
     try {
       if (!currentSubgroup.financialGroupId) {
-        toast({ title: "Erro", description: "O grupo financeiro é obrigatório.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "O grupo financeiro é obrigatório.",
+          variant: "destructive",
+        });
         return;
       }
       const user = await User.me();
-      const selectedGroup = groups.find(g => g.id === currentSubgroup.financialGroupId);
-      
+      const selectedGroup = groups.find(
+        (g) => g.id === currentSubgroup.financialGroupId,
+      );
+
       const subgroupData = {
         ...currentSubgroup,
-        financialGroupName: selectedGroup ? selectedGroup.name : '',
+        financialGroupName: selectedGroup ? selectedGroup.name : "",
         companyId: user.companyId,
         companyName: user.companyName,
-        createdByName: user.fullName
+        createdByName: user.name,
       };
 
       if (isEditing) {
         const { id, ...dataToUpdate } = subgroupData;
         await FinancialSubgroup.update(id, dataToUpdate);
-        toast({ title: "Sucesso", description: "Subgrupo financeiro atualizado com sucesso." });
+        toast({
+          title: "Sucesso",
+          description: "Subgrupo financeiro atualizado com sucesso.",
+        });
       } else {
         await FinancialSubgroup.create(subgroupData);
-        toast({ title: "Sucesso", description: "Subgrupo financeiro criado com sucesso." });
+        toast({
+          title: "Sucesso",
+          description: "Subgrupo financeiro criado com sucesso.",
+        });
       }
 
       setShowForm(false);
@@ -153,7 +203,11 @@ export default function FinancialSubgroupsPage() {
       loadData(); // Reload data after save/update
     } catch (error) {
       console.error("Erro ao salvar subgrupo:", error);
-      toast({ title: "Erro", description: "Não foi possível salvar o subgrupo financeiro.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o subgrupo financeiro.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -168,23 +222,38 @@ export default function FinancialSubgroupsPage() {
   };
 
   const handleGroupChange = (groupId) => {
-    const group = groups.find(g => g.id === groupId);
-    setCurrentSubgroup(prev => ({
+    const group = groups.find((g) => g.id === groupId);
+    setCurrentSubgroup((prev) => ({
       ...prev,
       financialGroupId: groupId,
-      financialGroupName: group ? group.name : ''
+      financialGroupName: group ? group.name : "",
     }));
   };
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(to bottom right, #f2f1ed, #95b4df)' }}>
+    <div
+      className="min-h-screen p-6"
+      style={{
+        background: "linear-gradient(to bottom right, #f2f1ed, #95b4df)",
+      }}
+    >
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Subgrupos Financeiros</h1>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+              Subgrupos Financeiros
+            </h1>
             <p className="text-slate-600">Detalhe suas receitas e despesas.</p>
           </div>
-          <Button onClick={() => { setShowForm(true); setIsEditing(false); resetForm(); }} className="text-white" style={{ backgroundColor: '#e78b3a' }}>
+          <Button
+            onClick={() => {
+              setShowForm(true);
+              setIsEditing(false);
+              resetForm();
+            }}
+            className="text-white"
+            style={{ backgroundColor: "#e78b3a" }}
+          >
             <Plus className="w-5 h-5 mr-2" />
             Novo Subgrupo
           </Button>
@@ -196,43 +265,68 @@ export default function FinancialSubgroupsPage() {
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-slate-800">Cadastro Rápido - Grupo Financeiro</h3>
-                  <Button variant="ghost" size="icon" onClick={() => setShowGroupModal(false)}>
+                  <h3 className="text-lg font-bold text-slate-800">
+                    Cadastro Rápido - Grupo Financeiro
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowGroupModal(false)}
+                  >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <Label>Nome do Grupo *</Label>
                     <Input
                       value={newGroup.name}
-                      onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setNewGroup((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                       placeholder="Ex: Receitas de Vendas, Despesas Fixas..."
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Tipo *</Label>
-                    <Select value={newGroup.type} onValueChange={(value) => setNewGroup(prev => ({ ...prev, type: value }))}>
+                    <Select
+                      value={newGroup.type}
+                      onValueChange={(value) =>
+                        setNewGroup((prev) => ({ ...prev, type: value }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="receita">Receita</SelectItem>
                         <SelectItem value="despesa">Despesa</SelectItem>
-                        <SelectItem value="movimentacao">Movimentação</SelectItem>
-                        <SelectItem value="investimento">Investimento</SelectItem>
+                        <SelectItem value="movimentacao">
+                          Movimentação
+                        </SelectItem>
+                        <SelectItem value="investimento">
+                          Investimento
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label>Descrição</Label>
                     <Textarea
                       value={newGroup.description}
-                      onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setNewGroup((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       placeholder="Descrição do grupo..."
                       rows={3}
                     />
@@ -240,10 +334,18 @@ export default function FinancialSubgroupsPage() {
                 </div>
 
                 <div className="flex justify-end gap-2 mt-6">
-                  <Button type="button" variant="outline" onClick={() => setShowGroupModal(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowGroupModal(false)}
+                  >
                     Cancelar
                   </Button>
-                  <Button type="button" onClick={handleSaveQuickGroup} className="bg-green-600 hover:bg-green-700">
+                  <Button
+                    type="button"
+                    onClick={handleSaveQuickGroup}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
                     Criar e Selecionar
                   </Button>
                 </div>
@@ -257,7 +359,7 @@ export default function FinancialSubgroupsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Folder className="w-5 h-5" />
-                {isEditing ? 'Editar Subgrupo' : 'Novo Subgrupo'}
+                {isEditing ? "Editar Subgrupo" : "Novo Subgrupo"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -268,27 +370,42 @@ export default function FinancialSubgroupsPage() {
                     <Input
                       id="subgroup-name"
                       value={currentSubgroup.name}
-                      onChange={(e) => setCurrentSubgroup(prev => ({ ...prev, name: e.target.value.toUpperCase() }))}
+                      onChange={(e) =>
+                        setCurrentSubgroup((prev) => ({
+                          ...prev,
+                          name: e.target.value.toUpperCase(),
+                        }))
+                      }
                       required
                       placeholder="Ex: Salários, Vendas de GLP..."
                     />
                   </div>
                   <div>
-                    <Label htmlFor="financial-group-select">Grupo Financeiro *</Label>
+                    <Label htmlFor="financial-group-select">
+                      Grupo Financeiro *
+                    </Label>
                     <div className="flex gap-2">
-                      <Select value={currentSubgroup.financialGroupId} onValueChange={handleGroupChange}>
-                        <SelectTrigger id="financial-group-select" className="flex-1">
+                      <Select
+                        value={currentSubgroup.financialGroupId}
+                        onValueChange={handleGroupChange}
+                      >
+                        <SelectTrigger
+                          id="financial-group-select"
+                          className="flex-1"
+                        >
                           <SelectValue placeholder="Selecione um grupo" />
                         </SelectTrigger>
                         <SelectContent>
-                          {groups.map(group => (
-                            <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                          {groups.map((group) => (
+                            <SelectItem key={group.id} value={group.id}>
+                              {group.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button 
+                      <Button
                         type="button"
-                        variant="outline" 
+                        variant="outline"
                         size="icon"
                         onClick={() => setShowGroupModal(true)}
                         className="bg-green-50 hover:bg-green-100 text-green-600 border-green-200"
@@ -304,16 +421,31 @@ export default function FinancialSubgroupsPage() {
                   <Textarea
                     id="subgroup-description"
                     value={currentSubgroup.description}
-                    onChange={(e) => setCurrentSubgroup(prev => ({ ...prev, description: e.target.value.toUpperCase() }))}
+                    onChange={(e) =>
+                      setCurrentSubgroup((prev) => ({
+                        ...prev,
+                        description: e.target.value.toUpperCase(),
+                      }))
+                    }
                     placeholder="Descreva este subgrupo..."
                     rows={3}
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" className="text-white hover:opacity-90" style={{ backgroundColor: '#223f61' }}>
-                    {isEditing ? 'Salvar Alterações' : 'Salvar'}
+                  <Button
+                    type="submit"
+                    className="text-white hover:opacity-90"
+                    style={{ backgroundColor: "#223f61" }}
+                  >
+                    {isEditing ? "Salvar Alterações" : "Salvar"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleCancel}>Cancelar</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -321,7 +453,9 @@ export default function FinancialSubgroupsPage() {
         )}
 
         <Card className="bg-white/90">
-          <CardHeader><CardTitle>Subgrupos Cadastrados</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Subgrupos Cadastrados</CardTitle>
+          </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
@@ -333,21 +467,37 @@ export default function FinancialSubgroupsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subgroups.map(subgroup => (
+                {subgroups.map((subgroup) => (
                   <TableRow key={subgroup.id}>
-                    <TableCell className="font-medium">{subgroup.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {subgroup.name}
+                    </TableCell>
                     <TableCell>{subgroup.financialGroupName}</TableCell>
                     <TableCell>
-                      <Badge variant={subgroup.active ? 'default' : 'outline'}
-                             className={subgroup.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                      <Badge
+                        variant={subgroup.active ? "default" : "outline"}
+                        className={
+                          subgroup.active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }
+                      >
                         {subgroup.active ? "Ativo" : "Inativo"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(subgroup)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(subgroup)}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(subgroup.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(subgroup.id)}
+                      >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
                     </TableCell>

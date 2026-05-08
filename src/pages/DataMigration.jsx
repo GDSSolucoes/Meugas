@@ -148,7 +148,7 @@ export default function DataMigrationPage() {
           console.log(`${name}: ${itemsWithoutCompany.length} registros para migrar`);
           
           for (const item of itemsWithoutCompany) {
-            await entity.updateitem.id, companyData);
+            await entity.update(item.id, companyData );
           }
           
           console.log(`${name}: Concluído`);

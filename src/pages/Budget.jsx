@@ -3,10 +3,30 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Edit, Trash2, Search, Save, X, LogOut, Printer, Plus
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Edit,
+  Trash2,
+  Search,
+  Save,
+  X,
+  LogOut,
+  Printer,
+  Plus,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
@@ -20,31 +40,31 @@ export default function BudgetPage() {
   const codigoInputRef = React.useRef(null);
   const codigoProdutoInputRef = React.useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [codigo, setCodigo] = useState('');
+  const [codigo, setCodigo] = useState("");
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [budgets, setBudgets] = useState([]);
   const [products, setProducts] = useState([]);
-  const [lastFocusedField, setLastFocusedField] = useState('codigo');
+  const [lastFocusedField, setLastFocusedField] = useState("codigo");
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
-  
+
   // Dados do Cliente (não salvos no cadastro)
-  const [nome, setNome] = useState('');
-  const [rua, setRua] = useState('');
-  const [numero, setNumero] = useState('');
-  const [complemento, setComplemento] = useState('');
-  const [bairro, setBairro] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [uf, setUf] = useState('PR');
-  
+  const [nome, setNome] = useState("");
+  const [rua, setRua] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [uf, setUf] = useState("PR");
+
   // Produtos
   const [items, setItems] = useState([]);
-  const [codigoProduto, setCodigoProduto] = useState('');
-  const [quantidade, setQuantidade] = useState('1');
-  const [valorUnitario, setValorUnitario] = useState('');
+  const [codigoProduto, setCodigoProduto] = useState("");
+  const [quantidade, setQuantidade] = useState("1");
+  const [valorUnitario, setValorUnitario] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
@@ -60,12 +80,12 @@ export default function BudgetPage() {
     try {
       const user = await User.me();
       setCurrentUser(user);
-      
+
       const [budgetsData, productsData] = await Promise.all([
         entities.Budget.filter({ companyId: user.companyId }),
-        entities.Product.filter({ companyId: user.companyId, active: true })
+        entities.Product.filter({ companyId: user.companyId, active: true }),
       ]);
-      
+
       setBudgets(budgetsData);
       setProducts(productsData);
     } catch (error) {
@@ -74,62 +94,68 @@ export default function BudgetPage() {
   };
 
   const limparCampos = () => {
-    setCodigo('');
-    setNome('');
-    setRua('');
-    setNumero('');
-    setComplemento('');
-    setBairro('');
-    setCidade('');
-    setUf('PR');
+    setCodigo("");
+    setNome("");
+    setRua("");
+    setNumero("");
+    setComplemento("");
+    setBairro("");
+    setCidade("");
+    setUf("PR");
     setItems([]);
-    setCodigoProduto('');
-    setQuantidade('1');
-    setValorUnitario('');
+    setCodigoProduto("");
+    setQuantidade("1");
+    setValorUnitario("");
     setSelectedProduct(null);
     setIsEditingCustomer(false);
   };
 
   const buscarOrcamentoPorCodigo = () => {
     // Se código vazio, novo orçamento
-    if (!codigo || codigo.trim() === '') {
-      setNome('');
-      setRua('');
-      setNumero('');
-      setComplemento('');
-      setBairro('');
-      setCidade('');
-      setUf('PR');
+    if (!codigo || codigo.trim() === "") {
+      setNome("");
+      setRua("");
+      setNumero("");
+      setComplemento("");
+      setBairro("");
+      setCidade("");
+      setUf("PR");
       setItems([]);
       setIsEditingCustomer(true);
-      toast({ title: "Novo Orçamento", description: "Preencha os dados para criar um novo orçamento." });
+      toast({
+        title: "Novo Orçamento",
+        description: "Preencha os dados para criar um novo orçamento.",
+      });
       // Focar no campo Nome após um pequeno delay
       setTimeout(() => {
         nomeInputRef.current?.focus();
       }, 100);
       return;
     }
-    
-    const orcamento = budgets.find(b => b.budgetNumber === codigo);
-    
+
+    const orcamento = budgets.find((b) => b.budgetNumber === codigo);
+
     if (orcamento) {
-      setNome(orcamento.customerData?.name || '');
-      setRua(orcamento.customerData?.street || '');
-      setNumero(orcamento.customerData?.number || '');
-      setComplemento(orcamento.customerData?.complement || '');
-      setBairro(orcamento.customerData?.neighborhood || '');
-      setCidade(orcamento.customerData?.city || '');
-      setUf(orcamento.customerData?.state || 'PR');
+      setNome(orcamento.customerData?.name || "");
+      setRua(orcamento.customerData?.street || "");
+      setNumero(orcamento.customerData?.number || "");
+      setComplemento(orcamento.customerData?.complement || "");
+      setBairro(orcamento.customerData?.neighborhood || "");
+      setCidade(orcamento.customerData?.city || "");
+      setUf(orcamento.customerData?.state || "PR");
       setItems(orcamento.items || []);
       setIsEditingCustomer(false);
-      toast({ title: "Orçamento encontrado", description: `Orçamento #${orcamento.budgetNumber} carregado com sucesso.` });
+      toast({
+        title: "Orçamento encontrado",
+        description: `Orçamento #${orcamento.budgetNumber} carregado com sucesso.`,
+      });
     } else {
       setShowErrorModal(true);
     }
   };
 
   const handleCodigoKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === 'Tab') {
+    if (e.key === "Enter" || e.key === "Tab") {
       e.preventDefault();
       buscarOrcamentoPorCodigo();
     }
@@ -141,7 +167,11 @@ export default function BudgetPage() {
 
   const handleModificar = () => {
     if (!codigo) {
-      toast({ title: "Atenção", description: "Informe um código para modificar.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Informe um código para modificar.",
+        variant: "destructive",
+      });
       return;
     }
     setIsEditingCustomer(true);
@@ -154,35 +184,50 @@ export default function BudgetPage() {
 
   const handleExcluir = async () => {
     if (!codigo) {
-      toast({ title: "Atenção", description: "Informe um código para excluir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Informe um código para excluir.",
+        variant: "destructive",
+      });
       return;
     }
-    
-    const orcamento = budgets.find(b => b.budgetNumber === codigo);
+
+    const orcamento = budgets.find((b) => b.budgetNumber === codigo);
     if (!orcamento) {
-      toast({ title: "Erro", description: "Orçamento não encontrado.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Orçamento não encontrado.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (!window.confirm("Tem certeza que deseja excluir este orçamento?")) {
       return;
     }
-    
+
     try {
       await entities.Budget.delete(orcamento.id);
-      toast({ title: "Sucesso", description: "Orçamento excluído com sucesso." });
+      toast({
+        title: "Sucesso",
+        description: "Orçamento excluído com sucesso.",
+      });
       await loadData();
       limparCampos();
     } catch (error) {
       console.error("Erro ao excluir:", error);
-      toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir.",
+        variant: "destructive",
+      });
     }
   };
 
   const handlePesquisar = () => {
-    if (lastFocusedField === 'codigo') {
+    if (lastFocusedField === "codigo") {
       setShowSearchModal(true);
-    } else if (lastFocusedField === 'produto') {
+    } else if (lastFocusedField === "produto") {
       setShowProductSearch(true);
     } else {
       // Fallback: se nenhum campo estiver focado, perguntar ao usuário
@@ -192,53 +237,69 @@ export default function BudgetPage() {
 
   const handleAdicionarProduto = () => {
     if (!selectedProduct) {
-      toast({ title: "Atenção", description: "Selecione um produto.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione um produto.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     const qtd = parseFloat(quantidade) || 0;
     const valor = parseFloat(valorUnitario) || 0;
-    
+
     if (qtd <= 0) {
-      toast({ title: "Atenção", description: "Quantidade deve ser maior que zero.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Quantidade deve ser maior que zero.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (valor <= 0) {
-      toast({ title: "Atenção", description: "Valor unitário deve ser maior que zero.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Valor unitário deve ser maior que zero.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     const novoItem = {
       productId: selectedProduct.id,
-      productCode: selectedProduct.code || '',
+      productCode: selectedProduct.code || "",
       productName: selectedProduct.name,
       quantity: qtd,
       unitPrice: valor,
-      total: qtd * valor
+      total: qtd * valor,
     };
-    
-    setItems(prev => [...prev, novoItem]);
-    setCodigoProduto('');
-    setQuantidade('1');
-    setValorUnitario('');
+
+    setItems((prev) => [...prev, novoItem]);
+    setCodigoProduto("");
+    setQuantidade("1");
+    setValorUnitario("");
     setSelectedProduct(null);
   };
 
   const handleRemoverItem = (index) => {
-    setItems(prev => prev.filter((_, i) => i !== index));
+    setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleOk = async () => {
     if (isSaving) return;
-    
+
     if (!nome) {
-      toast({ title: "Erro", description: "Nome do cliente é obrigatório.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Nome do cliente é obrigatório.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsSaving(true);
-    
+
     try {
       const customerData = {
         name: nome,
@@ -247,14 +308,14 @@ export default function BudgetPage() {
         complement: complemento,
         neighborhood: bairro,
         city: cidade,
-        state: uf
+        state: uf,
       };
 
       const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
 
       // Se tem código, é edição
       if (codigo) {
-        const orcamento = budgets.find(b => b.budgetNumber === codigo);
+        const orcamento = budgets.find((b) => b.budgetNumber === codigo);
         if (orcamento) {
           await entities.Budget.update(orcamento.id, {
             customerData: customerData,
@@ -262,20 +323,25 @@ export default function BudgetPage() {
             totalAmount: totalAmount,
             companyId: currentUser.companyId,
             companyName: currentUser.companyName,
-            createdByName: currentUser.fullName
+            createdByName: currentUser.name,
           });
-          
-          toast({ title: "Sucesso", description: `Orçamento #${codigo} atualizado com sucesso!` });
+
+          toast({
+            title: "Sucesso",
+            description: `Orçamento #${codigo} atualizado com sucesso!`,
+          });
         }
       } else {
         // Novo orçamento - gerar código sequencial
-        const allBudgets = await entities.Budget.filter({ companyId: currentUser.companyId });
+        const allBudgets = await entities.Budget.filter({
+          companyId: currentUser.companyId,
+        });
         const maxBudgetNumber = allBudgets.reduce((max, budget) => {
           const currentNum = parseInt(budget.budgetNumber, 10);
           return !isNaN(currentNum) && currentNum > max ? currentNum : max;
         }, 0);
         const newBudgetNumber = String(maxBudgetNumber + 1);
-        
+
         await entities.Budget.create({
           budgetNumber: newBudgetNumber,
           customerData: customerData,
@@ -283,18 +349,25 @@ export default function BudgetPage() {
           totalAmount: totalAmount,
           companyId: currentUser.companyId,
           companyName: currentUser.companyName,
-          createdByName: currentUser.fullName
+          createdByName: currentUser.name,
         });
-        
+
         setCodigo(newBudgetNumber);
-        toast({ title: "Sucesso", description: `Orçamento #${newBudgetNumber} criado com sucesso!` });
+        toast({
+          title: "Sucesso",
+          description: `Orçamento #${newBudgetNumber} criado com sucesso!`,
+        });
       }
-      
+
       await loadData();
       setIsEditingCustomer(false);
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      toast({ title: "Erro", description: "Não foi possível salvar.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -302,18 +375,22 @@ export default function BudgetPage() {
 
   const handleImprimir = () => {
     if (!codigo && items.length === 0) {
-      toast({ title: "Atenção", description: "Preencha os dados para imprimir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Preencha os dados para imprimir.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     const totalGeral = items.reduce((sum, item) => sum + item.total, 0);
-    const dataAtual = new Date().toLocaleDateString('pt-BR');
-    
+    const dataAtual = new Date().toLocaleDateString("pt-BR");
+
     const printContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Orçamento #${codigo || 'Novo'}</title>
+        <title>Orçamento #${codigo || "Novo"}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 40px; font-size: 12px; }
@@ -334,7 +411,7 @@ export default function BudgetPage() {
         </style>
       </head>
       <body>
-        <h1>ORÇAMENTO ${codigo ? '#' + codigo : ''}</h1>
+        <h1>ORÇAMENTO ${codigo ? "#" + codigo : ""}</h1>
         <div class="data">Data: ${dataAtual}</div>
         <div class="section">
           <div class="section-title">Dados do Cliente</div>
@@ -356,7 +433,9 @@ export default function BudgetPage() {
               </tr>
             </thead>
             <tbody>
-              ${items.map(item => `
+              ${items
+                .map(
+                  (item) => `
                 <tr>
                   <td>${item.productCode}</td>
                   <td>${item.productName}</td>
@@ -364,7 +443,9 @@ export default function BudgetPage() {
                   <td>R$ ${item.unitPrice.toFixed(2)}</td>
                   <td>R$ ${item.total.toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
           <div class="total">Total Geral: R$ ${totalGeral.toFixed(2)}</div>
@@ -378,33 +459,33 @@ export default function BudgetPage() {
       </body>
       </html>
     `;
-    
-    const printWindow = window.open('', '_blank');
+
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
 
   const handleSelectBudget = (budget) => {
     setCodigo(budget.budgetNumber);
-    setNome(budget.customerData?.name || '');
-    setRua(budget.customerData?.street || '');
-    setNumero(budget.customerData?.number || '');
-    setComplemento(budget.customerData?.complement || '');
-    setBairro(budget.customerData?.neighborhood || '');
-    setCidade(budget.customerData?.city || '');
-    setUf(budget.customerData?.state || 'PR');
+    setNome(budget.customerData?.name || "");
+    setRua(budget.customerData?.street || "");
+    setNumero(budget.customerData?.number || "");
+    setComplemento(budget.customerData?.complement || "");
+    setBairro(budget.customerData?.neighborhood || "");
+    setCidade(budget.customerData?.city || "");
+    setUf(budget.customerData?.state || "PR");
     setItems(budget.items || []);
     setIsEditingCustomer(false);
     setShowSearchModal(false);
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
-    setCodigoProduto(product.code || product.id?.slice(-6) || '');
-    setValorUnitario(product.unitPrice?.toString() || '0');
+    setCodigoProduto(product.code || product.id?.slice(-6) || "");
+    setValorUnitario(product.unitPrice?.toString() || "0");
     setShowProductSearch(false);
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const totalGeral = items.reduce((sum, item) => sum + item.total, 0);
@@ -413,94 +494,98 @@ export default function BudgetPage() {
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold" style={{ color: '#223f61' }}>Orçamento</h1>
+        <h1 className="text-xl font-bold" style={{ color: "#223f61" }}>
+          Orçamento
+        </h1>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-5xl mx-auto space-y-4">
-          
           {/* Código do Orçamento */}
           <div className="flex items-center gap-2">
             <Label className="text-sm w-16">Código:</Label>
-            <Input 
+            <Input
               ref={codigoInputRef}
               value={codigo}
               onChange={(e) => handleCodigoChange(e.target.value)}
               onKeyDown={handleCodigoKeyDown}
-              onFocus={() => setLastFocusedField('codigo')}
+              onFocus={() => setLastFocusedField("codigo")}
               className="w-32 h-8"
               placeholder=""
             />
             <span className="text-xs text-slate-500">
-              Digite o código do orçamento e pressione Enter/Tab. Deixe em branco para novo orçamento.
+              Digite o código do orçamento e pressione Enter/Tab. Deixe em
+              branco para novo orçamento.
             </span>
           </div>
 
           {/* Dados do Cliente */}
           <Card className="bg-white border-slate-300">
             <CardContent className="p-4">
-              <h3 className="text-sm font-semibold mb-4 pb-2 border-b">Dados do Cliente</h3>
-              
+              <h3 className="text-sm font-semibold mb-4 pb-2 border-b">
+                Dados do Cliente
+              </h3>
+
               <div className="space-y-3">
                 <div className="grid grid-cols-12 gap-3 items-center">
                   <Label className="text-sm col-span-1">Nome:</Label>
-                  <Input 
+                  <Input
                     ref={nomeInputRef}
-                    value={nome} 
-                    onChange={(e) => setNome(e.target.value)} 
-                    className={`col-span-11 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    className={`col-span-11 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     readOnly={!isEditingCustomer}
                   />
                 </div>
 
                 <div className="grid grid-cols-12 gap-2 items-center">
                   <Label className="text-sm col-span-1">Rua:</Label>
-                  <Input 
-                    value={rua} 
-                    onChange={(e) => setRua(e.target.value)} 
-                    className={`col-span-6 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                  <Input
+                    value={rua}
+                    onChange={(e) => setRua(e.target.value)}
+                    className={`col-span-6 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     readOnly={!isEditingCustomer}
                   />
                   <Label className="text-sm">Nº:</Label>
-                  <Input 
-                    value={numero} 
+                  <Input
+                    value={numero}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
+                      const value = e.target.value.replace(/\D/g, "");
                       setNumero(value);
-                    }} 
-                    className={`col-span-1 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                    }}
+                    className={`col-span-1 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     readOnly={!isEditingCustomer}
                   />
                   <Label className="text-sm">Compl.:</Label>
-                  <Input 
-                    value={complemento} 
-                    onChange={(e) => setComplemento(e.target.value)} 
-                    className={`col-span-2 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                  <Input
+                    value={complemento}
+                    onChange={(e) => setComplemento(e.target.value)}
+                    className={`col-span-2 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     readOnly={!isEditingCustomer}
                   />
                 </div>
 
                 <div className="grid grid-cols-12 gap-2 items-center">
                   <Label className="text-sm col-span-1">Bairro:</Label>
-                  <Input 
-                    value={bairro} 
-                    onChange={(e) => setBairro(e.target.value)} 
-                    className={`col-span-4 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                  <Input
+                    value={bairro}
+                    onChange={(e) => setBairro(e.target.value)}
+                    className={`col-span-4 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     readOnly={!isEditingCustomer}
                   />
                   <Label className="text-sm">Cidade:</Label>
-                  <Input 
-                    value={cidade} 
-                    onChange={(e) => setCidade(e.target.value)} 
-                    className={`col-span-4 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                  <Input
+                    value={cidade}
+                    onChange={(e) => setCidade(e.target.value)}
+                    className={`col-span-4 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     readOnly={!isEditingCustomer}
                   />
                   <Label className="text-sm">UF:</Label>
-                  <Input 
-                    value={uf} 
-                    onChange={(e) => setUf(e.target.value)} 
-                    className={`col-span-1 h-8 ${!isEditingCustomer ? 'bg-gray-100' : 'bg-white'}`}
+                  <Input
+                    value={uf}
+                    onChange={(e) => setUf(e.target.value)}
+                    className={`col-span-1 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
                     maxLength={2}
                     readOnly={!isEditingCustomer}
                   />
@@ -512,16 +597,18 @@ export default function BudgetPage() {
           {/* Produtos */}
           <Card className="bg-white border-slate-300">
             <CardContent className="p-4">
-              <h3 className="text-sm font-semibold mb-4 pb-2 border-b">Produtos</h3>
-              
+              <h3 className="text-sm font-semibold mb-4 pb-2 border-b">
+                Produtos
+              </h3>
+
               <div className="grid grid-cols-12 gap-3 items-end mb-4">
                 <div className="col-span-3">
                   <Label className="text-sm">Código:</Label>
-                  <Input 
+                  <Input
                     ref={codigoProdutoInputRef}
                     value={codigoProduto}
                     onChange={(e) => setCodigoProduto(e.target.value)}
-                    onFocus={() => setLastFocusedField('produto')}
+                    onFocus={() => setLastFocusedField("produto")}
                     className="h-8 mt-1"
                     placeholder="Produto"
                     readOnly
@@ -529,7 +616,7 @@ export default function BudgetPage() {
                 </div>
                 <div className="col-span-2">
                   <Label className="text-sm">Quantidade:</Label>
-                  <Input 
+                  <Input
                     type="number"
                     min="1"
                     step="1"
@@ -540,7 +627,7 @@ export default function BudgetPage() {
                 </div>
                 <div className="col-span-3">
                   <Label className="text-sm">Valor Unitário:</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={valorUnitario}
@@ -549,10 +636,10 @@ export default function BudgetPage() {
                   />
                 </div>
                 <div className="col-span-4">
-                  <Button 
+                  <Button
                     onClick={handleAdicionarProduto}
                     className="w-full h-8 text-white"
-                    style={{ background: '#e78b3a' }}
+                    style={{ background: "#e78b3a" }}
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Adicionar
@@ -568,20 +655,38 @@ export default function BudgetPage() {
                       <TableRow className="bg-slate-50">
                         <TableHead className="text-xs">Código</TableHead>
                         <TableHead className="text-xs">Produto</TableHead>
-                        <TableHead className="text-xs text-right">Qtde</TableHead>
-                        <TableHead className="text-xs text-right">Vlr. Unit.</TableHead>
-                        <TableHead className="text-xs text-right">Total</TableHead>
-                        <TableHead className="text-xs text-center">Ações</TableHead>
+                        <TableHead className="text-xs text-right">
+                          Qtde
+                        </TableHead>
+                        <TableHead className="text-xs text-right">
+                          Vlr. Unit.
+                        </TableHead>
+                        <TableHead className="text-xs text-right">
+                          Total
+                        </TableHead>
+                        <TableHead className="text-xs text-center">
+                          Ações
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {items.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell className="text-xs">{item.productCode}</TableCell>
-                          <TableCell className="text-xs">{item.productName}</TableCell>
-                          <TableCell className="text-xs text-right">{item.quantity}</TableCell>
-                          <TableCell className="text-xs text-right">R$ {item.unitPrice.toFixed(2)}</TableCell>
-                          <TableCell className="text-xs text-right font-semibold">R$ {item.total.toFixed(2)}</TableCell>
+                          <TableCell className="text-xs">
+                            {item.productCode}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {item.productName}
+                          </TableCell>
+                          <TableCell className="text-xs text-right">
+                            {item.quantity}
+                          </TableCell>
+                          <TableCell className="text-xs text-right">
+                            R$ {item.unitPrice.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-xs text-right font-semibold">
+                            R$ {item.total.toFixed(2)}
+                          </TableCell>
                           <TableCell className="text-center">
                             <Button
                               variant="ghost"
@@ -604,7 +709,9 @@ export default function BudgetPage() {
                 <div className="mt-4 flex justify-end">
                   <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <p className="text-sm text-slate-600">Total Geral:</p>
-                    <p className="text-2xl font-bold text-slate-800">R$ {totalGeral.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-slate-800">
+                      R$ {totalGeral.toFixed(2)}
+                    </p>
                   </div>
                 </div>
               )}
@@ -616,49 +723,68 @@ export default function BudgetPage() {
       {/* Barra de Ações */}
       <div className="bg-slate-200 border-t border-slate-300 p-2">
         <div className="flex gap-1 items-center justify-center">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-12 flex flex-col gap-1 px-4" 
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 flex flex-col gap-1 px-4"
             onClick={handleModificar}
             disabled={!codigo || isEditingCustomer}
           >
             <Edit className="w-4 h-4" />
             <span className="text-xs">Alterar</span>
           </Button>
-          <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1 px-4 text-red-600 hover:bg-red-50" onClick={handleExcluir}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 flex flex-col gap-1 px-4 text-red-600 hover:bg-red-50"
+            onClick={handleExcluir}
+          >
             <Trash2 className="w-4 h-4" />
             <span className="text-xs">Excluir</span>
           </Button>
-          <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1 px-4" onClick={handlePesquisar}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 flex flex-col gap-1 px-4"
+            onClick={handlePesquisar}
+          >
             <Search className="w-4 h-4" />
             <span className="text-xs">Pesquisar</span>
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-12 flex flex-col gap-1 px-4 text-white" 
-            style={{ backgroundColor: '#e78b3a' }}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 flex flex-col gap-1 px-4 text-white"
+            style={{ backgroundColor: "#e78b3a" }}
             onClick={handleOk}
             disabled={isSaving || !isEditingCustomer}
           >
             <Save className="w-4 h-4" />
-            <span className="text-xs">{isSaving ? 'Salvando...' : 'Ok'}</span>
+            <span className="text-xs">{isSaving ? "Salvando..." : "Ok"}</span>
           </Button>
-          <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1 px-4" onClick={limparCampos}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 flex flex-col gap-1 px-4"
+            onClick={limparCampos}
+          >
             <X className="w-4 h-4" />
             <span className="text-xs">Cancelar</span>
           </Button>
           <Link to={createPageUrl("Dashboard")}>
-            <Button variant="outline" size="sm" className="h-12 flex flex-col gap-1 px-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-12 flex flex-col gap-1 px-4"
+            >
               <LogOut className="w-4 h-4" />
               <span className="text-xs">Sair</span>
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-12 flex flex-col gap-1 px-4" 
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 flex flex-col gap-1 px-4"
             onClick={handleImprimir}
             disabled={!codigo}
           >
@@ -676,14 +802,15 @@ export default function BudgetPage() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-slate-600">
-              O código de orçamento digitado não foi encontrado. Por favor, verifique e digite novamente.
+              O código de orçamento digitado não foi encontrado. Por favor,
+              verifique e digite novamente.
             </p>
           </div>
           <DialogFooter>
-            <Button 
+            <Button
               onClick={() => {
                 setShowErrorModal(false);
-                setCodigo('');
+                setCodigo("");
               }}
             >
               OK
@@ -699,7 +826,7 @@ export default function BudgetPage() {
             <DialogTitle>Pesquisar Orçamento</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Buscar por código, nome do cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -717,31 +844,47 @@ export default function BudgetPage() {
                 </TableHeader>
                 <TableBody>
                   {budgets
-                    .filter(b => {
+                    .filter((b) => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return b.budgetNumber?.toLowerCase().includes(term) || 
-                             b.customerData?.name?.toLowerCase().includes(term);
+                      return (
+                        b.budgetNumber?.toLowerCase().includes(term) ||
+                        b.customerData?.name?.toLowerCase().includes(term)
+                      );
                     })
-                    .map(b => (
-                      <TableRow 
+                    .map((b) => (
+                      <TableRow
                         key={b.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => handleSelectBudget(b)}
                       >
-                        <TableCell className="text-xs font-mono">{b.budgetNumber}</TableCell>
-                        <TableCell className="text-xs">{b.customerData?.name || '-'}</TableCell>
-                        <TableCell className="text-xs">{b.createdDate ? new Date(b.createdDate).toLocaleDateString('pt-BR') : '-'}</TableCell>
-                        <TableCell className="text-xs text-right">R$ {(b.totalAmount || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {b.budgetNumber}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {b.customerData?.name || "-"}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {b.createdAt
+                            ? new Date(b.createdAt).toLocaleDateString("pt-BR")
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-xs text-right">
+                          R$ {(b.totalAmount || 0).toFixed(2)}
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSearchModal(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => setShowSearchModal(false)}>
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -753,7 +896,7 @@ export default function BudgetPage() {
             <DialogTitle>Pesquisar Produto</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Digite o código ou nome do produto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -772,31 +915,46 @@ export default function BudgetPage() {
                 </TableHeader>
                 <TableBody>
                   {products
-                    .filter(prod => {
+                    .filter((prod) => {
                       if (!searchTerm) return true;
                       const term = searchTerm.toLowerCase();
-                      return prod.name?.toLowerCase().includes(term) || 
-                             prod.code?.toLowerCase().includes(term);
+                      return (
+                        prod.name?.toLowerCase().includes(term) ||
+                        prod.code?.toLowerCase().includes(term)
+                      );
                     })
-                    .map(prod => (
-                      <TableRow 
-                        key={prod.id} 
+                    .map((prod) => (
+                      <TableRow
+                        key={prod.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => handleSelectProduct(prod)}
                       >
-                        <TableCell className="text-xs font-mono">{prod.code || prod.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {prod.code || prod.id?.slice(-6)}
+                        </TableCell>
                         <TableCell className="text-xs">{prod.name}</TableCell>
-                        <TableCell className="text-xs">{prod.category || '-'}</TableCell>
-                        <TableCell className="text-xs text-right">R$ {(prod.unitPrice || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-xs">
+                          {prod.category || "-"}
+                        </TableCell>
+                        <TableCell className="text-xs text-right">
+                          R$ {(prod.unitPrice || 0).toFixed(2)}
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowProductSearch(false)}>Fechar</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowProductSearch(false)}
+            >
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

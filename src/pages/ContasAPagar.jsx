@@ -3,14 +3,41 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  DollarSign, Search, LogOut, Printer, Edit, Trash2, CheckSquare, X, ArrowRight
+import {
+  DollarSign,
+  Search,
+  LogOut,
+  Printer,
+  Edit,
+  Trash2,
+  CheckSquare,
+  X,
+  ArrowRight,
 } from "lucide-react";
 import { ContasAPagar } from "@/entities/ContasAPagar";
 import { CashAccount } from "@/entities/CashAccount";
@@ -22,14 +49,29 @@ import { SectorMaster } from "@/entities/SectorMaster";
 import { Person } from "@/entities/Person";
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, isBefore, startOfDay, differenceInDays } from "date-fns";
+import {
+  format,
+  parseISO,
+  isBefore,
+  startOfDay,
+  differenceInDays,
+} from "date-fns";
 import { createPageUrl } from "@/utils";
 import PagamentoModal from "@/components/financial/PagamentoModal";
 
 // Dialog de Baixa (Pagamento)
-function BaixaDialog({ isOpen, onClose, onConfirm, cashAccounts, contas, totalSelecionado }) {
-  const [selectedAccountId, setSelectedAccountId] = useState('');
-  const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+function BaixaDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  cashAccounts,
+  contas,
+  totalSelecionado,
+}) {
+  const [selectedAccountId, setSelectedAccountId] = useState("");
+  const [paymentDate, setPaymentDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
 
   useEffect(() => {
     if (cashAccounts.length > 0) {
@@ -46,29 +88,54 @@ function BaixaDialog({ isOpen, onClose, onConfirm, cashAccounts, contas, totalSe
           <DialogTitle>Pagar Contas</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <p><strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)</p>
-          <p><strong>Valor Total:</strong> <span className="text-red-600 font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalSelecionado)}</span></p>
+          <p>
+            <strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)
+          </p>
+          <p>
+            <strong>Valor Total:</strong>{" "}
+            <span className="text-red-600 font-bold">
+              {new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(totalSelecionado)}
+            </span>
+          </p>
           <div>
             <Label>Data do Pagamento</Label>
-            <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+            <Input
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+            />
           </div>
           <div>
             <Label>Conta/Caixa de Origem *</Label>
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+            <Select
+              value={selectedAccountId}
+              onValueChange={setSelectedAccountId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a conta..." />
               </SelectTrigger>
               <SelectContent>
-                {cashAccounts.map(account => (
-                  <SelectItem key={account.id} value={account.id}>{account.name}</SelectItem>
+                {cashAccounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onConfirm(selectedAccountId, paymentDate)} disabled={!selectedAccountId} className="bg-red-600 hover:bg-red-700">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => onConfirm(selectedAccountId, paymentDate)}
+            disabled={!selectedAccountId}
+            className="bg-red-600 hover:bg-red-700"
+          >
             Confirmar Pagamento
           </Button>
         </DialogFooter>
@@ -79,8 +146,8 @@ function BaixaDialog({ isOpen, onClose, onConfirm, cashAccounts, contas, totalSe
 
 // Dialog de Reagendamento
 function ReagendarDialog({ isOpen, onClose, onConfirm, contas }) {
-  const [novaData, setNovaData] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [motivo, setMotivo] = useState('');
+  const [novaData, setNovaData] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [motivo, setMotivo] = useState("");
 
   if (!contas || contas.length === 0) return null;
 
@@ -91,23 +158,34 @@ function ReagendarDialog({ isOpen, onClose, onConfirm, contas }) {
           <DialogTitle>Reagendar Vencimento</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <p><strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)</p>
+          <p>
+            <strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)
+          </p>
           <div>
             <Label>Nova Data de Vencimento *</Label>
-            <Input type="date" value={novaData} onChange={(e) => setNovaData(e.target.value)} />
+            <Input
+              type="date"
+              value={novaData}
+              onChange={(e) => setNovaData(e.target.value)}
+            />
           </div>
           <div>
             <Label>Motivo do Reagendamento</Label>
-            <Input 
-              value={motivo} 
-              onChange={(e) => setMotivo(e.target.value)} 
+            <Input
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
               placeholder="Informe o motivo..."
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onConfirm(novaData, motivo)} className="bg-blue-600 hover:bg-blue-700">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => onConfirm(novaData, motivo)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             Confirmar Reagendamento
           </Button>
         </DialogFooter>
@@ -139,47 +217,66 @@ export default function ContasAPagarPage() {
   // Modais de pesquisa
   const [showFornecedorSearch, setShowFornecedorSearch] = useState(false);
   const [showNFSearch, setShowNFSearch] = useState(false);
-  const [fornecedorSearchTerm, setFornecedorSearchTerm] = useState('');
-  const [nfSearchTerm, setNfSearchTerm] = useState('');
+  const [fornecedorSearchTerm, setFornecedorSearchTerm] = useState("");
+  const [nfSearchTerm, setNfSearchTerm] = useState("");
 
   // Controle de foco para saber qual campo está ativo
   const [activeSearchField, setActiveSearchField] = useState(null); // 'fornecedor' | 'nf' | null
 
   // Pesquisa - Fornecedor
-  const [fornecedorPesquisa, setFornecedorPesquisa] = useState('');
+  const [fornecedorPesquisa, setFornecedorPesquisa] = useState("");
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
 
   // Filtros
-  const [filtroConta, setFiltroConta] = useState('todas');
-  const [filtroSectorMaster, setFiltroSectorMaster] = useState('todos');
-  const [filtroNFe, setFiltroNFe] = useState('');
+  const [filtroConta, setFiltroConta] = useState("todas");
+  const [filtroSectorMaster, setFiltroSectorMaster] = useState("todos");
+  const [filtroNFe, setFiltroNFe] = useState("");
   const [statusContas, setStatusContas] = useState({
     naoPagas: true,
-    pagas: false
+    pagas: false,
   });
 
   // Ordenação
-  const [ordenacao, setOrdenacao] = useState('vencimento');
+  const [ordenacao, setOrdenacao] = useState("vencimento");
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       const user = await User.me();
       setCurrentUser(user);
-      
+
       if (!user?.companyId) {
-        toast({ title: "Atenção", description: "Usuário não vinculado a uma empresa.", variant: "destructive" });
+        toast({
+          title: "Atenção",
+          description: "Usuário não vinculado a uma empresa.",
+          variant: "destructive",
+        });
         return;
       }
 
-      const [contasData, cashAccountsData, paymentTypesData, sectorsData, sectorMastersData, groupsData, suppliersData] = await Promise.all([
-        ContasAPagar.filter({ companyId: user.companyId }, { sort: '-dueDate' }),
+      const [
+        contasData,
+        cashAccountsData,
+        paymentTypesData,
+        sectorsData,
+        sectorMastersData,
+        groupsData,
+        suppliersData,
+      ] = await Promise.all([
+        ContasAPagar.filter(
+          { companyId: user.companyId },
+          { sort: "-dueDate" },
+        ),
         CashAccount.filter({ companyId: user.companyId, active: true }),
         PaymentType.filter({ companyId: user.companyId, active: true }),
         Sector.filter({ companyId: user.companyId, active: true }),
         SectorMaster.filter({ companyId: user.companyId }),
-        FinancialGroup.filter({ companyId: user.companyId, type: 'despesa', active: true }),
-        Person.filter({ companyId: user.companyId, type: 'fornecedor' })
+        FinancialGroup.filter({
+          companyId: user.companyId,
+          type: "despesa",
+          active: true,
+        }),
+        Person.filter({ companyId: user.companyId, type: "fornecedor" }),
       ]);
       setContas(contasData);
       setCashAccounts(cashAccountsData);
@@ -190,7 +287,11 @@ export default function ContasAPagarPage() {
       setSuppliers(suppliersData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar as contas a pagar.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as contas a pagar.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -203,50 +304,68 @@ export default function ContasAPagarPage() {
   // Função para aplicar filtros e exibir resultados
   const applyFiltersAndShow = () => {
     const today = startOfDay(new Date());
-    
-    const filtered = contas.filter(c => {
-      const dueDate = parseISO(c.dueDate);
-      const isVencida = c.status === 'aberto' && isBefore(dueDate, today);
-      const isPaga = c.status === 'pago';
-      
-      // Filtro de status
-      if (!statusContas.naoPagas && !isPaga) return false;
-      if (!statusContas.pagas && isPaga) return false;
 
-      // Filtro de fornecedor
-      if (fornecedorPesquisa) {
-        const term = fornecedorPesquisa.toLowerCase();
-        if (!c.supplierName?.toLowerCase().includes(term)) return false;
-      }
+    const filtered = contas
+      .filter((c) => {
+        const dueDate = c.dueDate;
+        const isVencida = c.status === "aberto" && isBefore(dueDate, today);
+        const isPaga = c.status === "pago";
 
-      // Filtro de conta
-      if (filtroConta !== 'todas' && c.cashAccountId !== filtroConta) return false;
+        // Filtro de status
+        if (!statusContas.naoPagas && !isPaga) return false;
+        if (!statusContas.pagas && isPaga) return false;
 
-      // Filtro de setor master
-      if (filtroSectorMaster !== 'todos' && c.sectorMasterId !== filtroSectorMaster) return false;
+        // Filtro de fornecedor
+        if (fornecedorPesquisa) {
+          const term = fornecedorPesquisa.toLowerCase();
+          if (!c.supplierName?.toLowerCase().includes(term)) return false;
+        }
 
-      // Filtro de NFe
-      if (filtroNFe) {
-        if (!c.nfeNumber?.toLowerCase().includes(filtroNFe.toLowerCase())) return false;
-      }
+        // Filtro de conta
+        if (filtroConta !== "todas" && c.cashAccountId !== filtroConta)
+          return false;
 
-      return true;
-    }).map(c => {
-      const dueDate = parseISO(c.dueDate);
-      const today = startOfDay(new Date());
-      const isVencida = c.status === 'aberto' && isBefore(dueDate, today);
-      const diasParaVencer = differenceInDays(dueDate, today);
-      const isVenceHoje = diasParaVencer === 0 && c.status === 'aberto';
-      const isVenceEm3Dias = diasParaVencer > 0 && diasParaVencer <= 3 && c.status === 'aberto';
-      
-      return { ...c, isVencida: isVencida, isVenceHoje: isVenceHoje, isVenceEm_3Dias: isVenceEm3Dias };
-    }).sort((a, b) => {
-      if (ordenacao === 'vencimento') return new Date(a.dueDate) - new Date(b.dueDate);
-      if (ordenacao === 'codigo') return (a.id || '').localeCompare(b.id || '');
-      if (ordenacao === 'fornecedor') return (a.supplierName || '').localeCompare(b.supplierName || '');
-      if (ordenacao === 'valor') return (b.amount || 0) - (a.amount || 0);
-      return 0;
-    });
+        // Filtro de setor master
+        if (
+          filtroSectorMaster !== "todos" &&
+          c.sectorMasterId !== filtroSectorMaster
+        )
+          return false;
+
+        // Filtro de NFe
+        if (filtroNFe) {
+          if (!c.nfeNumber?.toLowerCase().includes(filtroNFe.toLowerCase()))
+            return false;
+        }
+
+        return true;
+      })
+      .map((c) => {
+        const dueDate = c.dueDate;
+        const today = startOfDay(new Date());
+        const isVencida = c.status === "aberto" && isBefore(dueDate, today);
+        const diasParaVencer = differenceInDays(dueDate, today);
+        const isVenceHoje = diasParaVencer === 0 && c.status === "aberto";
+        const isVenceEm3Dias =
+          diasParaVencer > 0 && diasParaVencer <= 3 && c.status === "aberto";
+
+        return {
+          ...c,
+          isVencida: isVencida,
+          isVenceHoje: isVenceHoje,
+          isVenceEm_3Dias: isVenceEm3Dias,
+        };
+      })
+      .sort((a, b) => {
+        if (ordenacao === "vencimento")
+          return new Date(a.dueDate) - new Date(b.dueDate);
+        if (ordenacao === "codigo")
+          return (a.id || "").localeCompare(b.id || "");
+        if (ordenacao === "fornecedor")
+          return (a.supplierName || "").localeCompare(b.supplierName || "");
+        if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
+        return 0;
+      });
 
     setDisplayedContas(filtered);
     setShowResults(true);
@@ -256,26 +375,36 @@ export default function ContasAPagarPage() {
 
   // Cálculos de totais
   const totais = {
-    pago: contas.filter(c => c.status === 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
-    aPagar: filteredContas.filter(c => c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
-    vencido: filteredContas.filter(c => c.isVencida).reduce((sum, c) => sum + (c.amount || 0), 0),
-    aVencer: filteredContas.filter(c => !c.isVencida && c.status !== 'pago').reduce((sum, c) => sum + (c.amount || 0), 0),
+    pago: contas
+      .filter((c) => c.status === "pago")
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
+    aPagar: filteredContas
+      .filter((c) => c.status !== "pago")
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
+    vencido: filteredContas
+      .filter((c) => c.isVencida)
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
+    aVencer: filteredContas
+      .filter((c) => !c.isVencida && c.status !== "pago")
+      .reduce((sum, c) => sum + (c.amount || 0), 0),
     selecionado: selectedContas.reduce((sum, id) => {
-      const conta = contas.find(c => c.id === id);
+      const conta = contas.find((c) => c.id === id);
       return sum + (conta?.amount || 0);
-    }, 0)
+    }, 0),
   };
 
   const toggleSelectConta = (contaId) => {
-    setSelectedContas(prev => 
-      prev.includes(contaId) 
-        ? prev.filter(id => id !== contaId)
-        : [...prev, contaId]
+    setSelectedContas((prev) =>
+      prev.includes(contaId)
+        ? prev.filter((id) => id !== contaId)
+        : [...prev, contaId],
     );
   };
 
   const selectAll = () => {
-    setSelectedContas(filteredContas.filter(c => c.status === 'aberto').map(c => c.id));
+    setSelectedContas(
+      filteredContas.filter((c) => c.status === "aberto").map((c) => c.id),
+    );
   };
 
   const deselectAll = () => {
@@ -291,7 +420,9 @@ export default function ContasAPagarPage() {
 
   const getSelectedContasForAction = () => {
     if (selectedContas.length > 0) {
-      return selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean);
+      return selectedContas
+        .map((id) => contas.find((c) => c.id === id))
+        .filter(Boolean);
     }
     if (selectedContaForAction) {
       return [selectedContaForAction];
@@ -301,7 +432,11 @@ export default function ContasAPagarPage() {
 
   const handleExcluir = () => {
     if (!hasSelection) {
-      toast({ title: "Atenção", description: "Selecione uma conta para excluir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione uma conta para excluir.",
+        variant: "destructive",
+      });
       return;
     }
     setIsDeleteConfirmOpen(true);
@@ -310,32 +445,43 @@ export default function ContasAPagarPage() {
   const confirmExcluir = async () => {
     const contasToDelete = getSelectedContasForAction();
     if (contasToDelete.length === 0) return;
-    
+
     try {
       let deletedCount = 0;
       let notFoundCount = 0;
-      
+
       for (const conta of contasToDelete) {
         try {
           await ContasAPagar.delete(conta.id);
           deletedCount++;
         } catch (err) {
           // Se a conta não existe mais (404), apenas conta como "não encontrada"
-          if (err.message?.includes('not found') || err.response?.status === 404 || err.message?.includes('404')) {
+          if (
+            err.message?.includes("not found") ||
+            err.response?.status === 404 ||
+            err.message?.includes("404")
+          ) {
             notFoundCount++;
           } else {
             throw err;
           }
         }
       }
-      
+
       if (deletedCount > 0) {
-        toast({ title: "Sucesso", description: `${deletedCount} conta(s) excluída(s) com sucesso!` });
+        toast({
+          title: "Sucesso",
+          description: `${deletedCount} conta(s) excluída(s) com sucesso!`,
+        });
       }
       if (notFoundCount > 0) {
-        toast({ title: "Aviso", description: `${notFoundCount} conta(s) já havia(m) sido excluída(s).`, variant: "default" });
+        toast({
+          title: "Aviso",
+          description: `${notFoundCount} conta(s) já havia(m) sido excluída(s).`,
+          variant: "default",
+        });
       }
-      
+
       setIsDeleteConfirmOpen(false);
       setSelectedContaForAction(null);
       setSelectedContas([]);
@@ -345,7 +491,11 @@ export default function ContasAPagarPage() {
       }
     } catch (error) {
       console.error("Erro ao excluir conta:", error);
-      toast({ title: "Erro", description: "Não foi possível excluir a(s) conta(s).", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a(s) conta(s).",
+        variant: "destructive",
+      });
       // Mesmo em erro, recarrega os dados para manter consistência
       await loadData();
     }
@@ -353,15 +503,26 @@ export default function ContasAPagarPage() {
 
   const handleModificar = () => {
     if (!hasSelection) {
-      toast({ title: "Atenção", description: "Selecione uma conta para modificar.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione uma conta para modificar.",
+        variant: "destructive",
+      });
       return;
     }
-    toast({ title: "Info", description: "Funcionalidade de modificação em desenvolvimento." });
+    toast({
+      title: "Info",
+      description: "Funcionalidade de modificação em desenvolvimento.",
+    });
   };
 
   const handlePagar = () => {
     if (selectedContas.length === 0) {
-      toast({ title: "Atenção", description: "Selecione pelo menos uma conta para pagar.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione pelo menos uma conta para pagar.",
+        variant: "destructive",
+      });
       return;
     }
     setIsPagamentoOpen(true);
@@ -369,28 +530,38 @@ export default function ContasAPagarPage() {
 
   const handleConfirmPagamento = async (cashAccountId, paidDate) => {
     if (!cashAccountId || !currentUser) {
-      toast({ title: "Erro", description: "Dados incompletos para pagar as contas.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Dados incompletos para pagar as contas.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     try {
-      const payingAccount = cashAccounts.find(acc => acc.id === cashAccountId);
+      const payingAccount = cashAccounts.find(
+        (acc) => acc.id === cashAccountId,
+      );
       if (!payingAccount) {
-        toast({ title: "Erro", description: "Conta de caixa selecionada não encontrada.", variant: "destructive" });
+        toast({
+          title: "Erro",
+          description: "Conta de caixa selecionada não encontrada.",
+          variant: "destructive",
+        });
         return;
       }
 
       let totalPago = 0;
 
       for (const contaId of selectedContas) {
-        const conta = contas.find(c => c.id === contaId);
-        if (!conta || conta.status === 'pago') continue;
+        const conta = contas.find((c) => c.id === contaId);
+        if (!conta || conta.status === "pago") continue;
 
         // Criar movimento de caixa (despesa)
         await CashMovement.create({
           cashAccountId: payingAccount.id,
           cashAccountName: payingAccount.name,
-          type: 'despesa',
+          type: "despesa",
           description: `Pagamento: ${conta.description}`,
           amount: conta.amount,
           personId: conta.supplierId,
@@ -398,12 +569,12 @@ export default function ContasAPagarPage() {
           movementDate: paidDate,
           companyId: currentUser.companyId,
           companyName: currentUser.companyName,
-          createdByName: currentUser.fullName,
+          createdByName: currentUser.name,
         });
 
         // Atualizar status da conta
         await ContasAPagar.update(contaId, {
-          status: 'pago',
+          status: "pago",
           paymentDate: paidDate,
         });
 
@@ -414,7 +585,10 @@ export default function ContasAPagarPage() {
       const newBalance = (payingAccount.balance || 0) - totalPago;
       await CashAccount.update(payingAccount.id, { balance: newBalance });
 
-      toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) paga(s) com sucesso!` });
+      toast({
+        title: "Sucesso",
+        description: `${selectedContas.length} conta(s) paga(s) com sucesso!`,
+      });
       setIsBaixaOpen(false);
       setSelectedContas([]);
       await loadData();
@@ -424,13 +598,21 @@ export default function ContasAPagarPage() {
       }, 100);
     } catch (error) {
       console.error("Erro ao pagar contas:", error);
-      toast({ title: "Erro", description: `Não foi possível pagar as contas. ${error.message}`, variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: `Não foi possível pagar as contas. ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
   const handleReagendar = () => {
     if (selectedContas.length === 0) {
-      toast({ title: "Atenção", description: "Selecione pelo menos uma conta para reagendar.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione pelo menos uma conta para reagendar.",
+        variant: "destructive",
+      });
       return;
     }
     setIsReagendarOpen(true);
@@ -439,31 +621,42 @@ export default function ContasAPagarPage() {
   const handleConfirmReagendar = async (novaData, motivo) => {
     try {
       for (const contaId of selectedContas) {
-        const conta = contas.find(c => c.id === contaId);
-        if (!conta || conta.status === 'pago') continue;
+        const conta = contas.find((c) => c.id === contaId);
+        if (!conta || conta.status === "pago") continue;
 
         await ContasAPagar.update(contaId, {
           dueDate: novaData,
           reagendamentoMotivo: motivo,
-          reagendamentoData: format(new Date(), 'yyyy-MM-dd')
+          reagendamentoData: format(new Date(), "yyyy-MM-dd"),
         });
       }
 
-      toast({ title: "Sucesso", description: `${selectedContas.length} conta(s) reagendada(s) com sucesso!` });
+      toast({
+        title: "Sucesso",
+        description: `${selectedContas.length} conta(s) reagendada(s) com sucesso!`,
+      });
       setIsReagendarOpen(false);
       setSelectedContas([]);
       loadData();
       if (showResults) applyFiltersAndShow();
     } catch (error) {
       console.error("Erro ao reagendar:", error);
-      toast({ title: "Erro", description: "Não foi possível reagendar as contas.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível reagendar as contas.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleImprimir = () => {
     const contasToPrint = getSelectedContasForAction();
     if (contasToPrint.length === 0) {
-      toast({ title: "Atenção", description: "Selecione ao menos uma conta para imprimir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione ao menos uma conta para imprimir.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -491,7 +684,7 @@ export default function ContasAPagarPage() {
       </head>
       <body>
         <h1>Relatório de Contas a Pagar</h1>
-        <p class="subtitle">Emitido em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+        <p class="subtitle">Emitido em: ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
         
         <table>
           <thead>
@@ -507,23 +700,27 @@ export default function ContasAPagarPage() {
             </tr>
           </thead>
           <tbody>
-            ${contasToPrint.map(conta => `
+            ${contasToPrint
+              .map(
+                (conta) => `
               <tr>
-                <td>${conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yyyy') : '-'}</td>
-                <td>${conta.purchaseId?.slice(-6) || '-'}</td>
-                <td>${conta.nfeNumber || '-'}</td>
-                <td>${format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</td>
+                <td>${conta.createdAt ? format(conta.createdAt, "dd/MM/yyyy") : "-"}</td>
+                <td>${conta.purchaseId?.slice(-6) || "-"}</td>
+                <td>${conta.nfeNumber || "-"}</td>
+                <td>${format(conta.dueDate, "dd/MM/yyyy")}</td>
                 <td class="text-right">${formatCurrency(conta.amount)}</td>
-                <td>${conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</td>
-                <td class="text-right">${conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</td>
-                <td>${conta.supplierName || '-'}</td>
+                <td>${conta.paymentDate ? format(conta.paymentDate, "dd/MM/yyyy") : "-"}</td>
+                <td class="text-right">${conta.status === "pago" ? formatCurrency(conta.amount) : "-"}</td>
+                <td>${conta.supplierName || "-"}</td>
               </tr>
-            `).join('')}
+            `,
+              )
+              .join("")}
             <tr class="total-row">
               <td colspan="4" class="text-right"><strong>TOTAL:</strong></td>
               <td class="text-right"><strong>${formatCurrency(contasToPrint.reduce((sum, c) => sum + (c.amount || 0), 0))}</strong></td>
               <td></td>
-              <td class="text-right"><strong>${formatCurrency(contasToPrint.filter(c => c.status === 'pago').reduce((sum, c) => sum + (c.amount || 0), 0))}</strong></td>
+              <td class="text-right"><strong>${formatCurrency(contasToPrint.filter((c) => c.status === "pago").reduce((sum, c) => sum + (c.amount || 0), 0))}</strong></td>
               <td></td>
             </tr>
           </tbody>
@@ -536,13 +733,13 @@ export default function ContasAPagarPage() {
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       applyFiltersAndShow();
     }
@@ -550,12 +747,12 @@ export default function ContasAPagarPage() {
 
   const handlePesquisarClick = () => {
     // Se o campo de fornecedor está ativo, abre modal de fornecedor
-    if (activeSearchField === 'fornecedor') {
+    if (activeSearchField === "fornecedor") {
       setShowFornecedorSearch(true);
       return;
     }
     // Se o campo de NF está ativo, abre modal de NF
-    if (activeSearchField === 'nf') {
+    if (activeSearchField === "nf") {
       setShowNFSearch(true);
       return;
     }
@@ -566,9 +763,9 @@ export default function ContasAPagarPage() {
   const handleSair = () => {
     // Verifica se veio de alguma página específica via URL params
     const urlParams = new URLSearchParams(window.location.search);
-    const returnTo = urlParams.get('return');
-    
-    if (returnTo === 'cashMovements') {
+    const returnTo = urlParams.get("return");
+
+    if (returnTo === "cashMovements") {
       window.location.href = createPageUrl("CashMovements");
     } else {
       window.location.href = createPageUrl("Dashboard");
@@ -576,14 +773,18 @@ export default function ContasAPagarPage() {
   };
 
   const getRowColor = (conta) => {
-    if (conta.status === 'pago') return 'bg-green-50';
-    if (conta.isVenceHoje) return 'bg-yellow-50';
-    if (conta.isVenceEm_3Dias) return 'bg-orange-50';
-    if (conta.isVencida) return 'bg-red-50';
-    return '';
+    if (conta.status === "pago") return "bg-green-50";
+    if (conta.isVenceHoje) return "bg-yellow-50";
+    if (conta.isVenceEm_3Dias) return "bg-orange-50";
+    if (conta.isVencida) return "bg-red-50";
+    return "";
   };
 
-  const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value || 0);
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
@@ -593,12 +794,14 @@ export default function ContasAPagarPage() {
       </div>
 
       {/* Dialogs */}
-      <BaixaDialog 
+      <BaixaDialog
         isOpen={isBaixaOpen}
         onClose={() => setIsBaixaOpen(false)}
         onConfirm={handleConfirmPagamento}
         cashAccounts={cashAccounts}
-        contas={selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean)}
+        contas={selectedContas
+          .map((id) => contas.find((c) => c.id === id))
+          .filter(Boolean)}
         totalSelecionado={totais.selecionado}
       />
 
@@ -606,13 +809,18 @@ export default function ContasAPagarPage() {
         isOpen={isReagendarOpen}
         onClose={() => setIsReagendarOpen(false)}
         onConfirm={handleConfirmReagendar}
-        contas={selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean)}
+        contas={selectedContas
+          .map((id) => contas.find((c) => c.id === id))
+          .filter(Boolean)}
       />
 
       <PagamentoModal
         open={isPagamentoOpen}
         onOpenChange={setIsPagamentoOpen}
-        contas={selectedContas.map(id => contas.find(c => c.id === id)).filter(Boolean).filter(c => c.status !== 'pago')}
+        contas={selectedContas
+          .map((id) => contas.find((c) => c.id === id))
+          .filter(Boolean)
+          .filter((c) => c.status !== "pago")}
         cashAccounts={cashAccounts}
         currentUser={currentUser}
         onPaymentComplete={() => {
@@ -627,37 +835,41 @@ export default function ContasAPagarPage() {
       {/* Main Content */}
       <div className="flex-1 p-4 overflow-auto">
         <div className="max-w-full mx-auto space-y-4">
-          
           {/* SEÇÃO DE FILTROS - 4 BLOCOS */}
           <div className="grid grid-cols-12 gap-4">
-            
             {/* 1. PESQUISA */}
             <div className="col-span-3">
               <Card className="bg-white border-slate-300 h-full">
                 <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">Pesquisa</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
+                    Pesquisa
+                  </h4>
                   <div>
                     <Label className="text-xs">Fornecedor:</Label>
                     <div className="flex gap-1">
                       <div className="flex-1 relative">
-                        <Input 
-                          value={fornecedorSelecionado?.name || fornecedorPesquisa}
+                        <Input
+                          value={
+                            fornecedorSelecionado?.name || fornecedorPesquisa
+                          }
                           onChange={(e) => {
                             setFornecedorPesquisa(e.target.value);
                             setFornecedorSelecionado(null);
                           }}
                           onKeyDown={handleKeyDown}
-                          onFocus={() => setActiveSearchField('fornecedor')}
-                          onBlur={() => setTimeout(() => setActiveSearchField(null), 200)}
-                          className={`h-8 text-xs pr-6 ${activeSearchField === 'fornecedor' ? 'ring-2 ring-blue-500' : ''}`}
+                          onFocus={() => setActiveSearchField("fornecedor")}
+                          onBlur={() =>
+                            setTimeout(() => setActiveSearchField(null), 200)
+                          }
+                          className={`h-8 text-xs pr-6 ${activeSearchField === "fornecedor" ? "ring-2 ring-blue-500" : ""}`}
                           placeholder="Digite o nome ou use Pesquisar..."
                         />
                         {(fornecedorSelecionado || fornecedorPesquisa) && (
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setFornecedorSelecionado(null);
-                              setFornecedorPesquisa('');
+                              setFornecedorPesquisa("");
                             }}
                             className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                           >
@@ -666,7 +878,9 @@ export default function ContasAPagarPage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">Deixe em branco para todos</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Deixe em branco para todos
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -676,51 +890,75 @@ export default function ContasAPagarPage() {
             <div className="col-span-4">
               <Card className="bg-white border-slate-300 h-full">
                 <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">Filtros</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
+                    Filtros
+                  </h4>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label className="text-xs">Conta:</Label>
-                        <Select value={filtroConta} onValueChange={setFiltroConta}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                        <Select
+                          value={filtroConta}
+                          onValueChange={setFiltroConta}
+                        >
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="todas">Todas</SelectItem>
-                            {cashAccounts.map(acc => (
-                              <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                            {cashAccounts.map((acc) => (
+                              <SelectItem key={acc.id} value={acc.id}>
+                                {acc.name}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label className="text-xs">Setor Master:</Label>
-                        <Select value={filtroSectorMaster} onValueChange={setFiltroSectorMaster}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                        <Select
+                          value={filtroSectorMaster}
+                          onValueChange={setFiltroSectorMaster}
+                        >
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="todos">Todos</SelectItem>
-                            {sectorMasters.map(sm => (
-                              <SelectItem key={sm.id} value={sm.id}>{sm.name}</SelectItem>
+                            {sectorMasters.map((sm) => (
+                              <SelectItem key={sm.id} value={sm.id}>
+                                {sm.name}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <Checkbox 
-                          id="naoPagasPagar" 
+                        <Checkbox
+                          id="naoPagasPagar"
                           checked={statusContas.naoPagas}
-                          onCheckedChange={(v) => setStatusContas(p => ({...p, naoPagas: v}))}
+                          onCheckedChange={(v) =>
+                            setStatusContas((p) => ({ ...p, naoPagas: v }))
+                          }
                         />
-                        <label htmlFor="naoPagasPagar" className="text-xs">Não Pagas</label>
+                        <label htmlFor="naoPagasPagar" className="text-xs">
+                          Não Pagas
+                        </label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Checkbox 
-                          id="pagasPagar" 
+                        <Checkbox
+                          id="pagasPagar"
                           checked={statusContas.pagas}
-                          onCheckedChange={(v) => setStatusContas(p => ({...p, pagas: v}))}
+                          onCheckedChange={(v) =>
+                            setStatusContas((p) => ({ ...p, pagas: v }))
+                          }
                         />
-                        <label htmlFor="pagasPagar" className="text-xs">Pagas</label>
+                        <label htmlFor="pagasPagar" className="text-xs">
+                          Pagas
+                        </label>
                       </div>
                     </div>
 
@@ -728,20 +966,22 @@ export default function ContasAPagarPage() {
                       <Label className="text-xs">Número da NF:</Label>
                       <div className="flex gap-1">
                         <div className="flex-1 relative">
-                          <Input 
+                          <Input
                             value={filtroNFe}
                             onChange={(e) => setFiltroNFe(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            onFocus={() => setActiveSearchField('nf')}
-                            onBlur={() => setTimeout(() => setActiveSearchField(null), 200)}
-                            className={`h-7 text-xs pr-6 ${activeSearchField === 'nf' ? 'ring-2 ring-blue-500' : ''}`}
+                            onFocus={() => setActiveSearchField("nf")}
+                            onBlur={() =>
+                              setTimeout(() => setActiveSearchField(null), 200)
+                            }
+                            className={`h-7 text-xs pr-6 ${activeSearchField === "nf" ? "ring-2 ring-blue-500" : ""}`}
                             placeholder="Digite o número ou use Pesquisar..."
                           />
                           {filtroNFe && (
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setFiltroNFe('');
+                                setFiltroNFe("");
                               }}
                               className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                             >
@@ -760,7 +1000,9 @@ export default function ContasAPagarPage() {
             <div className="col-span-2">
               <Card className="bg-white border-slate-300 h-full">
                 <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">Legenda</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
+                    Legenda
+                  </h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-red-400 rounded"></div>
@@ -787,29 +1029,46 @@ export default function ContasAPagarPage() {
             <div className="col-span-3">
               <Card className="bg-white border-slate-300 h-full">
                 <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">Ordenação</h4>
-                  <RadioGroup value={ordenacao} onValueChange={setOrdenacao} className="space-y-1">
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
+                    Ordenação
+                  </h4>
+                  <RadioGroup
+                    value={ordenacao}
+                    onValueChange={setOrdenacao}
+                    className="space-y-1"
+                  >
                     <div className="flex items-center gap-2">
-                      <RadioGroupItem value="vencimento" id="ordVencimentoPagar" />
-                      <label htmlFor="ordVencimentoPagar" className="text-xs">Vencimento</label>
+                      <RadioGroupItem
+                        value="vencimento"
+                        id="ordVencimentoPagar"
+                      />
+                      <label htmlFor="ordVencimentoPagar" className="text-xs">
+                        Vencimento
+                      </label>
                     </div>
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="codigo" id="ordCodigoPagar" />
-                      <label htmlFor="ordCodigoPagar" className="text-xs">Código</label>
+                      <label htmlFor="ordCodigoPagar" className="text-xs">
+                        Código
+                      </label>
                     </div>
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="fornecedor" id="ordFornecedor" />
-                      <label htmlFor="ordFornecedor" className="text-xs">Fornecedor</label>
+                      <label htmlFor="ordFornecedor" className="text-xs">
+                        Fornecedor
+                      </label>
                     </div>
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="valor" id="ordValorPagar" />
-                      <label htmlFor="ordValorPagar" className="text-xs">Valor</label>
+                      <label htmlFor="ordValorPagar" className="text-xs">
+                        Valor
+                      </label>
                     </div>
                   </RadioGroup>
-                  
-                  <Button 
+
+                  <Button
                     className="w-full mt-3 text-white text-xs h-8 gap-1"
-                    style={{ backgroundColor: '#e78b3a' }}
+                    style={{ backgroundColor: "#e78b3a" }}
                     onClick={applyFiltersAndShow}
                   >
                     <ArrowRight className="w-4 h-4" />
@@ -827,80 +1086,137 @@ export default function ContasAPagarPage() {
                   <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
                     <div className="text-center">
                       <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>Selecione os filtros e clique em <strong>Pesquisar</strong></p>
+                      <p>
+                        Selecione os filtros e clique em{" "}
+                        <strong>Pesquisar</strong>
+                      </p>
                     </div>
                   </div>
                 ) : (
-                <Table>
-                  <TableHeader className="bg-slate-100 sticky top-0">
-                    <TableRow>
-                      <TableHead className="w-8 text-xs">S</TableHead>
-                      <TableHead className="text-xs w-20">Data</TableHead>
-                      <TableHead className="text-xs w-20">Código</TableHead>
-                      <TableHead className="text-xs w-20">N Fiscal</TableHead>
-                      <TableHead className="text-xs w-16">Tipo</TableHead>
-                      <TableHead className="text-xs w-20">Tp Pagto</TableHead>
-                      <TableHead className="text-xs w-12">Parc</TableHead>
-                      <TableHead className="text-xs w-24">Dt Vencto</TableHead>
-                      <TableHead className="text-xs w-24 text-right">Valor</TableHead>
-                      <TableHead className="text-xs w-24">Dt Pagto</TableHead>
-                      <TableHead className="text-xs w-24 text-right">Vl Pago</TableHead>
-                      <TableHead className="text-xs w-20">Situação</TableHead>
-                      <TableHead className="text-xs">Fornecedor</TableHead>
-                      <TableHead className="text-xs w-24">Grupo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
+                  <Table>
+                    <TableHeader className="bg-slate-100 sticky top-0">
                       <TableRow>
-                        <TableCell colSpan={14} className="text-center py-8">Carregando...</TableCell>
+                        <TableHead className="w-8 text-xs">S</TableHead>
+                        <TableHead className="text-xs w-20">Data</TableHead>
+                        <TableHead className="text-xs w-20">Código</TableHead>
+                        <TableHead className="text-xs w-20">N Fiscal</TableHead>
+                        <TableHead className="text-xs w-16">Tipo</TableHead>
+                        <TableHead className="text-xs w-20">Tp Pagto</TableHead>
+                        <TableHead className="text-xs w-12">Parc</TableHead>
+                        <TableHead className="text-xs w-24">
+                          Dt Vencto
+                        </TableHead>
+                        <TableHead className="text-xs w-24 text-right">
+                          Valor
+                        </TableHead>
+                        <TableHead className="text-xs w-24">Dt Pagto</TableHead>
+                        <TableHead className="text-xs w-24 text-right">
+                          Vl Pago
+                        </TableHead>
+                        <TableHead className="text-xs w-20">Situação</TableHead>
+                        <TableHead className="text-xs">Fornecedor</TableHead>
+                        <TableHead className="text-xs w-24">Grupo</TableHead>
                       </TableRow>
-                    ) : filteredContas.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={14} className="text-center py-8 text-slate-500">
-                          Nenhuma conta encontrada com os filtros selecionados.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredContas.map(conta => (
-                        <TableRow 
-                          key={conta.id} 
-                          className={`${getRowColor(conta)} hover:bg-slate-100 cursor-pointer ${selectedContaForAction?.id === conta.id ? 'ring-2 ring-blue-500' : ''}`}
-                          onClick={() => handleRowClick(conta)}
-                        >
-                          <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                            <Checkbox 
-                              checked={selectedContas.includes(conta.id)}
-                              onCheckedChange={() => toggleSelectConta(conta.id)}
-                              disabled={conta.status === 'pago'}
-                            />
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={14} className="text-center py-8">
+                            Carregando...
                           </TableCell>
-                          <TableCell className="text-xs">{conta.createdDate ? format(parseISO(conta.createdDate), 'dd/MM/yy') : '-'}</TableCell>
-                          <TableCell className="text-xs font-mono">{conta.purchaseId?.slice(-6) || conta.id?.slice(-6)}</TableCell>
-                          <TableCell className="text-xs">{conta.nfeNumber || '-'}</TableCell>
-                          <TableCell className="text-xs">{conta.documentType || '-'}</TableCell>
-                          <TableCell className="text-xs">{conta.paymentTypeName || '-'}</TableCell>
-                          <TableCell className="text-xs text-center">{conta.installmentNumber || '1'}</TableCell>
-                          <TableCell className="text-xs">{format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</TableCell>
-                          <TableCell className="text-xs text-right font-mono">{formatCurrency(conta.amount)}</TableCell>
-                          <TableCell className="text-xs">{conta.paymentDate ? format(parseISO(conta.paymentDate), 'dd/MM/yyyy') : '-'}</TableCell>
-                          <TableCell className="text-xs text-right font-mono">{conta.status === 'pago' ? formatCurrency(conta.amount) : '-'}</TableCell>
-                          <TableCell className="text-xs">
-                            {conta.status === 'pago' ? (
-                              <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
-                            ) : conta.isVencida ? (
-                              <Badge className="bg-red-100 text-red-800 text-xs">Vencido</Badge>
-                            ) : (
-                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">Aberto</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-xs">{conta.supplierName}</TableCell>
-                          <TableCell className="text-xs">{conta.groupName || '-'}</TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : filteredContas.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={14}
+                            className="text-center py-8 text-slate-500"
+                          >
+                            Nenhuma conta encontrada com os filtros
+                            selecionados.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredContas.map((conta) => (
+                          <TableRow
+                            key={conta.id}
+                            className={`${getRowColor(conta)} hover:bg-slate-100 cursor-pointer ${selectedContaForAction?.id === conta.id ? "ring-2 ring-blue-500" : ""}`}
+                            onClick={() => handleRowClick(conta)}
+                          >
+                            <TableCell
+                              className="text-center"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={selectedContas.includes(conta.id)}
+                                onCheckedChange={() =>
+                                  toggleSelectConta(conta.id)
+                                }
+                                disabled={conta.status === "pago"}
+                              />
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.createdAt
+                                ? format(conta.createdAt, "dd/MM/yy")
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-xs font-mono">
+                              {conta.purchaseId?.slice(-6) ||
+                                conta.id?.slice(-6)}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.nfeNumber || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.documentType || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.paymentTypeName || "-"}
+                            </TableCell>
+                            <TableCell className="text-xs text-center">
+                              {conta.installmentNumber || "1"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {format(conta.dueDate, "dd/MM/yyyy")}
+                            </TableCell>
+                            <TableCell className="text-xs text-right font-mono">
+                              {formatCurrency(conta.amount)}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.paymentDate
+                                ? format(conta.paymentDate, "dd/MM/yyyy")
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-xs text-right font-mono">
+                              {conta.status === "pago"
+                                ? formatCurrency(conta.amount)
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.status === "pago" ? (
+                                <Badge className="bg-green-100 text-green-800 text-xs">
+                                  Pago
+                                </Badge>
+                              ) : conta.isVencida ? (
+                                <Badge className="bg-red-100 text-red-800 text-xs">
+                                  Vencido
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                  Aberto
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.supplierName}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {conta.groupName || "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 )}
               </div>
             </CardContent>
@@ -910,23 +1226,33 @@ export default function ContasAPagarPage() {
           <div className="grid grid-cols-5 gap-4 p-3 bg-white rounded-lg border border-slate-300">
             <div className="text-center">
               <p className="text-xs text-slate-600">Pago:</p>
-              <p className="text-sm font-bold text-green-600">{formatCurrency(totais.pago)}</p>
+              <p className="text-sm font-bold text-green-600">
+                {formatCurrency(totais.pago)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">A pagar:</p>
-              <p className="text-sm font-bold text-blue-600">{formatCurrency(totais.aPagar)}</p>
+              <p className="text-sm font-bold text-blue-600">
+                {formatCurrency(totais.aPagar)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">Total Vencido:</p>
-              <p className="text-sm font-bold text-red-600">{formatCurrency(totais.vencido)}</p>
+              <p className="text-sm font-bold text-red-600">
+                {formatCurrency(totais.vencido)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">Total a Vencer:</p>
-              <p className="text-sm font-bold text-blue-600">{formatCurrency(totais.aVencer)}</p>
+              <p className="text-sm font-bold text-blue-600">
+                {formatCurrency(totais.aVencer)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-slate-600">Total Selecionado:</p>
-              <p className="text-sm font-bold text-green-700">{formatCurrency(totais.selecionado)}</p>
+              <p className="text-sm font-bold text-green-700">
+                {formatCurrency(totais.selecionado)}
+              </p>
             </div>
           </div>
         </div>
@@ -935,43 +1261,53 @@ export default function ContasAPagarPage() {
       {/* BARRA DE AÇÕES */}
       <div className="bg-slate-200 border-t border-slate-300 p-2">
         <div className="flex flex-wrap gap-1 items-center">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 text-xs gap-1" 
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
             disabled={!hasSelection}
             onClick={handleModificar}
           >
             <Edit className="w-3 h-3" /> Alterar
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 text-xs gap-1 text-red-600 hover:bg-red-50" 
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1 text-red-600 hover:bg-red-50"
             disabled={!hasSelection}
             onClick={handleExcluir}
           >
             <Trash2 className="w-3 h-3" /> Excluir
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={handlePesquisarClick}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
+            onClick={handlePesquisarClick}
+          >
             <Search className="w-3 h-3" /> Pesquisar
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={handleSair}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
+            onClick={handleSair}
+          >
             <LogOut className="w-3 h-3" /> Sair
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 text-xs gap-1" 
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
             disabled={!hasSelection}
             onClick={handleImprimir}
           >
             <Printer className="w-3 h-3" /> Imprimir
           </Button>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="h-8 text-xs gap-1 text-white hover:opacity-90"
-            style={{ backgroundColor: '#e78b3a' }}
+            style={{ backgroundColor: "#e78b3a" }}
             onClick={handlePagar}
             disabled={selectedContas.length === 0}
           >
@@ -980,23 +1316,36 @@ export default function ContasAPagarPage() {
 
           <div className="w-px h-6 bg-slate-400 mx-1" />
 
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={selectAll}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
+            onClick={selectAll}
+          >
             <CheckSquare className="w-3 h-3" /> Selecionar
           </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={deselectAll}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
+            onClick={deselectAll}
+          >
             <X className="w-3 h-3" /> Desmarcar
           </Button>
         </div>
       </div>
 
       {/* Modal de Pesquisa de Fornecedor */}
-      <Dialog open={showFornecedorSearch} onOpenChange={setShowFornecedorSearch}>
+      <Dialog
+        open={showFornecedorSearch}
+        onOpenChange={setShowFornecedorSearch}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Pesquisar Fornecedor</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Digite o nome do fornecedor..."
               value={fornecedorSearchTerm}
               onChange={(e) => setFornecedorSearchTerm(e.target.value)}
@@ -1015,37 +1364,51 @@ export default function ContasAPagarPage() {
                 </TableHeader>
                 <TableBody>
                   {suppliers
-                    .filter(s => {
+                    .filter((s) => {
                       if (!fornecedorSearchTerm) return true;
                       const term = fornecedorSearchTerm.toLowerCase();
-                      return s.name?.toLowerCase().includes(term) || 
-                             s.document?.toLowerCase().includes(term);
+                      return (
+                        s.name?.toLowerCase().includes(term) ||
+                        s.document?.toLowerCase().includes(term)
+                      );
                     })
-                    .map(s => (
-                      <TableRow 
-                        key={s.id} 
+                    .map((s) => (
+                      <TableRow
+                        key={s.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => {
                           setFornecedorSelecionado(s);
                           setFornecedorPesquisa(s.name);
                           setShowFornecedorSearch(false);
-                          setFornecedorSearchTerm('');
+                          setFornecedorSearchTerm("");
                           setTimeout(() => applyFiltersAndShow(), 100);
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{s.personNumber || s.id?.slice(-6)}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {s.personNumber || s.id?.slice(-6)}
+                        </TableCell>
                         <TableCell className="text-xs">{s.name}</TableCell>
-                        <TableCell className="text-xs">{s.document || '-'}</TableCell>
-                        <TableCell className="text-xs">{s.phone?.[0] || '-'}</TableCell>
+                        <TableCell className="text-xs">
+                          {s.document || "-"}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {s.phone?.[0] || "-"}
+                        </TableCell>
                       </TableRow>
                     ))}
-                  {suppliers.filter(s => {
+                  {suppliers.filter((s) => {
                     if (!fornecedorSearchTerm) return true;
                     const term = fornecedorSearchTerm.toLowerCase();
-                    return s.name?.toLowerCase().includes(term) || s.document?.toLowerCase().includes(term);
+                    return (
+                      s.name?.toLowerCase().includes(term) ||
+                      s.document?.toLowerCase().includes(term)
+                    );
                   }).length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-slate-500"
+                      >
                         Nenhum fornecedor encontrado
                       </TableCell>
                     </TableRow>
@@ -1053,10 +1416,17 @@ export default function ContasAPagarPage() {
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFornecedorSearch(false)}>Fechar</Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowFornecedorSearch(false)}
+            >
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1068,7 +1438,7 @@ export default function ContasAPagarPage() {
             <DialogTitle>Pesquisar Número da NF</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input 
+            <Input
               placeholder="Digite o número da NF..."
               value={nfSearchTerm}
               onChange={(e) => setNfSearchTerm(e.target.value)}
@@ -1088,44 +1458,66 @@ export default function ContasAPagarPage() {
                 </TableHeader>
                 <TableBody>
                   {contas
-                    .filter(c => c.nfeNumber)
-                    .filter(c => {
+                    .filter((c) => c.nfeNumber)
+                    .filter((c) => {
                       if (!nfSearchTerm) return true;
                       const term = nfSearchTerm.toLowerCase();
-                      return c.nfeNumber?.toLowerCase().includes(term) || 
-                             c.supplierName?.toLowerCase().includes(term);
+                      return (
+                        c.nfeNumber?.toLowerCase().includes(term) ||
+                        c.supplierName?.toLowerCase().includes(term)
+                      );
                     })
-                    .map(c => (
-                      <TableRow 
-                        key={c.id} 
+                    .map((c) => (
+                      <TableRow
+                        key={c.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => {
                           setFiltroNFe(c.nfeNumber);
                           setShowNFSearch(false);
-                          setNfSearchTerm('');
+                          setNfSearchTerm("");
                           setTimeout(() => applyFiltersAndShow(), 100);
                         }}
                       >
-                        <TableCell className="text-xs font-mono">{c.nfeNumber}</TableCell>
-                        <TableCell className="text-xs">{c.supplierName}</TableCell>
-                        <TableCell className="text-xs">{format(parseISO(c.dueDate), 'dd/MM/yyyy')}</TableCell>
-                        <TableCell className="text-xs text-right">{formatCurrency(c.amount)}</TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {c.nfeNumber}
+                        </TableCell>
                         <TableCell className="text-xs">
-                          {c.status === 'pago' ? (
-                            <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
+                          {c.supplierName}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {format(c.dueDate, "dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell className="text-xs text-right">
+                          {formatCurrency(c.amount)}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {c.status === "pago" ? (
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              Pago
+                            </Badge>
                           ) : (
-                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">Aberto</Badge>
+                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                              Aberto
+                            </Badge>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
-                  {contas.filter(c => c.nfeNumber).filter(c => {
-                    if (!nfSearchTerm) return true;
-                    const term = nfSearchTerm.toLowerCase();
-                    return c.nfeNumber?.toLowerCase().includes(term) || c.supplierName?.toLowerCase().includes(term);
-                  }).length === 0 && (
+                  {contas
+                    .filter((c) => c.nfeNumber)
+                    .filter((c) => {
+                      if (!nfSearchTerm) return true;
+                      const term = nfSearchTerm.toLowerCase();
+                      return (
+                        c.nfeNumber?.toLowerCase().includes(term) ||
+                        c.supplierName?.toLowerCase().includes(term)
+                      );
+                    }).length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-8 text-slate-500"
+                      >
                         Nenhuma NF encontrada
                       </TableCell>
                     </TableRow>
@@ -1133,10 +1525,14 @@ export default function ContasAPagarPage() {
                 </TableBody>
               </Table>
             </div>
-            <p className="text-xs text-slate-500">Dê duplo clique para selecionar</p>
+            <p className="text-xs text-slate-500">
+              Dê duplo clique para selecionar
+            </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNFSearch(false)}>Fechar</Button>
+            <Button variant="outline" onClick={() => setShowNFSearch(false)}>
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1149,25 +1545,47 @@ export default function ContasAPagarPage() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-center text-slate-600">
-              Tem certeza que deseja excluir {getSelectedContasForAction().length > 1 ? 'estas contas a pagar' : 'esta conta a pagar'}?
+              Tem certeza que deseja excluir{" "}
+              {getSelectedContasForAction().length > 1
+                ? "estas contas a pagar"
+                : "esta conta a pagar"}
+              ?
             </p>
             {getSelectedContasForAction().length > 0 && (
               <div className="mt-4 p-3 bg-slate-50 rounded-lg text-sm space-y-2 max-h-40 overflow-auto">
-                {getSelectedContasForAction().map(conta => (
+                {getSelectedContasForAction().map((conta) => (
                   <div key={conta.id} className="border-b pb-2 last:border-0">
-                    <p><strong>Fornecedor:</strong> {conta.supplierName}</p>
-                    <p><strong>Valor:</strong> {formatCurrency(conta.amount)}</p>
-                    <p><strong>Vencimento:</strong> {format(parseISO(conta.dueDate), 'dd/MM/yyyy')}</p>
+                    <p>
+                      <strong>Fornecedor:</strong> {conta.supplierName}
+                    </p>
+                    <p>
+                      <strong>Valor:</strong> {formatCurrency(conta.amount)}
+                    </p>
+                    <p>
+                      <strong>Vencimento:</strong>{" "}
+                      {format(conta.dueDate, "dd/MM/yyyy")}
+                    </p>
                   </div>
                 ))}
                 {getSelectedContasForAction().length > 1 && (
-                  <p className="font-bold pt-2">Total: {formatCurrency(getSelectedContasForAction().reduce((sum, c) => sum + (c.amount || 0), 0))}</p>
+                  <p className="font-bold pt-2">
+                    Total:{" "}
+                    {formatCurrency(
+                      getSelectedContasForAction().reduce(
+                        (sum, c) => sum + (c.amount || 0),
+                        0,
+                      ),
+                    )}
+                  </p>
                 )}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+            >
               Não
             </Button>
             <Button variant="destructive" onClick={confirmExcluir}>

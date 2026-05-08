@@ -2,12 +2,40 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  RefreshCw, Save, Printer, X, LogOut, Edit, Trash2, Calculator, CheckCircle, AlertCircle
+import {
+  RefreshCw,
+  Save,
+  Printer,
+  X,
+  LogOut,
+  Edit,
+  Trash2,
+  Calculator,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { CashMovement } from "@/entities/CashMovement";
@@ -15,116 +43,141 @@ import { CashAccount } from "@/entities/CashAccount";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, addDays } from "date-fns";
 
-export default function RenegociacaoModal({ 
-  open, 
-  onOpenChange, 
-  currentUser, 
+export default function RenegociacaoModal({
+  open,
+  onOpenChange,
+  currentUser,
   sectors,
   cashAccounts,
   contasSelecionadas,
-  onRenegociacaoComplete 
+  onRenegociacaoComplete,
 }) {
   const { toast } = useToast();
-  
+
   // Dados da renegociação
-  const [dataRenegociacao, setDataRenegociacao] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [setorId, setSetorId] = useState('');
+  const [dataRenegociacao, setDataRenegociacao] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
+  const [setorId, setSetorId] = useState("");
   const [valorTotal, setValorTotal] = useState(0);
   const [valorDinheiro, setValorDinheiro] = useState(0);
-  const [contaDestinoId, setContaDestinoId] = useState('');
-  const [observacoes, setObservacoes] = useState('');
-  
+  const [contaDestinoId, setContaDestinoId] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+
   // Controles de parcelamento
   const [numParcelas, setNumParcelas] = useState(1);
-  const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'));
+  const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState(
+    format(addDays(new Date(), 30), "yyyy-MM-dd"),
+  );
   const [intervalo, setIntervalo] = useState(30);
-  
+
   // Parcelas geradas
   const [parcelas, setParcelas] = useState([]);
   const [editingIndex, setEditingIndex] = useState(-1);
-  
+
   // Estados de loading
   const [isSaving, setIsSaving] = useState(false);
 
   // Inicializar valores quando abrir o modal
   useEffect(() => {
     if (open && contasSelecionadas.length > 0) {
-      const total = contasSelecionadas.reduce((sum, c) => sum + (c.amount || 0), 0);
+      const total = contasSelecionadas.reduce(
+        (sum, c) => sum + (c.amount || 0),
+        0,
+      );
       setValorTotal(total);
       setValorDinheiro(0);
       setParcelas([]);
       setNumParcelas(1);
-      setDataPrimeiraParcela(format(addDays(new Date(), 30), 'yyyy-MM-dd'));
-      setObservacoes('');
-      setSetorId('');
-      setContaDestinoId(cashAccounts.length > 0 ? cashAccounts[0].id : '');
+      setDataPrimeiraParcela(format(addDays(new Date(), 30), "yyyy-MM-dd"));
+      setObservacoes("");
+      setSetorId("");
+      setContaDestinoId(cashAccounts.length > 0 ? cashAccounts[0].id : "");
     }
   }, [open, contasSelecionadas, cashAccounts]);
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value || 0);
   };
 
   const formatMoneyDisplay = (value) => {
-    if (!value && value !== 0) return '';
-    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+    if (!value && value !== 0) return "";
+    return new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
   const parseMoneyInput = (inputValue) => {
     if (!inputValue) return 0;
-    const cleaned = inputValue.toString().replace(/[^\d,]/g, '');
-    const normalized = cleaned.replace(',', '.');
+    const cleaned = inputValue.toString().replace(/[^\d,]/g, "");
+    const normalized = cleaned.replace(",", ".");
     return parseFloat(normalized) || 0;
   };
 
   // Calcular valor a parcelar
   const valorAParcelar = valorTotal - valorDinheiro;
-  
+
   // Calcular total das parcelas
   const totalParcelas = parcelas.reduce((sum, p) => sum + (p.valor || 0), 0);
-  
+
   // Calcular diferença
   const diferenca = valorAParcelar - totalParcelas;
 
   // Gerar parcelas automaticamente
   const gerarParcelas = () => {
     if (numParcelas <= 0) {
-      toast({ title: "Erro", description: "Número de parcelas deve ser maior que zero.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Número de parcelas deve ser maior que zero.",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (valorAParcelar <= 0) {
-      toast({ title: "Erro", description: "Valor a parcelar deve ser maior que zero.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Valor a parcelar deve ser maior que zero.",
+        variant: "destructive",
+      });
       return;
     }
 
     const valorParcela = valorAParcelar / numParcelas;
     const novasParcelas = [];
-    
+
     for (let i = 0; i < numParcelas; i++) {
-      const dataVencimento = addDays(new Date(dataPrimeiraParcela), i * intervalo);
+      const dataVencimento = addDays(
+        new Date(dataPrimeiraParcela),
+        i * intervalo,
+      );
       novasParcelas.push({
         numero: i + 1,
-        vencimento: format(dataVencimento, 'yyyy-MM-dd'),
-        valor: Math.round(valorParcela * 100) / 100
+        vencimento: format(dataVencimento, "yyyy-MM-dd"),
+        valor: Math.round(valorParcela * 100) / 100,
       });
     }
-    
+
     // Ajustar última parcela para diferença de arredondamento
     const totalGerado = novasParcelas.reduce((sum, p) => sum + p.valor, 0);
     const diffArredondamento = valorAParcelar - totalGerado;
     if (novasParcelas.length > 0 && Math.abs(diffArredondamento) > 0.01) {
       novasParcelas[novasParcelas.length - 1].valor += diffArredondamento;
-      novasParcelas[novasParcelas.length - 1].valor = Math.round(novasParcelas[novasParcelas.length - 1].valor * 100) / 100;
+      novasParcelas[novasParcelas.length - 1].valor =
+        Math.round(novasParcelas[novasParcelas.length - 1].valor * 100) / 100;
     }
-    
+
     setParcelas(novasParcelas);
   };
 
   // Editar parcela
   const handleEditParcela = (index, field, value) => {
     const novasParcelas = [...parcelas];
-    if (field === 'valor') {
+    if (field === "valor") {
       novasParcelas[index].valor = parseMoneyInput(value);
     } else {
       novasParcelas[index][field] = value;
@@ -136,113 +189,140 @@ export default function RenegociacaoModal({
   const handleExcluirParcela = (index) => {
     const novasParcelas = parcelas.filter((_, i) => i !== index);
     // Renumerar parcelas
-    novasParcelas.forEach((p, i) => p.numero = i + 1);
+    novasParcelas.forEach((p, i) => (p.numero = i + 1));
     setParcelas(novasParcelas);
   };
 
   // Validar dados
   const validarDados = () => {
     if (!setorId) {
-      toast({ title: "Erro", description: "Selecione o setor que realizou a cobrança.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Selecione o setor que realizou a cobrança.",
+        variant: "destructive",
+      });
       return false;
     }
-    
+
     if (valorTotal <= 0) {
-      toast({ title: "Erro", description: "Valor total deve ser maior que zero.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Valor total deve ser maior que zero.",
+        variant: "destructive",
+      });
       return false;
     }
-    
+
     if (parcelas.length === 0) {
-      toast({ title: "Erro", description: "Gere pelo menos uma parcela.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Gere pelo menos uma parcela.",
+        variant: "destructive",
+      });
       return false;
     }
-    
+
     if (Math.abs(diferenca) > 0.01) {
-      toast({ title: "Erro", description: "Total das parcelas não confere com o valor a parcelar.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Total das parcelas não confere com o valor a parcelar.",
+        variant: "destructive",
+      });
       return false;
     }
 
     if (valorDinheiro > 0 && !contaDestinoId) {
-      toast({ title: "Erro", description: "Selecione a conta de destino para o valor de entrada.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Selecione a conta de destino para o valor de entrada.",
+        variant: "destructive",
+      });
       return false;
     }
-    
+
     return true;
   };
 
   // Salvar renegociação
   const handleSalvar = async () => {
     if (!validarDados()) return;
-    
+
     setIsSaving(true);
     try {
-      const setor = sectors.find(s => s.id === setorId);
-      
+      const setor = sectors.find((s) => s.id === setorId);
+
       // 1. Baixar contas originais como "renegociadas"
       for (const conta of contasSelecionadas) {
         await AccountsReceivable.update(conta.id, {
-          status: 'renegociado',
+          status: "renegociado",
           paymentDate: dataRenegociacao,
-          renegociacaoObservacao: `Renegociada em ${format(parseISO(dataRenegociacao), 'dd/MM/yyyy')}`
+          renegociacaoObservacao: `Renegociada em ${format(dataRenegociacao, "dd/MM/yyyy")}`,
         });
       }
-      
+
       // 2. Se houve entrada em dinheiro, registrar no caixa
       if (valorDinheiro > 0 && contaDestinoId) {
-        const contaDestino = cashAccounts.find(c => c.id === contaDestinoId);
-        
+        const contaDestino = cashAccounts.find((c) => c.id === contaDestinoId);
+
         await CashMovement.create({
           cashAccountId: contaDestinoId,
-          cashAccountName: contaDestino?.name || '',
-          type: 'receita',
-          description: `Entrada renegociação - ${contasSelecionadas.map(c => c.personName).join(', ')}`,
+          cashAccountName: contaDestino?.name || "",
+          type: "receita",
+          description: `Entrada renegociação - ${contasSelecionadas.map((c) => c.personName).join(", ")}`,
           amount: valorDinheiro,
           movementDate: dataRenegociacao,
           sectorId: setorId,
-          sectorName: setor?.name || '',
+          sectorName: setor?.name || "",
           personId: contasSelecionadas[0]?.personId,
           personName: contasSelecionadas[0]?.personName,
           companyId: currentUser.companyId,
           companyName: currentUser.companyName,
-          createdByName: currentUser.fullName
+          createdByName: currentUser.name,
         });
-        
+
         // Atualizar saldo da conta
         await CashAccount.update(contaDestinoId, {
-          balance: (contaDestino?.balance || 0) + valorDinheiro
+          balance: (contaDestino?.balance || 0) + valorDinheiro,
         });
       }
-      
+
       // 3. Criar novas contas a receber para cada parcela
       for (const parcela of parcelas) {
         await AccountsReceivable.create({
           personId: contasSelecionadas[0]?.personId,
           personName: contasSelecionadas[0]?.personName,
-          description: `Renegociação - Parcela ${String(parcela.numero).padStart(3, '0')}/${String(parcelas.length).padStart(3, '0')}`,
+          description: `Renegociação - Parcela ${String(parcela.numero).padStart(3, "0")}/${String(parcelas.length).padStart(3, "0")}`,
           dueDate: parcela.vencimento,
           amount: parcela.valor,
           installmentNumber: parcela.numero,
-          status: 'pendente',
+          status: "pendente",
           sectorId: setorId,
-          sectorName: setor?.name || '',
-          renegociacaoOrigem: contasSelecionadas.map(c => c.id).join(','),
+          sectorName: setor?.name || "",
+          renegociacaoOrigem: contasSelecionadas.map((c) => c.id).join(","),
           renegociacaoData: dataRenegociacao,
           renegociacaoObservacao: observacoes,
           companyId: currentUser.companyId,
           companyName: currentUser.companyName,
-          createdByName: currentUser.fullName
+          createdByName: currentUser.name,
         });
       }
-      
-      toast({ title: "Sucesso", description: `Renegociação salva! ${parcelas.length} nova(s) parcela(s) gerada(s).` });
+
+      toast({
+        title: "Sucesso",
+        description: `Renegociação salva! ${parcelas.length} nova(s) parcela(s) gerada(s).`,
+      });
       onOpenChange(false);
-      
+
       if (onRenegociacaoComplete) {
         onRenegociacaoComplete();
       }
     } catch (error) {
       console.error("Erro ao salvar renegociação:", error);
-      toast({ title: "Erro", description: "Não foi possível salvar a renegociação.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a renegociação.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -251,12 +331,16 @@ export default function RenegociacaoModal({
   // Imprimir comprovante
   const handleImprimir = () => {
     if (parcelas.length === 0) {
-      toast({ title: "Atenção", description: "Gere as parcelas antes de imprimir.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Gere as parcelas antes de imprimir.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const setor = sectors.find(s => s.id === setorId);
-    
+    const setor = sectors.find((s) => s.id === setorId);
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -286,20 +370,20 @@ export default function RenegociacaoModal({
       </head>
       <body>
         <h1>Comprovante de Renegociação de Dívida</h1>
-        <p class="subtitle">Emitido em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+        <p class="subtitle">Emitido em: ${format(new Date(), "dd/MM/yyyy HH:mm")}</p>
         
         <div class="info-section">
           <div class="info-row">
             <span class="info-label">Data da Renegociação:</span>
-            <span>${format(parseISO(dataRenegociacao), 'dd/MM/yyyy')}</span>
+            <span>${format(dataRenegociacao, "dd/MM/yyyy")}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Cliente:</span>
-            <span>${contasSelecionadas[0]?.personName || '-'}</span>
+            <span>${contasSelecionadas[0]?.personName || "-"}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Setor Responsável:</span>
-            <span>${setor?.name || '-'}</span>
+            <span>${setor?.name || "-"}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Valor Total da Dívida:</span>
@@ -325,13 +409,17 @@ export default function RenegociacaoModal({
             </tr>
           </thead>
           <tbody>
-            ${parcelas.map(p => `
+            ${parcelas
+              .map(
+                (p) => `
               <tr>
-                <td class="text-center">${String(p.numero).padStart(3, '0')}/${String(parcelas.length).padStart(3, '0')}</td>
-                <td>${format(parseISO(p.vencimento), 'dd/MM/yyyy')}</td>
+                <td class="text-center">${String(p.numero).padStart(3, "0")}/${String(parcelas.length).padStart(3, "0")}</td>
+                <td>${format(p.vencimento, "dd/MM/yyyy")}</td>
                 <td class="text-right">${formatCurrency(p.valor)}</td>
               </tr>
-            `).join('')}
+            `,
+              )
+              .join("")}
             <tr class="total-row">
               <td colspan="2" class="text-right">TOTAL:</td>
               <td class="text-right">${formatCurrency(totalParcelas)}</td>
@@ -339,12 +427,16 @@ export default function RenegociacaoModal({
           </tbody>
         </table>
         
-        ${observacoes ? `
+        ${
+          observacoes
+            ? `
           <div class="info-section" style="margin-top: 20px;">
             <strong>Observações:</strong><br/>
             ${observacoes}
           </div>
-        ` : ''}
+        `
+            : ""
+        }
         
         <div class="signature">
           <div class="signature-line">Responsável</div>
@@ -358,7 +450,7 @@ export default function RenegociacaoModal({
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(printContent);
     printWindow.document.close();
   };
@@ -378,23 +470,27 @@ export default function RenegociacaoModal({
           <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border">
             <div>
               <Label className="text-xs">Data da Renegociação:</Label>
-              <Input 
+              <Input
                 type="date"
                 value={dataRenegociacao}
                 onChange={(e) => setDataRenegociacao(e.target.value)}
-                max={format(new Date(), 'yyyy-MM-dd')}
+                max={format(new Date(), "yyyy-MM-dd")}
                 className="h-8"
               />
             </div>
             <div>
-              <Label className="text-xs">Setor que realizou a cobrança: *</Label>
+              <Label className="text-xs">
+                Setor que realizou a cobrança: *
+              </Label>
               <Select value={setorId} onValueChange={setSetorId}>
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="Selecionar setor..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {sectors.map(s => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  {sectors.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -405,7 +501,7 @@ export default function RenegociacaoModal({
           <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg border">
             <div>
               <Label className="text-xs">Valor Total:</Label>
-              <Input 
+              <Input
                 type="text"
                 value={formatMoneyDisplay(valorTotal)}
                 onChange={(e) => setValorTotal(parseMoneyInput(e.target.value))}
@@ -414,22 +510,30 @@ export default function RenegociacaoModal({
             </div>
             <div>
               <Label className="text-xs">Dinheiro (Entrada):</Label>
-              <Input 
+              <Input
                 type="text"
                 value={formatMoneyDisplay(valorDinheiro)}
-                onChange={(e) => setValorDinheiro(parseMoneyInput(e.target.value))}
+                onChange={(e) =>
+                  setValorDinheiro(parseMoneyInput(e.target.value))
+                }
                 className="h-8 text-right font-mono"
               />
             </div>
             <div>
               <Label className="text-xs">Conta para Entrada:</Label>
-              <Select value={contaDestinoId} onValueChange={setContaDestinoId} disabled={valorDinheiro <= 0}>
+              <Select
+                value={contaDestinoId}
+                onValueChange={setContaDestinoId}
+                disabled={valorDinheiro <= 0}
+              >
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="Selecionar conta..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {cashAccounts.map(acc => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                  {cashAccounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      {acc.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -440,7 +544,7 @@ export default function RenegociacaoModal({
           <div className="grid grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div>
               <Label className="text-xs">Nº Parcelas:</Label>
-              <Input 
+              <Input
                 type="number"
                 min={1}
                 max={99}
@@ -451,7 +555,7 @@ export default function RenegociacaoModal({
             </div>
             <div>
               <Label className="text-xs">Data 1ª Parcela:</Label>
-              <Input 
+              <Input
                 type="date"
                 value={dataPrimeiraParcela}
                 onChange={(e) => setDataPrimeiraParcela(e.target.value)}
@@ -460,7 +564,10 @@ export default function RenegociacaoModal({
             </div>
             <div>
               <Label className="text-xs">Intervalo:</Label>
-              <Select value={String(intervalo)} onValueChange={(v) => setIntervalo(parseInt(v))}>
+              <Select
+                value={String(intervalo)}
+                onValueChange={(v) => setIntervalo(parseInt(v))}
+              >
                 <SelectTrigger className="h-8">
                   <SelectValue />
                 </SelectTrigger>
@@ -474,7 +581,10 @@ export default function RenegociacaoModal({
               </Select>
             </div>
             <div className="flex items-end">
-              <Button onClick={gerarParcelas} className="w-full h-8 text-xs gap-1 bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={gerarParcelas}
+                className="w-full h-8 text-xs gap-1 bg-blue-600 hover:bg-blue-700"
+              >
                 <Calculator className="w-3 h-3" /> Gerar Parcelas
               </Button>
             </div>
@@ -489,16 +599,25 @@ export default function RenegociacaoModal({
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow>
-                    <TableHead className="w-20 text-xs text-center">Parcela</TableHead>
+                    <TableHead className="w-20 text-xs text-center">
+                      Parcela
+                    </TableHead>
                     <TableHead className="w-32 text-xs">Vencimento</TableHead>
-                    <TableHead className="w-32 text-xs text-right">Valor</TableHead>
-                    <TableHead className="w-20 text-xs text-center">Ações</TableHead>
+                    <TableHead className="w-32 text-xs text-right">
+                      Valor
+                    </TableHead>
+                    <TableHead className="w-20 text-xs text-center">
+                      Ações
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {parcelas.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-slate-500"
+                      >
                         Clique em "Gerar Parcelas" para criar o parcelamento
                       </TableCell>
                     </TableRow>
@@ -506,47 +625,67 @@ export default function RenegociacaoModal({
                     parcelas.map((parcela, index) => (
                       <TableRow key={index}>
                         <TableCell className="text-center text-xs font-mono">
-                          {String(parcela.numero).padStart(3, '0')}
+                          {String(parcela.numero).padStart(3, "0")}
                         </TableCell>
                         <TableCell>
                           {editingIndex === index ? (
-                            <Input 
+                            <Input
                               type="date"
                               value={parcela.vencimento}
-                              onChange={(e) => handleEditParcela(index, 'vencimento', e.target.value)}
+                              onChange={(e) =>
+                                handleEditParcela(
+                                  index,
+                                  "vencimento",
+                                  e.target.value,
+                                )
+                              }
                               className="h-7 text-xs"
                               onBlur={() => setEditingIndex(-1)}
                             />
                           ) : (
-                            <span className="text-xs">{format(parseISO(parcela.vencimento), 'dd/MM/yyyy')}</span>
+                            <span className="text-xs">
+                              {format(parcela.vencimento, "dd/MM/yyyy")}
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
                           {editingIndex === index ? (
-                            <Input 
+                            <Input
                               type="text"
                               value={formatMoneyDisplay(parcela.valor)}
-                              onChange={(e) => handleEditParcela(index, 'valor', e.target.value)}
+                              onChange={(e) =>
+                                handleEditParcela(
+                                  index,
+                                  "valor",
+                                  e.target.value,
+                                )
+                              }
                               className="h-7 text-xs text-right font-mono"
                               onBlur={() => setEditingIndex(-1)}
                             />
                           ) : (
-                            <span className="text-xs font-mono">{formatCurrency(parcela.valor)}</span>
+                            <span className="text-xs font-mono">
+                              {formatCurrency(parcela.valor)}
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="h-6 w-6 p-0"
-                              onClick={() => setEditingIndex(editingIndex === index ? -1 : index)}
+                              onClick={() =>
+                                setEditingIndex(
+                                  editingIndex === index ? -1 : index,
+                                )
+                              }
                             >
                               <Edit className="w-3 h-3" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                               onClick={() => handleExcluirParcela(index)}
                             >
@@ -565,12 +704,18 @@ export default function RenegociacaoModal({
           {/* Totais */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border">
             <div className="text-right">
-              <span className="text-xs text-slate-600">Total das Parcelas:</span>
-              <p className="text-lg font-bold text-blue-600">{formatCurrency(totalParcelas)}</p>
+              <span className="text-xs text-slate-600">
+                Total das Parcelas:
+              </span>
+              <p className="text-lg font-bold text-blue-600">
+                {formatCurrency(totalParcelas)}
+              </p>
             </div>
             <div className="text-right">
               <span className="text-xs text-slate-600">Diferença:</span>
-              <p className={`text-lg font-bold flex items-center justify-end gap-2 ${Math.abs(diferenca) < 0.01 ? 'text-green-600' : 'text-red-600'}`}>
+              <p
+                className={`text-lg font-bold flex items-center justify-end gap-2 ${Math.abs(diferenca) < 0.01 ? "text-green-600" : "text-red-600"}`}
+              >
                 {formatCurrency(diferenca)}
                 {Math.abs(diferenca) < 0.01 ? (
                   <CheckCircle className="w-4 h-4" />
@@ -584,7 +729,7 @@ export default function RenegociacaoModal({
           {/* Observações */}
           <div>
             <Label className="text-xs">Observações:</Label>
-            <Textarea 
+            <Textarea
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Informações adicionais sobre a renegociação..."
@@ -597,30 +742,32 @@ export default function RenegociacaoModal({
         {/* Barra de Ações */}
         <DialogFooter className="bg-slate-100 -mx-6 -mb-6 px-4 py-3 mt-4 border-t">
           <div className="flex gap-2 w-full justify-end">
-            <Button 
-              onClick={handleSalvar} 
-              disabled={isSaving || parcelas.length === 0 || Math.abs(diferenca) > 0.01}
+            <Button
+              onClick={handleSalvar}
+              disabled={
+                isSaving || parcelas.length === 0 || Math.abs(diferenca) > 0.01
+              }
               className="h-8 text-xs gap-1 bg-green-600 hover:bg-green-700"
             >
               <Save className="w-3 h-3" /> Salvar
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleImprimir}
               disabled={parcelas.length === 0}
               className="h-8 text-xs gap-1"
             >
               <Printer className="w-3 h-3" /> Imprimir
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => onOpenChange(false)}
               className="h-8 text-xs gap-1"
             >
               <X className="w-3 h-3" /> Cancelar
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => onOpenChange(false)}
               className="h-8 text-xs gap-1"
             >

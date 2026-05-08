@@ -7,7 +7,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   ChevronLeft,
   ChevronRight,
@@ -21,7 +28,7 @@ import {
   Coins,
   Wallet,
   ArrowLeftRight,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -37,45 +44,63 @@ import AccountsReceivable from "./AccountsReceivable";
 import CashMovementsPage from "./CashMovements";
 import PaymentModal from "@/components/acerto/PaymentModal";
 import * as entities from "@/entities";
+import AccountsReceivablePage from "./AccountsReceivable";
 
 export default function AcertoSetoresPage() {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState(null);
   const [setores, setSetores] = useState([]);
   const [showSetorModal, setShowSetorModal] = useState(false);
-  const [setorSearchTerm, setSetorSearchTerm] = useState('');
+  const [setorSearchTerm, setSetorSearchTerm] = useState("");
   const [showSalesModal, setShowSalesModal] = useState(false);
-  const [showAccountsReceivableModal, setShowAccountsReceivableModal] = useState(false);
+  const [showAccountsReceivableModal, setShowAccountsReceivableModal] =
+    useState(false);
   const [showCashMovementsModal, setShowCashMovementsModal] = useState(false);
   const [showNoResultsModal, setShowNoResultsModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  
+
   // Carregar filtros salvos do localStorage
   const getStoredFilters = () => {
     try {
-      const stored = localStorage.getItem('acertoSetoresFilters');
+      const stored = localStorage.getItem("acertoSetoresFilters");
       if (stored) {
         return JSON.parse(stored);
       }
     } catch (e) {
-      console.error('Erro ao carregar filtros:', e);
+      console.error("Erro ao carregar filtros:", e);
     }
     return null;
   };
 
   const storedFilters = getStoredFilters();
-  
-  const [lancamento, setLancamento] = useState(storedFilters?.lancamento || format(new Date(), 'yyyy-MM-dd'));
+
+  const [lancamento, setLancamento] = useState(
+    storedFilters?.lancamento || format(new Date(), "yyyy-MM-dd"),
+  );
   const [setorSelecionado, setSetorSelecionado] = useState(null);
-  const [mostrarEntregues, setMostrarEntregues] = useState(storedFilters?.mostrarEntregues ?? true);
-  const [mostrarNaoEntregues, setMostrarNaoEntregues] = useState(storedFilters?.mostrarNaoEntregues ?? true);
-  const [dataInicial, setDataInicial] = useState(storedFilters?.dataInicial || format(new Date(), 'yyyy-MM-dd'));
-  const [horaInicial, setHoraInicial] = useState(storedFilters?.horaInicial || '00:00');
-  const [dataFinal, setDataFinal] = useState(storedFilters?.dataFinal || format(new Date(), 'yyyy-MM-dd'));
-  const [horaFinal, setHoraFinal] = useState(storedFilters?.horaFinal || '23:59');
-  const [mostrarLancados, setMostrarLancados] = useState(storedFilters?.mostrarLancados || false);
-  const [convenio, setConvenio] = useState('nao');
-  const [selectedTab, setSelectedTab] = useState('venda');
+  const [mostrarEntregues, setMostrarEntregues] = useState(
+    storedFilters?.mostrarEntregues ?? true,
+  );
+  const [mostrarNaoEntregues, setMostrarNaoEntregues] = useState(
+    storedFilters?.mostrarNaoEntregues ?? true,
+  );
+  const [dataInicial, setDataInicial] = useState(
+    storedFilters?.dataInicial || format(new Date(), "yyyy-MM-dd"),
+  );
+  const [horaInicial, setHoraInicial] = useState(
+    storedFilters?.horaInicial || "00:00",
+  );
+  const [dataFinal, setDataFinal] = useState(
+    storedFilters?.dataFinal || format(new Date(), "yyyy-MM-dd"),
+  );
+  const [horaFinal, setHoraFinal] = useState(
+    storedFilters?.horaFinal || "23:59",
+  );
+  const [mostrarLancados, setMostrarLancados] = useState(
+    storedFilters?.mostrarLancados || false,
+  );
+  const [convenio, setConvenio] = useState("nao");
+  const [selectedTab, setSelectedTab] = useState("venda");
 
   const [allPedidos, setAllPedidos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
@@ -92,7 +117,7 @@ export default function AcertoSetoresPage() {
     entradas: { qtd: 0, valor: 0 },
     vendasPrazo: { qtd: 0, valor: 0 },
     total: { qtd: 0, valor: 0 },
-    cartoes: { qtd: 0, valor: 0 }
+    cartoes: { qtd: 0, valor: 0 },
   });
 
   // Salvar filtros no localStorage sempre que mudarem
@@ -105,10 +130,19 @@ export default function AcertoSetoresPage() {
       horaInicial,
       dataFinal,
       horaFinal,
-      mostrarLancados
+      mostrarLancados,
     };
-    localStorage.setItem('acertoSetoresFilters', JSON.stringify(filters));
-  }, [lancamento, mostrarEntregues, mostrarNaoEntregues, dataInicial, horaInicial, dataFinal, horaFinal, mostrarLancados]);
+    localStorage.setItem("acertoSetoresFilters", JSON.stringify(filters));
+  }, [
+    lancamento,
+    mostrarEntregues,
+    mostrarNaoEntregues,
+    dataInicial,
+    horaInicial,
+    dataFinal,
+    horaFinal,
+    mostrarLancados,
+  ]);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -117,34 +151,42 @@ export default function AcertoSetoresPage() {
 
   const loadData = async () => {
     try {
-      const user = await User.me();
+      const user = await entities.User.me();
       setCurrentUser(user);
-      
-      const [ordersData, setoresData, paymentTypesData, cashAccountsData] = await Promise.all([
-        entities.Order.filter({ 
-          companyId: user.companyId 
-        }, { sort: '-createdDate', limit: 500 }),
-        entities.Sector.filter({ 
-          companyId: user.companyId,
-          active: true 
-        }),
-        entities.PaymentType.filter({ 
-          companyId: user.companyId,
-          active: true 
-        }),
-        entities.CashAccount.filter({ 
-          companyId: user.companyId,
-          active: true 
-        })
-      ]);
-      
+
+      const [ordersData, setoresData, paymentTypesData, cashAccountsData] =
+        await Promise.all([
+          entities.Order.filter(
+            {
+              companyId: user.companyId,
+            },
+            { sort: "-createdAt", limit: 500 },
+          ),
+          entities.Sector.filter({
+            companyId: user.companyId,
+            active: true,
+          }),
+          entities.PaymentType.filter({
+            companyId: user.companyId,
+            active: true,
+          }),
+          entities.CashAccount.filter({
+            companyId: user.companyId,
+            active: true,
+          }),
+        ]);
+
       setAllPedidos(ordersData);
       setSetores(setoresData);
       setPaymentTypes(paymentTypesData);
       setCashAccounts(cashAccountsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
-      toast({ title: "Erro", description: "Não foi possível carregar os pedidos.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os pedidos.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -154,44 +196,44 @@ export default function AcertoSetoresPage() {
   };
 
   const handleOpenSetorModal = () => {
-    setSetorSearchTerm('');
+    setSetorSearchTerm("");
     setShowSetorModal(true);
   };
 
-  const filteredSetores = setores.filter(setor =>
-    setor.name.toLowerCase().includes(setorSearchTerm.toLowerCase())
+  const filteredSetores = setores.filter((setor) =>
+    setor.name.toLowerCase().includes(setorSearchTerm.toLowerCase()),
   );
 
   // Aplicar filtros
   const applyFilters = () => {
-    console.log('Aplicando filtros...');
+    console.log("Aplicando filtros...");
     setSearchExecuted(true);
-    
+
     if (!allPedidos.length) {
-      console.log('Nenhum pedido carregado');
+      console.log("Nenhum pedido carregado");
       setPedidos([]);
       calcularResumo([]);
       return;
     }
 
-    console.log('Total de pedidos:', allPedidos.length);
+    console.log("Total de pedidos:", allPedidos.length);
     let filtered = [...allPedidos];
 
     // Filtro por período de data/hora
     const dataHoraInicio = new Date(`${dataInicial}T${horaInicial}:00`);
     const dataHoraFim = new Date(`${dataFinal}T${horaFinal}:59`);
 
-    console.log('Período:', dataHoraInicio, 'até', dataHoraFim);
+    console.log("Período:", dataHoraInicio, "até", dataHoraFim);
 
-    filtered = filtered.filter(pedido => {
-      const dataParaComparar = pedido.deliveryDate || pedido.createdDate;
+    filtered = filtered.filter((pedido) => {
+      const dataParaComparar = pedido.deliveryDate || pedido.createdAt;
       if (!dataParaComparar) return false;
-      
+
       const pedidoDate = new Date(dataParaComparar);
       return pedidoDate >= dataHoraInicio && pedidoDate <= dataHoraFim;
     });
 
-    console.log('Após filtro de data:', filtered.length);
+    console.log("Após filtro de data:", filtered.length);
 
     // Filtro por tipo de pedido (checkboxes)
     if (!mostrarEntregues && !mostrarNaoEntregues) {
@@ -199,25 +241,23 @@ export default function AcertoSetoresPage() {
       filtered = [];
     } else if (mostrarEntregues && !mostrarNaoEntregues) {
       // Só entregues
-      filtered = filtered.filter(p => p.status === 'finalizado');
+      filtered = filtered.filter((p) => p.status === "finalizado");
     } else if (!mostrarEntregues && mostrarNaoEntregues) {
       // Só não entregues
-      filtered = filtered.filter(p => p.status !== 'finalizado');
+      filtered = filtered.filter((p) => p.status !== "finalizado");
     }
     // Se ambos estão marcados, mostra todos (não filtra)
 
-    console.log('Após filtro de status:', filtered.length);
-    console.log('Pedidos filtrados:', filtered);
+    console.log("Após filtro de status:", filtered.length);
+    console.log("Pedidos filtrados:", filtered);
 
     setPedidos(filtered);
     calcularResumo(filtered);
-    
+
     if (filtered.length === 0) {
       setShowNoResultsModal(true);
     }
   };
-
-
 
   const calcularResumo = (pedidosFiltrados) => {
     // Lógica de cálculo do resumo baseada nos pedidos filtrados
@@ -227,10 +267,10 @@ export default function AcertoSetoresPage() {
       entradas: { qtd: 0, valor: 0 },
       vendasPrazo: { qtd: 0, valor: 0 },
       total: { qtd: pedidosFiltrados.length, valor: 0 },
-      cartoes: { qtd: 0, valor: 0 }
+      cartoes: { qtd: 0, valor: 0 },
     };
 
-    pedidosFiltrados.forEach(pedido => {
+    pedidosFiltrados.forEach((pedido) => {
       resumoCalculado.total.valor += pedido.totalAmount || 0;
     });
 
@@ -239,7 +279,11 @@ export default function AcertoSetoresPage() {
 
   const handleTransformToSale = () => {
     if (!selectedPedido) {
-      toast({ title: "Atenção", description: "Selecione um pedido para transformar em venda.", variant: "destructive" });
+      toast({
+        title: "Atenção",
+        description: "Selecione um pedido para transformar em venda.",
+        variant: "destructive",
+      });
       return;
     }
     setShowPaymentModal(true);
@@ -248,47 +292,60 @@ export default function AcertoSetoresPage() {
   const handlePaymentConfirm = async (paymentData) => {
     try {
       const user = await entities.User.me();
-      const { pedido, payments, parcelas, totalVenda, desconto, acrescimo, totalAReceber } = paymentData;
-      
+      const {
+        pedido,
+        payments,
+        parcelas,
+        totalVenda,
+        desconto,
+        acrescimo,
+        totalAReceber,
+      } = paymentData;
+
       // 1. Criar a venda
       const saleData = {
         saleNumber: `V-${Date.now()}`,
         personId: pedido.personId,
         personName: pedido.personName,
-        sectorId: pedido.sectorId || '',
-        sectorName: pedido.sectorName || '',
-        status: 'concluida',
-        saleDate: format(new Date(), 'yyyy-MM-dd'),
+        sectorId: pedido.sectorId || "",
+        sectorName: pedido.sectorName || "",
+        status: "concluida",
+        saleDate: format(new Date(), "yyyy-MM-dd"),
         items: pedido.items || [],
-        paymentMethods: payments.map(p => {
-          const paymentType = paymentTypes.find(pt => pt.id === p.tipo);
+        paymentMethods: payments.map((p) => {
+          const paymentType = paymentTypes.find((pt) => pt.id === p.tipo);
           return {
             paymentTypeId: p.tipo,
-            paymentTypeName: paymentType?.name || '',
+            paymentTypeName: paymentType?.name || "",
             amount: p.valor,
-            installments: parcelas.filter(parc => parc.paymentId === p.id).length || 1
+            installments:
+              parcelas.filter((parc) => parc.paymentId === p.id).length || 1,
           };
         }),
         totalAmount: totalAReceber,
-        notes: pedido.notes || '',
+        notes: pedido.notes || "",
         orderId: pedido.id,
         orderNumber: pedido.orderNumber,
         companyId: user.companyId,
         companyName: user.companyName,
-        createdByName: user.fullName
+        createdByName: user.name,
       };
 
       const newSale = await entities.Sale.create(saleData);
 
       // 2. Processar pagamentos
       for (const payment of payments) {
-        const paymentType = paymentTypes.find(pt => pt.id === payment.tipo);
-        const isCard = paymentType?.type?.includes('cartao');
-        const isPrazo = parcelas.filter(p => p.paymentId === payment.id).length > 1 || isCard;
+        const paymentType = paymentTypes.find((pt) => pt.id === payment.tipo);
+        const isCard = paymentType?.type?.includes("cartao");
+        const isPrazo =
+          parcelas.filter((p) => p.paymentId === payment.id).length > 1 ||
+          isCard;
 
         if (isCard) {
           // Cartões: criar em Contas a Receber com dados do cartão
-          const parcelasDoCartao = parcelas.filter(p => p.paymentId === payment.id);
+          const parcelasDoCartao = parcelas.filter(
+            (p) => p.paymentId === payment.id,
+          );
           for (const parcela of parcelasDoCartao) {
             await entities.AccountsReceivable.create({
               personId: pedido.personId,
@@ -298,15 +355,17 @@ export default function AcertoSetoresPage() {
               description: `${paymentType.name} - Parcela ${parcela.numero}/${parcelasDoCartao.length}`,
               dueDate: parcela.vencimento,
               amount: parcela.valor,
-              status: 'pendente',
+              status: "pendente",
               companyId: user.companyId,
               companyName: user.companyName,
-              createdByName: user.fullName
+              createdByName: user.name,
             });
           }
         } else if (isPrazo) {
           // A PRAZO (boleto, cheque, etc): criar em Contas a Receber
-          const parcelasDoPayment = parcelas.filter(p => p.paymentId === payment.id);
+          const parcelasDoPayment = parcelas.filter(
+            (p) => p.paymentId === payment.id,
+          );
           for (const parcela of parcelasDoPayment) {
             await entities.AccountsReceivable.create({
               personId: pedido.personId,
@@ -316,52 +375,54 @@ export default function AcertoSetoresPage() {
               description: `${paymentType.name} - Parcela ${parcela.numero}/${parcelasDoPayment.length}`,
               dueDate: parcela.vencimento,
               amount: parcela.valor,
-              status: 'pendente',
+              status: "pendente",
               companyId: user.companyId,
               companyName: user.companyName,
-              createdByName: user.fullName
+              createdByName: user.name,
             });
           }
         } else {
           // À VISTA: lançar no caixa
-          const cashAccount = cashAccounts.find(ca => ca.id === payment.caixaId);
+          const cashAccount = cashAccounts.find(
+            (ca) => ca.id === payment.caixaId,
+          );
           await entities.CashMovement.create({
             cashAccountId: payment.caixaId,
-            cashAccountName: cashAccount?.name || '',
-            type: 'receita',
+            cashAccountName: cashAccount?.name || "",
+            type: "receita",
             amount: payment.valor,
             description: `Venda ${newSale.saleNumber} - ${paymentType.name}`,
-            movementDate: format(new Date(), 'yyyy-MM-dd'),
+            movementDate: format(new Date(), "yyyy-MM-dd"),
             personId: pedido.personId,
             personName: pedido.personName,
             relatedDocId: newSale.id,
             companyId: user.companyId,
             companyName: user.companyName,
-            createdByName: user.fullName
+            createdByName: user.name,
           });
         }
       }
 
       // 3. Atualizar status do pedido para finalizado
       await entities.Order.update(pedido.id, {
-        status: 'finalizado',
-        finalizedAt: new Date().toISOString()
+        status: "finalizado",
+        finalizedAt: new Date(),
       });
 
-      toast({ 
-        title: "Sucesso", 
+      toast({
+        title: "Sucesso",
         description: "Venda realizada com sucesso!",
       });
-      
+
       setShowPaymentModal(false);
       setSelectedPedido(null);
       loadData();
     } catch (error) {
       console.error("Erro ao processar venda:", error);
-      toast({ 
-        title: "Erro", 
-        description: "Não foi possível processar a venda.", 
-        variant: "destructive" 
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar a venda.",
+        variant: "destructive",
       });
     }
   };
@@ -372,41 +433,45 @@ export default function AcertoSetoresPage() {
   };
 
   const formatMoney = (value) => {
-    return value.toFixed(4).replace('.', ',');
+    return value.toFixed(4).replace(".", ",");
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#F3F4F6' }}>
+    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <div className="max-w-[1400px] mx-auto p-6">
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">Acerto de Setores</h1>
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
+          Acerto de Setores
+        </h1>
 
         {/* Layout Principal - Grid de 2 colunas */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          
           {/* COLUNA ESQUERDA (2/3) */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* QUADRANTE SUPERIOR ESQUERDO - Controles de Filtro */}
             <Card className="bg-white/90 backdrop-blur-sm">
               <CardContent className="p-4">
                 <div className="space-y-4">
                   <div className="w-40">
-                    <Label className="text-sm font-medium mb-1 block">Lançamento</Label>
+                    <Label className="text-sm font-medium mb-1 block">
+                      Lançamento
+                    </Label>
                     <Input
                       type="date"
                       value={lancamento}
                       onChange={(e) => setLancamento(e.target.value)}
                     />
                   </div>
-                  
+
                   <div className="w-full">
-                    <Label className="text-sm font-medium mb-1 block">Setor</Label>
-                    <div 
+                    <Label className="text-sm font-medium mb-1 block">
+                      Setor
+                    </Label>
+                    <div
                       className="border rounded px-3 py-2 bg-white cursor-pointer hover:border-gray-400 transition-colors"
                       onClick={handleOpenSetorModal}
                     >
                       <span className="text-red-600 font-medium">
-                        {setorSelecionado ? setorSelecionado.name : 'Todos'}
+                        {setorSelecionado ? setorSelecionado.name : "Todos"}
                       </span>
                     </div>
                   </div>
@@ -420,47 +485,64 @@ export default function AcertoSetoresPage() {
                 <CardTitle className="text-base font-bold">Pedidos</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="overflow-x-auto" style={{ height: '300px' }}>
+                <div className="overflow-x-auto" style={{ height: "300px" }}>
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
-                        <TableHead className="text-center w-20">Código</TableHead>
-                        <TableHead className="w-52">Cliente/Pto. venda</TableHead>
+                        <TableHead className="text-center w-20">
+                          Código
+                        </TableHead>
+                        <TableHead className="w-52">
+                          Cliente/Pto. venda
+                        </TableHead>
                         <TableHead className="text-center w-24">Data</TableHead>
-                        <TableHead className="text-center w-20">Setor</TableHead>
-                        <TableHead className="text-center w-20">Baixa</TableHead>
-                        <TableHead className="text-right w-24">Total F</TableHead>
+                        <TableHead className="text-center w-20">
+                          Setor
+                        </TableHead>
+                        <TableHead className="text-center w-20">
+                          Baixa
+                        </TableHead>
+                        <TableHead className="text-right w-24">
+                          Total F
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {!searchExecuted ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-gray-400 py-8">
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-gray-400 py-8"
+                          >
                             Clique no botão de pesquisa para visualizar pedidos
                           </TableCell>
                         </TableRow>
                       ) : (
                         pedidos.map((pedido) => (
-                          <TableRow 
+                          <TableRow
                             key={pedido.id}
-                            className={`cursor-pointer hover:bg-blue-50 ${selectedPedido?.id === pedido.id ? 'bg-blue-100' : ''}`}
+                            className={`cursor-pointer hover:bg-blue-50 ${selectedPedido?.id === pedido.id ? "bg-blue-100" : ""}`}
                             onClick={() => handleSelectPedido(pedido)}
                             onDoubleClick={() => {
                               handleSelectPedido(pedido);
                               handleTransformToSale();
                             }}
                           >
-                            <TableCell className="text-center">{pedido.orderNumber}</TableCell>
+                            <TableCell className="text-center">
+                              {pedido.orderNumber}
+                            </TableCell>
                             <TableCell>{pedido.personName}</TableCell>
                             <TableCell className="text-center">
-                              {pedido.deliveryDate ? format(parseISO(pedido.deliveryDate), 'dd/MM/yyyy') : '-'}
+                              {pedido.deliveryDate
+                                ? format(pedido.deliveryDate, "dd/MM/yyyy")
+                                : "-"}
                             </TableCell>
                             <TableCell className="text-center">-</TableCell>
                             <TableCell className="text-center">
-                              {pedido.status === 'finalizado' ? '✓' : '-'}
+                              {pedido.status === "finalizado" ? "✓" : "-"}
                             </TableCell>
                             <TableCell className="text-right">
-                              R$ {pedido.totalAmount?.toFixed(2) || '0,00'}
+                              R$ {pedido.totalAmount?.toFixed(2) || "0,00"}
                             </TableCell>
                           </TableRow>
                         ))
@@ -485,21 +567,28 @@ export default function AcertoSetoresPage() {
                 <CardTitle className="text-base font-bold">Itens</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="overflow-x-auto" style={{ height: '200px' }}>
+                <div className="overflow-x-auto" style={{ height: "200px" }}>
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
                         <TableHead className="w-64">Produto</TableHead>
-                        <TableHead className="text-center w-20">Qtde.</TableHead>
+                        <TableHead className="text-center w-20">
+                          Qtde.
+                        </TableHead>
                         <TableHead className="text-right w-24">Preço</TableHead>
-                        <TableHead className="text-right w-24">Desconto</TableHead>
+                        <TableHead className="text-right w-24">
+                          Desconto
+                        </TableHead>
                         <TableHead className="text-center w-20">Vas</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {itensPedido.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-gray-400 py-8">
+                          <TableCell
+                            colSpan={5}
+                            className="text-center text-gray-400 py-8"
+                          >
                             Selecione um pedido para ver os itens
                           </TableCell>
                         </TableRow>
@@ -507,9 +596,15 @@ export default function AcertoSetoresPage() {
                         itensPedido.map((item, index) => (
                           <TableRow key={index}>
                             <TableCell>{item.productName}</TableCell>
-                            <TableCell className="text-center">{item.quantity}</TableCell>
-                            <TableCell className="text-right">R$ {item.unitPrice?.toFixed(2)}</TableCell>
-                            <TableCell className="text-right">R$ {item.discount?.toFixed(2) || '0,00'}</TableCell>
+                            <TableCell className="text-center">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              R$ {item.unitPrice?.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              R$ {item.discount?.toFixed(2) || "0,00"}
+                            </TableCell>
                             <TableCell className="text-center">-</TableCell>
                           </TableRow>
                         ))
@@ -517,43 +612,48 @@ export default function AcertoSetoresPage() {
                     </TableBody>
                   </Table>
                 </div>
-                
+
                 <div className="p-4 border-t space-y-4">
                   <div className="flex justify-end items-center gap-3">
                     <Label className="text-sm">Total Pedido........:</Label>
-                    <Input 
-                      type="text" 
-                      readOnly 
-                      className="w-40 text-right" 
-                      value={selectedPedido ? `R$ ${selectedPedido.totalAmount?.toFixed(2)}` : '0,00'} 
+                    <Input
+                      type="text"
+                      readOnly
+                      className="w-40 text-right"
+                      value={
+                        selectedPedido
+                          ? `R$ ${selectedPedido.totalAmount?.toFixed(2)}`
+                          : "0,00"
+                      }
                     />
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Observação do Pedido</Label>
-                    <Textarea 
-                      rows={3} 
-                      className="resize-none" 
-                      value={selectedPedido?.notes || ''}
+                    <Label className="text-sm font-medium mb-2 block">
+                      Observação do Pedido
+                    </Label>
+                    <Textarea
+                      rows={3}
+                      className="resize-none"
+                      value={selectedPedido?.notes || ""}
                       readOnly
                     />
                   </div>
                 </div>
               </CardContent>
             </Card>
-
           </div>
 
           {/* COLUNA DIREITA (1/3) */}
           <div className="space-y-6">
-            
             {/* QUADRANTE SUPERIOR DIREITO - Controles de Pedidos e Período */}
             <Card className="bg-white/90 backdrop-blur-sm">
               <CardContent className="p-4 space-y-6">
-                
                 {/* Seção Pedidos */}
                 <div className="border rounded-lg p-3">
-                  <Label className="text-sm font-bold mb-3 block">Pedidos</Label>
+                  <Label className="text-sm font-bold mb-3 block">
+                    Pedidos
+                  </Label>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -561,7 +661,12 @@ export default function AcertoSetoresPage() {
                         checked={mostrarEntregues}
                         onCheckedChange={setMostrarEntregues}
                       />
-                      <Label htmlFor="entregues" className="text-sm cursor-pointer">Entregues</Label>
+                      <Label
+                        htmlFor="entregues"
+                        className="text-sm cursor-pointer"
+                      >
+                        Entregues
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -569,14 +674,21 @@ export default function AcertoSetoresPage() {
                         checked={mostrarNaoEntregues}
                         onCheckedChange={setMostrarNaoEntregues}
                       />
-                      <Label htmlFor="naoEntregues" className="text-sm cursor-pointer">Não Entregues</Label>
+                      <Label
+                        htmlFor="naoEntregues"
+                        className="text-sm cursor-pointer"
+                      >
+                        Não Entregues
+                      </Label>
                     </div>
                   </div>
                 </div>
 
                 {/* Seção Período */}
                 <div className="border rounded-lg p-3">
-                  <Label className="text-sm font-bold mb-3 block">Período</Label>
+                  <Label className="text-sm font-bold mb-3 block">
+                    Período
+                  </Label>
                   <div className="flex flex-wrap items-center gap-2">
                     <Input
                       type="date"
@@ -603,17 +715,16 @@ export default function AcertoSetoresPage() {
                       onChange={(e) => setHoraFinal(e.target.value)}
                       className="w-24"
                     />
-                    <Button 
-                      size="icon" 
-                      className="h-8 w-8 text-white" 
-                      style={{ backgroundColor: '#e78b3a' }}
+                    <Button
+                      size="icon"
+                      className="h-8 w-8 text-white"
+                      style={{ backgroundColor: "#e78b3a" }}
                       onClick={applyFilters}
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
-
               </CardContent>
             </Card>
 
@@ -626,7 +737,10 @@ export default function AcertoSetoresPage() {
                     checked={mostrarLancados}
                     onCheckedChange={setMostrarLancados}
                   />
-                  <Label htmlFor="mostrar-lancados" className="text-sm cursor-pointer">
+                  <Label
+                    htmlFor="mostrar-lancados"
+                    className="text-sm cursor-pointer"
+                  >
                     Mostrar ped. lançados
                   </Label>
                 </div>
@@ -636,7 +750,9 @@ export default function AcertoSetoresPage() {
                   <div>
                     <Label className="text-sm block mb-1">Não lançados</Label>
                     <div className="flex justify-between items-center">
-                      <span className="text-base">{resumo.naoLancados.qtd}</span>
+                      <span className="text-base">
+                        {resumo.naoLancados.qtd}
+                      </span>
                       <span className="text-base font-bold text-red-600">
                         {formatMoney(resumo.naoLancados.valor)}
                       </span>
@@ -647,7 +763,9 @@ export default function AcertoSetoresPage() {
                   <div>
                     <Label className="text-sm block mb-1">Vendas Vista</Label>
                     <div className="flex justify-between items-center">
-                      <span className="text-base">{resumo.vendasVista.qtd}</span>
+                      <span className="text-base">
+                        {resumo.vendasVista.qtd}
+                      </span>
                       <span className="text-base font-bold text-red-600">
                         {formatMoney(resumo.vendasVista.valor)}
                       </span>
@@ -667,9 +785,13 @@ export default function AcertoSetoresPage() {
 
                   {/* Vendas Prazo/A Rec. */}
                   <div>
-                    <Label className="text-sm block mb-1">Vendas Prazo/A Rec.</Label>
+                    <Label className="text-sm block mb-1">
+                      Vendas Prazo/A Rec.
+                    </Label>
                     <div className="flex justify-between items-center">
-                      <span className="text-base">{resumo.vendasPrazo.qtd}</span>
+                      <span className="text-base">
+                        {resumo.vendasPrazo.qtd}
+                      </span>
                       <span className="text-base font-bold text-red-600">
                         {formatMoney(resumo.vendasPrazo.valor)}
                       </span>
@@ -714,7 +836,9 @@ export default function AcertoSetoresPage() {
                   <TabsContent value="venda" className="space-y-4 mt-4">
                     {/* Nota Fiscal */}
                     <div>
-                      <Label className="text-sm font-bold block mb-2">Nota Fiscal</Label>
+                      <Label className="text-sm font-bold block mb-2">
+                        Nota Fiscal
+                      </Label>
                       <div className="flex gap-2">
                         <div className="flex-1">
                           <Label className="text-xs block mb-1">Nº:</Label>
@@ -729,16 +853,18 @@ export default function AcertoSetoresPage() {
 
                     {/* Documento */}
                     <div>
-                      <Label className="text-sm font-bold block mb-2">Documento</Label>
+                      <Label className="text-sm font-bold block mb-2">
+                        Documento
+                      </Label>
                       <div className="flex gap-2 items-end">
                         <div className="flex-1">
                           <Label className="text-xs block mb-1">Nº:</Label>
                           <Input type="text" className="w-full" />
                         </div>
-                        <Button 
-                          size="icon" 
-                          className="text-white" 
-                          style={{ backgroundColor: '#e78b3a' }}
+                        <Button
+                          size="icon"
+                          className="text-white"
+                          style={{ backgroundColor: "#e78b3a" }}
                           onClick={handleTransformToSale}
                           disabled={!selectedPedido}
                         >
@@ -749,70 +875,103 @@ export default function AcertoSetoresPage() {
 
                     {/* Convênio */}
                     <div>
-                      <Label className="text-sm font-bold block mb-2">Convênio</Label>
-                      <RadioGroup value={convenio} onValueChange={setConvenio} className="flex gap-4">
+                      <Label className="text-sm font-bold block mb-2">
+                        Convênio
+                      </Label>
+                      <RadioGroup
+                        value={convenio}
+                        onValueChange={setConvenio}
+                        className="flex gap-4"
+                      >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="sim" id="convenio-sim" />
-                          <Label htmlFor="convenio-sim" className="text-sm cursor-pointer">Sim</Label>
+                          <Label
+                            htmlFor="convenio-sim"
+                            className="text-sm cursor-pointer"
+                          >
+                            Sim
+                          </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="nao" id="convenio-nao" />
-                          <Label htmlFor="convenio-nao" className="text-sm cursor-pointer">Não</Label>
+                          <Label
+                            htmlFor="convenio-nao"
+                            className="text-sm cursor-pointer"
+                          >
+                            Não
+                          </Label>
                         </div>
                       </RadioGroup>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="bxCartao" className="mt-4">
-                    <p className="text-sm text-gray-500">Informações de baixa de cartão</p>
+                    <p className="text-sm text-gray-500">
+                      Informações de baixa de cartão
+                    </p>
                   </TabsContent>
 
                   <TabsContent value="cancelamento" className="mt-4">
-                    <p className="text-sm text-gray-500">Dados de cancelamento</p>
+                    <p className="text-sm text-gray-500">
+                      Dados de cancelamento
+                    </p>
                   </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
-
           </div>
         </div>
 
         {/* BARRA DE AÇÕES (RODAPÉ) */}
         <div className="bg-gray-100 rounded-lg p-4 shadow-lg">
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white">
+            <Button
+              variant="outline"
+              className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
+            >
               <Edit className="w-6 h-6 text-gray-700" />
               <span className="text-xs text-gray-700">Alterar</span>
             </Button>
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
-              onClick={() => window.location.href = createPageUrl("Dashboard")}
+              onClick={() =>
+                (window.location.href = createPageUrl("Dashboard"))
+              }
             >
               <LogOut className="w-6 h-6 text-gray-700" />
               <span className="text-xs text-gray-700">Sair</span>
             </Button>
 
-            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white">
+            <Button
+              variant="outline"
+              className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
+            >
               <Printer className="w-6 h-6 text-gray-700" />
               <span className="text-xs text-gray-700">Imprimir</span>
             </Button>
 
-            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white">
+            <Button
+              variant="outline"
+              className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
+            >
               <FileText className="w-6 h-6 text-gray-700" />
               <span className="text-xs text-gray-700">Rel. Venda</span>
             </Button>
 
-            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white">
+            <Button
+              variant="outline"
+              className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
+            >
               <FileText className="w-6 h-6 text-gray-700" />
               <span className="text-xs text-gray-700">Rel. Ped</span>
             </Button>
 
             <div className="w-px bg-gray-400 h-16 mx-2"></div>
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
               onClick={() => setShowSalesModal(true)}
             >
@@ -820,10 +979,8 @@ export default function AcertoSetoresPage() {
               <span className="text-xs text-gray-700">Vendas</span>
             </Button>
 
-
-
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
               onClick={() => setShowAccountsReceivableModal(true)}
             >
@@ -831,8 +988,8 @@ export default function AcertoSetoresPage() {
               <span className="text-xs text-gray-700">Ctas Rec</span>
             </Button>
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
               onClick={() => setShowCashMovementsModal(true)}
             >
@@ -840,7 +997,10 @@ export default function AcertoSetoresPage() {
               <span className="text-xs text-gray-700">Caixa</span>
             </Button>
 
-            <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white">
+            <Button
+              variant="outline"
+              className="flex flex-col items-center gap-1 h-auto py-3 px-4 bg-white"
+            >
               <ArrowLeftRight className="w-6 h-6 text-gray-700" />
               <span className="text-xs text-gray-700">Transferências</span>
             </Button>
@@ -874,7 +1034,9 @@ export default function AcertoSetoresPage() {
                   <div
                     key={setor.id}
                     className={`p-3 border rounded cursor-pointer hover:bg-blue-50 transition-colors ${
-                      setorSelecionado?.id === setor.id ? 'bg-blue-100 border-blue-500' : ''
+                      setorSelecionado?.id === setor.id
+                        ? "bg-blue-100 border-blue-500"
+                        : ""
                     }`}
                     onClick={() => handleSelectSetor(setor)}
                   >
@@ -894,30 +1056,42 @@ export default function AcertoSetoresPage() {
         {/* Modal de Vendas */}
         <Dialog open={showSalesModal} onOpenChange={setShowSalesModal}>
           <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-            <SalesPage onSaleComplete={() => {
-              setShowSalesModal(false);
-              loadData();
-            }} />
+            <SalesPage
+              onSaleComplete={() => {
+                setShowSalesModal(false);
+                loadData();
+              }}
+            />
           </DialogContent>
         </Dialog>
 
         {/* Modal de Contas a Receber */}
-        <Dialog open={showAccountsReceivableModal} onOpenChange={setShowAccountsReceivableModal}>
+        <Dialog
+          open={showAccountsReceivableModal}
+          onOpenChange={setShowAccountsReceivableModal}
+        >
           <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-            <AccountsReceivablePage onComplete={() => {
-              setShowAccountsReceivableModal(false);
-              loadData();
-            }} />
+            <AccountsReceivablePage
+              onComplete={() => {
+                setShowAccountsReceivableModal(false);
+                loadData();
+              }}
+            />
           </DialogContent>
         </Dialog>
 
         {/* Modal de Lançamentos Financeiros */}
-        <Dialog open={showCashMovementsModal} onOpenChange={setShowCashMovementsModal}>
+        <Dialog
+          open={showCashMovementsModal}
+          onOpenChange={setShowCashMovementsModal}
+        >
           <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
-            <CashMovementsPage onComplete={() => {
-              setShowCashMovementsModal(false);
-              loadData();
-            }} />
+            <CashMovementsPage
+              onComplete={() => {
+                setShowCashMovementsModal(false);
+                loadData();
+              }}
+            />
           </DialogContent>
         </Dialog>
 
@@ -933,7 +1107,11 @@ export default function AcertoSetoresPage() {
               </p>
             </div>
             <div className="flex justify-center">
-              <Button onClick={() => setShowNoResultsModal(false)} className="text-white" style={{ backgroundColor: '#e78b3a' }}>
+              <Button
+                onClick={() => setShowNoResultsModal(false)}
+                className="text-white"
+                style={{ backgroundColor: "#e78b3a" }}
+              >
                 OK
               </Button>
             </div>
@@ -947,7 +1125,6 @@ export default function AcertoSetoresPage() {
           pedido={selectedPedido}
           onConfirm={handlePaymentConfirm}
         />
-
       </div>
     </div>
   );
