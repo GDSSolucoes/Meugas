@@ -1,0 +1,5 @@
+node_modules
+.env
+dist/*
+base44_data_export/*
+base44_data_export_updated/*

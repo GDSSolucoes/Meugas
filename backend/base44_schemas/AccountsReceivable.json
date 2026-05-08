@@ -1,0 +1,59 @@
+{
+  "name": "AccountsReceivable",
+  "type": "object",
+  "properties": {
+    "person_id": {
+      "type": "string"
+    },
+    "person_name": {
+      "type": "string"
+    },
+    "sale_id": {
+      "type": "string"
+    },
+    "installment_number": {
+      "type": "number",
+      "default": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "pago",
+        "vencido"
+      ],
+      "default": "pendente"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "ID da empresa a qual o registro pertence"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Nome da empresa a qual o registro pertence"
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "person_id",
+    "description",
+    "due_date",
+    "amount"
+  ]
+}
