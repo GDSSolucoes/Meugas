@@ -1,89 +1,96 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+} from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { Type } from "class-transformer";
 
 export class FuelingBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  vehicleId!: string
+  vehicleId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  vehiclePlate!: string
+  vehiclePlate!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  vehicleDescription!: string
+  vehicleDescription!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  fleetNumber!: string
+  fleetNumber!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  driverId!: string
+  driverId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  driverName!: string
+  driverName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  fuelingDate!: Date
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsNumber()
-  currentKm!: number
+  @Type(() => Date)
+  fuelingDate!: Date;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  liters!: number
+  currentKm!: number;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  totalValue!: number
+  liters!: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsNumber()
+  totalValue!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  pricePerLiter!: number
+  pricePerLiter!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  kmTraveled!: number
+  kmTraveled!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  consumption!: number
+  consumption!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  costPerKm!: number
+  costPerKm!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  createExpense!: boolean
+  createExpense!: boolean;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  cashMovementId!: string
+  cashMovementId!: string;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 }

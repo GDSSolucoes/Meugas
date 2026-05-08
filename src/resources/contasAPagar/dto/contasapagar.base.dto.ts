@@ -1,42 +1,45 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { ContasAPagarStatusEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { ContasAPagarStatusEnum } from "../../../database/schemas";
+import { Type } from "class-transformer";
 
 export class ContasapagarBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  supplierId!: string
+  supplierId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  supplierName!: string
+  supplierName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  description!: string
+  description!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  dueDate!: Date
+  @Type(() => Date)
+  dueDate!: Date;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  amount!: number
+  amount!: number;
 
   @ApiProperty()
   @IsOptional()
-  status!: ContasAPagarStatusEnum
+  status!: ContasAPagarStatusEnum;
 
   @ApiProperty()
   @IsOptional()
-  paymentDate!: Date
+  @Type(() => Date)
+  paymentDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 }

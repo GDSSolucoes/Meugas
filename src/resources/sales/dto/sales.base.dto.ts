@@ -1,114 +1,128 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { SaleItemsItem, SaleStatusEnum, SalePaymentMethodsItem } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+} from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import {
+  SaleItemsItem,
+  SaleStatusEnum,
+  SalePaymentMethodsItem,
+} from "../../../database/schemas";
+import { Type } from "class-transformer";
 
 export class SalEsBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  saleNumber!: string
+  saleNumber!: string;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  personName!: string
+  onDelete!: any;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  sectorName!: string
+  personName!: string;
 
   @ApiProperty()
   @IsOptional()
-  status!: SaleStatusEnum
+  @IsString()
+  sectorName!: string;
 
   @ApiProperty()
   @IsOptional()
-  saleDate!: Date
+  status!: SaleStatusEnum;
 
   @ApiProperty()
   @IsOptional()
-  items!: SaleItemsItem[]
+  @Type(() => Date)
+  saleDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  paymentMethods!: SalePaymentMethodsItem[]
+  items!: SaleItemsItem[];
+
+  @ApiProperty()
+  @IsOptional()
+  paymentMethods!: SalePaymentMethodsItem[];
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  totalAmount!: number
+  totalAmount!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  notes!: string
+  notes!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  orderNumber!: string
+  orderNumber!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  conveniadaId!: string
+  conveniadaId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  conveniadaName!: string
+  conveniadaName!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfeNumber!: string
+  nfeNumber!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfeKey!: string
+  nfeKey!: string;
 
   @ApiProperty()
   @IsOptional()
-  nfeDate!: Date
+  @Type(() => Date)
+  nfeDate!: Date;
 
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  nfeCancelada!: boolean
+  nfeCancelada!: boolean;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfeJustificativaCancelamento!: string
+  nfeJustificativaCancelamento!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfceNumber!: string
+  nfceNumber!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfceKey!: string
+  nfceKey!: string;
 
   @ApiProperty()
   @IsOptional()
-  nfceDate!: Date
+  @Type(() => Date)
+  nfceDate!: Date;
 
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  nfceCancelada!: boolean
+  nfceCancelada!: boolean;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfceJustificativaCancelamento!: string
+  nfceJustificativaCancelamento!: string;
 }

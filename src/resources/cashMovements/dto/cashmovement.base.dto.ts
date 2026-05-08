@@ -1,53 +1,55 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { CashMovementTypeEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { CashMovementTypeEnum } from "../../../database/schemas";
+import { Type } from "class-transformer";
 
 export class CashmovementBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  cashAccountName!: string
+  cashAccountName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  type!: CashMovementTypeEnum
+  type!: CashMovementTypeEnum;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  amount!: number
+  amount!: number;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  description!: string
+  description!: string;
 
   @ApiProperty()
   @IsOptional()
-  movementDate!: Date
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  personName!: string
+  @Type(() => Date)
+  movementDate!: Date;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  groupId!: string
+  personName!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  groupName!: string
+  groupId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  relatedDocId!: string
+  groupName!: string;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  @IsString()
+  relatedDocId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  onDelete!: any;
 }

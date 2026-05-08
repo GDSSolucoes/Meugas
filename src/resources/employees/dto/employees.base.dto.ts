@@ -1,56 +1,66 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { EmployeePositionEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+} from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { EmployeePositionEnum } from "../../../database/schemas";
+import { Type } from "class-transformer";
 
 export class EmployeEsBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  name!: string
+  name!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  document!: string
+  document!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  email!: string
+  email!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  phone!: string
+  phone!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  position!: EmployeePositionEnum
+  position!: EmployeePositionEnum;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  salary!: number
+  salary!: number;
 
   @ApiProperty()
   @IsOptional()
-  hireDate!: Date
+  @Type(() => Date)
+  hireDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  vacationStart!: Date
+  @Type(() => Date)
+  vacationStart!: Date;
 
   @ApiProperty()
   @IsOptional()
-  vacationEnd!: Date
+  @Type(() => Date)
+  vacationEnd!: Date;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  active!: boolean
+  active!: boolean;
 }

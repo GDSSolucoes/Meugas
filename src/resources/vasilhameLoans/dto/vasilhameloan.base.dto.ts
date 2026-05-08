@@ -1,43 +1,45 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { VasilhameLoanStatusEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { VasilhameLoanStatusEnum } from "../../../database/schemas";
+import { Type } from "class-transformer";
 
 export class VasilhameloanBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  personName!: string
+  personName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  vasilhameId!: string
+  vasilhameId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  vasilhameName!: string
+  vasilhameName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  loanQuantity!: number
+  loanQuantity!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  returnedQuantity!: number
+  returnedQuantity!: number;
 
   @ApiProperty()
   @IsOptional()
-  loanDate!: Date
+  @Type(() => Date)
+  loanDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  status!: VasilhameLoanStatusEnum
+  status!: VasilhameLoanStatusEnum;
 }

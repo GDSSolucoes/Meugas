@@ -61,10 +61,10 @@ export const sales = pgTable(
     }),
     sectorName: text("sector_name"),
     status: saleStatusPGEnum("status").default(SaleStatusEnum.CONCLUIDA),
-    saleDate: date("sale_date", { mode : "date"}),
+    saleDate: date("sale_date", { mode : "date" }).notNull(),
     items: json("items").$type<SaleItemsItem[]>(),
     paymentMethods: json("payment_methods").$type<SalePaymentMethodsItem[]>(),
-    totalAmount: numeric("total_amount", { mode : "number"}).notNull(),
+    totalAmount: numeric("total_amount", { mode : "number" }).notNull(),
     notes: text("notes"),
     orderId: uuid("order_id").references(() => orders.id, {
       onDelete: "set null",

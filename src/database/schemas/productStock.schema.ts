@@ -18,19 +18,26 @@ export const productStocks = pgTable(
   "productStocks",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
     productName: text("product_name"),
-    sectorId: uuid("sector_id").notNull().references(() => sectors.id, { onDelete: "cascade" }),
+    sectorId: uuid("sector_id")
+      .notNull()
+      .references(() => sectors.id, { onDelete: "cascade" }),
     sectorName: text("sector_name"),
-    quantity: numeric("quantity", { mode : "number"}).notNull(),
-    initialDate: date("initial_date", { mode : "date"}),
+    quantity: numeric("quantity", { mode: "number" }).notNull(),
+    initialDate: date("initial_date", { mode: "date" }),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("productStocks_tenant_isolation", {
@@ -45,4 +52,3 @@ export const productStocks = pgTable(
     index("productStocks_sector_id_index").on(table.sectorId),
   ],
 );
-

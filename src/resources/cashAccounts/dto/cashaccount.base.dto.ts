@@ -1,38 +1,46 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { CashAccountTypeEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+} from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { CashAccountTypeEnum } from "../../../database/schemas";
+import { Type } from "class-transformer";
 
 export class CashaccountBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  name!: string
+  name!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  type!: CashAccountTypeEnum
+  type!: CashAccountTypeEnum;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  balance!: number
+  balance!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  initialBalance!: number
+  initialBalance!: number;
 
   @ApiProperty()
   @IsOptional()
-  initialBalanceDate!: Date
+  @Type(() => Date)
+  initialBalanceDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  active!: boolean
+  active!: boolean;
 }

@@ -1,39 +1,47 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-
+import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsDate,
+} from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
 
 export class ProductstockBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  productId!: string
+  productId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  productName!: string
+  productName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  sectorId!: string
+  sectorId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  sectorName!: string
+  sectorName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  quantity!: number
+  quantity!: number;
 
   @ApiProperty()
   @IsOptional()
-  initialDate!: Date
+  @Type(() => Date)
+  @IsDate()
+  initialDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 }

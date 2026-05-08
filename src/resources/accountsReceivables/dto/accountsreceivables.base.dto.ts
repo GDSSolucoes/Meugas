@@ -1,38 +1,40 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { Type } from "class-transformer";
 
 export class AccountsreceivablEsBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsOptional()
-  onDelete!: any
+  onDelete!: any;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  personName!: string
+  personName!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  installmentNumber!: number
+  installmentNumber!: number;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  description!: string
+  description!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  dueDate!: Date
+  @Type(() => Date)
+  dueDate!: Date;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  amount!: number
+  amount!: number;
 
   @ApiProperty()
   @IsOptional()
-  paymentDate!: Date
+  @Type(() => Date)
+  paymentDate!: Date;
 }

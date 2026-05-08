@@ -49,8 +49,6 @@ export class UsersController {
       email: body.email,
       adminName: body.name,
       adminEmail: body.email,
-    }, {
-      name: body.name,
     });
     const created = await this.rls.withCompany(company.id, () =>
       this.users.create({
