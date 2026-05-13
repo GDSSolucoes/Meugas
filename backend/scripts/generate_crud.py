@@ -138,6 +138,7 @@ class FileGenerator:
         return {
             'base_dto': '''import {{ ApiProperty }} from '@nestjs/swagger'            
 import {{ IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID }} from 'class-validator'
+import {{ Type }} from "class-transformer";
 import {{ BaseGetDto }} from '../../../common/dto/base-get.dto'
 {properties_to_import}
 
@@ -149,6 +150,7 @@ export class {Entity}BaseDto extends BaseGetDto {{
             'create_dto': '''import {{ {Entity}BaseDto }} from './{entity}.base.dto'            
 {properties_to_import}
 import {{ IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID }} from 'class-validator'
+import {{ Type }} from "class-transformer";
 
 export class {Entity}CreateDto extends {Entity}BaseDto {{
 }}
@@ -296,7 +298,7 @@ export class {Entities}Module {{}}
         properties = []
 
         for col_name, col_info in columns.items():
-            if col_name in ['id', 'createdAt', 'deleted', 'companyId', 'companyName', 'createdByName']:
+            if col_name in ['id', 'createdAt', 'deleted', 'active', 'companyId', 'companyName', 'createdByName']:
                 continue
 
             prop_name = self.snake_to_camel(col_name)
@@ -321,6 +323,9 @@ export class {Entities}Module {{}}
                 decorators.append('@IsBoolean()')
             elif col_name.endswith('_id') or col_name == 'id':
                 decorators.append('@IsUUID()')
+            elif prop_type == 'Date':
+                decorators.append('@Type(() => Date)')
+
 
             # Add ApiProperty
             decorators.insert(0, '@ApiProperty()')

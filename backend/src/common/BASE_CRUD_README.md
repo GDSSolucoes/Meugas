@@ -4,142 +4,7 @@
 
 A estrutura `BaseCrudService` e `BaseCrudController` foi ajustada para aproveitar o contexto de RLS (Row-Level Security) que já está implementado no `database.module.ts`.
 
-## Mudanças Principais
-
-### 1. **BaseCrudService**
-- Agora injeta `RequestContextService` em vez de `@Inject('DB')`
-- Obtém o database com RLS ativado via `this.requestContext.getDb()`
-- Obtém o `companyId` automaticamente do contexto via `this.requestContext.getCompanyId()`
-- **Não precisa mais receber `companyId` como parâmetro** - é obtido do contexto RLS
-- As políticas de RLS filtram automaticamente por `company_id`
-
-### 2. **BaseCrudController**
-- Métodos não recebem mais `@CurrentUser()` para extrair `companyId`
-- Chama serviço sem passar `companyId` - contexto é automático
-- Exemplos de mudanças:
-
-```typescript
-// ANTES
-async list(@CurrentUser() user: any, @Query('page') page: number = 1) {
-  const companyId = user.companyId
-  return this.service.list(companyId, page, 10, {})
-}
-
-// DEPOIS
-async list(@Query('page') page: number = 1) {
-  return this.service.list(page, 10, {})
-}
-```
-
 ## Como Adicionar Nova Entidade
-
-### 1. Criar DTOs
-
-```typescript
-// src/resources/[entity]/dto/[entity].post.dto.ts
-import { ApiProperty } from '@nestjs/swagger'
-
-export class [Entity]PostDto {
-  @ApiProperty()
-  name!: string
-  // ... outros campos
-}
-```
-
-### 2. Criar Service
-
-```typescript
-// src/resources/[entity]/[entity].service.ts
-import { Injectable } from '@nestjs/common'
-import { BaseCrudService } from '../../common/base-crud.service'
-import { RequestContextService } from '../../database/request-context.service'
-import { [entities] } from '../../database/schemas'
-import { [Entity]PostDto } from './dto/[entity].post.dto'
-import { [Entity]UpdateDto } from './dto/[entity].update.dto'
-
-@Injectable()
-export class [Entity]Service extends BaseCrudService<typeof [entities]> {
-  constructor(requestContext: RequestContextService) {
-    super(requestContext, [entities], true) // true = has companyId
-  }
-}
-```
-
-### 3. Criar Controller
-
-```typescript
-// src/resources/[entity]/[entity].controller.ts
-import { Controller, UseGuards } from '@nestjs/common'
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
-import { JwtAuthGuard } from '../../auth/jwt-auth.guard'
-import { RolesGuard } from '../../auth/roles.guard'
-import { BaseCrudController } from '../../common/base-crud.controller'
-import { [Entity]Service } from './[entity].service'
-
-@Controller('[entities]')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@ApiBearerAuth()
-@ApiTags('[entities]')
-export class [Entity]Controller extends BaseCrudController<any> {
-  constructor(readonly [entity]Service: [Entity]Service) {
-    super([entity]Service, '[Entity]', true)
-  }
-}
-```
-
-### 4. Criar Module
-
-```typescript
-// src/resources/[entity]/[entity].module.ts
-import { Module } from '@nestjs/common'
-import { [Entity]Service } from './[entity].service'
-import { [Entity]Controller } from './[entity].controller'
-
-@Module({
-  providers: [[Entity]Service],
-  controllers: [[Entity]Controller],
-})
-export class [Entity]Module {}
-```
-
-### 5. Registrar no AppModule
-
-```typescript
-// src/app.module.ts
-import { [Entity]Module } from './resources/[entity]/[entity].module'
-
-@Module({
-  imports: [
-    // ... outros imports
-    [Entity]Module,
-  ],
-})
-export class AppModule {}
-```
-
-## RLS (Row-Level Security) - Como Funciona
-
-### Flow
-
-1. **RLS Interceptor** (`rls.interceptor.ts`) intercepta requisições HTTP
-2. Extrai `companyId` do JWT token
-3. Chama `RlsService.withCompany(companyId, fn)`
-4. `RlsService.withCompany`:
-   - Conecta ao banco com cliente dedicado
-   - Executa `SET app.current_company_id = companyId`
-   - Executa a função dentro d
-
-o contexto via `RequestContextService`
-   - Commit/Rollback automático
-5. **RequestContextService** armazena `db`, `client`, `companyId` em AsyncLocalStorage
-6. **BaseCrudService** obtém o db do contexto e todas as queries são automaticamente filtradas
-
-### Benefícios
-
-- ✅ Segurança garantida - queries sempre filtram por `company_id` em nível de banco
-- ✅ Sem passar `companyId` manualmente entre camadas
-- ✅ Menor chance de bug de isolamento de dados
-- ✅ Performance - filtro aplicado no banco, não na aplicação
 
 ## Endpoints Padrão
 
@@ -167,34 +32,206 @@ GET /api/vehicles?page=1&limit=10&q=Honda&plate_like=ABC
 - campo_eq: igual (ex: status_eq=ativo)
 ```
 
-## Exemplo Completo: Fueling
+### 1. Verificar se a maquina possui ambiente python configurado
+
+### 2. Se possui python instalado:
+
+#### 2.1 Criar definição do schema
 
 ```typescript
-// Service
-@Injectable()
-export class FuelingService extends BaseCrudService<typeof fuelings> {
-  constructor(requestContext: RequestContextService) {
-    super(requestContext, fuelings, true)
-  }
-}
+// src/database/schemas/[entity].schema.ts
+import { pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { companies } from "./company.schema";
+import { sql } from "drizzle-orm/sql/sql";
 
-// Controller
-@Controller('fuelings')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@ApiTags('fuelings')
-export class FuelingController extends BaseCrudController<any> {
-  constructor(readonly fuelingService: FuelingService) {
-    super(fuelingService, 'Fueling', true)
-  }
-}
-
-// Module
-@Module({
-  providers: [FuelingService],
-  controllers: [FuelingController],
-})
-export class FuelingModule {}
+export const [entity] = pgTable(
+  "entity",
+  {
+    // Propriedades base, obrigatórias
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    companyName: text("company_name"),
+    active: boolean("active").default(true),
+    createdByName: text("created_by_name"),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
+    //... outras propriedades
+  },
+  (table) => [
+    pgPolicy("[entity]_tenant_isolation", {
+      for: "all",
+      as: "permissive",
+      to: "public",
+      using: sql`company_id = current_setting('app.current_company_id', true)::uuid`,
+      withCheck: sql`company_id = current_setting('app.current_company_id', true)::uuid`,
+    }),
+  ],
+);
 ```
+
+#### 2.2 Executar script para geração de CRUD
+
+```shell
+python scripts/generate_crud.py
+```
+
+#### 2.3 Conferir arquivos gerados.
+
+- Conferir se foi gerado adequadamente os DTOs, service, controller e module na pasta `src/resources/[entity]`
+- Conferir se o modulo foi registrado em `src/app.module.ts`
+
+### 3. Se não existir ambiente python
+
+Precisa criar os arquivos manualmente, seguindo a arquitetura padrão
+
+#### 3.1 Criar definição do schema
+
+```typescript
+// src/database/schemas/[entity].schema.ts
+import { pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { companies } from "./company.schema";
+import { sql } from "drizzle-orm/sql/sql";
+
+export const [entity] = pgTable(
+  "entity",
+  {
+    // Propriedades base, obrigatórias
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    companyName: text("company_name"),
+    active: boolean("active").default(true),
+    createdByName: text("created_by_name"),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
+    //... outras propriedades
+  },
+  (table) => [
+    pgPolicy("[entity]_tenant_isolation", {
+      for: "all",
+      as: "permissive",
+      to: "public",
+      using: sql`company_id = current_setting('app.current_company_id', true)::uuid`,
+      withCheck: sql`company_id = current_setting('app.current_company_id', true)::uuid`,
+    }),
+  ],
+);
+```
+
+#### 3.2. Criar DTOs
+
+```typescript
+// src/resources/[entity]/dto/[entity].post.dto.ts
+import { ApiProperty } from '@nestjs/swagger'
+
+export class [Entity]PostDto {
+  @ApiProperty()
+  name!: string
+  // ... outros campos
+}
+```
+
+#### 3.3. Criar Service
+
+```typescript
+// src/resources/[entity]/[entity].service.ts
+import { Injectable } from '@nestjs/common'
+import { BaseCrudService } from '../../common/base-crud.service'
+import { RequestContextService } from '../../database/request-context.service'
+import { [entities] } from '../../database/schemas'
+import { [Entity]PostDto } from './dto/[entity].post.dto'
+import { [Entity]UpdateDto } from './dto/[entity].update.dto'
+
+@Injectable()
+export class [Entity]Service extends BaseCrudService<typeof [entities]> {
+  constructor(requestContext: RequestContextService) {
+    super(requestContext, [entities], true) // true = has companyId
+  }
+}
+```
+
+#### 3.4. Criar Controller
+
+```typescript
+// src/resources/[entity]/[entity].controller.ts
+import { Controller, UseGuards } from '@nestjs/common'
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard'
+import { RolesGuard } from '../../auth/roles.guard'
+import { BaseCrudController } from '../../common/base-crud.controller'
+import { [Entity]Service } from './[entity].service'
+
+@Controller('[entities]')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
+@ApiTags('[entities]')
+export class [Entity]Controller extends BaseCrudController<any> {
+  constructor(readonly [entity]Service: [Entity]Service) {
+    super([entity]Service, '[Entity]', true)
+  }
+}
+```
+
+#### 3.5. Criar Module
+
+```typescript
+// src/resources/[entity]/[entity].module.ts
+import { Module } from '@nestjs/common'
+import { [Entity]Service } from './[entity].service'
+import { [Entity]Controller } from './[entity].controller'
+
+@Module({
+  providers: [[Entity]Service],
+  controllers: [[Entity]Controller],
+})
+export class [Entity]Module {}
+```
+
+#### 3.6. Registrar no AppModule
+
+```typescript
+// src/app.module.ts
+import { [Entity]Module } from './resources/[entity]/[entity].module'
+
+@Module({
+  imports: [
+    // ... outros imports
+    [Entity]Module,
+  ],
+})
+export class AppModule {}
+```
+
+## RLS (Row-Level Security) - Como Funciona
+
+### Flow
+
+1. **RLS Interceptor** (`rls.interceptor.ts`) intercepta requisições HTTP
+2. Extrai `companyId` do JWT token
+3. Chama `RlsService.withCompany(companyId, fn)`
+4. `RlsService.withCompany`:
+   - Conecta ao banco com cliente dedicado
+   - Executa `SET app.current_company_id = companyId`
+   - Executa a função dentro do contexto via `RequestContextService`
+   - Commit/Rollback automático
+5. **RequestContextService** armazena `db`, `client`, `companyId` em AsyncLocalStorage
+6. **BaseCrudService** obtém o db do contexto e todas as queries são automaticamente filtradas
+
+### Benefícios
+
+- ✅ Segurança garantida - queries sempre filtram por `company_id` em nível de banco
+- ✅ Sem passar `companyId` manualmente entre camadas
+- ✅ Menor chance de bug de isolamento de dados
+- ✅ Performance - filtro aplicado no banco, não na aplicação
 
 ## Observações Importantes
 
