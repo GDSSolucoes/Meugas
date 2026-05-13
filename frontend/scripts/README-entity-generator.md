@@ -26,13 +26,13 @@ Gera: `frontend/src/entities/Order.ts`
 ### Exemplo de Output
 
 ```typescript
-import { BaseEntity } from './BaseEntity';
+import { BaseEntity } from "./BaseEntity";
 
 export enum OrdersStatusEnum {
-  PENDENTE = 'pendente',
-  EM_ATENDIMENTO = 'em_atendimento',
-  FINALIZADO = 'finalizado',
-  CANCELADO = 'cancelado',
+  PENDENTE = "pendente",
+  EM_ATENDIMENTO = "em_atendimento",
+  FINALIZADO = "finalizado",
+  CANCELADO = "cancelado",
 }
 
 export class Order extends BaseEntity {
@@ -51,58 +51,8 @@ export class Order extends BaseEntity {
 ✅ **Interfaces complexas** - Gera tipos para objetos aninhados  
 ✅ **Date handling** - Converte strings para objetos Date automaticamente  
 ✅ **Métodos validados** - Adiciona validações específicas da entidade  
-✅ **Getters úteis** - Adiciona cálculos e formatações comuns  
-
-## 🎯 Próximos passos
-
-1. Validar `Order.ts` gerado
-2. Executar para outras entidades:
-   ```bash
-   node generate-entity.js Product
-   node generate-entity.js Sale
-   node generate-entity.js Person
-   node generate-entity.js CashAccount
-   # ... etc
-   ```
-3. Atualizar imports nos componentes que usam essas entidades
+✅ **Getters úteis** - Adiciona cálculos e formatações comuns
 
 ## 🔧 Customizações
 
 Se o script precisar de ajustes para uma entidade específica, edite manualmente após a geração, mas mantenha a estrutura base para consistência.
-
-## 📚 Entidades a Gerar
-
-Baseado no backend, as entidades a gerar são:
-- Order ✅ (já existe)
-- Person (já existe)
-- Product
-- Sale
-- Purchase
-- CashAccount
-- CashMovement
-- Sector
-- Employee
-- PaymentType
-- Acquirer
-- Facilitador
-- Budget
-- AccountsReceivable
-- ContasAPagar
-- ProductPickup
-- VasilhameLoan
-- StockTransfer
-- ProductStock
-- SectorMaster
-- FinancialGroup
-- FinancialSubgroup
-- Fueling
-
-## 🐛 Troubleshooting
-
-**Script não encontra arquivo DTO/Schema?**
-- Verifique se o caminho é correto: `backend/src/resources/{entity.lowercase}s/`
-- Certifique-se que a entidade existe no backend
-
-**Proprietário não foi detectado?**
-- Verifique se o DTO segue o padrão de classe com decoradores `@IsOptional()` ou `@IsNotEmpty()`
-- Execute `npm run typecheck` no backend para validar DTOs
