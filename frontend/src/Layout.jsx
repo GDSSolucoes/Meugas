@@ -49,7 +49,7 @@ import { Toaster } from "@/components/ui/toaster"; // Importar o Toaster
 import { User } from "@/entities/User";
 import { Company } from "@/entities/Company"; // Import correto da entidade Company
 
-const logoUrl = "/public/assets/logo.png";
+const logoUrl = "/assets/logo.png";
 
 const modulePedidos = [
   { title: "Pedidos", url: createPageUrl("Orders"), icon: ClipboardList },
