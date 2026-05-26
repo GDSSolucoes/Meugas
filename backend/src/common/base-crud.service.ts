@@ -9,14 +9,12 @@ import { AnyPgColumn, PgTableWithColumns } from "drizzle-orm/pg-core";
 export type BaseTableConfig = {
   name: string;
   schema: string | undefined;
-  dialect: 'pg';
+  dialect: "pg";
   columns: {
     // 1. Colunas OBRIGATÓRIAS que seu motor genérico usa
     id: AnyPgColumn;
     active: AnyPgColumn;
     createdAt: AnyPgColumn;
-    
-    
   };
 };
 
@@ -141,7 +139,10 @@ export class BaseCrudService<T extends BasePgTable> {
       insertData.companyId = companyId;
     }
 
-    const result = await db.insert(this.table as any).values(insertData).returning();
+    const result = await db
+      .insert(this.table as any)
+      .values(insertData)
+      .returning();
     return (result as any[])[0];
   }
 

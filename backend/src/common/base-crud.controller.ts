@@ -1,11 +1,26 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger'
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'
-import { RolesGuard } from '../auth/roles.guard'
-import { Roles } from '../auth/roles.decorator'
-import { BaseCrudService, BasePgTable } from './base-crud.service'
-import { BaseCreateDto } from './dto/base-create.dto'
-import { BaseUpdateDto } from './dto/base-update.dto'
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from "@nestjs/swagger";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/roles.guard";
+import { Roles } from "../auth/roles.decorator";
+import { BaseCrudService, BasePgTable } from "./base-crud.service";
+import { BaseCreateDto } from "./dto/base-create.dto";
+import { BaseUpdateDto } from "./dto/base-update.dto";
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -20,13 +35,28 @@ export class BaseCrudController<T extends BasePgTable> {
   @Get()
   @ApiOperation({ summary: `List Items` })
   @ApiResponse({ status: 200, description: `list of objects` })
-  @ApiQuery({ name: 'page', required: false, type: 'string', description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: 'string', description: 'Items per page (default: 10)' })
-  @ApiQuery({ name: 'q', required: false, type: 'string', description: 'Search query' })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: "string",
+    description: "Page number (default: 1)",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: "string",
+    description: "Items per page (default: 10)",
+  })
+  @ApiQuery({
+    name: "q",
+    required: false,
+    type: "string",
+    description: "Search query",
+  })
   async list(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('q') search?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("q") search?: string,
     @Query() allFilters?: Record<string, any>,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
@@ -37,38 +67,43 @@ export class BaseCrudController<T extends BasePgTable> {
     delete filters.page;
     delete filters.limit;
     delete filters.q;
-
+    console.log(
+      `Listing ${this.entityName} with filters:`,
+      filters,
+      `search:`,
+      search,
+    );
     return this.service.list(pageNum, limitNum, filters, search);
   }
 
-  @Get(':id')
+  @Get(":id")
   @ApiOperation({ summary: `Get Item by ID` })
   @ApiResponse({ status: 200, description: `Item details` })
-  async get(@Param('id') id: string) {
-    return this.service.get(id)
+  async get(@Param("id") id: string) {
+    return this.service.get(id);
   }
 
   @Post()
-  @Roles('admin', 'user')
+  @Roles("admin", "user")
   @ApiOperation({ summary: `Create Item` })
   @ApiResponse({ status: 201, description: `Item created` })
   async create(@Body() data: BaseCreateDto) {
-    return this.service.create(data)
+    return this.service.create(data);
   }
 
-  @Put(':id')
-  @Roles('admin', 'user')
+  @Put(":id")
+  @Roles("admin", "user")
   @ApiOperation({ summary: `Update Item` })
   @ApiResponse({ status: 200, description: `Item updated` })
-  async update(@Param('id') id: string, @Body() data: BaseUpdateDto) {
-    return this.service.update(id, data)
+  async update(@Param("id") id: string, @Body() data: BaseUpdateDto) {
+    return this.service.update(id, data);
   }
 
-  @Delete(':id')
-  @Roles('admin')
+  @Delete(":id")
+  @Roles("admin")
   @ApiOperation({ summary: `Delete Item` })
   @ApiResponse({ status: 200, description: `Item deleted` })
-  async delete(@Param('id') id: string) {
-    return this.service.delete(id)
+  async delete(@Param("id") id: string) {
+    return this.service.delete(id);
   }
 }
