@@ -42,6 +42,7 @@ import argparse
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, Optional
 import json
+from collections import defaultdict
 
 
 class SchemaParser:
@@ -121,6 +122,54 @@ class SchemaParser:
         return columns
 
 
+class ComplexTypeExtractor:
+    """Extrai tipos complexos (export type) do arquivo de schema."""
+
+    def __init__(self, schema_file_path: Path):
+        self.schema_file_path = schema_file_path
+        self.complex_types = {}
+
+    def extract_all_types(self) -> Dict[str, Dict]:
+        """Extrai todos os export type do schema."""
+        with open(self.schema_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Padrão: export type TypeName = { ... };
+        type_pattern = r'export type (\w+) = \{([^}]+)\};'
+        matches = re.finditer(type_pattern, content, re.MULTILINE | re.DOTALL)
+
+        for match in matches:
+            type_name = match.group(1)
+            type_body = match.group(2)
+            properties = self._parse_type_properties(type_body)
+            self.complex_types[type_name] = {
+                'name': type_name,
+                'properties': properties,
+                'body': type_body
+            }
+
+        return self.complex_types
+
+    def _parse_type_properties(self, type_body: str) -> Dict:
+        """Extrai propriedades de um tipo."""
+        properties = {}
+
+        # Padrão: propertyName?: type;
+        prop_pattern = r'(\w+)\?: ([^;]+);'
+        matches = re.finditer(prop_pattern, type_body)
+
+        for match in matches:
+            prop_name = match.group(1)
+            prop_type = match.group(2).strip()
+            properties[prop_name] = {
+                'name': prop_name,
+                'type': prop_type,
+                'required': False  # TypeScript usa ? = opcional
+            }
+
+        return properties
+
+
 class EntityMapper:
     """Maps table names to entity names and file paths."""
 
@@ -155,7 +204,7 @@ class FileGenerator:
         """Load file templates."""
         return {
             'base_dto': '''import {{ ApiProperty }} from '@nestjs/swagger'            
-import {{ IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID }} from 'class-validator'
+import {{ IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID, IsArray, ValidateNested }} from 'class-validator'
 import {{ Type }} from "class-transformer";
 import {{ BaseCreateDto }} from "../../../common/dto/base-create.dto";
 {properties_to_import}
@@ -224,6 +273,7 @@ import {{ {Entity}CreateDto }} from './dto/{entity}.post.dto'
 import {{ Roles }} from '../../auth/roles.decorator'
 import {{ RolesGuard }} from '../../auth/roles.guard'
 import {{ {Entity}UpdateDto }} from './dto/{entity}.update.dto'
+import {{ CurrentUser }} from "../../auth/current-user.decorator"
 
 @ApiTags('{entities}')
 @ApiBearerAuth()
@@ -239,8 +289,8 @@ export class {Entities}Controller extends BaseCrudController<typeof {entities}> 
   @ApiBody({{ type: {Entity}CreateDto }})
   @ApiOperation({{ summary: `Create {Entity}` }})
   @ApiResponse({{ status: 201, description: `{Entity} created`, type: {Entity}CreateDto }})
-  async create(@Body() data: {Entity}CreateDto) {{
-    return super.create(data)
+  async create(@Body() data: {Entity}CreateDto, @CurrentUser() user?: any) {{
+    return super.create(data, user)
   }}
 
   @Get(':id')
@@ -317,7 +367,10 @@ export class {Entities}Module {{}}
 
         return '\n\n'.join(properties), ', '.join(set(properties_to_import))
 
-    def generate_base_dto_properties(self, columns: Dict) -> str:
+    def generate_base_dto_properties(self, columns: Dict, complex_types_generated: Set[str] = None) -> str:
+        if complex_types_generated is None:
+            complex_types_generated = set()
+            
         properties_to_import = []
         properties = []
 
@@ -329,27 +382,52 @@ export class {Entities}Module {{}}
             prop_type, need_import = self.map_column_definition_to_ts(col_info['definition'])
             decorators = []
 
-            if need_import:
-                properties_to_import.append(prop_type.replace('[]', ''))  # Remove array brackets for imports
-
             # Add validation decorators
             if col_info['required']:
                 decorators.append('@IsNotEmpty()')
             else:
                 decorators.append('@IsOptional()')
 
-            # Add type-specific decorators
-            if prop_type == 'string':
-                decorators.append('@IsString()')
-            elif prop_type in ['number', 'numeric']:
-                decorators.append('@IsNumber()')
-            elif prop_type == 'boolean':
-                decorators.append('@IsBoolean()')
-            elif col_name.lower().endswith('id') or col_name.lower() == 'id':
-                decorators.append('@IsUUID()')
-            elif prop_type == 'Date':
-                decorators.append('@Type(() => Date)')
+            # Check if this is a complex type that was generated
+            is_complex_type = False
+            base_type = prop_type.replace('[]', '').strip()
+            
+            if base_type in complex_types_generated:
+                is_complex_type = True
+                # Convert type name to DTO class name (e.g., SaleItemsItem -> SaleItemsItemDto)
+                dto_class_name = f'{base_type}Dto'
+                
+                if prop_type.endswith('[]'):
+                    # Array of complex types
+                    decorators.append('@IsArray()')
+                    decorators.append('@ValidateNested({ each: true })')
+                    decorators.append(f'@Type(() => {dto_class_name})')
+                    prop_type = f'{dto_class_name}[]'
+                else:
+                    # Single complex type
+                    decorators.append('@ValidateNested()')
+                    decorators.append(f'@Type(() => {dto_class_name})')
+                    prop_type = dto_class_name
+                
+                properties_to_import.append(dto_class_name)
+            elif need_import:
+                # For enum types, still import from schema
+                if 'Enum' in prop_type:
+                    properties_to_import.append(prop_type.replace('[]', ''))
 
+            # Add type-specific decorators only if not a complex type
+            if not is_complex_type:
+                if prop_type == 'string':
+                    decorators.append('@IsString()')
+                elif prop_type in ['number', 'numeric']:
+                    decorators.append('@IsNumber()')
+                elif prop_type == 'boolean':
+                    decorators.append('@IsBoolean()')
+                elif col_name.lower().endswith('id') or col_name.lower() == 'id':
+                    if not need_import:  # Don't add IsUUID for enum types
+                        decorators.append('@IsUUID()')
+                elif prop_type == 'Date':
+                    decorators.append('@Type(() => Date)')
 
             # Add ApiProperty
             decorators.insert(0, '@ApiProperty()')
@@ -359,6 +437,65 @@ export class {Entities}Module {{}}
   {prop_name}!: {prop_type}''')
 
         return '\n\n'.join(properties), ', '.join(set(properties_to_import))
+
+    def generate_complex_type_dto(self, type_name: str, type_info: Dict) -> str:
+        """Gera DTO class para um tipo complexo."""
+        properties = []
+        properties_to_import = set()
+
+        for prop_name, prop_data in type_info['properties'].items():
+            prop_type = prop_data['type']
+            decorators = []
+
+            # Detectar se é array
+            is_array = prop_type.endswith('[]')
+            base_type = prop_type.replace('[]', '').strip()
+
+            # Adicionar decoradores de validação
+            decorators.append('@IsOptional()')
+
+            if is_array:
+                decorators.append('@IsArray()')
+                # Se for array de objetos complexos, usar ValidateNested
+                if base_type not in ['string', 'number', 'boolean', 'any']:
+                    decorators.append('@ValidateNested({ each: true })')
+                    decorators.append(f'@Type(() => {base_type})')
+                    properties_to_import.add(base_type)
+            else:
+                # Adicionar decoradores específicos do tipo
+                if base_type == 'string':
+                    decorators.append('@IsString()')
+                elif base_type in ['number', 'numeric']:
+                    decorators.append('@IsNumber()')
+                elif base_type == 'boolean':
+                    decorators.append('@IsBoolean()')
+                elif base_type != 'any':
+                    # Se for um tipo customizado (ex: nested object)
+                    decorators.append('@ValidateNested()')
+                    decorators.append(f'@Type(() => {base_type})')
+                    properties_to_import.add(base_type)
+
+            decorators.insert(0, '@ApiProperty()')
+            decorator_str = '\n  '.join(decorators)
+            properties.append(f'''  {decorator_str}
+  {prop_name}!: {prop_type}\n''')
+
+        # Construir import statement
+        import_stmt = ''
+        if properties_to_import:
+            imports = ', '.join(sorted(properties_to_import))
+            import_stmt = f"import {{ {imports} }} from './{ self.snake_to_camel(type_name).lower()}.dto'\n"
+
+        # Gerar DTO class
+        dto_content = f'''import {{ ApiProperty }} from '@nestjs/swagger'
+import {{ IsOptional, IsString, IsNumber, IsBoolean, IsArray, ValidateNested }} from 'class-validator'
+import {{ Type }} from 'class-transformer'
+{import_stmt}
+export class {type_name}Dto {{
+{chr(10).join(properties)}
+}}
+'''
+        return dto_content
 
     @staticmethod
     def snake_to_camel(snake_str: str) -> str:
@@ -399,8 +536,11 @@ export class {Entities}Module {{}}
 
         return type_mapping.get(column_type, 'any'), False
 
-    def generate_file(self, template_name: str, variables: Dict, output_path: Path, dry_run: bool = False) -> bool:
+    def generate_file(self, template_name: str, variables: Dict, output_path: Path, dry_run: bool = False, complex_types_generated: Set[str] = None) -> bool:
         """Generate a file from template."""
+        if complex_types_generated is None:
+            complex_types_generated = set()
+            
         if template_name not in self.templates:
             print(f"Template {template_name} not found")
             return False
@@ -410,7 +550,10 @@ export class {Entities}Module {{}}
         # Special handling for DTOs with properties
         if template_name in ['create_dto', 'base_dto'] and 'columns' in variables:
             if template_name == 'base_dto':
-                variables['properties'], variables['properties_to_import'] = self.generate_base_dto_properties(variables['columns'])
+                variables['properties'], variables['properties_to_import'] = self.generate_base_dto_properties(
+                    variables['columns'], 
+                    complex_types_generated
+                )
             else:
                 variables['properties'], variables['properties_to_import'] = self.generate_dto_properties(variables['columns'])
             # Remove columns from variables to avoid KeyError
@@ -418,10 +561,37 @@ export class {Entities}Module {{}}
 
         # Format template
         try:
-            if len(variables['properties_to_import']) > 5:
-                variables['properties_to_import'] = f"import {{ { variables['properties_to_import'] } }} from '../../../database/schemas'"
-            else:
-                variables['properties_to_import'] = ''
+            # Handle complex type imports and schema imports separately
+            complex_type_imports = []
+            schema_imports = []
+            
+            if 'properties_to_import' in variables and variables['properties_to_import']:
+                imports_str = variables['properties_to_import']
+                for imp in imports_str.split(', '):
+                    imp = imp.strip()
+                    if imp.endswith('Dto'):
+                        # It's a complex type DTO import
+                        dto_file = f'{self.snake_to_camel(imp.replace("Dto", "")).lower()}.dto'
+                        complex_type_imports.append((imp, f'./{dto_file}'))
+                    elif imp and imp != '':
+                        # It's a schema import (like enum)
+                        schema_imports.append(imp)
+            
+            # Build proper import statements
+            import_lines = []
+            if complex_type_imports:
+                # Group by file
+                imports_by_file = defaultdict(list)
+                for imp, file_path in complex_type_imports:
+                    imports_by_file[file_path].append(imp)
+                
+                for file_path, imports in imports_by_file.items():
+                    import_lines.append(f"import {{ {', '.join(imports)} }} from '{file_path}'")
+            
+            if schema_imports:
+                import_lines.append(f"import {{ {', '.join(schema_imports)} }} from '../../../database/schemas'")
+            
+            variables['properties_to_import'] = '\n'.join(import_lines) if import_lines else ''
 
             content = template.format(**variables)
         except KeyError as e:
@@ -700,7 +870,7 @@ Examples:
         # Generate all new entities
         for table_name, schema_info in schemas.items():
             entities_folder = mapper.table_to_entities_folder(table_name)
-            if entities_folder not in existing_resources:
+            if entities_folder not in existing_resources or args.regenerate:
                 entity_name = mapper.table_to_entity(table_name)
                 to_generate.append({
                     'table_name': table_name,
@@ -762,7 +932,7 @@ Examples:
 
         variables = {
             'Entity': entity,
-            'Entities': entity + 's',  # Service/Controller class name
+            'Entities': entity.capitalize(),  # Service/Controller class name
             'entity': entity.lower(),
             'entities': entities,
             'columns': columns
@@ -787,8 +957,42 @@ Examples:
         # Generate DTOs
         if 'dto' in components_to_generate:
             print(f"  📄 DTOs")
-            generator.generate_file('base_dto', variables, dto_dir / f'{entity.lower()}.base.dto.ts', args.dry_run)
-            generator.generate_file('create_dto', variables, dto_dir / f'{entity.lower()}.post.dto.ts', args.dry_run)
+            
+            # Extract and generate complex type DTOs first
+            schema_file = item['schema']['file']
+            complex_extractor = ComplexTypeExtractor(schema_file)
+            complex_types = complex_extractor.extract_all_types()
+            
+            # Gerar DTOs para tipos complexos que são usados no schema
+            generated_complex_types = set()
+            for col_name, col_info in columns.items():
+                col_def = col_info['definition']
+                # Procurar por tipos complexos referenciados
+                type_match = re.search(r'\$type<([^>]+)>', col_def)
+                if type_match:
+                    type_ref = type_match.group(1)
+                    # Extrair nome base (remover [] se for array)
+                    base_type = type_ref.replace('[]', '').strip()
+                    
+                    # Se encontrou o tipo complexo, gerar DTO para ele
+                    if base_type in complex_types and base_type not in generated_complex_types:
+                        complex_type_info = complex_types[base_type]
+                        dto_content = generator.generate_complex_type_dto(base_type, complex_type_info)
+                        
+                        dto_path = dto_dir / f'{generator.snake_to_camel(base_type).lower()}.dto.ts'
+                        if not args.dry_run:
+                            dto_dir.mkdir(parents=True, exist_ok=True)
+                            with open(dto_path, 'w', encoding='utf-8') as f:
+                                f.write(dto_content)
+                            print(f"    - Complex type DTO: {dto_path.name}")
+                        else:
+                            print(f"    Would create complex type DTO: {dto_path.name}")
+                        
+                        generated_complex_types.add(base_type)
+            
+            # Gerar DTOs padrão, passando os tipos complexos gerados
+            generator.generate_file('base_dto', variables, dto_dir / f'{entity.lower()}.base.dto.ts', args.dry_run, generated_complex_types)
+            generator.generate_file('create_dto', variables, dto_dir / f'{entity.lower()}.post.dto.ts', args.dry_run, generated_complex_types)
             generator.generate_file('update_dto', variables, dto_dir / f'{entity.lower()}.update.dto.ts', args.dry_run)
             generator.generate_file('delete_dto', variables, dto_dir / f'{entity.lower()}.delete.dto.ts', args.dry_run)
             generator.generate_file('list_dto', variables, dto_dir / f'{entity.lower()}.list.dto.ts', args.dry_run)
