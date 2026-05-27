@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, ilike, or, sql, desc, SQL } from "drizzle-orm";
+import { and, eq, ilike, or, sql, desc, SQL, asc } from "drizzle-orm";
 import { RequestContextService } from "../database/request-context.service";
 import { BaseCreateDto } from "./dto/base-create.dto";
 import { BaseUpdateDto } from "./dto/base-update.dto";
@@ -50,6 +50,8 @@ export class BaseCrudService<T extends BasePgTable> {
     limit: number = 10,
     filters: Record<string, any> = {},
     search?: string,
+    sort?: string,
+    order: "asc" | "desc" = "desc",
     searchFields: string[] = ["name"],
   ) {
     const db = this.getDb();
@@ -65,24 +67,49 @@ export class BaseCrudService<T extends BasePgTable> {
         if (column) {
           filterConditions.push(ilike(column, `%${value}%`));
         }
-      } else if (key.endsWith("_gt")) {
+        continue;
+      }
+      if (key.endsWith("_gt")) {
         const field = key.replace("_gt", "");
         const column = (this.table as any)[field];
         if (column) {
           filterConditions.push(sql`${column} > ${value}`);
         }
-      } else if (key.endsWith("_lt")) {
+        continue;
+      }
+
+      if (key.endsWith("_lt")) {
         const field = key.replace("_lt", "");
         const column = (this.table as any)[field];
         if (column) {
           filterConditions.push(sql`${column} < ${value}`);
         }
-      } else if (key.endsWith("_eq")) {
+        continue;
+      }
+
+      if (key.endsWith("_eq")) {
         const field = key.replace("_eq", "");
         const column = (this.table as any)[field];
         if (column) {
           filterConditions.push(eq(column, value));
         }
+        continue;
+      }
+
+      const column = (this.table as any)[key];
+      if (!column) continue;
+
+      const values = Array.isArray(value)
+        ? value
+        : String(value)
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+      if (values.length === 1) {
+        filterConditions.push(eq(column, values[0]));
+      } else if (values.length > 1) {
+        filterConditions.push(or(...values.map((item) => eq(column, item))));
       }
     }
 
@@ -98,13 +125,22 @@ export class BaseCrudService<T extends BasePgTable> {
       where = and(where, or(...searchConditions)) as SQL<boolean>;
     }
 
-    const result = await db
+    let query: any = db
       .select()
       .from(this.table as any)
       .where(where)
       .limit(limit)
-      .offset(offset)
-      .orderBy(desc((this.table as any).createdAt));
+      .offset(offset);
+
+    if (sort && (this.table as any)[sort]) {
+      const sortColumn = (this.table as any)[sort];
+      query = query.orderBy(
+        order === "asc" ? asc(sortColumn) : desc(sortColumn),
+      );
+    } else {
+      query = query.orderBy(desc((this.table as any).createdAt));
+    }
+    const result = await query;
 
     const total = await db
       .select({ count: sql<number>`count(*)` })

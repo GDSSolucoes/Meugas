@@ -57,6 +57,8 @@ export class BaseCrudController<T extends BasePgTable> {
     @Query("page") page?: string,
     @Query("limit") limit?: string,
     @Query("q") search?: string,
+    @Query("sort") sort?: string,
+    @Query("order") order?: string,
     @Query() allFilters?: Record<string, any>,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
@@ -67,13 +69,24 @@ export class BaseCrudController<T extends BasePgTable> {
     delete filters.page;
     delete filters.limit;
     delete filters.q;
+    delete filters.sort;
+    delete filters.order;
     console.log(
       `Listing ${this.entityName} with filters:`,
       filters,
       `search:`,
       search,
+      "Pagination: ",
+      { page: pageNum, limit: limitNum, sort, order },
     );
-    return this.service.list(pageNum, limitNum, filters, search);
+    return this.service.list(
+      pageNum,
+      limitNum,
+      filters,
+      search,
+      sort,
+      order === "desc" ? "desc" : "asc",
+    );
   }
 
   @Get(":id")
@@ -87,7 +100,14 @@ export class BaseCrudController<T extends BasePgTable> {
   @Roles("admin", "user")
   @ApiOperation({ summary: `Create Item` })
   @ApiResponse({ status: 201, description: `Item created` })
-  async create(@Body() data: BaseCreateDto) {
+  async create(
+    @Body()
+    data: BaseCreateDto,
+    user: any,
+  ) {
+    data.CompanyId = user.companyId;
+    data.CompanyName = user.companyName;
+    data.CreatedByName = user.name;
     return this.service.create(data);
   }
 

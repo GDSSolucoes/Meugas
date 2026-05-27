@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
@@ -83,8 +84,15 @@ export class ProductsController extends BaseCrudController<typeof products> {
     type: "string",
     description: "Search query",
   })
-  async list() {
-    return super.list();
+  async list(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("q") search?: string,
+    @Query("sort") sort?: string,
+    @Query("order") order?: string,
+    @Query() allFilters?: Record<string, any>,
+  ) {
+    return super.list(page, limit, search, sort, order, allFilters);
   }
 
   @Put(":id")

@@ -2,20 +2,38 @@
 """
 CRUD Generator Script for NestJS + Drizzle ORM
 
-This script generates complete CRUD modules for entities defined in database/schemas
-following the pattern established in the vehicles module.
+This script generates or regenerates complete CRUD modules for entities 
+defined in database/schemas following the pattern established in the vehicles module.
 
 Usage:
-    python scripts/generate_crud.py [--dry-run]
+    # Interactive mode - choose entity and components
+    python scripts/generate_crud.py
+    
+    # Generate all new entities
+    python scripts/generate_crud.py --no-interactive
+    
+    # Regenerate specific entity with all components
+    python scripts/generate_crud.py --entity products --regenerate
+    
+    # Generate only DTOs and Service for an entity
+    python scripts/generate_crud.py --entity orders --only-dto --only-service --regenerate
+    
+    # Dry run to see what would be generated
+    python scripts/generate_crud.py --entity products --dry-run
 
-Arguments:
-    --dry-run: Show what would be generated without creating files
+Features:
+    - Generate CRUD for new entities automatically
+    - Regenerate existing entities (with --regenerate flag)
+    - Choose specific components: DTO, Service, Controller
+    - Interactive mode for entity and component selection
+    - Dry run mode to preview changes
+    - Automatic app.module.ts updates
 
 The script will:
-1. Scan database/schemas for table definitions
-2. Check which entities don't have corresponding resources
-3. Generate DTOs, service, controller, and module files
-4. Update app.module.ts with new imports
+    1. Scan database/schemas for table definitions
+    2. Allow selection of specific entity or regenerate all new ones
+    3. Generate selected components (DTOs, service, controller, and module files)
+    4. Update app.module.ts with new imports when needed
 """
 
 import os
@@ -139,18 +157,16 @@ class FileGenerator:
             'base_dto': '''import {{ ApiProperty }} from '@nestjs/swagger'            
 import {{ IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID }} from 'class-validator'
 import {{ Type }} from "class-transformer";
-import {{ BaseGetDto }} from '../../../common/dto/base-get.dto'
+import {{ BaseCreateDto }} from "../../../common/dto/base-create.dto";
 {properties_to_import}
 
-export class {Entity}BaseDto extends BaseGetDto {{
+export class {Entity}BaseDto extends BaseCreateDto {{
 {properties}
 }}
 ''',
 
             'create_dto': '''import {{ {Entity}BaseDto }} from './{entity}.base.dto'            
 {properties_to_import}
-import {{ IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID }} from 'class-validator'
-import {{ Type }} from "class-transformer";
 
 export class {Entity}CreateDto extends {Entity}BaseDto {{
 }}
@@ -163,7 +179,6 @@ export class {Entity}UpdateDto extends PartialType({Entity}CreateDto) {{}}
 ''',
 
             'delete_dto': '''import {{ {Entity}BaseDto }} from './{entity}.base.dto'
-import {{ IsUUID }} from 'class-validator'
 
 export class {Entity}DeleteDto extends {Entity}BaseDto {{
 }}
@@ -199,7 +214,7 @@ export class {Entities}Service extends BaseCrudService<typeof {entities}> {{
 }}
 ''',
 
-            'controller': '''import {{ Body, Controller, Delete, Get, Param, Post, Put, UseGuards }} from '@nestjs/common'
+            'controller': '''import {{ Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards }} from "@nestjs/common"
 import {{ ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags, ApiQuery }} from '@nestjs/swagger'
 import {{ BaseCrudController }} from '../../common/base-crud.controller'
 import {{ {Entities}Service }} from './{entities}.service'
@@ -241,8 +256,17 @@ export class {Entities}Controller extends BaseCrudController<typeof {entities}> 
   @ApiQuery({{ name: 'page', required: false, type: 'string', description: 'Page number (default: 1)' }})
   @ApiQuery({{ name: 'limit', required: false, type: 'string', description: 'Items per page (default: 10)' }})
   @ApiQuery({{ name: 'q', required: false, type: 'string', description: 'Search query' }})
-  async list() {{
-    return super.list()
+  @ApiQuery({{ name: 'sort', required: false, type: 'string', description: 'Sort field' }})
+  @ApiQuery({{ name: 'order', required: false, type: 'string', description: 'Sort order' }})
+  async list(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("q") search?: string,
+    @Query("sort") sort?: string,
+    @Query("order") order?: string,
+    @Query() allFilters?: Record<string, any>
+    ) {{
+    return super.list(page, limit, search, sort, order, allFilters)
   }}
 
   @Put(':id')
@@ -298,7 +322,7 @@ export class {Entities}Module {{}}
         properties = []
 
         for col_name, col_info in columns.items():
-            if col_name in ['id', 'createdAt', 'deleted', 'active', 'companyId', 'companyName', 'createdByName']:
+            if col_name.lower() in ['id', 'createdat', 'deleted', 'active', 'companyid', 'companyname', 'createdbyname']:
                 continue
 
             prop_name = self.snake_to_camel(col_name)
@@ -321,7 +345,7 @@ export class {Entities}Module {{}}
                 decorators.append('@IsNumber()')
             elif prop_type == 'boolean':
                 decorators.append('@IsBoolean()')
-            elif col_name.endswith('_id') or col_name == 'id':
+            elif col_name.lower().endswith('id') or col_name.lower() == 'id':
                 decorators.append('@IsUUID()')
             elif prop_type == 'Date':
                 decorators.append('@Type(() => Date)')
@@ -481,9 +505,144 @@ class AppModuleUpdater:
         return True
 
 
+class ComponentSelector:
+    """Handles selection of CRUD components to generate."""
+    
+    @staticmethod
+    def get_components_to_generate(args) -> Set[str]:
+        """Determine which components to generate based on arguments."""
+        components = set()
+        
+        if not args.only_dto and not args.only_service and not args.only_controller:
+            # Default: generate all
+            components = {'dto', 'service', 'controller', 'module'}
+        else:
+            if args.only_dto:
+                components.add('dto')
+            if args.only_service:
+                components.add('service')
+            if args.only_controller:
+                components.add('controller')
+            # Module is always generated if service or controller is generated
+            if 'service' in components or 'controller' in components:
+                components.add('module')
+        
+        return components
+    
+    @staticmethod
+    def display_components(components: Set[str]) -> str:
+        """Display selected components in a user-friendly way."""
+        component_names = {
+            'dto': 'DTO files',
+            'service': 'Service',
+            'controller': 'Controller',
+            'module': 'Module'
+        }
+        return ', '.join(component_names.get(c, c) for c in sorted(components))
+
+
+def select_entity_interactive(schemas: Dict[str, Dict], existing_resources: Set[str]) -> Optional[str]:
+    """Display interactive menu to select an entity."""
+    mapper = EntityMapper()
+    schema_list = sorted(schemas.keys())
+    
+    print("\n=== Select Entity to Generate/Regenerate ===")
+    print("\nAvailable entities:")
+    
+    for idx, table_name in enumerate(schema_list, 1):
+        entities_folder = mapper.table_to_entities_folder(table_name)
+        status = "✓ (exists)" if entities_folder in existing_resources else "(new)"
+        print(f"  {idx}. {table_name} {status}")
+    
+    print(f"\n  0. Generate all new entities")
+    print(f"  q. Quit")
+    
+    while True:
+        try:
+            choice = input("\nEnter your choice: ").strip().lower()
+            
+            if choice == 'q':
+                return None
+            elif choice == '0':
+                return 'all_new'
+            else:
+                idx = int(choice) - 1
+                if 0 <= idx < len(schema_list):
+                    return schema_list[idx]
+                else:
+                    print("Invalid choice. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter a number or 'q'.")
+
+
+def select_components_interactive() -> Set[str]:
+    """Display interactive menu to select components to generate."""
+    print("\n=== Select Components to Generate ===")
+    print("  1. DTOs (base, create, update, delete, list)")
+    print("  2. Service")
+    print("  3. Controller")
+    print("  4. All components (default)")
+    
+    components = set()
+    
+    while True:
+        choices = input("\nEnter your choices (comma-separated, e.g., 1,2,3 or just press Enter for all): ").strip()
+        
+        if not choices:
+            return {'dto', 'service', 'controller', 'module'}
+        
+        try:
+            selected = [int(c.strip()) for c in choices.split(',')]
+            
+            if 4 in selected:
+                return {'dto', 'service', 'controller', 'module'}
+            
+            components = set()
+            if 1 in selected:
+                components.add('dto')
+            if 2 in selected:
+                components.add('service')
+            if 3 in selected:
+                components.add('controller')
+            
+            if 'service' in components or 'controller' in components:
+                components.add('module')
+            
+            if components:
+                return components
+            else:
+                print("Invalid choice. Please select at least one component.")
+        except ValueError:
+            print("Invalid input. Please enter numbers separated by commas.")
+
+
 def main():
-    parser = argparse.ArgumentParser(description='Generate CRUD modules for NestJS entities')
+    parser = argparse.ArgumentParser(
+        description='Generate or regenerate CRUD modules for NestJS entities',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  # Generate all new entities
+  python scripts/generate_crud.py
+  
+  # Regenerate specific entity with all components
+  python scripts/generate_crud.py --entity products --regenerate
+  
+  # Generate only DTOs and Service for an entity
+  python scripts/generate_crud.py --entity orders --only-dto --only-service
+  
+  # Dry run to see what would be generated
+  python scripts/generate_crud.py --entity products --dry-run
+        '''
+    )
+    parser.add_argument('--entity', type=str, help='Specific entity to generate/regenerate (table name)')
+    parser.add_argument('--regenerate', action='store_true', help='Force regeneration of existing entity')
+    parser.add_argument('--only-dto', action='store_true', help='Generate only DTO files')
+    parser.add_argument('--only-service', action='store_true', help='Generate only Service')
+    parser.add_argument('--only-controller', action='store_true', help='Generate only Controller')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be generated without creating files')
+    parser.add_argument('--no-interactive', action='store_true', help='Skip interactive mode and use defaults')
+    
     args = parser.parse_args()
 
     # Setup paths
@@ -492,17 +651,18 @@ def main():
     resources_dir = backend_dir / 'src' / 'resources'
     app_module_path = backend_dir / 'src' / 'app.module.ts'
 
+    print("\n" + "="*60)
     print("CRUD Generator for NestJS + Drizzle ORM")
+    print("="*60)
     print(f"Backend directory: {backend_dir}")
-    print(f"Dry run: {args.dry_run}")
     print()
 
     # Parse schemas
-    parser = SchemaParser(schemas_dir)
-    schemas = parser.get_all_schemas()
+    schema_parser = SchemaParser(schemas_dir)
+    schemas = schema_parser.get_all_schemas()
 
     print(f"Found {len(schemas)} schema files:")
-    for table_name in schemas.keys():
+    for table_name in sorted(schemas.keys()):
         print(f"  - {table_name}")
     print()
 
@@ -513,32 +673,82 @@ def main():
             if item.is_dir():
                 existing_resources.add(item.name)
 
-    print(f"Existing resources: {sorted(existing_resources)}")
+    print(f"Existing resources: {sorted(existing_resources) if existing_resources else 'None'}")
     print()
 
     # Determine which entities to generate
     mapper = EntityMapper()
+    selected_entity = args.entity
+    
+    # Interactive selection if no entity specified and not no-interactive flag
+    if not selected_entity and not args.no_interactive:
+        selected_entity = select_entity_interactive(schemas, existing_resources)
+        if selected_entity is None:
+            print("Cancelled.")
+            return
+    
+    # Interactive component selection if no specific components requested
+    components_to_generate = ComponentSelector.get_components_to_generate(args)
+    if not args.no_interactive and not (args.only_dto or args.only_service or args.only_controller):
+        if selected_entity and selected_entity != 'all_new':
+            components_to_generate = select_components_interactive()
+    
+    # Determine entities to generate
     to_generate = []
 
-    for table_name, schema_info in schemas.items():
-        entities_folder = mapper.table_to_entities_folder(table_name)
-        if entities_folder not in existing_resources:
-            entity_name = mapper.table_to_entity(table_name)
-            to_generate.append({
-                'table_name': table_name,
-                'entity': entity_name,
-                'entities': entities_folder,
-                'schema': schema_info
-            })
+    if selected_entity == 'all_new' or not selected_entity:
+        # Generate all new entities
+        for table_name, schema_info in schemas.items():
+            entities_folder = mapper.table_to_entities_folder(table_name)
+            if entities_folder not in existing_resources:
+                entity_name = mapper.table_to_entity(table_name)
+                to_generate.append({
+                    'table_name': table_name,
+                    'entity': entity_name,
+                    'entities': entities_folder,
+                    'schema': schema_info
+                })
+    else:
+        # Generate specific entity
+        if selected_entity not in schemas:
+            print(f"❌ Entity '{selected_entity}' not found in schemas!")
+            print(f"Available entities: {', '.join(sorted(schemas.keys()))}")
+            return
+        
+        schema_info = schemas[selected_entity]
+        entities_folder = mapper.table_to_entities_folder(selected_entity)
+        entity_name = mapper.table_to_entity(selected_entity)
+        
+        if entities_folder in existing_resources and not args.regenerate:
+            print(f"⚠️  Entity '{selected_entity}' already exists.")
+            print("Use --regenerate flag to overwrite existing files.")
+            return
+        
+        to_generate.append({
+            'table_name': selected_entity,
+            'entity': entity_name,
+            'entities': entities_folder,
+            'schema': schema_info
+        })
 
     if not to_generate:
-        print("No new entities to generate. All schemas already have corresponding resources.")
+        print("No entities to generate. All schemas already have corresponding resources.")
         return
 
-    print(f"Will generate CRUD for {len(to_generate)} entities:")
+    print(f"Will generate CRUD for {len(to_generate)} entity/entities:")
     for item in to_generate:
-        print(f"  - {item['table_name']} -> {item['entity']} ({item['entities']})")
+        print(f"  ✓ {item['table_name']} -> {item['entity']} ({item['entities']})")
     print()
+    print(f"Components to generate: {ComponentSelector.display_components(components_to_generate)}")
+    print(f"Dry run: {args.dry_run}")
+    print()
+
+    if args.dry_run and not args.no_interactive:
+        confirm = input("Proceed with dry run? (y/n): ").strip().lower()
+        if confirm != 'y':
+            print("Cancelled.")
+            return
+        print()
 
     # Generate files
     generator = FileGenerator(backend_dir)
@@ -571,34 +781,51 @@ def main():
         entity_dir = resources_dir / entities
         dto_dir = entity_dir / 'dto'
 
+        print(f"\nGenerating for: {entity}")
+        print("-" * 40)
+        
         # Generate DTOs
-        generator.generate_file('base_dto', variables, dto_dir / f'{entity.lower()}.base.dto.ts', args.dry_run)
-        generator.generate_file('create_dto', variables, dto_dir / f'{entity.lower()}.post.dto.ts', args.dry_run)
-        generator.generate_file('update_dto', variables, dto_dir / f'{entity.lower()}.update.dto.ts', args.dry_run)
-        generator.generate_file('delete_dto', variables, dto_dir / f'{entity.lower()}.delete.dto.ts', args.dry_run)
-        generator.generate_file('list_dto', variables, dto_dir / f'{entity.lower()}.list.dto.ts', args.dry_run)
+        if 'dto' in components_to_generate:
+            print(f"  📄 DTOs")
+            generator.generate_file('base_dto', variables, dto_dir / f'{entity.lower()}.base.dto.ts', args.dry_run)
+            generator.generate_file('create_dto', variables, dto_dir / f'{entity.lower()}.post.dto.ts', args.dry_run)
+            generator.generate_file('update_dto', variables, dto_dir / f'{entity.lower()}.update.dto.ts', args.dry_run)
+            generator.generate_file('delete_dto', variables, dto_dir / f'{entity.lower()}.delete.dto.ts', args.dry_run)
+            generator.generate_file('list_dto', variables, dto_dir / f'{entity.lower()}.list.dto.ts', args.dry_run)
 
         # Generate service
-        generator.generate_file('service', variables, entity_dir / f'{entities}.service.ts', args.dry_run)
+        if 'service' in components_to_generate:
+            print(f"  🔧 Service")
+            generator.generate_file('service', variables, entity_dir / f'{entities}.service.ts', args.dry_run)
 
         # Generate controller
-        generator.generate_file('controller', variables, entity_dir / f'{entities}.controller.ts', args.dry_run)
+        if 'controller' in components_to_generate:
+            print(f"  🌐 Controller")
+            generator.generate_file('controller', variables, entity_dir / f'{entities}.controller.ts', args.dry_run)
 
         # Generate module
-        generator.generate_file('module', variables, entity_dir / f'{entities}.module.ts', args.dry_run)
+        if 'module' in components_to_generate:
+            print(f"  📦 Module")
+            generator.generate_file('module', variables, entity_dir / f'{entities}.module.ts', args.dry_run)
 
-        # Update app.module.ts
-        updater.add_module_import(f'{variables["Entities"]}Module', entities, args.dry_run)
+        # Update app.module.ts only if generating module
+        if 'module' in components_to_generate:
+            updater.add_module_import(f'{variables["Entities"]}Module', entities, args.dry_run)
 
     if not args.dry_run:
-        print("\nGeneration complete!")
-        print("Next steps:")
+        print("\n" + "="*60)
+        print("✅ Generation complete!")
+        print("="*60)
+        print("\nNext steps:")
         print("1. Run 'npm run lint' to check for any linting issues")
         print("2. Run 'npm run test' to ensure tests pass")
         print("3. Test the new endpoints with your API client")
         print("4. Review generated DTOs and adjust validation rules if needed")
     else:
-        print("\nDry run complete. Use without --dry-run to actually generate files.")
+        print("\n" + "="*60)
+        print("✅ Dry run complete!")
+        print("="*60)
+        print("Use without --dry-run to actually generate files.")
 
 
 if __name__ == '__main__':

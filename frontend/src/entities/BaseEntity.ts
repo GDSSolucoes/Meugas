@@ -1,4 +1,4 @@
-import { api, apiEnabled } from '@/api/apiClient';
+import { api, apiEnabled } from "@/api/apiClient";
 
 export interface FilterOptions {
   [key: string]: any;
@@ -8,7 +8,7 @@ export interface PaginationOptions {
   page?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 export class BaseEntity {
@@ -38,29 +38,37 @@ export class BaseEntity {
     this: new (data?: T) => T,
     baseUrl: string,
     filters: FilterOptions = {},
-    pagination?: PaginationOptions
+    pagination?: PaginationOptions,
   ): Promise<T[]> {
     if (!apiEnabled) {
-      throw new Error('API não configurada');
+      throw new Error("API não configurada");
     }
-    
 
     try {
       const params = new URLSearchParams();
 
       // Add filters
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
+        if (value !== undefined && value !== null && value !== "") {
+          if (Array.isArray(value)) {
+            value.forEach((item) => params.append(key, String(item)));
+          } else {
+            params.append(key, String(value));
+          }
         }
       });
 
       // Add pagination
       if (pagination) {
-        if (pagination.page) params.append('page', String(pagination.page));
-        if (pagination.limit) params.append('limit', String(pagination.limit));
-        if (pagination.sort) params.append('sort', pagination.sort);
-        if (pagination.order) params.append('order', pagination.order);
+        if (pagination.page) params.append("page", String(pagination.page));
+        if (pagination.limit) params.append("limit", String(pagination.limit));
+        if (pagination.sort)
+          params.append("sort", pagination.sort.replace("-", ""));
+        if (pagination.order || pagination.sort?.startsWith("-"))
+          params.append(
+            "order",
+            pagination.sort?.startsWith("-") ? "desc" : "asc",
+          );
       }
 
       const queryString = params.toString();
@@ -69,9 +77,10 @@ export class BaseEntity {
       const response = await api.get(url);
       // a API por padrão retorna um objeto null ou um objeto com { data: T[], totalPages: number, page: number, limit: number }
       // mas o frontend nao esta preparado para tabelas paginadas, entao vamos retornar apenas o array de dados
-      
-      
-      return response.data?.data ? response.data.data.map((item: any) => new this(item)) : response.data;
+
+      return response.data?.data
+        ? response.data.data.map((item: any) => new this(item))
+        : response.data;
     } catch (error) {
       console.error(`Erro ao filtrar ${this.name}:`, error);
       throw error;
@@ -86,10 +95,10 @@ export class BaseEntity {
   static async _create<T extends BaseEntity>(
     this: new (data?: T) => T,
     baseUrl: string,
-    data: Partial<T>
+    data: Partial<T>,
   ): Promise<T> {
     if (!apiEnabled) {
-      throw new Error('API não configurada');
+      throw new Error("API não configurada");
     }
 
     try {
@@ -111,10 +120,10 @@ export class BaseEntity {
     this: new (data?: T) => T,
     baseUrl: string,
     id: string,
-    data: Partial<T>
+    data: Partial<T>,
   ): Promise<T> {
     if (!apiEnabled) {
-      throw new Error('API não configurada');
+      throw new Error("API não configurada");
     }
 
     try {
@@ -135,10 +144,10 @@ export class BaseEntity {
   static async _delete<T extends BaseEntity>(
     this: new (data?: T) => T,
     baseUrl: string,
-    id: string
+    id: string,
   ): Promise<void> {
     if (!apiEnabled) {
-      throw new Error('API não configurada');
+      throw new Error("API não configurada");
     }
 
     try {
@@ -158,10 +167,10 @@ export class BaseEntity {
   static async _findById<T extends BaseEntity>(
     this: new (data?: T) => T,
     baseUrl: string,
-    id: string
+    id: string,
   ): Promise<T | null> {
     if (!apiEnabled) {
-      throw new Error('API não configurada');
+      throw new Error("API não configurada");
     }
 
     try {

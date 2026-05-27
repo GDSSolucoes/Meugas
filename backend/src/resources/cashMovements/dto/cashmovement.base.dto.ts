@@ -1,16 +1,27 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsUUID,
+} from "class-validator";
 import { CashMovementTypeEnum } from "../../../database/schemas";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 
-export class CashmovementBaseDto extends BaseGetDto {
+export class CashmovementBaseDto extends BaseCreateDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  cashAccountId!: string;
+
   @ApiProperty()
   @IsOptional()
   @IsString()
   cashAccountName!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: CashMovementTypeEnum })
   @IsNotEmpty()
   type!: CashMovementTypeEnum;
 
@@ -48,8 +59,4 @@ export class CashmovementBaseDto extends BaseGetDto {
   @IsOptional()
   @IsString()
   relatedDocId!: string;
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
 }

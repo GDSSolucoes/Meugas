@@ -1,63 +1,117 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
-import { BaseCrudController } from '../../common/base-crud.controller'
-import { VehiclesService } from './vehicles.service'
-import { vehicles } from '../../database/schemas'
-import { JwtAuthGuard } from '../../auth/jwt-auth.guard'
-import { VehicleCreateDto } from './dto/vehicle.post.dto'
-import { Roles } from '../../auth/roles.decorator'
-import { RolesGuard } from '../../auth/roles.guard'
-import { VehicleUpdateDto } from './dto/vehicle.update.dto'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
+import { BaseCrudController } from "../../common/base-crud.controller";
+import { VehiclesService } from "./vehicles.service";
+import { vehicles } from "../../database/schemas";
+import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
+import { VehicleCreateDto } from "./dto/vehicle.post.dto";
+import { Roles } from "../../auth/roles.decorator";
+import { RolesGuard } from "../../auth/roles.guard";
+import { VehicleUpdateDto } from "./dto/vehicle.update.dto";
 
-@ApiTags('vehicles')
+@ApiTags("vehicles")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin', 'user')
-@Controller('vehicles')
+@Roles("admin", "user")
+@Controller("vehicles")
 export class VehiclesController extends BaseCrudController<typeof vehicles> {
   constructor(protected readonly service: VehiclesService) {
-    super(service, 'vehicles', true)
+    super(service, "vehicles", true);
   }
 
   @Post()
   @ApiBody({ type: VehicleCreateDto })
   @ApiOperation({ summary: `Create Vehicle` })
-  @ApiResponse({ status: 201, description: `Vehicle created`, type: VehicleCreateDto })  
+  @ApiResponse({
+    status: 201,
+    description: `Vehicle created`,
+    type: VehicleCreateDto,
+  })
   async create(@Body() data: VehicleCreateDto) {
-    return super.create(data)
+    return super.create(data);
   }
 
-  @Get(':id')
+  @Get(":id")
   @ApiOperation({ summary: `Get Vehicle by ID` })
-  @ApiResponse({ status: 200, description: `Vehicle retrieved`, type: VehicleCreateDto })
-  async get(@Param('id') id: string) {
-    return super.get(id)
+  @ApiResponse({
+    status: 200,
+    description: `Vehicle retrieved`,
+    type: VehicleCreateDto,
+  })
+  async get(@Param("id") id: string) {
+    return super.get(id);
   }
-  
+
   @Get()
   @ApiOperation({ summary: `List Vehicles` })
-  @ApiResponse({ status: 200, description: `List of vehicles`, type: [VehicleCreateDto] })
-  @ApiQuery({ name: 'page', required: false, type: 'string', description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: 'string', description: 'Items per page (default: 10)' })
-  @ApiQuery({ name: 'q', required: false, type: 'string', description: 'Search query' })
-  async list() {
-    return super.list()
+  @ApiResponse({
+    status: 200,
+    description: `List of vehicles`,
+    type: [VehicleCreateDto],
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: "string",
+    description: "Page number (default: 1)",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: "string",
+    description: "Items per page (default: 10)",
+  })
+  @ApiQuery({
+    name: "q",
+    required: false,
+    type: "string",
+    description: "Search query",
+  })
+  async list(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("q") search?: string,
+    @Query("sort") sort?: string,
+    @Query("order") order?: string,
+    @Query() allFilters?: Record<string, any>,
+  ) {
+    return super.list(page, limit, search, sort, order, allFilters);
   }
 
-
-  @Put(':id')
+  @Put(":id")
   @ApiBody({ type: VehicleUpdateDto })
   @ApiOperation({ summary: `Update Vehicle` })
-  @ApiResponse({ status: 201, description: `Vehicle updated`, type: VehicleUpdateDto })
-  async update(@Param('id') id: string, @Body() data: VehicleUpdateDto) {
-    return super.update(id, data)
+  @ApiResponse({
+    status: 201,
+    description: `Vehicle updated`,
+    type: VehicleUpdateDto,
+  })
+  async update(@Param("id") id: string, @Body() data: VehicleUpdateDto) {
+    return super.update(id, data);
   }
 
-  @Delete(':id')
-  @Roles('admin')
+  @Delete(":id")
+  @Roles("admin")
   @ApiOperation({ summary: `Delete Vehicle` })
   @ApiResponse({ status: 200, description: `Vehicle deleted` })
-  async delete(@Param('id') id: string) {
-    return super.delete(id)
+  async delete(@Param("id") id: string) {
+    return super.delete(id);
   }
 }
