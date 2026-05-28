@@ -105,9 +105,9 @@ export class BaseCrudController<T extends BasePgTable> {
     data: BaseCreateDto,
     user: any,
   ) {
-    data.CompanyId = user.companyId;
-    data.CompanyName = user.companyName;
-    data.CreatedByName = user.name;
+    data.companyId = user.companyId;
+    data.companyName = user.companyName;
+    data.createdByName = user.name;
     return this.service.create(data);
   }
 
