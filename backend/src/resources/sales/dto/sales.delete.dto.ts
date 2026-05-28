@@ -1,5 +1,3 @@
-import { SalEsBaseDto } from './sales.base.dto'
-import { IsUUID } from 'class-validator'
+import { SalesBaseDto } from "./sales.base.dto";
 
-export class SalEsDeleteDto extends SalEsBaseDto {
-}
+export class SalesDeleteDto extends SalesBaseDto {}

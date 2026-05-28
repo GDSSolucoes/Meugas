@@ -1,4 +1,4 @@
-import { BaseListDto } from '../../../common/dto/base-list.dto'
-import { AccountsreceivablEsBaseDto } from './accountsreceivables.base.dto'
+import { BaseListDto } from "../../../common/dto/base-list.dto";
+import { AccountsReceivablesBaseDto } from "./accountsreceivables.base.dto";
 
-export class AccountsreceivablEsListDto extends BaseListDto<AccountsreceivablEsBaseDto> {}
+export class AccountsReceivablesListDto extends BaseListDto<AccountsReceivablesBaseDto> {}

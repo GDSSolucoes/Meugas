@@ -25,6 +25,7 @@ import { ContasapagarCreateDto } from "./dto/contasapagar.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { ContasapagarUpdateDto } from "./dto/contasapagar.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("contasAPagar")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class ContasapagarsController extends BaseCrudController<
     description: `Contasapagar created`,
     type: ContasapagarCreateDto,
   })
-  async create(@Body() data: ContasapagarCreateDto) {
-    return super.create(data);
+  async create(@Body() data: ContasapagarCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

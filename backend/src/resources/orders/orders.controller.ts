@@ -25,6 +25,7 @@ import { OrderCreateDto } from "./dto/order.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { OrderUpdateDto } from "./dto/order.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("orders")
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class OrdersController extends BaseCrudController<typeof orders> {
     description: `Order created`,
     type: OrderCreateDto,
   })
-  async create(@Body() data: OrderCreateDto) {
-    return super.create(data);
+  async create(@Body() data: OrderCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

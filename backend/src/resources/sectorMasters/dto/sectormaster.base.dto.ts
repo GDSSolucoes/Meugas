@@ -1,15 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
+import { IsNotEmpty, IsString } from 'class-validator'
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 
 
-export class SectormasterBaseDto extends BaseGetDto {
+export class SectormasterBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   name!: string
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any
 }

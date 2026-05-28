@@ -1,4 +1,4 @@
-import { StocktransferBaseDto } from './stocktransfers.base.dto'
+import { StocktransferBaseDto } from './stocktransfer.base.dto'
 
 export class StocktransferDeleteDto extends StocktransferBaseDto {
 }

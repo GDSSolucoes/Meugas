@@ -6,10 +6,6 @@ import { Type } from "class-transformer";
 export class StocktransferBaseDto extends BaseGetDto {
   @ApiProperty()
   @IsOptional()
-  onDelete!: any;
-
-  @ApiProperty()
-  @IsOptional()
   @IsString()
   productName!: string;
 

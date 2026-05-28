@@ -1,142 +1,133 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ProductCategoriesEnum } from "../../../database/schemas";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
 import {
-  IsString,
   IsNotEmpty,
   IsOptional,
-  IsEnum,
+  IsString,
   IsNumber,
+  IsUUID,
 } from "class-validator";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import {
+  IcmsOrigemEnum,
+  ProductCategoriesEnum,
+} from "../../../database/schemas";
 
-export class ProductsBaseDto extends BaseGetDto {
+export class ProductsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   name!: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  code?: string;
-
-  @ApiProperty({ enum: ProductCategoriesEnum })
-  @IsEnum(ProductCategoriesEnum)
-  @IsOptional()
-  category?: ProductCategoriesEnum;
+  code!: string;
 
   @ApiProperty()
+  @IsOptional()
+  category!: ProductCategoriesEnum;
+
+  @ApiProperty()
+  @IsNotEmpty()
   @IsNumber()
-  @IsOptional()
-  unitPrice?: number;
+  unitPrice!: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  costPrice?: number;
+  costPrice!: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  minStock?: number;
+  minStock!: number;
 
   @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  vasilhameId!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  vasilhameId?: string;
+  vasilhameName!: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  vasilhameName?: string;
+  ncm!: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  ncm?: string;
+  cest!: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  cest?: string;
+  unidadeTributavel!: string;
 
   @ApiProperty()
+  @IsOptional()
+  icmsOrigem!: IcmsOrigemEnum;
+
+  @ApiProperty()
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  unidadeTributavel?: string;
+  beneficioFiscal!: string;
 
   @ApiProperty()
+  @IsOptional()
+  @IsString()
+  anpCodigo!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  anpDescricao!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  icmsOrigem?: number;
+  valorSemIcmsKg!: number;
 
   @ApiProperty()
-  @IsString()
   @IsOptional()
-  beneficioFiscal?: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  anpCodigo?: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  anpDescricao?: string;
-
-  @ApiProperty()
   @IsNumber()
-  @IsOptional()
-  valorSemIcmsKg?: number;
+  kgPorUnidadeGlp!: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  kgPorUnidadeGlp?: number;
+  percentualGlp!: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  percentualGlp?: number;
+  percentualGnNacional!: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  percentualGnNacional?: number;
+  percentualGnImportado!: number;
 
   @ApiProperty()
-  @IsNumber()
   @IsOptional()
-  percentualGnImportado?: number;
-
-  @ApiProperty()
   @IsString()
-  @IsOptional()
-  codif?: string;
+  codif!: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  pesoLiquido?: number;
+  pesoLiquido!: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsNumber()
-  @IsOptional()
-  pesoBruto?: number;
+  pesoBruto!: number;
 
   @ApiProperty()
-  @IsString()
   @IsOptional()
-  informacoesAdicionaisNfe?: string;
-
-  @ApiProperty()
   @IsString()
-  @IsOptional()
-  companyName?: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  createdByName?: string;
+  informacoesAdicionaisNfe!: string;
 }

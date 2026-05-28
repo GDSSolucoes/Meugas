@@ -4,15 +4,16 @@ import {
   IsOptional,
   IsString,
   IsNumber,
+  IsBoolean,
   IsUUID,
 } from "class-validator";
-import { CashMovementTypeEnum } from "../../../database/schemas";
 import { Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { CashMovementTypeEnum } from "../../../database/schemas";
 
 export class CashmovementBaseDto extends BaseCreateDto {
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
   @IsUUID()
   cashAccountId!: string;
 
@@ -42,12 +43,17 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsUUID()
+  personId!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsString()
   personName!: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   groupId!: string;
 
   @ApiProperty()
@@ -57,6 +63,56 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsUUID()
+  subgroupId!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsString()
+  subgroupName!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  documentNumber!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  competenceMonth!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  paymentTypeId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  paymentTypeName!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  notes!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  isAccounting!: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
   relatedDocId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  sectorId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  sectorName!: string;
 }

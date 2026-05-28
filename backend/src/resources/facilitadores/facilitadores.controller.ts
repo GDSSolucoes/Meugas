@@ -25,6 +25,7 @@ import { FacilitadorEsCreateDto } from "./dto/facilitadores.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { FacilitadorEsUpdateDto } from "./dto/facilitadores.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("facilitadores")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class FacilitadorEsesController extends BaseCrudController<
     description: `FacilitadorEs created`,
     type: FacilitadorEsCreateDto,
   })
-  async create(@Body() data: FacilitadorEsCreateDto) {
-    return super.create(data);
+  async create(@Body() data: FacilitadorEsCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

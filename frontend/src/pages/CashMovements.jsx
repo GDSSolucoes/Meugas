@@ -325,7 +325,7 @@ export default function CashMovementsPage({ onComplete }) {
 
         const periodMovements = allMovements
           .filter((m) => {
-            const movDate = m.movementDate;
+            const movDate = new Date(m.movementDate);
             return movDate >= periodStart && movDate <= periodEnd;
           })
           .sort((a, b) => a.movementDate - b.movementDate);

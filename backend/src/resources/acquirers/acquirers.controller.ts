@@ -25,6 +25,7 @@ import { AcquirerCreateDto } from "./dto/acquirer.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { AcquirerUpdateDto } from "./dto/acquirer.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("acquirers")
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class AcquirersController extends BaseCrudController<typeof acquirers> {
     description: `Acquirer created`,
     type: AcquirerCreateDto,
   })
-  async create(@Body() data: AcquirerCreateDto) {
-    return super.create(data);
+  async create(@Body() data: AcquirerCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

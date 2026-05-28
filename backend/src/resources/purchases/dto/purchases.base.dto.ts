@@ -1,40 +1,39 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
-import { PurchaseItemsItem } from "../../../database/schemas";
+import { ApiProperty } from '@nestjs/swagger'            
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsUUID, IsArray, ValidateNested } from 'class-validator'
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { PurchaseItemsItemDto } from './purchaseitemsitem.dto'
 
-export class PurchasEsBaseDto extends BaseGetDto {
+export class PurchasEsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  supplierId!: string;
+  @IsUUID()
+  supplierId!: string
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  supplierName!: string;
+  supplierName!: string
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  invoiceNumber!: string;
+  invoiceNumber!: string
 
   @ApiProperty()
   @IsOptional()
-  items!: PurchaseItemsItem[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PurchaseItemsItemDto)
+  items!: PurchaseItemsItemDto[]
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  totalAmount!: number;
+  totalAmount!: number
 
   @ApiProperty()
   @IsOptional()
   @Type(() => Date)
-  purchaseDate!: Date;
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
+  purchaseDate!: Date
 }

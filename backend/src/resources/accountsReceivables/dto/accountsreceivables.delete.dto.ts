@@ -1,4 +1,3 @@
-import { AccountsreceivablEsBaseDto } from './accountsreceivables.base.dto'
+import { AccountsReceivablesBaseDto } from "./accountsreceivables.base.dto";
 
-export class AccountsreceivablEsDeleteDto extends AccountsreceivablEsBaseDto {
-}
+export class AccountsReceivablesDeleteDto extends AccountsReceivablesBaseDto {}

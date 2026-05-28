@@ -1,17 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator'
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 
 
-export class FinancialsubgroupBaseDto extends BaseGetDto {
+export class FinancialsubgroupBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   name!: string
 
   @ApiProperty()
-  @IsOptional()
-  onDelete!: any
+  @IsNotEmpty()
+  @IsUUID()
+  financialGroupId!: string
 
   @ApiProperty()
   @IsOptional()
@@ -20,6 +21,6 @@ export class FinancialsubgroupBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsBoolean()
-  active!: boolean
+  @IsString()
+  description!: string
 }

@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/swagger'
-import { AccountsreceivablEsCreateDto } from './accountsreceivables.post.dto'
+import { PartialType } from "@nestjs/swagger";
+import { AccountsReceivablesCreateDto } from "./accountsreceivables.post.dto";
 
-export class AccountsreceivablEsUpdateDto extends PartialType(AccountsreceivablEsCreateDto) {}
+export class AccountsReceivablesUpdateDto extends PartialType(
+  AccountsReceivablesCreateDto,
+) {}

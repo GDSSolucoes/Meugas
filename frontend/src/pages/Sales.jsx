@@ -1181,6 +1181,8 @@ export default function SalesPage({ onSaleComplete }) {
                 companyId: companyId,
                 companyName: companyName,
                 createdByName: currentUser.name,
+                sectorId: savedSale.sectorId,
+                sectorName: savedSale.sectorName,
               });
             }
           } catch (error) {

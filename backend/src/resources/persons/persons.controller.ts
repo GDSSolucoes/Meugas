@@ -25,6 +25,7 @@ import { PersonCreateDto } from "./dto/person.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { PersonUpdateDto } from "./dto/person.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("persons")
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class PersonsController extends BaseCrudController<typeof persons> {
     description: `Person created`,
     type: PersonCreateDto,
   })
-  async create(@Body() data: PersonCreateDto) {
-    return super.create(data);
+  async create(@Body() data: PersonCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

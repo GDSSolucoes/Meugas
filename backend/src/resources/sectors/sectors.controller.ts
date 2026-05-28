@@ -25,6 +25,7 @@ import { SectorCreateDto } from "./dto/sector.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { SectorUpdateDto } from "./dto/sector.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("sectors")
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class SectorsController extends BaseCrudController<typeof sectors> {
     description: `Sector created`,
     type: SectorCreateDto,
   })
-  async create(@Body() data: SectorCreateDto) {
-    return super.create(data);
+  async create(@Body() data: SectorCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

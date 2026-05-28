@@ -100,11 +100,13 @@ class SchemaParser:
 
         # Extract individual column definitions
         # Pattern: columnName: type("column_name")[.modifiers...]
-        column_pattern = r'(\w+):\s*(.+?)(?=,\s*\w+\s*:|,\s*(?:deleted|createdByName|active|createdAt)\s*:|},\s*\()'
+        column_pattern = r'(\w+):\s*([\s\S]+?)(?=,\s*\w+\s*:|,\s*(?:deleted|createdByName|active|createdAt)\s*:|},\s*\()'
         matches = re.findall(column_pattern, table_content, re.MULTILINE)
 
         for column_name, column_def in matches:
             # Parse column definition
+            if column_name in ['id', 'createdAt', 'deleted', 'active', 'createdByName']:
+                continue
             is_required = '.notNull()' in column_def
             has_default = '.default(' in column_def
 
@@ -417,15 +419,15 @@ export class {Entities}Module {{}}
 
             # Add type-specific decorators only if not a complex type
             if not is_complex_type:
-                if prop_type == 'string':
+                if col_name.lower().endswith('id') or col_name.lower() == 'id':
+                    if not need_import:  # Don't add IsUUID for enum types
+                        decorators.append('@IsUUID()')
+                elif prop_type == 'string':
                     decorators.append('@IsString()')
                 elif prop_type in ['number', 'numeric']:
                     decorators.append('@IsNumber()')
                 elif prop_type == 'boolean':
                     decorators.append('@IsBoolean()')
-                elif col_name.lower().endswith('id') or col_name.lower() == 'id':
-                    if not need_import:  # Don't add IsUUID for enum types
-                        decorators.append('@IsUUID()')
                 elif prop_type == 'Date':
                     decorators.append('@Type(() => Date)')
 
@@ -989,7 +991,11 @@ Examples:
                             print(f"    Would create complex type DTO: {dto_path.name}")
                         
                         generated_complex_types.add(base_type)
-            
+            print(f"    - Generated complex type DTOs: {', '.join(generated_complex_types) if generated_complex_types else 'None'}")
+            # print com as colunas detectadas
+            print(f"    - Columns of entity {entity}: {', '.join([f'{col}({columns[col]["type"]})' for col in columns])}")
+
+
             # Gerar DTOs padrão, passando os tipos complexos gerados
             generator.generate_file('base_dto', variables, dto_dir / f'{entity.lower()}.base.dto.ts', args.dry_run, generated_complex_types)
             generator.generate_file('create_dto', variables, dto_dir / f'{entity.lower()}.post.dto.ts', args.dry_run, generated_complex_types)

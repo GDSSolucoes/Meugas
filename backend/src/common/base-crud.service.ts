@@ -168,7 +168,7 @@ export class BaseCrudService<T extends BasePgTable> {
   async create(data: BaseCreateDto) {
     const db = this.getDb();
     const companyId = this.requestContext.getCompanyId();
-    const insertData: any = { ...data };
+    const insertData: any = { ...data, active: true };
 
     // Injetar companyId automaticamente do contexto RLS
     if (this.hasCompanyId && companyId) {

@@ -1,45 +1,101 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
-import { ContasAPagarStatusEnum } from "../../../database/schemas";
+import { ApiProperty } from '@nestjs/swagger'            
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsUUID } from 'class-validator'
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { ContasAPagarStatusEnum } from '../../../database/schemas'
 
-export class ContasapagarBaseDto extends BaseGetDto {
+export class ContasapagarBaseDto extends BaseCreateDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  supplierId!: string
+
   @ApiProperty()
   @IsOptional()
   @IsString()
-  supplierId!: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  supplierName!: string;
+  supplierName!: string
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  description!: string;
+  description!: string
 
   @ApiProperty()
   @IsNotEmpty()
   @Type(() => Date)
-  dueDate!: Date;
+  dueDate!: Date
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  amount!: number;
+  amount!: number
 
   @ApiProperty()
   @IsOptional()
-  status!: ContasAPagarStatusEnum;
+  @IsNumber()
+  installmentNumber!: number
+
+  @ApiProperty()
+  @IsOptional()
+  status!: ContasAPagarStatusEnum
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  paymentTypeId!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  paymentTypeName!: string
 
   @ApiProperty()
   @IsOptional()
   @Type(() => Date)
-  paymentDate!: Date;
+  paymentDate!: Date
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any;
+  @IsUUID()
+  purchaseId!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  nfeNumber!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  groupId!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  groupName!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  subgroupId!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  subgroupName!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  documentNumber!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  reagendamentoMotivo!: string
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Date)
+  reagendamentoData!: Date
 }

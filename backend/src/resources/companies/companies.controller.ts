@@ -25,6 +25,7 @@ import { CompanyUpdateDto } from "./dto/companies.update.dto";
 import { companies } from "../../database/schemas";
 import { BaseCrudController } from "../../common/base-crud.controller";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("Companies")
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class CompaniesController extends BaseCrudController<typeof companies> {
     description: `Company created`,
     type: CompanyPostDto,
   })
-  async create(@Body() data: CompanyPostDto) {
-    return super.create(data);
+  async create(@Body() data: CompanyPostDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

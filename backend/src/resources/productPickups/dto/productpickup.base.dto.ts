@@ -1,23 +1,35 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
-import { ProductPickupStatusEnum } from "../../../database/schemas";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsUUID,
+} from "class-validator";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { ProductPickupStatusEnum } from "../../../database/schemas";
 
-export class ProductpickupBaseDto extends BaseGetDto {
+export class ProductpickupBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   saleId!: string;
 
   @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
+  @IsNotEmpty()
+  @IsUUID()
+  personId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   personName!: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsUUID()
+  productId!: string;
 
   @ApiProperty()
   @IsOptional()
@@ -46,7 +58,7 @@ export class ProductpickupBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   sectorId!: string;
 
   @ApiProperty()
@@ -64,7 +76,7 @@ export class ProductpickupBaseDto extends BaseGetDto {
   @IsString()
   pedido!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: ProductPickupStatusEnum })
   @IsOptional()
   status!: ProductPickupStatusEnum;
 }

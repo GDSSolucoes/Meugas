@@ -25,6 +25,7 @@ import { FuelingCreateDto } from "./dto/fueling.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { FuelingUpdateDto } from "./dto/fueling.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("fuelings")
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class FuelingsController extends BaseCrudController<typeof fuelings> {
     description: `Fueling created`,
     type: FuelingCreateDto,
   })
-  async create(@Body() data: FuelingCreateDto) {
-    return super.create(data);
+  async create(@Body() data: FuelingCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

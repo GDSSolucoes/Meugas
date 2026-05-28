@@ -7,9 +7,10 @@ import { CurrentUser } from "../../auth/current-user.decorator";
 import { UsersPostDto } from "./dto/users.post.dto";
 import { UsersBootstrapPostDto } from "./dto/users.bootstrap.post.dto";
 import { RlsService } from "../../database/rls/rls.service";
-import { userRoleEnum, userTypeEnum } from "../../database/schemas";
+import { UserRoleEnum, UserTypeEnum } from "../../database/schemas";
 import { CompaniesService } from "../companies/companies.service";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
+import { CompanyPostDto } from "../companies/dto/companies.post.dto";
 
 @ApiTags("Users")
 @Controller("users")
@@ -49,13 +50,13 @@ export class UsersController {
       email: body.email,
       adminName: body.name,
       adminEmail: body.email,
-    });
+    } as CompanyPostDto);
     const created = await this.rls.withCompany(company.id, () =>
       this.users.create({
         ...body,
         companyId: company.id,
-        role: userRoleEnum.ADMIN,
-        userType: userTypeEnum.SUPER_ADMIN,
+        role: UserRoleEnum.ADMIN,
+        userType: UserTypeEnum.SUPER_ADMIN,
       }),
     );
     return {

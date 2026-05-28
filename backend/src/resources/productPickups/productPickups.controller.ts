@@ -25,6 +25,7 @@ import { ProductpickupCreateDto } from "./dto/productpickup.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { ProductpickupUpdateDto } from "./dto/productpickup.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("productPickups")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class ProductpickupsController extends BaseCrudController<
     description: `Productpickup created`,
     type: ProductpickupCreateDto,
   })
-  async create(@Body() data: ProductpickupCreateDto) {
-    return super.create(data);
+  async create(@Body() data: ProductpickupCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

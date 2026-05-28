@@ -25,6 +25,7 @@ import { VasilhameloanCreateDto } from "./dto/vasilhameloan.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { VasilhameloanUpdateDto } from "./dto/vasilhameloan.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("vasilhameLoans")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class VasilhameloansController extends BaseCrudController<
     description: `Vasilhameloan created`,
     type: VasilhameloanCreateDto,
   })
-  async create(@Body() data: VasilhameloanCreateDto) {
-    return super.create(data);
+  async create(@Body() data: VasilhameloanCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

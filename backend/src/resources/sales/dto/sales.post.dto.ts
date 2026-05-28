@@ -1,7 +1,5 @@
-import { SalEsBaseDto } from './sales.base.dto'            
-import { SaleItemsItem, SalePaymentMethodsItem, SaleStatusEnum } from '../../../database/schemas'
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsUUID } from 'class-validator'
-import { Type } from "class-transformer";
+import { SalesBaseDto } from "./sales.base.dto";
 
-export class SalEsCreateDto extends SalEsBaseDto {
-}
+
+
+export class SalesCreateDto extends SalesBaseDto {}

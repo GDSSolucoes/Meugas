@@ -1,63 +1,62 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { FacilitadorTipoOperacaoEnum, FacilitadorRegimeTributarioEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import {
+  FacilitadorRegimeTributarioEnum,
+  FacilitadorModeloFiscalEnum,
+  FacilitadorTipoOperacaoEnum,
+} from "../../../database/schemas";
 
-export class FacilitadorEsBaseDto extends BaseGetDto {
+export class FacilitadorEsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsOptional()
-  @IsString()
-  empresaId!: string
+  @IsUUID()
+  empresaId!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  nome!: string
+  nome!: string;
+
+  @ApiProperty({ enum: FacilitadorModeloFiscalEnum })
+  @IsNotEmpty()
+  modeloFiscal!: FacilitadorModeloFiscalEnum;
+
+  @ApiProperty({ enum: FacilitadorTipoOperacaoEnum })
+  @IsNotEmpty()
+  tipoOperacao!: FacilitadorTipoOperacaoEnum;
 
   @ApiProperty()
   @IsNotEmpty()
-  tipoOperacao!: FacilitadorTipoOperacaoEnum
+  @IsString()
+  cfop!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: FacilitadorRegimeTributarioEnum })
   @IsNotEmpty()
-  @IsString()
-  cfop!: string
-
-  @ApiProperty()
-  @IsNotEmpty()
-  regimeTributario!: FacilitadorRegimeTributarioEnum
+  regimeTributario!: FacilitadorRegimeTributarioEnum;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  icmsSituacaoTributaria!: string
+  icmsSituacaoTributaria!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  pisSituacaoTributaria!: string
+  pisSituacaoTributaria!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  cofinsSituacaoTributaria!: string
+  cofinsSituacaoTributaria!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  ipiSituacaoTributaria!: string
+  ipiSituacaoTributaria!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  observacoes!: string
-
-  @ApiProperty()
-  @IsOptional()
-  @IsBoolean()
-  active!: boolean
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any
+  observacoes!: string;
 }

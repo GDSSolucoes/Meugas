@@ -1,5 +1,3 @@
-import * as dotenv from "dotenv/config";
-import * as metadata from "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";

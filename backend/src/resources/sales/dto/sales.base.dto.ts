@@ -5,140 +5,26 @@ import {
   IsString,
   IsNumber,
   IsBoolean,
+  IsUUID,
   IsArray,
   ValidateNested,
 } from "class-validator";
 import { Type } from "class-transformer";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { SaleItemsItemDto } from "./saleitemsitem.dto";
+import { SalePaymentMethodsItemDto } from "./salepaymentmethodsitem.dto";
 import { SaleStatusEnum } from "../../../database/schemas";
 
-class SaleInstallmentDetailDto {
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  number!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @Type(() => Date)
-  dueDate!: Date;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  amount!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  status!: string;
-}
-
-class SalePaymentMethodDto {
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  paymentTypeId!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  paymentTypeName!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  amount!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  installments!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  cashAccountId!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => SaleInstallmentDetailDto)
-  installmentsDetails!: SaleInstallmentDetailDto[];
-}
-
-class SaleItemDto {
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  productId!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  productCode!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  productName!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  category!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  vasilhameId!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  vasilhameName!: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  quantity!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  unitPrice!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  discount!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  total!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  quantityToPickup!: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsNumber()
-  vasilhameLoanQuantity!: number;
-}
-
-export class SalEsBaseDto extends BaseGetDto {
+export class SalesBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   saleNumber!: string;
 
   @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
+  @IsNotEmpty()
+  @IsUUID()
+  personId!: string;
 
   @ApiProperty()
   @IsOptional()
@@ -147,12 +33,7 @@ export class SalEsBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
-  personId!: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
+  @IsUUID()
   sectorId!: string;
 
   @ApiProperty()
@@ -160,7 +41,7 @@ export class SalEsBaseDto extends BaseGetDto {
   @IsString()
   sectorName!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: SaleStatusEnum })
   @IsOptional()
   status!: SaleStatusEnum;
 
@@ -169,19 +50,19 @@ export class SalEsBaseDto extends BaseGetDto {
   @Type(() => Date)
   saleDate!: Date;
 
-  @ApiProperty({ type: [SaleItemDto] })
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SaleItemDto)
-  items!: SaleItemDto[];
+  @Type(() => SaleItemsItemDto)
+  items!: SaleItemsItemDto[];
 
-  @ApiProperty({ type: [SalePaymentMethodDto] })
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SalePaymentMethodDto)
-  paymentMethods!: SalePaymentMethodDto[];
+  @Type(() => SalePaymentMethodsItemDto)
+  paymentMethods!: SalePaymentMethodsItemDto[];
 
   @ApiProperty()
   @IsNotEmpty()
@@ -195,12 +76,17 @@ export class SalEsBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsUUID()
+  orderId!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsString()
   orderNumber!: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   conveniadaId!: string;
 
   @ApiProperty()
@@ -222,11 +108,6 @@ export class SalEsBaseDto extends BaseGetDto {
   @IsOptional()
   @Type(() => Date)
   nfeDate!: Date;
-
-  @ApiProperty()
-  @IsOptional()
-  withTimezone!: any;
-
   @ApiProperty()
   @IsOptional()
   @IsBoolean()

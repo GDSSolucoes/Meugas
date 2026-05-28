@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 
 
-export class AcquirerBaseDto extends BaseGetDto {
+export class AcquirerBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -18,13 +18,4 @@ export class AcquirerBaseDto extends BaseGetDto {
   @IsOptional()
   @IsNumber()
   settlementDays!: number
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any
-
-  @ApiProperty()
-  @IsOptional()
-  @IsBoolean()
-  active!: boolean
 }

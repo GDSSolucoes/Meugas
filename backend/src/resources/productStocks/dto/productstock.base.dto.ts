@@ -1,47 +1,37 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger'            
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsUUID } from 'class-validator'
 import { Type } from "class-transformer";
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsNumber,
-  IsDate,
-} from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 
-export class ProductstockBaseDto extends BaseGetDto {
+
+export class ProductstockBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  productId!: string;
+  @IsUUID()
+  productId!: string
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  productName!: string;
+  productName!: string
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  sectorId!: string;
+  @IsUUID()
+  sectorId!: string
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  sectorName!: string;
+  sectorName!: string
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  quantity!: number;
+  quantity!: number
 
   @ApiProperty()
   @IsOptional()
   @Type(() => Date)
-  @IsDate()
-  initialDate!: Date;
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
+  initialDate!: Date
 }

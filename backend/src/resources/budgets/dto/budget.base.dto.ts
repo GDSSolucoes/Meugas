@@ -1,9 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator'
-import { BaseGetDto } from '../../../common/dto/base-get.dto'
-import { BudgetCustomerData, BudgetItemsItem } from '../../../database/schemas'
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsArray, ValidateNested } from 'class-validator'
+import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { BudgetItemsItemDto } from './budgetitemsitem.dto'
+import { BudgetCustomerDataDto } from './budgetcustomerdata.dto'
 
-export class BudgetBaseDto extends BaseGetDto {
+export class BudgetBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -11,11 +13,16 @@ export class BudgetBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  customerData!: BudgetCustomerData
+  @ValidateNested()
+  @Type(() => BudgetCustomerDataDto)
+  customerData!: BudgetCustomerDataDto
 
   @ApiProperty()
   @IsOptional()
-  items!: BudgetItemsItem[]
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BudgetItemsItemDto)
+  items!: BudgetItemsItemDto[]
 
   @ApiProperty()
   @IsOptional()
@@ -26,8 +33,4 @@ export class BudgetBaseDto extends BaseGetDto {
   @IsOptional()
   @IsString()
   notes!: string
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any
 }

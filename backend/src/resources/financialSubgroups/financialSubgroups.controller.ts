@@ -25,6 +25,7 @@ import { FinancialsubgroupCreateDto } from "./dto/financialsubgroup.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { FinancialsubgroupUpdateDto } from "./dto/financialsubgroup.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("financialSubgroups")
 @ApiBearerAuth()
@@ -46,8 +47,11 @@ export class FinancialsubgroupsController extends BaseCrudController<
     description: `Financialsubgroup created`,
     type: FinancialsubgroupCreateDto,
   })
-  async create(@Body() data: FinancialsubgroupCreateDto) {
-    return super.create(data);
+  async create(
+    @Body() data: FinancialsubgroupCreateDto,
+    @CurrentUser() user: any,
+  ) {
+    return super.create(data, user);
   }
 
   @Get(":id")

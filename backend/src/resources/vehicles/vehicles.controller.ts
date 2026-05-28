@@ -21,10 +21,11 @@ import { BaseCrudController } from "../../common/base-crud.controller";
 import { VehiclesService } from "./vehicles.service";
 import { vehicles } from "../../database/schemas";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
-import { VehicleCreateDto } from "./dto/vehicle.post.dto";
+import { VehiclesCreateDto } from "./dto/vehicles.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
-import { VehicleUpdateDto } from "./dto/vehicle.update.dto";
+import { VehiclesUpdateDto } from "./dto/vehicles.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("vehicles")
 @ApiBearerAuth()
@@ -37,15 +38,15 @@ export class VehiclesController extends BaseCrudController<typeof vehicles> {
   }
 
   @Post()
-  @ApiBody({ type: VehicleCreateDto })
+  @ApiBody({ type: VehiclesCreateDto })
   @ApiOperation({ summary: `Create Vehicle` })
   @ApiResponse({
     status: 201,
     description: `Vehicle created`,
-    type: VehicleCreateDto,
+    type: VehiclesCreateDto,
   })
-  async create(@Body() data: VehicleCreateDto) {
-    return super.create(data);
+  async create(@Body() data: VehiclesCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")
@@ -53,7 +54,7 @@ export class VehiclesController extends BaseCrudController<typeof vehicles> {
   @ApiResponse({
     status: 200,
     description: `Vehicle retrieved`,
-    type: VehicleCreateDto,
+    type: VehiclesCreateDto,
   })
   async get(@Param("id") id: string) {
     return super.get(id);
@@ -64,7 +65,7 @@ export class VehiclesController extends BaseCrudController<typeof vehicles> {
   @ApiResponse({
     status: 200,
     description: `List of vehicles`,
-    type: [VehicleCreateDto],
+    type: [VehiclesCreateDto],
   })
   @ApiQuery({
     name: "page",
@@ -96,14 +97,14 @@ export class VehiclesController extends BaseCrudController<typeof vehicles> {
   }
 
   @Put(":id")
-  @ApiBody({ type: VehicleUpdateDto })
+  @ApiBody({ type: VehiclesUpdateDto })
   @ApiOperation({ summary: `Update Vehicle` })
   @ApiResponse({
     status: 201,
     description: `Vehicle updated`,
-    type: VehicleUpdateDto,
+    type: VehiclesUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: VehicleUpdateDto) {
+  async update(@Param("id") id: string, @Body() data: VehiclesUpdateDto) {
     return super.update(id, data);
   }
 

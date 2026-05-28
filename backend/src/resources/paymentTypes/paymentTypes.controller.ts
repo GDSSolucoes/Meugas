@@ -25,6 +25,7 @@ import { PaymenttypEsCreateDto } from "./dto/paymenttypes.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { PaymenttypEsUpdateDto } from "./dto/paymenttypes.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("paymentTypes")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class PaymenttypEsesController extends BaseCrudController<
     description: `PaymenttypEs created`,
     type: PaymenttypEsCreateDto,
   })
-  async create(@Body() data: PaymenttypEsCreateDto) {
-    return super.create(data);
+  async create(@Body() data: PaymenttypEsCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

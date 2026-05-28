@@ -18,13 +18,15 @@ import {
   ApiResponse,
   ApiQuery,
 } from "@nestjs/swagger";
-import { ProductsPostDto } from "./dto/products.post.dto";
+import { ProductsCreateDto } from "./dto/products.post.dto";
 import { ProductsUpdateDto } from "./dto/products.update.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { RolesGuard } from "../../auth/roles.guard";
 import { products } from "../../database/schemas";
 import { BaseCrudController } from "../../common/base-crud.controller";
+import { CurrentUser } from "../../auth/current-user.decorator";
+import { ProductsListDto } from "./dto/products.list.dto";
 
 @ApiTags("Products")
 @ApiBearerAuth()
@@ -37,15 +39,15 @@ export class ProductsController extends BaseCrudController<typeof products> {
   }
 
   @Post()
-  @ApiBody({ type: ProductsPostDto })
+  @ApiBody({ type: ProductsCreateDto })
   @ApiOperation({ summary: `Create Products` })
   @ApiResponse({
     status: 201,
     description: `Products created`,
-    type: ProductsPostDto,
+    type: ProductsCreateDto,
   })
-  async create(@Body() data: ProductsPostDto) {
-    return super.create(data);
+  async create(@Body() data: ProductsCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")
@@ -53,7 +55,7 @@ export class ProductsController extends BaseCrudController<typeof products> {
   @ApiResponse({
     status: 200,
     description: `Products retrieved`,
-    type: ProductsPostDto,
+    type: ProductsListDto,
   })
   async get(@Param("id") id: string) {
     return super.get(id);
@@ -64,7 +66,7 @@ export class ProductsController extends BaseCrudController<typeof products> {
   @ApiResponse({
     status: 200,
     description: `List of products`,
-    type: [ProductsPostDto],
+    type: [ProductsListDto],
   })
   @ApiQuery({
     name: "page",

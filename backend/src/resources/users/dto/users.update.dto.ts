@@ -1,23 +1,23 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { userRoleEnum, userTypeEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import { UserRoleEnum, UserTypeEnum } from "../../../database/schemas";
 
 export class UsersUpdateDto {
   @ApiProperty({ required: false })
-  name?: string
-  @ApiProperty({ required: false, enum: userRoleEnum })
-  role?: userRoleEnum
+  name?: string;
+  @ApiProperty({ required: false, enum: UserRoleEnum })
+  role?: UserRoleEnum;
   @ApiProperty({ required: false })
-  email?: string
+  email?: string;
   @ApiProperty({ required: false })
-  cpf?: string
-  @ApiProperty({ required: false, enum: userTypeEnum })
-  userType?: userTypeEnum
+  cpf?: string;
+  @ApiProperty({ required: false, enum: UserTypeEnum })
+  userType?: UserTypeEnum;
   @ApiProperty({ required: false })
-  phone?: string
+  phone?: string;
   @ApiProperty({ required: false })
-  department?: string
+  department?: string;
   @ApiProperty({ required: false })
-  active?: boolean
+  active?: boolean;
   @ApiProperty({ required: false })
-  password?: string
+  password?: string;
 }

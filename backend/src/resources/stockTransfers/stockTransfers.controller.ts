@@ -25,6 +25,7 @@ import { StocktransferCreateDto } from "./dto/stocktransfer.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { StocktransferUpdateDto } from "./dto/stocktransfer.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("stockTransfers")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class StocktransfersController extends BaseCrudController<
     description: `Stocktransfer created`,
     type: StocktransferCreateDto,
   })
-  async create(@Body() data: StocktransferCreateDto) {
-    return super.create(data);
+  async create(@Body() data: StocktransferCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

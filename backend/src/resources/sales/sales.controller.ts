@@ -18,53 +18,54 @@ import {
   ApiQuery,
 } from "@nestjs/swagger";
 import { BaseCrudController } from "../../common/base-crud.controller";
-import { SalEsesService } from "./sales.service";
+import { SalesService } from "./sales.service";
 import { sales } from "../../database/schemas";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
-import { SalEsCreateDto } from "./dto/sales.post.dto";
+import { SalesCreateDto } from "./dto/sales.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
-import { SalEsUpdateDto } from "./dto/sales.update.dto";
+import { SalesUpdateDto } from "./dto/sales.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("sales")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles("admin", "user")
 @Controller("sales")
-export class SalEsesController extends BaseCrudController<typeof sales> {
-  constructor(protected readonly service: SalEsesService) {
+export class SalesController extends BaseCrudController<typeof sales> {
+  constructor(protected readonly service: SalesService) {
     super(service, "sales", true);
   }
 
   @Post()
-  @ApiBody({ type: SalEsCreateDto })
-  @ApiOperation({ summary: `Create SalEs` })
+  @ApiBody({ type: SalesCreateDto })
+  @ApiOperation({ summary: `Create Sales` })
   @ApiResponse({
     status: 201,
-    description: `SalEs created`,
-    type: SalEsCreateDto,
+    description: `Sales created`,
+    type: SalesCreateDto,
   })
-  async create(@Body() data: SalEsCreateDto) {
-    return super.create(data);
+  async create(@Body() data: SalesCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")
-  @ApiOperation({ summary: `Get SalEs by ID` })
+  @ApiOperation({ summary: `Get Sales by ID` })
   @ApiResponse({
     status: 200,
-    description: `SalEs retrieved`,
-    type: SalEsCreateDto,
+    description: `Sales retrieved`,
+    type: SalesCreateDto,
   })
   async get(@Param("id") id: string) {
     return super.get(id);
   }
 
   @Get()
-  @ApiOperation({ summary: `List SalEses` })
+  @ApiOperation({ summary: `List Sales` })
   @ApiResponse({
     status: 200,
     description: `List of sales`,
-    type: [SalEsCreateDto],
+    type: [SalesCreateDto],
   })
   @ApiQuery({
     name: "page",
@@ -96,21 +97,21 @@ export class SalEsesController extends BaseCrudController<typeof sales> {
   }
 
   @Put(":id")
-  @ApiBody({ type: SalEsUpdateDto })
-  @ApiOperation({ summary: `Update SalEs` })
+  @ApiBody({ type: SalesUpdateDto })
+  @ApiOperation({ summary: `Update Sales` })
   @ApiResponse({
     status: 201,
-    description: `SalEs updated`,
-    type: SalEsUpdateDto,
+    description: `Sales updated`,
+    type: SalesUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: SalEsUpdateDto) {
+  async update(@Param("id") id: string, @Body() data: SalesUpdateDto) {
     return super.update(id, data);
   }
 
   @Delete(":id")
   @Roles("admin")
-  @ApiOperation({ summary: `Delete SalEs` })
-  @ApiResponse({ status: 200, description: `SalEs deleted` })
+  @ApiOperation({ summary: `Delete Sales` })
+  @ApiResponse({ status: 200, description: `Sales deleted` })
   async delete(@Param("id") id: string) {
     return super.delete(id);
   }

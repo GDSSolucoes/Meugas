@@ -1,20 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { userRoleEnum, userTypeEnum } from '../../../database/schemas'
+import { ApiProperty } from "@nestjs/swagger";
+import { UserRoleEnum, UserTypeEnum } from "../../../database/schemas";
 
 export class UsersPostDto {
   @ApiProperty()
-  name!: string
+  name!: string;
   @ApiProperty()
-  email!: string
+  email!: string;
   @ApiProperty({ required: false })
-  cpf?: string
+  cpf?: string;
   @ApiProperty({ required: false })
-  phone?: string
+  phone?: string;
   @ApiProperty()
-  password!: string
+  password!: string;
   @ApiProperty()
-  companyId!: string
+  companyId!: string;
 
-  role?: userRoleEnum
-  userType?: userTypeEnum
+  role?: UserRoleEnum;
+  userType?: UserTypeEnum;
 }

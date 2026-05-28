@@ -25,6 +25,7 @@ import { ProductstockCreateDto } from "./dto/productstock.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { ProductstockUpdateDto } from "./dto/productstock.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("productStocks")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class ProductstocksController extends BaseCrudController<
     description: `Productstock created`,
     type: ProductstockCreateDto,
   })
-  async create(@Body() data: ProductstockCreateDto) {
-    return super.create(data);
+  async create(@Body() data: ProductstockCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

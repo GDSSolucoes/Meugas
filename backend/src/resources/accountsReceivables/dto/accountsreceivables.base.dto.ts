@@ -1,17 +1,30 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsUUID,
+} from "class-validator";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { AccountsReceivableStatusEnum } from "../../../database/schemas";
 
-export class AccountsreceivablEsBaseDto extends BaseGetDto {
+export class AccountsReceivablesBaseDto extends BaseCreateDto {
   @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
+  @IsNotEmpty()
+  @IsUUID()
+  personId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   personName!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  saleId!: string;
 
   @ApiProperty()
   @IsOptional()
@@ -32,6 +45,10 @@ export class AccountsreceivablEsBaseDto extends BaseGetDto {
   @IsNotEmpty()
   @IsNumber()
   amount!: number;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  status!: AccountsReceivableStatusEnum;
 
   @ApiProperty()
   @IsOptional()

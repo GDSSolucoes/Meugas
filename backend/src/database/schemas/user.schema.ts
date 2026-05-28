@@ -11,19 +11,19 @@ import {
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql";
 
-export enum userRoleEnum {
+export enum UserRoleEnum {
   ADMIN = "admin",
   USER = "user",
 }
 
-export enum userTypeEnum {
+export enum UserTypeEnum {
   ATENDENTE = "atendente",
   ADMIN = "admin",
   SUPER_ADMIN = "super_admin",
 }
 
-export const userRolePGEnum = pgEnum("user_role", userRoleEnum);
-export const userTypePGEnum = pgEnum("user_type", userTypeEnum);
+export const userRolePGEnum = pgEnum("user_role", UserRoleEnum);
+export const userTypePGEnum = pgEnum("user_type", UserTypeEnum);
 
 export const users = pgTable(
   "users",
@@ -42,7 +42,10 @@ export const users = pgTable(
     companyName: text("company_name").default(""),
     active: boolean("active").default(true),
     passwordHash: text("password_hash").notNull(),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("users_tenant_isolation", {
@@ -63,4 +66,3 @@ export const users = pgTable(
     index("cpf_index").on(table.cpf),
   ],
 );
-

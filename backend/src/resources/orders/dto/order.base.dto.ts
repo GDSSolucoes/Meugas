@@ -1,14 +1,21 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
 import {
-  OrderItemsItem,
-  OrderPersonAddress,
-  OrdersStatusEnum,
-} from "../../../database/schemas";
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsUUID,
+  IsArray,
+  ValidateNested,
+} from "class-validator";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { OrderItemsItemDto } from "./orderitemsitem.dto";
+import { OrderPersonAddressDto } from "./orderpersonaddress.dto";
+import { OrdersStatusEnum } from "../../../database/schemas";
 
-export class OrderBaseDto extends BaseGetDto {
+export class OrderBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -16,7 +23,7 @@ export class OrderBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   personId!: string;
 
   @ApiProperty()
@@ -26,11 +33,13 @@ export class OrderBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  personAddress!: OrderPersonAddress;
+  @ValidateNested()
+  @Type(() => OrderPersonAddressDto)
+  personAddress!: OrderPersonAddressDto;
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   employeeId!: string;
 
   @ApiProperty()
@@ -40,7 +49,7 @@ export class OrderBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   paymentTypeId!: string;
 
   @ApiProperty()
@@ -50,7 +59,7 @@ export class OrderBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   cashAccountId!: string;
 
   @ApiProperty()
@@ -64,7 +73,10 @@ export class OrderBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  items!: OrderItemsItem[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemsItemDto)
+  items!: OrderItemsItemDto[];
 
   @ApiProperty()
   @IsOptional()
@@ -103,5 +115,16 @@ export class OrderBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsOptional()
-  onDelete!: any;
+  @IsString()
+  canal!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  urgente!: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  convenio!: boolean;
 }

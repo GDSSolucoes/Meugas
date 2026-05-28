@@ -25,6 +25,7 @@ import { CashaccountCreateDto } from "./dto/cashaccount.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { CashaccountUpdateDto } from "./dto/cashaccount.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("cashAccounts")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class CashaccountsController extends BaseCrudController<
     description: `Cashaccount created`,
     type: CashaccountCreateDto,
   })
-  async create(@Body() data: CashaccountCreateDto) {
-    return super.create(data);
+  async create(@Body() data: CashaccountCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

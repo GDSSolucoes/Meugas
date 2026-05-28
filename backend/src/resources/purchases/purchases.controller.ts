@@ -25,6 +25,7 @@ import { PurchasEsCreateDto } from "./dto/purchases.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { PurchasEsUpdateDto } from "./dto/purchases.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("purchases")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class PurchasEsesController extends BaseCrudController<
     description: `PurchasEs created`,
     type: PurchasEsCreateDto,
   })
-  async create(@Body() data: PurchasEsCreateDto) {
-    return super.create(data);
+  async create(@Body() data: PurchasEsCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

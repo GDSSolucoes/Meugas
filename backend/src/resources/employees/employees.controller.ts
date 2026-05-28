@@ -25,6 +25,7 @@ import { EmployeEsCreateDto } from "./dto/employees.post.dto";
 import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { EmployeEsUpdateDto } from "./dto/employees.update.dto";
+import { CurrentUser } from "../../auth/current-user.decorator";
 
 @ApiTags("employees")
 @ApiBearerAuth()
@@ -46,8 +47,8 @@ export class EmployeEsesController extends BaseCrudController<
     description: `EmployeEs created`,
     type: EmployeEsCreateDto,
   })
-  async create(@Body() data: EmployeEsCreateDto) {
-    return super.create(data);
+  async create(@Body() data: EmployeEsCreateDto, @CurrentUser() user: any) {
+    return super.create(data, user);
   }
 
   @Get(":id")

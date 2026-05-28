@@ -1,13 +1,25 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
-import { VasilhameLoanStatusEnum } from "../../../database/schemas";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsUUID,
+} from "class-validator";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { VasilhameLoanStatusEnum } from "../../../database/schemas";
 
-export class VasilhameloanBaseDto extends BaseGetDto {
+export class VasilhameloanBaseDto extends BaseCreateDto {
   @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
+  @IsNotEmpty()
+  @IsUUID()
+  saleId!: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsUUID()
+  personId!: string;
 
   @ApiProperty()
   @IsOptional()
@@ -16,7 +28,7 @@ export class VasilhameloanBaseDto extends BaseGetDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   vasilhameId!: string;
 
   @ApiProperty()
@@ -39,7 +51,7 @@ export class VasilhameloanBaseDto extends BaseGetDto {
   @Type(() => Date)
   loanDate!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ enum: VasilhameLoanStatusEnum })
   @IsOptional()
   status!: VasilhameLoanStatusEnum;
 }

@@ -1,22 +1,16 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsNumber,
-  IsBoolean,
-} from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
-import { CashAccountTypeEnum } from "../../../database/schemas";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { CashAccountTypeEnum } from "../../../database/schemas";
 
-export class CashaccountBaseDto extends BaseGetDto {
+export class CashaccountBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: CashAccountTypeEnum })
   @IsNotEmpty()
   type!: CashAccountTypeEnum;
 
@@ -34,13 +28,4 @@ export class CashaccountBaseDto extends BaseGetDto {
   @IsOptional()
   @Type(() => Date)
   initialBalanceDate!: Date;
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsBoolean()
-  active!: boolean;
 }

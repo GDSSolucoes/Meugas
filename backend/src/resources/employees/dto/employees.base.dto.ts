@@ -4,13 +4,12 @@ import {
   IsOptional,
   IsString,
   IsNumber,
-  IsBoolean,
 } from "class-validator";
-import { BaseGetDto } from "../../../common/dto/base-get.dto";
-import { EmployeePositionEnum } from "../../../database/schemas";
 import { Type } from "class-transformer";
+import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { EmployeePositionEnum } from "../../../database/schemas";
 
-export class EmployeEsBaseDto extends BaseGetDto {
+export class EmployeEsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -31,7 +30,7 @@ export class EmployeEsBaseDto extends BaseGetDto {
   @IsString()
   phone!: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: EmployeePositionEnum })
   @IsNotEmpty()
   position!: EmployeePositionEnum;
 
@@ -54,13 +53,4 @@ export class EmployeEsBaseDto extends BaseGetDto {
   @IsOptional()
   @Type(() => Date)
   vacationEnd!: Date;
-
-  @ApiProperty()
-  @IsOptional()
-  onDelete!: any;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsBoolean()
-  active!: boolean;
 }
