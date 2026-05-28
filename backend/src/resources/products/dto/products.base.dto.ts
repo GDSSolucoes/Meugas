@@ -44,7 +44,7 @@ export class ProductsBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   vasilhameId!: string;
 
   @ApiProperty()

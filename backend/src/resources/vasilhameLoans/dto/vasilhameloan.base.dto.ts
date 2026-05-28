@@ -13,12 +13,12 @@ import { VasilhameLoanStatusEnum } from "../../../database/schemas";
 export class VasilhameloanBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   saleId!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   personId!: string;
 
   @ApiProperty()
@@ -28,7 +28,7 @@ export class VasilhameloanBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   vasilhameId!: string;
 
   @ApiProperty()

@@ -13,7 +13,7 @@ import { AccountsReceivableStatusEnum } from "../../../database/schemas";
 export class AccountsReceivablesBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   personId!: string;
 
   @ApiProperty()
@@ -23,7 +23,7 @@ export class AccountsReceivablesBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   saleId!: string;
 
   @ApiProperty()

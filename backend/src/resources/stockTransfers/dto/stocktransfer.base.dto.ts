@@ -17,7 +17,7 @@ export class StocktransferBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   productId!: string;
 
   @ApiProperty()
@@ -27,7 +27,7 @@ export class StocktransferBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   fromSectorId!: string;
 
   @ApiProperty()
@@ -37,7 +37,7 @@ export class StocktransferBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   toSectorId!: string;
 
   @ApiProperty()

@@ -13,12 +13,12 @@ import { ProductPickupStatusEnum } from "../../../database/schemas";
 export class ProductpickupBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   saleId!: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   personId!: string;
 
   @ApiProperty()
@@ -28,7 +28,7 @@ export class ProductpickupBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   productId!: string;
 
   @ApiProperty()
@@ -58,7 +58,7 @@ export class ProductpickupBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   sectorId!: string;
 
   @ApiProperty()

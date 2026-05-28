@@ -14,7 +14,7 @@ import { CashMovementTypeEnum } from "../../../database/schemas";
 export class CashmovementBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   cashAccountId!: string;
 
   @ApiProperty()
@@ -43,7 +43,7 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   personId!: string;
 
   @ApiProperty()
@@ -53,7 +53,7 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   groupId!: string;
 
   @ApiProperty()
@@ -63,7 +63,7 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   subgroupId!: string;
 
   @ApiProperty()
@@ -83,7 +83,7 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   paymentTypeId!: string;
 
   @ApiProperty()
@@ -103,12 +103,12 @@ export class CashmovementBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   relatedDocId!: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   sectorId!: string;
 
   @ApiProperty()

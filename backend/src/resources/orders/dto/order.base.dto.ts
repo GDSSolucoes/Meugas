@@ -23,7 +23,7 @@ export class OrderBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsUUID()
+  @IsString()
   personId!: string;
 
   @ApiProperty()
@@ -39,7 +39,7 @@ export class OrderBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   employeeId!: string;
 
   @ApiProperty()
@@ -49,7 +49,7 @@ export class OrderBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   paymentTypeId!: string;
 
   @ApiProperty()
@@ -59,7 +59,7 @@ export class OrderBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   cashAccountId!: string;
 
   @ApiProperty()

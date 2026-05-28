@@ -1,101 +1,107 @@
-import { ApiProperty } from '@nestjs/swagger'            
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsUUID } from 'class-validator'
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsUUID,
+} from "class-validator";
 import { Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
-import { ContasAPagarStatusEnum } from '../../../database/schemas'
+import { ContasAPagarStatusEnum } from "../../../database/schemas";
 
 export class ContasapagarBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
-  supplierId!: string
+  @IsString()
+  supplierId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  supplierName!: string
+  supplierName!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  description!: string
+  description!: string;
 
   @ApiProperty()
   @IsNotEmpty()
   @Type(() => Date)
-  dueDate!: Date
+  dueDate!: Date;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
-  amount!: number
+  amount!: number;
 
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  installmentNumber!: number
+  installmentNumber!: number;
 
   @ApiProperty()
   @IsOptional()
-  status!: ContasAPagarStatusEnum
-
-  @ApiProperty()
-  @IsOptional()
-  @IsUUID()
-  paymentTypeId!: string
+  status!: ContasAPagarStatusEnum;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  paymentTypeName!: string
+  paymentTypeId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  paymentTypeName!: string;
 
   @ApiProperty()
   @IsOptional()
   @Type(() => Date)
-  paymentDate!: Date
-
-  @ApiProperty()
-  @IsOptional()
-  @IsUUID()
-  purchaseId!: string
+  paymentDate!: Date;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  nfeNumber!: string
-
-  @ApiProperty()
-  @IsOptional()
-  @IsUUID()
-  groupId!: string
+  purchaseId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  groupName!: string
-
-  @ApiProperty()
-  @IsOptional()
-  @IsUUID()
-  subgroupId!: string
+  nfeNumber!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  subgroupName!: string
+  groupId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  documentNumber!: string
+  groupName!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  reagendamentoMotivo!: string
+  subgroupId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  subgroupName!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  documentNumber!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  reagendamentoMotivo!: string;
 
   @ApiProperty()
   @IsOptional()
   @Type(() => Date)
-  reagendamentoData!: Date
+  reagendamentoData!: Date;
 }

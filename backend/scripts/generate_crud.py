@@ -421,7 +421,7 @@ export class {Entities}Module {{}}
             if not is_complex_type:
                 if col_name.lower().endswith('id') or col_name.lower() == 'id':
                     if not need_import:  # Don't add IsUUID for enum types
-                        decorators.append('@IsUUID()')
+                        decorators.append('@IsString()')
                 elif prop_type == 'string':
                     decorators.append('@IsString()')
                 elif prop_type in ['number', 'numeric']:

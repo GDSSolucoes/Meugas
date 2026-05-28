@@ -10,7 +10,7 @@ import {
 export class FacilitadorEsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsOptional()
-  @IsUUID()
+  @IsString()
   empresaId!: string;
 
   @ApiProperty()
