@@ -108,6 +108,7 @@ export class BaseCrudController<T extends BasePgTable> {
     data.companyId = user.companyId;
     data.companyName = user.companyName;
     data.createdByName = user.name;
+    console.log(`Creating ${this.entityName} with data:`, data);
     return this.service.create(data);
   }
 
@@ -116,6 +117,7 @@ export class BaseCrudController<T extends BasePgTable> {
   @ApiOperation({ summary: `Update Item` })
   @ApiResponse({ status: 200, description: `Item updated` })
   async update(@Param("id") id: string, @Body() data: BaseUpdateDto) {
+    console.log(`Updating ${this.entityName} with ID ${id} and data:`, data);
     return this.service.update(id, data);
   }
 
@@ -124,6 +126,7 @@ export class BaseCrudController<T extends BasePgTable> {
   @ApiOperation({ summary: `Delete Item` })
   @ApiResponse({ status: 200, description: `Item deleted` })
   async delete(@Param("id") id: string) {
+    console.log(`Deleting ${this.entityName} with ID ${id}`);
     return this.service.delete(id);
   }
 }

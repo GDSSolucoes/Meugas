@@ -21,7 +21,10 @@ export enum EmployeePositionEnum {
   OUTRO = "outro",
 }
 
-export const EmployeePositionPGEnum = pgEnum("employee_position", EmployeePositionEnum);
+export const EmployeePositionPGEnum = pgEnum(
+  "employee_position",
+  EmployeePositionEnum,
+);
 
 export const employees = pgTable(
   "employees",
@@ -32,17 +35,20 @@ export const employees = pgTable(
     email: text("email"),
     phone: text("phone"),
     position: EmployeePositionPGEnum("position").notNull(),
-    salary: numeric("salary", { mode : "number"}),
-    hireDate: date("hire_date", { mode : "date"}),
-    vacationStart: date("vacation_start", { mode : "date"}),
-    vacationEnd: date("vacation_end", { mode : "date"}),
+    salary: numeric("salary", { mode: "number" }),
+    hireDate: date("hire_date", { mode: "date" }),
+    vacationStart: date("vacation_start", { mode: "date" }),
+    vacationEnd: date("vacation_end", { mode: "date" }),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("employees_tenant_isolation", {
@@ -56,4 +62,3 @@ export const employees = pgTable(
     index("employees_position_index").on(table.position),
   ],
 );
-

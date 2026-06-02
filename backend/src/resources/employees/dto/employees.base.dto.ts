@@ -1,11 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsNumber,
-} from "class-validator";
-import { Type } from "class-transformer";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { Type, Transform } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { EmployeePositionEnum } from "../../../database/schemas";
 
@@ -41,16 +36,28 @@ export class EmployeEsBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) =>
+    value === "" || value === null || value === undefined
+      ? undefined
+      : new Date(value),
+  )
   hireDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) =>
+    value === "" || value === null || value === undefined
+      ? undefined
+      : new Date(value),
+  )
   vacationStart!: Date;
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) =>
+    value === "" || value === null || value === undefined
+      ? undefined
+      : new Date(value),
+  )
   vacationEnd!: Date;
 }

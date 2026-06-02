@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
+import { SanitizePipe } from "./common/pipes/sanitize-body.pipe";
 import { AppModule } from "./app.module";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { RlsInterceptor } from "./database/rls/rls.interceptor";
@@ -14,12 +15,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix("api");
   app.useGlobalPipes(
+    new SanitizePipe(),
     new ValidationPipe({
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
       },
       whitelist: true,
+      skipMissingProperties: true,
+      skipNullProperties: true,
+      skipUndefinedProperties: true,
     }),
   );
   const swaggerConfig = new DocumentBuilder()

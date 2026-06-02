@@ -110,7 +110,7 @@ export class ProductsController extends BaseCrudController<typeof products> {
   }
 
   @Delete(":id")
-  @Roles("admin")
+  @Roles("admin", "super_admin")
   @ApiOperation({ summary: `Delete Products` })
   @ApiResponse({ status: 200, description: `Products deleted` })
   async delete(@Param("id") id: string) {
