@@ -10,6 +10,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
+import { acquirers } from "./acquirer.schema";
 import { sql } from "drizzle-orm/sql/sql";
 
 export enum PaymentTypesTypeEnum {
@@ -39,6 +40,9 @@ export const paymentTypes = pgTable(
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
+    acquirerId: uuid("acquirer_id").references(() => acquirers.id, {
+      onDelete: "set null",
+    }),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", {
@@ -56,5 +60,6 @@ export const paymentTypes = pgTable(
     }),
     index("paymentTypes_company_id_index").on(table.companyId),
     index("paymentTypes_type_index").on(table.type),
+    index("paymentTypes_acquirer_id_index").on(table.acquirerId),
   ],
 );

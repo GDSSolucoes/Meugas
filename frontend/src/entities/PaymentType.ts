@@ -1,5 +1,4 @@
-import { BaseEntity } from './BaseEntity';
-
+import { BaseEntity } from "./BaseEntity";
 
 export enum PaymentTypesTypeEnum {
   DINHEIRO = "dinheiro",
@@ -20,6 +19,7 @@ export enum PaymentTypesTypeEnum {
 export class PaymentType extends BaseEntity {
   name: string;
   type: PaymentTypesTypeEnum;
+  acquirerId?: string;
   maxInstallments: number;
   daysInterval: number;
 
@@ -32,8 +32,16 @@ export class PaymentType extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<PaymentType[]>
    */
-  static async filter(filters: Partial<PaymentType> = {}, pagination = {}) : Promise<PaymentType[]> {
-    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<PaymentType[]>;
+  static async filter(
+    filters: Partial<PaymentType> = {},
+    pagination = {},
+  ): Promise<PaymentType[]> {
+    return super._filter.call(
+      this,
+      this.baseUrl,
+      filters,
+      pagination,
+    ) as Promise<PaymentType[]>;
   }
 
   /**
@@ -53,8 +61,16 @@ export class PaymentType extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<PaymentType>
    */
-  static async update(id: string, data: Partial<PaymentType>): Promise<PaymentType> {
-    return super._update.call(this, this.baseUrl, id, data) as Promise<PaymentType>;
+  static async update(
+    id: string,
+    data: Partial<PaymentType>,
+  ): Promise<PaymentType> {
+    return super._update.call(
+      this,
+      this.baseUrl,
+      id,
+      data,
+    ) as Promise<PaymentType>;
   }
 
   /**
@@ -74,6 +90,10 @@ export class PaymentType extends BaseEntity {
    * @returns Promise<PaymentType | null>
    */
   static async findById(id: string): Promise<PaymentType | null> {
-    return super._findById.call(this, this.baseUrl, id) as Promise<PaymentType | null>;
+    return super._findById.call(
+      this,
+      this.baseUrl,
+      id,
+    ) as Promise<PaymentType | null>;
   }
 }

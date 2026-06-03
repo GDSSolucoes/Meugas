@@ -29,6 +29,10 @@
       "default": 30,
       "description": "Intervalo em dias entre parcelas"
     },
+    "acquirer_id": {
+      "type": "string",
+      "description": "Vínculo opcional com a adquirente para tipos de cartão"
+    },
     "company_id": {
       "type": "string",
       "description": "ID da empresa \u00e0 qual o registro pertence"

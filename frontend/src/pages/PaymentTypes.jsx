@@ -22,16 +22,19 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, CreditCard, Edit, Trash2 } from "lucide-react";
 import { PaymentType } from "@/entities/PaymentType";
+import { Acquirer } from "@/entities/Acquirer";
 import { User } from "@/entities/User";
 
 export default function PaymentTypesPage() {
   const [paymentTypes, setPaymentTypes] = useState([]);
+  const [acquirers, setAcquirers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const initialPaymentTypeState = {
     name: "",
     type: "dinheiro",
+    acquirerId: "",
     maxInstallments: 1,
     daysInterval: 0,
     active: true,
@@ -46,6 +49,7 @@ export default function PaymentTypesPage() {
 
   useEffect(() => {
     loadPaymentTypes();
+    loadAcquirers();
   }, []);
 
   const loadPaymentTypes = async () => {
@@ -62,10 +66,25 @@ export default function PaymentTypesPage() {
     }
   };
 
+  const loadAcquirers = async () => {
+    try {
+      const user = await User.me();
+      const data = await Acquirer.filter(
+        { companyId: user.companyId },
+        { sort: "name" },
+      );
+      setAcquirers(data);
+    } catch (error) {
+      console.error("Erro ao carregar adquirentes:", error);
+      setAcquirers([]);
+    }
+  };
+
   const handleEdit = (paymentType) => {
     setIsEditing(true);
     setCurrentPaymentType({
       ...paymentType,
+      acquirerId: paymentType.acquirerId || "",
       daysInterval: paymentType.daysInterval || 0,
     });
     setShowForm(true);
@@ -90,6 +109,7 @@ export default function PaymentTypesPage() {
       const user = await User.me();
       const payload = {
         ...currentPaymentType,
+        acquirerId: currentPaymentType.acquirerId || null,
         maxInstallments: Number(currentPaymentType.maxInstallments) || 1,
         daysInterval: Number(currentPaymentType.daysInterval) || 0,
         companyId: user.companyId,
@@ -122,19 +142,30 @@ export default function PaymentTypesPage() {
 
   const getTypeBadge = (type) => {
     const info = {
-      aVista: { label: "À Vista", color: "bg-green-100 text-green-800" },
-      aPrazo: { label: "À Prazo", color: "bg-blue-100 text-blue-800" },
-      cartao: { label: "Cartão", color: "bg-purple-100 text-purple-800" },
+      dinheiro: { label: "Dinheiro", color: "bg-green-100 text-green-800" },
+      pix: { label: "Pix", color: "bg-cyan-100 text-cyan-800" },
+      cartao_debito: {
+        label: "Cartão de Débito",
+        color: "bg-purple-100 text-purple-800",
+      },
+      cartao_credito: {
+        label: "Cartão de Crédito",
+        color: "bg-purple-100 text-purple-800",
+      },
+      boleto: { label: "Boleto", color: "bg-orange-100 text-orange-800" },
+      cheque: { label: "Cheque", color: "bg-slate-100 text-slate-800" },
+      convenio: { label: "Convênio", color: "bg-blue-100 text-blue-800" },
     };
     return (
-      <Badge className={info[type]?.color || info.aVista.color}>
+      <Badge className={info[type]?.color || "bg-slate-100 text-slate-800"}>
         {info[type]?.label || type}
       </Badge>
     );
   };
 
   const isAPrazo = (type) => type === "aPrazo";
-  const isCartao = (type) => type === "cartao";
+  const isCartao = (type) =>
+    type === "cartao_debito" || type === "cartao_credito";
 
   return (
     <div
@@ -203,6 +234,11 @@ export default function PaymentTypesPage() {
                         setCurrentPaymentType((prev) => ({
                           ...prev,
                           type: value,
+                          acquirerId:
+                            value === "cartao_debito" ||
+                            value === "cartao_credito"
+                              ? prev.acquirerId
+                              : "",
                         }))
                       }
                     >
@@ -224,6 +260,36 @@ export default function PaymentTypesPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {isCartao(currentPaymentType.type) && (
+                    <div>
+                      <Label>Adquirente</Label>
+                      <Select
+                        value={currentPaymentType.acquirerId}
+                        onValueChange={(value) =>
+                          setCurrentPaymentType((prev) => ({
+                            ...prev,
+                            acquirerId: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="bg-white/80">
+                          <SelectValue placeholder="Selecione a adquirente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem>Nenhuma</SelectItem>
+                          {acquirers.map((acquirer) => (
+                            <SelectItem key={acquirer.id} value={acquirer.id}>
+                              {acquirer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Escolha uma adquirente para este tipo de cartão.
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <Label>Máx. de Parcelas</Label>

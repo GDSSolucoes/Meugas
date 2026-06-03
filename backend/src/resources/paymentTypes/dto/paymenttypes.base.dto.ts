@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsUUID,
+} from "class-validator";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { PaymentTypesTypeEnum } from "../../../database/schemas";
 
@@ -22,4 +28,9 @@ export class PaymenttypEsBaseDto extends BaseCreateDto {
   @IsOptional()
   @IsNumber()
   daysInterval!: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  acquirerId?: string;
 }
