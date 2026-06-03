@@ -41,15 +41,20 @@ const toastVariants = cva(
 
 const Toast = React.forwardRef(
   ({ className, variant, duration, children, ...props }, ref) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+
     // Determina duration baseado no variant:
     // - destructive (erro): 0 = nunca dismissar automaticamente
     // - outros (info/sucesso): 2000ms
-    const dur =
+    const baseDur =
       typeof duration === "number"
         ? duration
         : variant === "destructive"
           ? 5000
           : 2000;
+
+    // Quando hovering, setar duration=0 para pausar o timer do Radix
+    const dur = isHovered ? 0 : baseDur;
 
     return (
       <ToastPrimitive.Root
@@ -57,12 +62,14 @@ const Toast = React.forwardRef(
         duration={dur}
         className={cn(toastVariants({ variant }), className)}
         style={{
-          "--toast-duration": `${dur}ms`,
+          "--toast-duration": `${baseDur}ms`,
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         {...props}
       >
         {/* Barra de progresso */}
-        {dur > 0 && (
+        {baseDur > 0 && (
           <style>{`
             @keyframes slideOut {
               from {
@@ -74,11 +81,12 @@ const Toast = React.forwardRef(
             }
           `}</style>
         )}
-        {dur > 0 && (
+        {baseDur > 0 && (
           <div
             className="absolute bottom-0 left-0 h-1 bg-current opacity-50 origin-left"
             style={{
-              animation: `slideOut ${dur}ms linear forwards`,
+              animation: `slideOut ${baseDur}ms linear forwards`,
+              animationPlayState: isHovered ? "paused" : "running",
             }}
           />
         )}
