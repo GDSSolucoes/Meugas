@@ -81,7 +81,7 @@ export const PAGES = {
     "SectorMaster": SectorMaster,
     "Acquirers": AcquirersPage,
     "SalesList": SalesListPage,
-    "Facilitadores": FacilitadoresPage,
+    //"Facilitadores": FacilitadoresPage,
     "Budget": BudgetPage,
     "AcertoSetores": AcertoSetoresPage,
 }

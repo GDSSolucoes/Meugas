@@ -579,6 +579,8 @@ export default function SalesListPage() {
                               <Eye className="w-4 h-4 text-blue-600" />
                             </Button>
 
+                            {/* Oculto ate a contratação de facilitador fiscal para emissão das NF
+                            
                             {!sale.nfeNumber && !sale.nfceNumber && (
                               <>
                                 <Button
@@ -686,7 +688,7 @@ export default function SalesListPage() {
                                   </Button>
                                 )}
                               </>
-                            )}
+                            )} */}
                           </div>
                         </TableCell>
                       </TableRow>

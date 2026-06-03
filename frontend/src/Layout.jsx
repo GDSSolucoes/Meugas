@@ -121,11 +121,12 @@ const moduleGerencial = [
         url: createPageUrl("FinancialSubgroups"),
         icon: Folder,
       },
-      {
-        title: "Facilitadores Fiscais",
-        url: createPageUrl("Facilitadores"),
-        icon: FileText,
-      },
+      // Desativado até a contratacao de novo facilitador fiscal
+      // {
+      //   title: "Facilitadores Fiscais",
+      //   url: createPageUrl("Facilitadores"),
+      //   icon: FileText,
+      // },
     ],
   },
   {
