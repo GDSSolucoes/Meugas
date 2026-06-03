@@ -1,13 +1,19 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { UserTypeEnum, UserRoleEnum } from "../../../database/schemas";
 
 export class UserBaseDto extends BaseCreateDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  companyId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  companyName!: string;
+
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -44,5 +50,5 @@ export class UserBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  passwordHash!: string;
+  password!: string;
 }

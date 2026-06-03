@@ -19,8 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { UsersIcon, Edit, Info } from "lucide-react";
-import { User } from "@/entities/User";
+import { UsersIcon, Edit, Info, Plus } from "lucide-react";
+import { User, userRoleEnum, userTypeEnum } from "@/entities/User";
 import { Company } from "@/entities/Company"; // Importar a entidade Company
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast"; // Importar useToast
@@ -29,10 +29,23 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]); // State para armazenar as empresas
   const [showForm, setShowForm] = useState(false);
+  const [isCreating, setIsCreating] = useState(false); // State para controlar se é criação
   const [editingUser, setEditingUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null); // State para armazenar o usuário logado
   const { toast } = useToast(); // Inicializar useToast
+
+  const initialUserState = {
+    name: "",
+    email: "",
+    cpf: "",
+    phone: "",
+    department: "",
+    userType: userTypeEnum.ATENDENTE,
+    password: "",
+    companyId: null,
+    companyName: null,
+  };
 
   const loadData = useCallback(async () => {
     // Renamed from loadUsers
@@ -96,7 +109,89 @@ export default function UsersPage() {
 
   const handleEdit = (user) => {
     setEditingUser({ ...user });
+    setIsCreating(false);
     setShowForm(true);
+  };
+
+  const handleAddNew = () => {
+    // Set default companyId for non-super-admin users
+    const defaultNewUser = { ...initialUserState };
+    setEditingUser(defaultNewUser);
+    setIsCreating(true);
+    setShowForm(true);
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    setIsLoading(true);
+
+    try {
+      // Validações básicas
+      if (!editingUser.name || !editingUser.email || !editingUser.password) {
+        toast({
+          title: "Erro",
+          description: "Nome, email e senha são obrigatórios.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (currentUser?.userType != userTypeEnum.SUPER_ADMIN) {
+        // Admin normal usa a empresa dele
+        editingUser.companyId = currentUser.companyId;
+        editingUser.companyName = currentUser.companyName;
+      }
+
+      // Garantir que companyId e companyName estejam presentes
+      if (!editingUser.companyId || !editingUser.companyName) {
+        toast({
+          title: "Erro",
+          description: "Empresa é obrigatória.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const userData = {
+        name: editingUser.name,
+        email: editingUser.email,
+        cpf: editingUser.cpf || null,
+        phone: editingUser.phone || "",
+        department: editingUser.department || "",
+        userType: editingUser.userType,
+        password: editingUser.password,
+        role: userRoleEnum.USER, // Role padrão
+        companyId: editingUser.companyId,
+        companyName: editingUser.companyName,
+      };
+
+      await User.create(userData);
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário cadastrado com sucesso.",
+      });
+
+      setShowForm(false);
+      setEditingUser(null);
+      setIsCreating(false);
+      loadData();
+    } catch (error) {
+      console.error("Erro ao criar usuário:", error);
+      toast({
+        title: "Erro",
+        description:
+          error.response?.data?.message ||
+          "Não foi possível cadastrar o usuário.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUpdateUser = async (e) => {
@@ -146,6 +241,7 @@ export default function UsersPage() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingUser(null);
+    setIsCreating(false);
   };
 
   const getUserTypeBadge = (userType) => {
@@ -214,89 +310,157 @@ export default function UsersPage() {
                 : `Edite os usuários da sua empresa: ${currentUser?.companyName || "N/A"}`}
             </p>
           </div>
+          <Button
+            onClick={handleAddNew}
+            className="shadow-lg text-white"
+            style={{ backgroundColor: "#e78b3a" }}
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Adicionar Novo
+          </Button>
         </div>
-
-        <Card className="mb-8 bg-blue-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800">
-              <Info className="w-5 h-5" />
-              Como convidar e associar novos usuários?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-blue-700 space-y-2">
-            <p>
-              O processo tem duas etapas. Primeiro, convide o usuário para a
-              plataforma e, depois, associe-o a uma empresa.
-            </p>
-            <ol className="list-decimal list-inside space-y-1 font-medium">
-              <li>
-                <strong>Passo 1: Convidar.</strong> Navegue até a aba{" "}
-                <strong>"Dashboard" &rarr; "Users"</strong> no menu da
-                plataforma (fora deste app). Clique em "Invite User" e preencha
-                o email.
-              </li>
-              <li>
-                <strong>Passo 2: Associar.</strong> Após o usuário aceitar o
-                convite e fazer login, ele aparecerá nesta lista. Clique no
-                botão de edição (✏️) para associá-lo a uma empresa e definir seu
-                tipo de acesso.
-              </li>
-            </ol>
-          </CardContent>
-        </Card>
 
         {showForm && editingUser && (
           <Card className="mb-8 bg-white/90 backdrop-blur-sm border-slate-200/60">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UsersIcon className="w-5 h-5" />
-                Editar Usuário
+                {isCreating ? "Cadastrar Novo Usuário" : "Editar Usuário"}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUpdateUser} className="space-y-6">
+              <form
+                onSubmit={isCreating ? handleCreateUser : handleUpdateUser}
+                className="space-y-6"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Nome Completo</Label>
+                  <div className="md:col-span-2">
+                    <Label>Nome Completo {isCreating ? "*" : ""}</Label>
                     <Input
-                      value={editingUsername || ""}
-                      readOnly
-                      disabled
-                      className="bg-slate-100"
+                      value={editingUser.name || ""}
+                      onChange={(e) =>
+                        setEditingUser((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      readOnly={!isCreating}
+                      disabled={!isCreating}
+                      required={isCreating}
+                      className={isCreating ? "bg-white/80" : "bg-slate-100"}
                     />
                   </div>
                   <div>
-                    <Label>Email</Label>
+                    <Label>Email {isCreating ? "*" : ""}</Label>
                     <Input
                       type="email"
                       value={editingUser.email || ""}
-                      readOnly
-                      disabled
-                      className="bg-slate-100"
+                      onChange={(e) =>
+                        setEditingUser((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                      readOnly={!isCreating}
+                      disabled={!isCreating}
+                      required={isCreating}
+                      className={isCreating ? "bg-white/80" : "bg-slate-100"}
+                    />
+                  </div>
+                  <div>
+                    <Label>CPF</Label>
+                    <Input
+                      value={editingUser.cpf || ""}
+                      onChange={(e) =>
+                        setEditingUser((prev) => ({
+                          ...prev,
+                          cpf: e.target.value,
+                        }))
+                      }
+                      readOnly={!isCreating}
+                      disabled={!isCreating}
+                      className={isCreating ? "bg-white/80" : "bg-slate-100"}
                     />
                   </div>
 
-                  {/* Só mostrar seleção de empresa se for super admin */}
-                  {currentUser?.email === "brasileirosilvia@gmail.com" ? (
+                  {/* Campo de Senha - só aparece na criação */}
+                  {isCreating && (
                     <div>
-                      <Label>Empresa *</Label>
+                      <Label>Senha *</Label>
+                      <Input
+                        type="password"
+                        value={editingUser.password || ""}
+                        onChange={(e) =>
+                          setEditingUser((prev) => ({
+                            ...prev,
+                            password: e.target.value,
+                          }))
+                        }
+                        required
+                        className="bg-white/80"
+                        placeholder="Digite uma senha"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <Label>Telefone {isCreating ? "*" : ""}</Label>
+                    <Input
+                      value={editingUser.phone || ""}
+                      onChange={(e) =>
+                        setEditingUser((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
+                      readOnly={!isCreating}
+                      disabled={!isCreating}
+                      required={isCreating}
+                      className={isCreating ? "bg-white/80" : "bg-slate-100"}
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                  <div>
+                    <Label>Departamento {isCreating ? "*" : ""}</Label>
+                    <Input
+                      value={editingUser.department || ""}
+                      onChange={(e) =>
+                        setEditingUser((prev) => ({
+                          ...prev,
+                          department: e.target.value,
+                        }))
+                      }
+                      readOnly={!isCreating}
+                      disabled={!isCreating}
+                      required={isCreating}
+                      className={isCreating ? "bg-white/80" : "bg-slate-100"}
+                      placeholder="Ex: Vendas, Atendimento, Gerência"
+                    />
+                  </div>
+
+                  {/* Só mostrar seleção de empresa se for super admin (na criação) ou em edição */}
+                  {currentUser?.userType === userTypeEnum.SUPER_ADMIN ? (
+                    <div>
+                      <Label>Empresa {isCreating ? "*" : ""}</Label>
                       <Select
                         value={editingUser.companyId || ""}
                         onValueChange={(value) => {
                           const company = companies.find((c) => c.id === value);
                           setEditingUser((prev) => ({
                             ...prev,
-                            companyId: value === "" ? null : value, // Set to null if empty string is selected
-                            companyName: value === "" ? null : company?.name, // Set name to null if empty string is selected
+                            companyId: value === "" ? null : value,
+                            companyName: value === "" ? null : company?.name,
                           }));
                         }}
+                        disabled={!isCreating && !showForm}
                       >
                         <SelectTrigger className="bg-white/80">
                           <SelectValue placeholder="Selecione a empresa" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={null}>Não Associado</SelectItem>{" "}
-                          {/* Option for super admin to unassign */}
+                          {isCreating && (
+                            <SelectItem value="">Não Associado</SelectItem>
+                          )}
                           {companies.map((company) => (
                             <SelectItem key={company.id} value={company.id}>
                               {company.name}
@@ -306,22 +470,19 @@ export default function UsersPage() {
                       </Select>
                     </div>
                   ) : (
-                    // Lógica para admin de empresa: só pode associar à sua própria empresa ou deixar desassociado
+                    // Lógica para admin de empresa
                     <div>
-                      <Label>Empresa *</Label>
+                      <Label>Empresa {isCreating ? "*" : ""}</Label>
                       <Select
                         value={editingUser.companyId || ""}
                         onValueChange={(value) => {
-                          // For company admin, 'value' can only be their company's ID or empty string.
                           if (value === "") {
-                            // User selected "Não Associado"
                             setEditingUser((prev) => ({
                               ...prev,
                               companyId: null,
                               companyName: null,
                             }));
                           } else if (value === currentUser.companyId) {
-                            // User selected their company
                             setEditingUser((prev) => ({
                               ...prev,
                               companyId: currentUser.companyId,
@@ -329,13 +490,10 @@ export default function UsersPage() {
                             }));
                           }
                         }}
-                        // Disabled if the user is already associated with ANY company OTHER THAN the current user's company.
-                        // Since this is not a super admin, they can only manage their own company's users.
                         disabled={
-                          !!(
-                            editingUser.companyId &&
-                            editingUser.companyId !== currentUser.companyId
-                          )
+                          !isCreating &&
+                          !!editingUser.companyId &&
+                          editingUser.companyId !== currentUser.companyId
                         }
                       >
                         <SelectTrigger className="bg-white/80">
@@ -350,7 +508,9 @@ export default function UsersPage() {
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={null}>Não Associado</SelectItem>
+                          {isCreating && (
+                            <SelectItem value="">Não Associado</SelectItem>
+                          )}
                           {currentUser.companyId && (
                             <SelectItem value={currentUser.companyId}>
                               {currentUser.companyName}
@@ -368,8 +528,11 @@ export default function UsersPage() {
                       onValueChange={(value) =>
                         setEditingUser((prev) => ({ ...prev, userType: value }))
                       }
+                      disabled={!isCreating}
                     >
-                      <SelectTrigger className="bg-white/80">
+                      <SelectTrigger
+                        className={isCreating ? "bg-white/80" : "bg-slate-100"}
+                      >
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -382,36 +545,6 @@ export default function UsersPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>Telefone *</Label>
-                    <Input
-                      value={editingUser.phone || ""}
-                      onChange={(e) =>
-                        setEditingUser((prev) => ({
-                          ...prev,
-                          phone: e.target.value,
-                        }))
-                      }
-                      required
-                      className="bg-white/80"
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div>
-                    <Label>Departamento *</Label>
-                    <Input
-                      value={editingUser.department || ""}
-                      onChange={(e) =>
-                        setEditingUser((prev) => ({
-                          ...prev,
-                          department: e.target.value,
-                        }))
-                      }
-                      required
-                      className="bg-white/80"
-                      placeholder="Ex: Vendas, Atendimento, Gerência"
-                    />
-                  </div>
                 </div>
 
                 <div className="flex gap-3">
@@ -420,7 +553,11 @@ export default function UsersPage() {
                     className="bg-green-600 hover:bg-green-700"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Salvando..." : "Salvar Alterações"}
+                    {isLoading
+                      ? "Salvando..."
+                      : isCreating
+                        ? "Cadastrar Usuário"
+                        : "Salvar Alterações"}
                   </Button>
                   <Button
                     type="button"
