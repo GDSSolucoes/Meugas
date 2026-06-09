@@ -12,12 +12,15 @@ import { UserBaseDto } from "./dto/user.base.dto";
 
 @Injectable()
 export class UsersService extends BaseCrudService<typeof users> {
-  constructor(requestContext: RequestContextService) {
+  constructor(
+    @Inject("DB") private readonly db: NodePgDatabase,
+    requestContext: RequestContextService,
+  ) {
     super(requestContext, users, true); // hasCompanyId = true
   }
 
   async findByEmail(email: string) {
-    const rows = await this.getDb()
+    const rows = await this.db
       .select()
       .from(users)
       .where(eq(users.email, email));
@@ -25,18 +28,12 @@ export class UsersService extends BaseCrudService<typeof users> {
   }
 
   async findByCpf(cpf: string) {
-    const rows = await this.getDb()
-      .select()
-      .from(users)
-      .where(eq(users.cpf, cpf));
+    const rows = await this.db.select().from(users).where(eq(users.cpf, cpf));
     return rows[0] || null;
   }
 
   async findById(id: string) {
-    const rows = await this.getDb()
-      .select()
-      .from(users)
-      .where(eq(users.id, id));
+    const rows = await this.db.select().from(users).where(eq(users.id, id));
     return rows[0] || null;
   }
 
