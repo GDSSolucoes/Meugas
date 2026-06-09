@@ -120,7 +120,7 @@ export default function PagamentoModal({
       });
       return;
     }
-    if (isFuture(new Date(paymentDate + "T23:59:59"))) {
+    if (isFuture(new Date(paymentDate + "T00:00:59"))) {
       toast({
         title: "Erro",
         description: "A data do pagamento não pode ser futura.",
@@ -152,16 +152,6 @@ export default function PagamentoModal({
       toast({
         title: "Erro",
         description: "Conta não encontrada.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Verificar saldo
-    if ((contaSelecionada.balance || 0) < valorFinal) {
-      toast({
-        title: "Erro",
-        description: "Saldo insuficiente na conta selecionada.",
         variant: "destructive",
       });
       return;
