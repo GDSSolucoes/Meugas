@@ -61,8 +61,8 @@ export class BaseCrudController<T extends BasePgTable> {
     @Query("order") order?: string,
     @Query() allFilters?: Record<string, any>,
   ) {
-    const pageNum = page ? parseInt(page, 10) : 1;
-    const limitNum = limit ? parseInt(limit, 10) : 10;
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 100;
 
     // Remove page, limit e q dos filters se existirem
     const filters = { ...allFilters };

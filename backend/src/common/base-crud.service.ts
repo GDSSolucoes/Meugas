@@ -47,7 +47,7 @@ export class BaseCrudService<T extends BasePgTable> {
 
   async list(
     page: number = 1,
-    limit: number = 10,
+    limit: number = 100,
     filters: Record<string, any> = {},
     search?: string,
     sort?: string,
