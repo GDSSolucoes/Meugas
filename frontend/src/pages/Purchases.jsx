@@ -55,7 +55,7 @@ export default function PurchasesPage() {
   const [searchSupplier, setSearchSupplier] = useState("");
 
   const initialPurchaseState = {
-    purchaseNumber: "",
+    invoiceNumber: "",
     supplierId: "", // Changed from personId
     supplierName: "", // Changed from personName
     sectorId: "",
@@ -264,6 +264,7 @@ export default function PurchasesPage() {
       return;
     }
 
+    debugger;
     const found = suppliers.find(
       (s) =>
         s.document?.includes(searchSupplier) ||
@@ -394,25 +395,28 @@ export default function PurchasesPage() {
     setCurrentPurchase((prev) => ({ ...prev, items: newItems }));
   };
 
+  const getDueDateForInstallment = (purchaseDate, installmentIndex) => {
+    const purchase = new Date(purchaseDate);
+    const baseDate = new Date(
+      purchase.getFullYear(),
+      purchase.getMonth() + 1 + installmentIndex,
+      10,
+    );
+    return format(baseDate, "yyyy-MM-dd");
+  };
+
   const handlePaymentTypeChange = (paymentTypeId) => {
     const paymentType = paymentTypes.find((pt) => pt.id === paymentTypeId);
     if (!paymentType) return;
 
-    const isImmediatePayment = ["dinheiro", "pix", "cartao_debito"].includes(
-      paymentType.type,
-    );
-    const maxInstallments = paymentType.maxInstallments || 1;
-    const installments = isImmediatePayment ? 1 : maxInstallments;
+    const installments = 1; // Default to 1 installment for all payment selections
 
-    // Gerar detalhes das parcelas
     const installmentsDetails = [];
     const totalAmountPerInstallment = currentPurchase.finalTotal / installments;
     for (let i = 0; i < installments; i++) {
-      const dueDate = new Date(currentPurchase.purchaseDate);
-      dueDate.setDate(dueDate.getDate() + i * 30); // Assuming 30 days per installment for simplicity
       installmentsDetails.push({
         number: i + 1,
-        dueDate: format(dueDate, "yyyy-MM-dd"),
+        dueDate: getDueDateForInstallment(currentPurchase.purchaseDate, i),
         amount: totalAmountPerInstallment,
         status: "pendente",
       });
@@ -433,11 +437,9 @@ export default function PurchasesPage() {
     const totalAmountPerInstallment =
       currentPurchase.finalTotal / numInstallments;
     for (let i = 0; i < numInstallments; i++) {
-      const dueDate = new Date(currentPurchase.purchaseDate);
-      dueDate.setDate(dueDate.getDate() + i * 30); // Assuming 30 days per installment for simplicity
       installmentsDetails.push({
         number: i + 1,
-        dueDate: format(dueDate, "yyyy-MM-dd"),
+        dueDate: getDueDateForInstallment(currentPurchase.purchaseDate, i),
         amount: totalAmountPerInstallment,
         status: "pendente",
       });
@@ -516,7 +518,7 @@ export default function PurchasesPage() {
         companyId: user.companyId,
       });
       const maxNumber = allPurchases.reduce((max, p) => {
-        const num = parseInt(p.purchaseNumber, 10);
+        const num = parseInt(p.invoiceNumber, 10);
         return !isNaN(num) && num > max ? num : max;
       }, 0);
       const newNumber = String(maxNumber + 1);
@@ -524,7 +526,7 @@ export default function PurchasesPage() {
       // Para compra avulsa, usar dados genéricos
       const purchaseData = {
         ...currentPurchase,
-        purchaseNumber: newNumber,
+        invoiceNumber: newNumber,
         supplierId:
           purchaseType === "avulsa" ? "avulsa" : currentPurchase.supplierId, // Handled 'avulsa'
         supplierName:
@@ -554,7 +556,7 @@ export default function PurchasesPage() {
           await entities.ContasAPagar.create({
             supplierId: purchaseData.supplierId,
             supplierName: purchaseData.supplierName,
-            description: `Compra ${currentPurchase.purchaseNumber} - Parcela ${installment.number}/${currentPurchase.installments}`,
+            description: `Compra ${currentPurchase.invoiceNumber} - Parcela ${installment.number}/${currentPurchase.installments}`,
             dueDate: installment.dueDate,
             amount: installment.amount,
             status: "aberto",
@@ -570,12 +572,12 @@ export default function PurchasesPage() {
         }
         toast({
           title: "Sucesso",
-          description: `Compra #${createdPurchase.purchaseNumber} salva! ${currentPurchase.installments} parcela(s) registrada(s) em Contas a Pagar.`,
+          description: `Compra #${createdPurchase.invoiceNumber} salva! ${currentPurchase.installments} parcela(s) registrada(s) em Contas a Pagar.`,
         });
       } else {
         toast({
           title: "Sucesso",
-          description: `Compra #${createdPurchase.purchaseNumber} salva com sucesso!`,
+          description: `Compra #${createdPurchase.invoiceNumber} salva com sucesso!`,
         });
       }
 
