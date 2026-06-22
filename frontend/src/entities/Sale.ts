@@ -1,3 +1,4 @@
+import { api } from '@/api/apiClient';
 import { BaseEntity } from './BaseEntity';
 
 
@@ -87,6 +88,17 @@ export class Sale extends BaseEntity {
     return super._create.call(this, this.baseUrl, data) as Promise<Sale>;
   }
 
+  
+  static async createComplete(data: Partial<Sale>) {
+    try {
+      const response = await api.post(`${this.baseUrl}/complete`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating complete Sale:", error);
+      throw error;
+    }
+  }
+
   /**
    * Static method to update a Sale
    *
@@ -96,6 +108,16 @@ export class Sale extends BaseEntity {
    */
   static async update(id: string, data: Partial<Sale>): Promise<Sale> {
     return super._update.call(this, this.baseUrl, id, data) as Promise<Sale>;
+  }
+
+  static async updateComplete(id: string, data: Partial<Sale>) {
+    try {
+      const response = await api.put(`${this.baseUrl}/complete/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating complete Sale:", error);
+      throw error;
+    }  
   }
 
   /**

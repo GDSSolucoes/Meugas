@@ -23,6 +23,12 @@ export enum PaymentTypesTypeEnum {
   CONVENIO = "convenio",
 }
 
+export const ImmediatePaymentTypesType = [
+  PaymentTypesTypeEnum.DINHEIRO,
+  PaymentTypesTypeEnum.PIX,
+  PaymentTypesTypeEnum.CARTAO_DEBITO,
+];
+
 export const paymentTypesTypePGEnum = pgEnum(
   "payment_types_type_enum",
   PaymentTypesTypeEnum,

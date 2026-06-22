@@ -3,46 +3,70 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Edit2, Save, X, DollarSign, CreditCard, FileText, Calendar } from "lucide-react";
+import {
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  DollarSign,
+  CreditCard,
+  FileText,
+  Calendar,
+} from "lucide-react";
 import { format, addDays } from "date-fns";
 
-export default function PaymentModal({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  totalAmount, 
-  paymentTypes, 
+export default function PaymentModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  totalAmount,
+  paymentTypes,
   cashAccounts,
   saleNumber,
   customerName,
-  saleDate
+  saleDate,
 }) {
   const [payments, setPayments] = useState([]);
   const [currentPayment, setCurrentPayment] = useState({
-    paymentTypeId: '',
-    paymentTypeName: '',
+    paymentTypeId: "",
+    paymentTypeName: "",
+    paymentTypeType: "",
     amount: totalAmount,
     installments: 1,
-    cashAccountId: '',
-    installmentsDetails: []
+    cashAccountId: "",
+    installmentsDetails: [],
   });
-  const [observations, setObservations] = useState('');
+  const [observations, setObservations] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [showInstallmentsGrid, setShowInstallmentsGrid] = useState(false);
-  
+
   // NOVO: Estado separado para guardar o valor fixo quando gerar parcelas
   const [fixedPaymentAmount, setFixedPaymentAmount] = useState(null);
 
-  const totalPaid = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const totalPaid = payments.reduce(
+    (sum, p) => sum + (parseFloat(p.amount) || 0),
+    0,
+  );
   const remaining = totalAmount - totalPaid;
   const isComplete = Math.abs(remaining) < 0.01;
   const isOverpaid = remaining < -0.01;
 
-  const selectedPaymentType = paymentTypes.find(pt => pt.id === currentPayment.paymentTypeId);
-  const isCashPayment = selectedPaymentType && ['dinheiro', 'pix', 'cartao_debito'].includes(selectedPaymentType.type);
-  const isInstallmentPayment = selectedPaymentType && !isCashPayment && currentPayment.installments > 1;
+  const selectedPaymentType = paymentTypes.find(
+    (pt) => pt.id === currentPayment.paymentTypeId,
+  );
+  const isCashPayment =
+    selectedPaymentType &&
+    ["dinheiro", "pix", "cartao_debito"].includes(selectedPaymentType.type);
+  const isInstallmentPayment =
+    selectedPaymentType && !isCashPayment && currentPayment.installments > 1;
 
   // Gerar parcelas quando o usuário clicar no botão
   const handleGenerateInstallments = () => {
@@ -51,7 +75,8 @@ export default function PaymentModal({
     // GUARDAR o valor fixo em um estado separado
     setFixedPaymentAmount(currentPayment.amount);
 
-    const installmentAmount = currentPayment.amount / currentPayment.installments;
+    const installmentAmount =
+      currentPayment.amount / currentPayment.installments;
     const daysInterval = selectedPaymentType.daysInterval || 30;
     const startDate = new Date(saleDate || new Date());
 
@@ -61,13 +86,13 @@ export default function PaymentModal({
       installmentsDetails.push({
         number: i + 1,
         amount: installmentAmount,
-        dueDate: format(dueDate, 'yyyy-MM-dd')
+        dueDate: format(dueDate, "yyyy-MM-dd"),
       });
     }
 
-    setCurrentPayment(prev => ({
+    setCurrentPayment((prev) => ({
       ...prev,
-      installmentsDetails: installmentsDetails
+      installmentsDetails: installmentsDetails,
     }));
     setShowInstallmentsGrid(true);
   };
@@ -76,44 +101,46 @@ export default function PaymentModal({
   const updateInstallmentAmount = (index, newAmount) => {
     // Usar o valor fixo guardado no estado separado
     const fixedTotal = fixedPaymentAmount;
-    
+
     if (!fixedTotal) return;
 
     const newInstallments = [...currentPayment.installmentsDetails];
     const parsedNewAmount = parseFloat(newAmount) || 0;
 
     if (parsedNewAmount < 0) {
-        alert('O valor da parcela não pode ser negativo.');
-        return;
-    }
-    
-    if (parsedNewAmount > fixedTotal) {
-      alert(`O valor da parcela não pode ser maior que o total do pagamento (R$ ${fixedTotal.toFixed(2)})`);
+      alert("O valor da parcela não pode ser negativo.");
       return;
     }
-    
+
+    if (parsedNewAmount > fixedTotal) {
+      alert(
+        `O valor da parcela não pode ser maior que o total do pagamento (R$ ${fixedTotal.toFixed(2)})`,
+      );
+      return;
+    }
+
     // Atualizar o valor da parcela editada
     newInstallments[index].amount = parsedNewAmount;
-    
+
     // Quanto sobra para as outras parcelas
     const remainingForOthers = fixedTotal - parsedNewAmount;
-    
+
     // Distribuir o restante nas outras parcelas
     const otherInstallmentsCount = newInstallments.length - 1;
     if (otherInstallmentsCount > 0) {
       const amountPerOther = remainingForOthers / otherInstallmentsCount;
-      
+
       newInstallments.forEach((inst, i) => {
         if (i !== index) {
           inst.amount = amountPerOther;
         }
       });
     }
-    
+
     // Atualizar APENAS installmentsDetails
-    setCurrentPayment(prev => ({
+    setCurrentPayment((prev) => ({
       ...prev,
-      installmentsDetails: newInstallments
+      installmentsDetails: newInstallments,
     }));
   };
 
@@ -121,39 +148,48 @@ export default function PaymentModal({
   const updateInstallmentDate = (index, newDate) => {
     const newInstallments = [...currentPayment.installmentsDetails];
     newInstallments[index].dueDate = newDate;
-    
-    setCurrentPayment(prev => ({
+
+    setCurrentPayment((prev) => ({
       ...prev,
-      installmentsDetails: newInstallments
+      installmentsDetails: newInstallments,
     }));
   };
 
   const handleAddPayment = () => {
     if (!currentPayment.paymentTypeId) {
-      alert('Selecione uma forma de pagamento');
-      return;
-    }
-    
-    if (!currentPayment.amount || currentPayment.amount <= 0) {
-      alert('Informe um valor válido');
+      alert("Selecione uma forma de pagamento");
       return;
     }
 
-    const paymentType = paymentTypes.find(pt => pt.id === currentPayment.paymentTypeId);
-    const isCash = ['dinheiro', 'pix', 'cartao_debito'].includes(paymentType?.type);
+    if (!currentPayment.amount || currentPayment.amount <= 0) {
+      alert("Informe um valor válido");
+      return;
+    }
+
+    const paymentType = paymentTypes.find(
+      (pt) => pt.id === currentPayment.paymentTypeId,
+    );
+    const isCash = ["dinheiro", "pix", "cartao_debito"].includes(
+      paymentType?.type,
+    );
 
     if (isCash && !currentPayment.cashAccountId) {
-      alert('Selecione uma conta/caixa para pagamento à vista');
+      alert("Selecione uma conta/caixa para pagamento à vista");
       return;
     }
 
     // Validar total das parcelas se for parcelado
     if (isInstallmentPayment && currentPayment.installmentsDetails.length > 0) {
-      const totalInstallments = currentPayment.installmentsDetails.reduce((sum, inst) => sum + inst.amount, 0);
+      const totalInstallments = currentPayment.installmentsDetails.reduce(
+        (sum, inst) => sum + inst.amount,
+        0,
+      );
       // Usar o fixedPaymentAmount para validação
       const amountToValidate = fixedPaymentAmount || currentPayment.amount;
       if (Math.abs(totalInstallments - amountToValidate) > 0.01) {
-        alert(`A soma das parcelas (R$ ${totalInstallments.toFixed(2)}) deve ser igual ao valor total do pagamento (R$ ${amountToValidate.toFixed(2)})`);
+        alert(
+          `A soma das parcelas (R$ ${totalInstallments.toFixed(2)}) deve ser igual ao valor total do pagamento (R$ ${amountToValidate.toFixed(2)})`,
+        );
         return;
       }
     }
@@ -170,12 +206,13 @@ export default function PaymentModal({
     // Reset form
     const newRemaining = totalAmount - (totalPaid + currentPayment.amount);
     setCurrentPayment({
-      paymentTypeId: '',
-      paymentTypeName: '',
+      paymentTypeId: "",
+      paymentTypeName: "",
+      paymentTypeType: "",
       amount: newRemaining > 0 ? newRemaining : 0,
       installments: 1,
-      cashAccountId: '',
-      installmentsDetails: []
+      cashAccountId: "",
+      installmentsDetails: [],
     });
     setShowInstallmentsGrid(false);
     setFixedPaymentAmount(null); // Resetar o valor fixo
@@ -184,7 +221,10 @@ export default function PaymentModal({
   const handleEditPayment = (index) => {
     setCurrentPayment(payments[index]);
     setEditingIndex(index);
-    if (payments[index].installmentsDetails && payments[index].installmentsDetails.length > 0) {
+    if (
+      payments[index].installmentsDetails &&
+      payments[index].installmentsDetails.length > 0
+    ) {
       setShowInstallmentsGrid(true);
       setFixedPaymentAmount(payments[index].amount); // Guardar o valor fixo ao editar
     }
@@ -197,7 +237,12 @@ export default function PaymentModal({
 
   const handleConfirm = () => {
     if (!isComplete) {
-      alert('O total dos pagamentos deve ser igual ao valor da venda');
+      alert("O total dos pagamentos deve ser igual ao valor da venda");
+      return;
+    }
+    const paymentsWihtoutType = payments.filter((p) => !p.paymentTypeId);
+    if (paymentsWihtoutType.length > 0) {
+      alert("Todos os pagamentos devem ter uma forma de pagamento selecionada");
       return;
     }
     onConfirm(payments, observations);
@@ -527,17 +572,18 @@ export default function PaymentModal({
 
             <div className="field-group">
               <Label>Forma de Pagamento *</Label>
-              <Select 
-                value={currentPayment.paymentTypeId} 
+              <Select
+                value={currentPayment.paymentTypeId}
                 onValueChange={(value) => {
-                  const pt = paymentTypes.find(p => p.id === value);
-                  setCurrentPayment(prev => ({
+                  const pt = paymentTypes.find((p) => p.id === value);
+                  setCurrentPayment((prev) => ({
                     ...prev,
                     paymentTypeId: value,
-                    paymentTypeName: pt?.name || '',
+                    paymentTypeName: pt?.name || "",
+                    paymentTypeType: pt?.type || "",
                     installments: 1,
-                    cashAccountId: '',
-                    installmentsDetails: []
+                    cashAccountId: "",
+                    installmentsDetails: [],
                   }));
                   setShowInstallmentsGrid(false);
                   setFixedPaymentAmount(null);
@@ -547,8 +593,10 @@ export default function PaymentModal({
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {paymentTypes.map(pt => (
-                    <SelectItem key={pt.id} value={pt.id}>{pt.name}</SelectItem>
+                  {paymentTypes.map((pt) => (
+                    <SelectItem key={pt.id} value={pt.id}>
+                      {pt.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -557,16 +605,23 @@ export default function PaymentModal({
             {isCashPayment && (
               <div className="field-group">
                 <Label>Conta/Caixa *</Label>
-                <Select 
-                  value={currentPayment.cashAccountId} 
-                  onValueChange={(value) => setCurrentPayment(prev => ({...prev, cashAccountId: value}))}
+                <Select
+                  value={currentPayment.cashAccountId}
+                  onValueChange={(value) =>
+                    setCurrentPayment((prev) => ({
+                      ...prev,
+                      cashAccountId: value,
+                    }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {cashAccounts.map(ca => (
-                      <SelectItem key={ca.id} value={ca.id}>{ca.name}</SelectItem>
+                    {cashAccounts.map((ca) => (
+                      <SelectItem key={ca.id} value={ca.id}>
+                        {ca.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -574,20 +629,32 @@ export default function PaymentModal({
             )}
 
             <div className="field-group">
-              <Label>Valor * {fixedPaymentAmount !== null && <span style={{color: '#EF4444', fontSize: '12px'}}>(TRAVADO)</span>}</Label>
+              <Label>
+                Valor *{" "}
+                {fixedPaymentAmount !== null && (
+                  <span style={{ color: "#EF4444", fontSize: "12px" }}>
+                    (TRAVADO)
+                  </span>
+                )}
+              </Label>
               <Input
                 type="number"
                 step="0.01"
                 value={currentPayment.amount}
                 onChange={(e) => {
                   if (fixedPaymentAmount !== null) {
-                    alert('Não é possível alterar o valor após gerar as parcelas. Cancele e crie novamente.');
+                    alert(
+                      "Não é possível alterar o valor após gerar as parcelas. Cancele e crie novamente.",
+                    );
                     return;
                   }
-                  setCurrentPayment(prev => ({...prev, amount: parseFloat(e.target.value) || 0}));
+                  setCurrentPayment((prev) => ({
+                    ...prev,
+                    amount: parseFloat(e.target.value) || 0,
+                  }));
                 }}
                 placeholder="0,00"
-                className={fixedPaymentAmount !== null ? 'locked-field' : ''}
+                className={fixedPaymentAmount !== null ? "locked-field" : ""}
                 readOnly={fixedPaymentAmount !== null}
               />
             </div>
@@ -600,19 +667,22 @@ export default function PaymentModal({
                   min="1"
                   value={currentPayment.installments}
                   onChange={(e) => {
-                    setCurrentPayment(prev => ({...prev, installments: parseInt(e.target.value) || 1}));
+                    setCurrentPayment((prev) => ({
+                      ...prev,
+                      installments: parseInt(e.target.value) || 1,
+                    }));
                     setShowInstallmentsGrid(false);
                     setFixedPaymentAmount(null);
                   }}
                   disabled={fixedPaymentAmount !== null}
-                  className={fixedPaymentAmount !== null ? 'locked-field' : ''}
+                  className={fixedPaymentAmount !== null ? "locked-field" : ""}
                 />
               </div>
             )}
 
             {/* Botão para gerar parcelas */}
             {isInstallmentPayment && !showInstallmentsGrid && (
-              <Button 
+              <Button
                 onClick={handleGenerateInstallments}
                 className="w-full mt-2 bg-blue-500 hover:bg-blue-600"
               >
@@ -621,74 +691,100 @@ export default function PaymentModal({
             )}
 
             {/* Grid de Parcelas */}
-            {showInstallmentsGrid && currentPayment.installmentsDetails.length > 0 && (
-              <div className="installments-grid">
-                <h4>
-                  <Calendar className="w-4 h-4" />
-                  Detalhamento das Parcelas
-                </h4>
-                <table className="installments-table">
-                  <thead>
-                    <tr>
-                      <th>Parc.</th>
-                      <th>Vencimento</th>
-                      <th>Valor (R$)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentPayment.installmentsDetails.map((inst, index) => (
-                      <tr key={index}>
-                        <td>{inst.number}ª</td>
-                        <td>
-                          <Input
-                            type="date"
-                            value={inst.dueDate}
-                            onChange={(e) => updateInstallmentDate(index, e.target.value)}
-                          />
-                        </td>
-                        <td>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={inst.amount.toFixed(2)}
-                            onChange={(e) => updateInstallmentAmount(index, parseFloat(e.target.value) || 0)}
-                          />
-                        </td>
+            {showInstallmentsGrid &&
+              currentPayment.installmentsDetails.length > 0 && (
+                <div className="installments-grid">
+                  <h4>
+                    <Calendar className="w-4 h-4" />
+                    Detalhamento das Parcelas
+                  </h4>
+                  <table className="installments-table">
+                    <thead>
+                      <tr>
+                        <th>Parc.</th>
+                        <th>Vencimento</th>
+                        <th>Valor (R$)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="installment-totals">
-                  <strong>Total das Parcelas:</strong>
-                  <span className="total-value">
-                    R$ {currentPayment.installmentsDetails.reduce((sum, inst) => sum + inst.amount, 0).toFixed(2)}
-                  </span>
+                    </thead>
+                    <tbody>
+                      {currentPayment.installmentsDetails.map((inst, index) => (
+                        <tr key={index}>
+                          <td>{inst.number}ª</td>
+                          <td>
+                            <Input
+                              type="date"
+                              value={inst.dueDate}
+                              onChange={(e) =>
+                                updateInstallmentDate(index, e.target.value)
+                              }
+                            />
+                          </td>
+                          <td>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={inst.amount.toFixed(2)}
+                              onChange={(e) =>
+                                updateInstallmentAmount(
+                                  index,
+                                  parseFloat(e.target.value) || 0,
+                                )
+                              }
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="installment-totals">
+                    <strong>Total das Parcelas:</strong>
+                    <span className="total-value">
+                      R${" "}
+                      {currentPayment.installmentsDetails
+                        .reduce((sum, inst) => sum + inst.amount, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                  <div
+                    className="installment-totals"
+                    style={{
+                      marginTop: "8px",
+                      background: "#FEF3C7",
+                      borderColor: "#F59E0B",
+                    }}
+                  >
+                    <strong>Valor Total do Pagamento (FIXO):</strong>
+                    <span className="total-value" style={{ color: "#F59E0B" }}>
+                      R${" "}
+                      {fixedPaymentAmount !== null
+                        ? fixedPaymentAmount.toFixed(2)
+                        : currentPayment.amount.toFixed(2)}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setShowInstallmentsGrid(false);
+                      setFixedPaymentAmount(null);
+                      setCurrentPayment((prev) => ({
+                        ...prev,
+                        installmentsDetails: [],
+                      }));
+                    }}
+                    className="w-full mt-2"
+                    variant="outline"
+                  >
+                    🔄 Reajustar Parcelas
+                  </Button>
                 </div>
-                <div className="installment-totals" style={{marginTop: '8px', background: '#FEF3C7', borderColor: '#F59E0B'}}>
-                  <strong>Valor Total do Pagamento (FIXO):</strong>
-                  <span className="total-value" style={{color: '#F59E0B'}}>
-                    R$ {fixedPaymentAmount !== null ? fixedPaymentAmount.toFixed(2) : currentPayment.amount.toFixed(2)}
-                  </span>
-                </div>
-                <Button 
-                  onClick={() => {
-                    setShowInstallmentsGrid(false);
-                    setFixedPaymentAmount(null);
-                    setCurrentPayment(prev => ({...prev, installmentsDetails: []}));
-                  }}
-                  className="w-full mt-2"
-                  variant="outline"
-                >
-                  🔄 Reajustar Parcelas
-                </Button>
-              </div>
-            )}
+              )}
 
-            <Button 
+            <Button
               onClick={handleAddPayment}
               className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white"
             >
-              {editingIndex !== null ? 'Atualizar Pagamento' : 'Adicionar Pagamento'}
+              {editingIndex !== null
+                ? "Atualizar Pagamento"
+                : "Adicionar Pagamento"}
             </Button>
           </div>
 
@@ -706,18 +802,29 @@ export default function PaymentModal({
 
             <div className="summary-item">
               <label>Total Pago:</label>
-              <span className="value" style={{color: '#10B981'}}>R$ {totalPaid.toFixed(2)}</span>
+              <span className="value" style={{ color: "#10B981" }}>
+                R$ {totalPaid.toFixed(2)}
+              </span>
             </div>
 
             <div className="summary-item highlight">
               <label>Falta Pagar:</label>
-              <span className="value" style={{color: remaining > 0.01 ? '#EF4444' : '#10B981'}}>
+              <span
+                className="value"
+                style={{ color: remaining > 0.01 ? "#EF4444" : "#10B981" }}
+              >
                 R$ {remaining.toFixed(2)}
               </span>
             </div>
 
-            <div className={`payment-status ${isOverpaid ? 'overpaid' : isComplete ? 'complete' : 'pending'}`}>
-              {isOverpaid ? '⚠️ Pagamento excedente!' : isComplete ? '✅ Pagamento completo' : '⏳ Pagamento pendente'}
+            <div
+              className={`payment-status ${isOverpaid ? "overpaid" : isComplete ? "complete" : "pending"}`}
+            >
+              {isOverpaid
+                ? "⚠️ Pagamento excedente!"
+                : isComplete
+                  ? "✅ Pagamento completo"
+                  : "⏳ Pagamento pendente"}
             </div>
           </div>
 
@@ -745,19 +852,27 @@ export default function PaymentModal({
                 </thead>
                 <tbody>
                   {payments.map((payment, index) => {
-                    const account = cashAccounts.find(ca => ca.id === payment.cashAccountId);
+                    const account = cashAccounts.find(
+                      (ca) => ca.id === payment.cashAccountId,
+                    );
                     return (
                       <tr key={index}>
                         <td>{payment.paymentTypeName}</td>
-                        <td>{account?.name || '-'}</td>
+                        <td>{account?.name || "-"}</td>
                         <td>R$ {payment.amount.toFixed(2)}</td>
                         <td>{payment.installments}x</td>
                         <td>
                           <div className="table-actions">
-                            <button className="btn-table-action btn-edit" onClick={() => handleEditPayment(index)}>
+                            <button
+                              className="btn-table-action btn-edit"
+                              onClick={() => handleEditPayment(index)}
+                            >
                               <Edit2 className="w-4 h-4" />
                             </button>
-                            <button className="btn-table-action btn-delete" onClick={() => handleDeletePayment(index)}>
+                            <button
+                              className="btn-table-action btn-delete"
+                              onClick={() => handleDeletePayment(index)}
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -790,8 +905,8 @@ export default function PaymentModal({
               <X className="w-4 h-4 mr-2" />
               Cancelar
             </Button>
-            <Button 
-              onClick={handleConfirm} 
+            <Button
+              onClick={handleConfirm}
               disabled={!isComplete}
               className="bg-green-600 hover:bg-green-700"
             >

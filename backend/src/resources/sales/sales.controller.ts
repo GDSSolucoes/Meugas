@@ -39,14 +39,37 @@ export class SalesController extends BaseCrudController<typeof sales> {
 
   @Post()
   @ApiBody({ type: SalesCreateDto })
-  @ApiOperation({ summary: `Create Sales` })
+  @ApiOperation({
+    summary: `Criar venda completa (incluindo estoque e financeiro)`,
+  })
   @ApiResponse({
     status: 201,
     description: `Sales created`,
     type: SalesCreateDto,
   })
   async create(@Body() data: SalesCreateDto, @CurrentUser() user: any) {
-    return super.create(data, user);
+    return this.service.completeCreate(
+      data,
+      user.id,
+      user.name,
+      user.companyId,
+      user.companyName,
+    );
+  }
+  @Post("complete")
+  @ApiBody({ type: SalesCreateDto })
+  @ApiOperation({
+    summary: `Criar venda completa (incluindo estoque e financeiro)`,
+  })
+  @ApiResponse({ status: 201, description: `Venda criada` })
+  async createComplete(@Body() data: SalesCreateDto, @CurrentUser() user: any) {
+    return this.service.completeCreate(
+      data,
+      user.id,
+      user.name,
+      user.companyId,
+      user.companyName,
+    );
   }
 
   @Get(":id")
@@ -98,14 +121,44 @@ export class SalesController extends BaseCrudController<typeof sales> {
 
   @Put(":id")
   @ApiBody({ type: SalesUpdateDto })
-  @ApiOperation({ summary: `Update Sales` })
+  @ApiOperation({ summary: `Atualizar venda completa (reverte e recria tudo)` })
   @ApiResponse({
     status: 201,
     description: `Sales updated`,
     type: SalesUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: SalesUpdateDto) {
-    return super.update(id, data);
+  async update(
+    @Param("id") id: string,
+    @Body() data: SalesUpdateDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.service.completeUpdate(
+      id,
+      data,
+      user.id,
+      user.name,
+      user.companyId,
+      user.companyName,
+    );
+  }
+
+  @Put("complete/:id")
+  @ApiBody({ type: SalesUpdateDto })
+  @ApiOperation({ summary: `Atualizar venda completa (reverte e recria tudo)` })
+  @ApiResponse({ status: 200, description: `Venda atualizada` })
+  async updateComplete(
+    @Param("id") id: string,
+    @Body() data: SalesUpdateDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.service.completeUpdate(
+      id,
+      data,
+      user.id,
+      user.name,
+      user.companyId,
+      user.companyName,
+    );
   }
 
   @Delete(":id")

@@ -1,35 +1,34 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional, IsString, IsNumber, IsArray } from 'class-validator'
+import { ApiProperty } from "@nestjs/swagger";
+import { IsOptional, IsString, IsNumber, IsArray } from "class-validator";
+import { PaymentTypesTypeEnum } from "../../../database/schemas";
+import { SaleInstallmentsDetailsDto } from "./saleinstalmentdetailsitem.dto";
 
 export class SalePaymentMethodsItemDto {
   @ApiProperty()
-  @IsOptional()
   @IsString()
-  paymentTypeId!: string
+  paymentTypeId!: string;
 
   @ApiProperty()
-  @IsOptional()
   @IsString()
-  paymentTypeName!: string
+  paymentTypeName!: string;
+
+  @ApiProperty({ enum: PaymentTypesTypeEnum })
+  paymentTypeType!: string;
 
   @ApiProperty()
-  @IsOptional()
   @IsNumber()
-  amount!: number
+  amount!: number;
 
   @ApiProperty()
-  @IsOptional()
   @IsNumber()
-  installments!: number
+  installments!: number;
 
   @ApiProperty()
-  @IsOptional()
   @IsString()
-  cashAccountId!: string
+  cashAccountId!: string;
 
   @ApiProperty()
   @IsOptional()
   @IsArray()
-  installmentsDetails!: any[]
-
+  installmentsDetails!: SaleInstallmentsDetailsDto[];
 }

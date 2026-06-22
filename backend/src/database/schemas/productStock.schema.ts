@@ -7,6 +7,7 @@ import {
   uuid,
   pgPolicy,
   index,
+  uniqueIndex,
   boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
@@ -50,5 +51,9 @@ export const productStocks = pgTable(
     index("productStocks_company_id_index").on(table.companyId),
     index("productStocks_product_id_index").on(table.productId),
     index("productStocks_sector_id_index").on(table.sectorId),
+    uniqueIndex("productStocks_product_id_sector_id_unique").on(
+      table.productId,
+      table.sectorId,
+    ),
   ],
 );

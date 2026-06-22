@@ -6,6 +6,7 @@ import {
   uuid,
   pgPolicy,
   index,
+  uniqueIndex,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
@@ -18,7 +19,10 @@ export enum FinancialGroupTypeEnum {
   INVESTIMENTO = "investimento",
 }
 
-export const financialGroupTypePGEnum = pgEnum("financial_group_type", FinancialGroupTypeEnum);
+export const financialGroupTypePGEnum = pgEnum(
+  "financial_group_type",
+  FinancialGroupTypeEnum,
+);
 
 export const financialGroups = pgTable(
   "financialGroups",
@@ -33,7 +37,10 @@ export const financialGroups = pgTable(
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("financialGroups_tenant_isolation", {
@@ -45,6 +52,10 @@ export const financialGroups = pgTable(
     }),
     index("financialGroups_company_id_index").on(table.companyId),
     index("financialGroups_type_index").on(table.type),
+    uniqueIndex("financialGroups_name_type_company_id_unique").on(
+      table.name,
+      table.type,
+      table.companyId,
+    ),
   ],
 );
-

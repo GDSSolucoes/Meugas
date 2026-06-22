@@ -23,13 +23,15 @@ import {
   Calendar,
   Download,
   XCircle,
-  FileCode, // Added FileCode icon
+  FileCode,
+  Edit2, // Added Edit2 icon
 } from "lucide-react";
 import * as entities from "@/entities";
 import FiscalProvider from "@/providers/FiscalProvider";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom"; // Added useNavigate
 import {
   Dialog,
   DialogContent,
@@ -40,6 +42,7 @@ import {
 
 export default function SalesListPage() {
   const { toast } = useToast();
+  const navigate = useNavigate(); // Added navigate
   const [sales, setSales] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,6 +128,11 @@ export default function SalesListPage() {
   const handleViewDetails = (sale) => {
     setSelectedSale(sale);
     setShowDetailsModal(true);
+  };
+
+  const handleEditSale = (sale) => {
+    // Redireciona para a tela de vendas passando os dados da venda via state
+    navigate("/Sales", { state: { editSale: sale } });
   };
 
   const handleDownloadDANFe = async (sale, tipo) => {
@@ -577,6 +585,16 @@ export default function SalesListPage() {
                               title="Ver Detalhes"
                             >
                               <Eye className="w-4 h-4 text-blue-600" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditSale(sale)}
+                              className="hover:bg-yellow-100"
+                              title="Editar Venda (Manutenção)"
+                            >
+                              <Edit2 className="w-4 h-4 text-yellow-600" />
                             </Button>
 
                             {/* Oculto ate a contratação de facilitador fiscal para emissão das NF

@@ -22,8 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Trash2, Edit2, Save, X, Printer } from "lucide-react";
 import * as entities from "@/entities";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
+import { useLocation } from "react-router-dom"; // Added useLocation
 import {
   Dialog,
   DialogContent,
@@ -278,6 +279,12 @@ const PaymentModal = ({
         description: `O total dos pagamentos (R$ ${totalPaymentsMade.toFixed(2)}) deve ser igual ao total da venda (R$ ${totalAmount.toFixed(2)}).`,
         variant: "destructive",
       });
+      return;
+    }
+
+    const paymentsWihtoutType = paymentMethods.filter((p) => !p.paymentTypeId);
+    if (paymentsWihtoutType.length > 0) {
+      alert("Todos os pagamentos devem ter uma forma de pagamento selecionada");
       return;
     }
 
@@ -601,6 +608,7 @@ const PaymentModal = ({
 export default function SalesPage({ onSaleComplete }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const location = useLocation(); // Added location
 
   const [people, setPeople] = useState([]);
   const [products, setProducts] = useState([]);
@@ -612,11 +620,13 @@ export default function SalesPage({ onSaleComplete }) {
   const [currentUser, setCurrentUser] = useState(null);
 
   const [currentSale, setCurrentSale] = useState(initialSaleState);
+  const [editSaleId, setEditSaleId] = useState(null); // ID da venda sendo editada
+  const [isEditingMode, setIsEditingMode] = useState(false);
   const [customerSelected, setCustomerSelected] = useState(false);
   const [customerFound, setCustomerFound] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
-  const [productCode, setProductCode] = useState("");
+  const [productId, setProductId] = useState("");
   const [productQuantity, setProductQuantity] = useState("1");
   const [productPrice, setProductPrice] = useState("");
   const [productDescription, setProductDescription] = useState("");
@@ -686,9 +696,38 @@ export default function SalesPage({ onSaleComplete }) {
     loadData();
   }, [loadData]);
 
-  const handleProductCodeChange = (code) => {
-    setProductCode(code);
-    const product = products.find((p) => p.code === code || p.id === code);
+  // Efeito para carregar venda em modo de edição
+  useEffect(() => {
+    if (location.state?.editSale && sectors.length > 0 && people.length > 0) {
+      const sale = location.state.editSale;
+      setEditSaleId(sale.id);
+      setIsEditingMode(true);
+
+      const customer = people.find((p) => p.id === sale.personId);
+      if (customer) {
+        setCustomerFound(customer);
+        setCustomerSelected(true);
+      }
+
+      setCurrentSale({
+        ...sale,
+        saleDate: sale.saleDate
+          ? format(parseISO(sale.saleDate), "yyyy-MM-dd")
+          : format(new Date(), "yyyy-MM-dd"),
+      });
+
+      if (sale.conveniadaId) {
+        setTemConvenio("sim");
+      }
+
+      // Limpa o state do location para não carregar novamente ao navegar
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, sectors, people]);
+
+  const handleProductCodeChange = (id) => {
+    setProductId(id);
+    const product = products.find((p) => p.id === id);
     if (product) {
       setSelectedProductObj(product);
       setProductDescription(product.name);
@@ -750,7 +789,7 @@ export default function SalesPage({ onSaleComplete }) {
       items: [...prev.items, newItem],
     }));
 
-    setProductCode("");
+    setProductId("");
     setProductQuantity("1");
     setProductPrice("");
     setProductDescription("");
@@ -1002,261 +1041,111 @@ export default function SalesPage({ onSaleComplete }) {
 
     setIsSaving(true);
     try {
-      const companyId = currentUser.companyId;
-      const companyName = currentUser.companyName;
+      let savedSale;
 
-      // Gerar próximo código sequencial
-      const allSales = await entities.Sale.filter({ companyId: companyId });
-      const maxSaleNumber = allSales.reduce((max, sale) => {
-        const currentNum = parseInt(sale.saleNumber, 10);
-        return !isNaN(currentNum) && currentNum > max ? currentNum : max;
-      }, 0);
-      const newSaleNumber = String(maxSaleNumber + 1);
+      if (isEditingMode) {
+        // MODO EDIÇÃO: Primeiro reverte tudo o que a venda antiga fez
+        const oldSale = await entities.Sale.findById(editSaleId);
 
-      const saleData = {
-        ...currentSale,
-        saleNumber: newSaleNumber,
-        totalAmount: totalSale,
-        paymentMethods: payments, // Payments now include installmentsDetails
-        notes: modalObservations,
-        companyId: companyId,
-        companyName: companyName,
-        createdByName: currentUser.name,
-        orderId: selectedOrderId,
-        orderNumber: currentSale.orderNumber,
-        conveniadaId:
-          temConvenio === "sim" && currentSale.conveniadaId
-            ? currentSale.conveniadaId
-            : null,
-        conveniadaName:
-          temConvenio === "sim" && currentSale.conveniadaName
-            ? currentSale.conveniadaName
-            : null,
-      };
-
-      const savedSale = await entities.Sale.create(saleData);
-
-      if (selectedOrderId) {
-        try {
-          await entities.Order.update(selectedOrderId, {
-            status: "finalizado",
-            finalizedAt: new Date(),
-          });
-          loadData();
-        } catch (error) {
-          console.error("Erro ao atualizar status do pedido:", error);
-          toast({
-            title: "Atenção",
-            description:
-              "Não foi possível atualizar o status do pedido original.",
-            variant: "warning",
-          });
-        }
-      }
-
-      for (const item of currentSale.items) {
-        try {
+        // 1. Reverter estoque
+        for (const item of oldSale.items) {
           const stockEntries = await entities.ProductStock.filter({
             productId: item.productId,
-            sectorId: currentSale.sectorId,
+            sectorId: oldSale.sectorId,
             companyId: companyId,
           });
-
           if (stockEntries.length > 0) {
             const stockEntry = stockEntries[0];
-            const newQuantity = (stockEntry.quantity || 0) - item.quantity;
             await entities.ProductStock.update(stockEntry.id, {
-              quantity: newQuantity,
-            });
-          } else {
-            await entities.ProductStock.create({
-              productId: item.productId,
-              productName: item.productName,
-              sectorId: currentSale.sectorId,
-              sectorName: currentSale.sectorName,
-              quantity: -item.quantity,
-              initialDate: currentSale.saleDate,
-              companyId: companyId,
-              companyName: companyName,
-              createdByName: currentUser.name,
-            });
-          }
-        } catch (error) {
-          console.error("Erro ao atualizar estoque:", error);
-          toast({
-            title: "Atenção",
-            description: `Erro ao atualizar estoque para o produto ${item.productName}.`,
-            variant: "warning",
-          });
-        }
-      }
-
-      for (const item of currentSale.items) {
-        if (item.vasilhameLoanQuantity > 0 && item.vasilhameId) {
-          await entities.VasilhameLoan.create({
-            saleId: savedSale.id,
-            personId: savedSale.personId,
-            personName: savedSale.personName,
-            vasilhameId: item.vasilhameId,
-            vasilhameName: item.vasilhameName,
-            loanQuantity: item.vasilhameLoanQuantity,
-            returnedQuantity: 0,
-            loanDate: savedSale.saleDate,
-            status: "pendente",
-            companyId: companyId,
-            companyName: companyName,
-            createdByName: currentUser.name,
-          });
-        }
-
-        if (item.quantityToPickup > 0) {
-          await entities.ProductPickup.create({
-            saleId: savedSale.id,
-            personId: savedSale.personId,
-            personName: savedSale.personName,
-            productId: item.productId,
-            productName: item.productName,
-            pickupQuantity: item.quantityToPickup,
-            saleDate: savedSale.saleDate,
-            companyId: companyId,
-            companyName: companyName,
-            createdByName: currentUser.name,
-          });
-        }
-      }
-
-      let revenueGroup = await entities.FinancialGroup.filter({
-        name: "Receitas de Vendas",
-        type: "receita",
-        companyId: companyId,
-      });
-      if (revenueGroup.length === 0) {
-        revenueGroup = [
-          await entities.FinancialGroup.create({
-            name: "Receitas de Vendas",
-            type: "receita",
-            active: true,
-            companyId: companyId,
-            companyName: companyName,
-            createdByName: currentUser.name,
-          }),
-        ];
-      }
-
-      for (const paymentMethod of payments) {
-        const paymentType = paymentTypes.find(
-          (p) => p.id === paymentMethod.paymentTypeId,
-        );
-
-        const isImmediatePaymentType =
-          paymentType &&
-          ["dinheiro", "pix", "cartao_debito"].includes(paymentType.type);
-        if (
-          paymentMethod.installments === 1 &&
-          isImmediatePaymentType &&
-          paymentMethod.cashAccountId
-        ) {
-          try {
-            const cashAccount = cashAccounts.find(
-              (ca) => ca.id === paymentMethod.cashAccountId,
-            );
-            if (cashAccount) {
-              const newBalance =
-                (cashAccount.balance || 0) + paymentMethod.amount;
-              await entities.CashAccount.update(cashAccount.id, {
-                balance: newBalance,
-              });
-
-              await entities.CashMovement.create({
-                cashAccountId: cashAccount.id,
-                cashAccountName: cashAccount.name,
-                type: "receita",
-                description: `Recebimento da Venda #${savedSale.saleNumber}`,
-                amount: paymentMethod.amount,
-                personId: savedSale.personId,
-                personName: savedSale.personName,
-                movementDate: savedSale.saleDate,
-                groupId: revenueGroup[0].id,
-                groupName: revenueGroup[0].name,
-                companyId: companyId,
-                companyName: companyName,
-                createdByName: currentUser.name,
-                sectorId: savedSale.sectorId,
-                sectorName: savedSale.sectorName,
-              });
-            }
-          } catch (error) {
-            console.error("Erro ao atualizar conta/caixa:", error);
-            toast({
-              title: "Atenção",
-              description: `Erro ao processar pagamento imediato para ${paymentMethod.paymentTypeName}.`,
-              variant: "warning",
+              quantity: (stockEntry.quantity || 0) + item.quantity,
             });
           }
         }
 
-        const isAPrazoPaymentType =
-          paymentType &&
-          ["boleto", "cheque", "cartao_credito", "convenio"].includes(
-            paymentType.type,
+        // 2. Excluir lançamentos financeiros (CashMovements) vinculados à venda
+        const movements = await entities.CashMovement.filter({
+          description: `Recebimento da Venda #${oldSale.saleNumber}`,
+          companyId: companyId,
+        });
+        for (const mov of movements) {
+          // Reverter saldo da conta antes de excluir o movimento
+          const cashAccount = await entities.CashAccount.findById(
+            mov.cashAccountId,
           );
-        if (
-          isAPrazoPaymentType &&
-          paymentMethod.installmentsDetails &&
-          paymentMethod.installmentsDetails.length > 0
-        ) {
-          const targetPersonId =
-            paymentType?.type === "convenio" && savedSale.conveniadaId
-              ? savedSale.conveniadaId
-              : savedSale.personId;
-          const targetPersonName =
-            paymentType?.type === "convenio" && savedSale.conveniadaName
-              ? savedSale.conveniadaName
-              : savedSale.personName;
-
-          if (!targetPersonId) {
-            console.error(
-              "Target person ID is missing for accounts receivable.",
-            );
-            toast({
-              title: "Erro",
-              description:
-                "Não foi possível identificar o cliente para as contas a receber.",
-              variant: "destructive",
+          if (cashAccount) {
+            await entities.CashAccount.update(cashAccount.id, {
+              balance: (cashAccount.balance || 0) - mov.amount,
             });
-            continue;
           }
-
-          // Use the already generated and potentially edited installmentsDetails from the payment method
-          for (const installment of paymentMethod.installmentsDetails) {
-            try {
-              await entities.AccountsReceivable.create({
-                saleId: savedSale.id,
-                personId: targetPersonId,
-                personName: targetPersonName,
-                installmentNumber: installment.number,
-                dueDate: installment.dueDate,
-                amount: installment.amount,
-                status: "pendente", // Status is always pending on creation
-                companyId: companyId,
-                companyName: companyName,
-                createdByName: currentUser.name,
-              });
-            } catch (error) {
-              console.error("Erro ao criar conta a receber:", error);
-              toast({
-                title: "Atenção",
-                description: `Erro ao criar conta a receber para ${paymentMethod.paymentTypeName}.`,
-                variant: "warning",
-              });
-            }
-          }
+          await entities.CashMovement.delete(mov.id);
         }
+
+        // 3. Excluir Contas a Receber
+        const receivables = await entities.AccountsReceivable.filter({
+          saleId: oldSale.id,
+          companyId: companyId,
+        });
+        for (const rec of receivables) {
+          await entities.AccountsReceivable.delete(rec.id);
+        }
+
+        // 4. Excluir Empréstimos de Vasilhame
+        const loans = await entities.VasilhameLoan.filter({
+          saleId: oldSale.id,
+          companyId: companyId,
+        });
+        for (const loan of loans) {
+          await entities.VasilhameLoan.delete(loan.id);
+        }
+
+        // 5. Excluir Retiradas de Produto
+        const pickups = await entities.ProductPickup.filter({
+          saleId: oldSale.id,
+          companyId: companyId,
+        });
+        for (const pickup of pickups) {
+          await entities.ProductPickup.delete(pickup.id);
+        }
+
+        // Agora atualiza a venda com os novos dados
+        const updateData = {
+          ...currentSale,
+          totalAmount: totalSale,
+          paymentMethods: payments,
+          notes: modalObservations,
+          conveniadaId: temConvenio === "sim" ? currentSale.conveniadaId : null,
+          conveniadaName:
+            temConvenio === "sim" ? currentSale.conveniadaName : null,
+          saleDate: currentSale.saleDate,
+        };
+        savedSale = await entities.Sale.update(editSaleId, updateData);
+      } else {
+        // MODO CRIAÇÃO (Lógica original)
+        const saleData = {
+          ...currentSale,
+          totalAmount: totalSale,
+          paymentMethods: payments, // Payments now include installmentsDetails
+          notes: modalObservations,
+          orderId: selectedOrderId,
+          orderNumber: currentSale.orderNumber,
+          conveniadaId:
+            temConvenio === "sim" && currentSale.conveniadaId
+              ? currentSale.conveniadaId
+              : null,
+          conveniadaName:
+            temConvenio === "sim" && currentSale.conveniadaName
+              ? currentSale.conveniadaName
+              : null,
+        };
+
+        savedSale = await entities.Sale.createComplete(saleData);
       }
 
       toast({
         title: "Sucesso!",
-        description: `Venda #${savedSale.saleNumber} realizada com sucesso.`,
+        description: isEditingMode
+          ? `Venda #${savedSale.saleNumber} atualizada com sucesso.`
+          : `Venda #${savedSale.saleNumber} realizada com sucesso.`,
       });
       setShowPaymentModal(false);
       resetForm();
@@ -1285,9 +1174,11 @@ export default function SalesPage({ onSaleComplete }) {
       saleNumber: "",
       createdByName: currentUser?.name || "",
     });
+    setEditSaleId(null);
+    setIsEditingMode(false);
     setCustomerSelected(false);
     setCustomerFound(null);
-    setProductCode("");
+    setProductId("");
     setProductQuantity("1");
     setProductPrice("");
     setProductDescription("");
@@ -1321,100 +1212,170 @@ export default function SalesPage({ onSaleComplete }) {
   return (
     <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
       <div className="max-w-[1400px] mx-auto p-6">
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">Vendas</h1>
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
+          {isEditingMode
+            ? `Manutenção de Venda #${currentSale.saleNumber}`
+            : "Vendas"}
+        </h1>
 
         {/* Seção Pedido */}
-        <Card
-          className="mb-4"
-          style={{
-            background: "white",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          }}
-        >
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Pedido:
-                </Label>
-                <Select
-                  value={selectedOrderId || ""}
-                  onValueChange={handleSelectOrder}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Nova venda ou selecione pedido..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={null}>🆕 Nova Venda</SelectItem>
-                    {orders.map((order) => (
-                      <SelectItem key={order.id} value={order.id}>
-                        #{order.orderNumber} - {order.personName} - R${" "}
-                        {order.totalAmount.toFixed(2)} -{" "}
-                        {order.status === "pendente"
-                          ? "⏳ Pendente"
-                          : order.status === "em_atendimento"
-                            ? "🚚 Em Atendimento"
-                            : "✅ Finalizado"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        {!isEditingMode && (
+          <Card
+            className="mb-4"
+            style={{
+              background: "white",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label
+                    className="text-xs font-medium"
+                    style={{ color: "#374151" }}
+                  >
+                    Pedido:
+                  </Label>
+                  <Select
+                    value={selectedOrderId || ""}
+                    onValueChange={handleSelectOrder}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Nova venda ou selecione pedido..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>🆕 Nova Venda</SelectItem>
+                      {orders.map((order) => (
+                        <SelectItem key={order.id} value={order.id}>
+                          #{order.orderNumber} - {order.personName} - R${" "}
+                          {order.totalAmount.toFixed(2)} -{" "}
+                          {order.status === "pendente"
+                            ? "⏳ Pendente"
+                            : order.status === "em_atendimento"
+                              ? "🚚 Em Atendimento"
+                              : "✅ Finalizado"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label
+                    className="text-xs font-medium"
+                    style={{ color: "#374151" }}
+                  >
+                    Data: <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="date"
+                    value={currentSale.saleDate}
+                    onChange={(e) =>
+                      setCurrentSale((prev) => ({
+                        ...prev,
+                        saleDate: e.target.value,
+                      }))
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label
+                    className="text-xs font-medium"
+                    style={{ color: "#374151" }}
+                  >
+                    Setor: <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={currentSale.sectorId || ""}
+                    onValueChange={(value) => {
+                      const sector = sectors.find((s) => s.id === value);
+                      setCurrentSale((prev) => ({
+                        ...prev,
+                        sectorId: value,
+                        sectorName: sector ? sector.name : "",
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o setor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sectors.map((sector) => (
+                        <SelectItem key={sector.id} value={sector.id}>
+                          {sector.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Data: <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="date"
-                  value={currentSale.saleDate}
-                  onChange={(e) =>
-                    setCurrentSale((prev) => ({
-                      ...prev,
-                      saleDate: e.target.value,
-                    }))
-                  }
-                  className="mt-1"
-                />
+            </CardContent>
+          </Card>
+        )}
+
+        {isEditingMode && (
+          <Card
+            className="mb-4"
+            style={{
+              background: "white",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label
+                    className="text-xs font-medium"
+                    style={{ color: "#374151" }}
+                  >
+                    Data da Venda: <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="date"
+                    value={currentSale.saleDate}
+                    onChange={(e) =>
+                      setCurrentSale((prev) => ({
+                        ...prev,
+                        saleDate: e.target.value,
+                      }))
+                    }
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label
+                    className="text-xs font-medium"
+                    style={{ color: "#374151" }}
+                  >
+                    Setor: <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={currentSale.sectorId || ""}
+                    onValueChange={(value) => {
+                      const sector = sectors.find((s) => s.id === value);
+                      setCurrentSale((prev) => ({
+                        ...prev,
+                        sectorId: value,
+                        sectorName: sector ? sector.name : "",
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o setor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sectors.map((sector) => (
+                        <SelectItem key={sector.id} value={sector.id}>
+                          {sector.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Setor: <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={currentSale.sectorId || ""}
-                  onValueChange={(value) => {
-                    const sector = sectors.find((s) => s.id === value);
-                    setCurrentSale((prev) => ({
-                      ...prev,
-                      sectorId: value,
-                      sectorName: sector ? sector.name : "",
-                    }));
-                  }}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectors.map((sector) => (
-                      <SelectItem key={sector.id} value={sector.id}>
-                        {sector.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Seção Produtos */}
         <Card
@@ -1434,7 +1395,7 @@ export default function SalesPage({ onSaleComplete }) {
                   Código:
                 </Label>
                 <Select
-                  value={productCode}
+                  value={productId}
                   onValueChange={handleProductCodeChange}
                 >
                   <SelectTrigger className="mt-1">
@@ -1442,10 +1403,7 @@ export default function SalesPage({ onSaleComplete }) {
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((product) => (
-                      <SelectItem
-                        key={product.id}
-                        value={product.code || product.id}
-                      >
+                      <SelectItem key={product.id} value={product.id}>
                         {product.code} - {product.name}
                       </SelectItem>
                     ))}

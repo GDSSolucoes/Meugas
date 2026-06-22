@@ -15,6 +15,7 @@ import { sql } from "drizzle-orm/sql/sql";
 import { persons } from "./person.schema";
 import { cashAccounts } from "./cashAccount.schema";
 import { paymentTypes } from "./paymentType.schema";
+import { sales } from "./sale.schema";
 
 export enum CashMovementTypeEnum {
   RECEITA = "receita",
@@ -33,7 +34,7 @@ export const cashMovements = pgTable(
     cashAccountName: text("cash_account_name"),
     type: CashMovementTypePGEnum("type").notNull(),
     amount: numeric("amount", { mode : "number"}).notNull(),
-    description: text("description").notNull(),
+    description: text("description"),
     movementDate: date("movement_date", { mode : "date"}),
     personId: uuid("person_id").references(() => persons.id, {
       onDelete: "set null",
@@ -48,7 +49,8 @@ export const cashMovements = pgTable(
     paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
       onDelete: "set null",
     }),
-    paymentTypeName: text("payment_type_name"),
+    paymentTypeName: text("payment_type_name"),    
+    saleId: uuid("sale_id").references(() => sales.id),
     notes: text("notes"),
     isAccounting: boolean("is_accounting").default(false),
     relatedDocId: uuid("related_doc_id"),

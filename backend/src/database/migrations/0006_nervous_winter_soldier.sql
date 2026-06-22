@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "financialGroups_name_type_company_id_unique" ON "financialGroups" USING btree ("name","type","company_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "productStocks_product_id_sector_id_unique" ON "productStocks" USING btree ("product_id","sector_id");

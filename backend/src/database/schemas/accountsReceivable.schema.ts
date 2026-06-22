@@ -38,7 +38,7 @@ export const accountsReceivables = pgTable(
       onDelete: "set null",
     }),
     installmentNumber: numeric("installment_number", { mode : "number"}).default(1),
-    description: text("description").notNull(),
+    description: text("description"),
     dueDate: date("due_date", {mode: "date"}).notNull(),
     amount: numeric("amount", {mode: "number"}).notNull(),
     status: AccountsReceivableStatusPGEnum("status")
