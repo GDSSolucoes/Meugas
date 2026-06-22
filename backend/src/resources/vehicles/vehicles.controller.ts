@@ -104,8 +104,8 @@ export class VehiclesController extends BaseCrudController<typeof vehicles> {
     description: `Vehicle updated`,
     type: VehiclesUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: VehiclesUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: VehiclesUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

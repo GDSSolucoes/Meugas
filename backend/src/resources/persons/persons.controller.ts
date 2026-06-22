@@ -104,8 +104,8 @@ export class PersonsController extends BaseCrudController<typeof persons> {
     description: `Person updated`,
     type: PersonUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: PersonUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: PersonUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

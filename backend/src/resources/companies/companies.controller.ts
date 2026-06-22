@@ -104,8 +104,8 @@ export class CompaniesController extends BaseCrudController<typeof companies> {
     description: `Company updated`,
     type: CompanyUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: CompanyUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: CompanyUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

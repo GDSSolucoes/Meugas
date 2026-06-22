@@ -106,8 +106,8 @@ export class ProductstocksController extends BaseCrudController<
     description: `Productstock updated`,
     type: ProductstockUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: ProductstockUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: ProductstockUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

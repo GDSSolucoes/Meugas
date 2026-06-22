@@ -118,8 +118,8 @@ export class UsersController extends BaseCrudController<typeof users> {
     description: `User updated`,
     type: UserUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: UserUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: UserUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -106,8 +106,8 @@ export class StocktransfersController extends BaseCrudController<
     description: `Stocktransfer updated`,
     type: StocktransferUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: StocktransferUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: StocktransferUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

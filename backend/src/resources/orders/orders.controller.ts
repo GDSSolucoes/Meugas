@@ -104,8 +104,8 @@ export class OrdersController extends BaseCrudController<typeof orders> {
     description: `Order updated`,
     type: OrderUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: OrderUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: OrderUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

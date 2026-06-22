@@ -109,8 +109,8 @@ export class FinancialgroupsController extends BaseCrudController<
     description: `Financialgroup updated`,
     type: FinancialgroupUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: FinancialgroupUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: FinancialgroupUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -106,8 +106,8 @@ export class CashmovementsController extends BaseCrudController<
     description: `Cashmovement updated`,
     type: CashmovementUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: CashmovementUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: CashmovementUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -104,8 +104,8 @@ export class SectorsController extends BaseCrudController<typeof sectors> {
     description: `Sector updated`,
     type: SectorUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: SectorUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: SectorUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -105,8 +105,8 @@ export class ProductsController extends BaseCrudController<typeof products> {
     description: `Products updated`,
     type: ProductsUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: ProductsUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: ProductsUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -106,8 +106,8 @@ export class EmployeEsesController extends BaseCrudController<
     description: `EmployeEs updated`,
     type: EmployeEsUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: EmployeEsUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: EmployeEsUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

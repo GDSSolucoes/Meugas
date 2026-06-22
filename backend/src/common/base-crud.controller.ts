@@ -21,6 +21,7 @@ import { Roles } from "../auth/roles.decorator";
 import { BaseCrudService, BasePgTable } from "./base-crud.service";
 import { BaseCreateDto } from "./dto/base-create.dto";
 import { BaseUpdateDto } from "./dto/base-update.dto";
+import { CurrentUser } from "../auth/current-user.decorator";
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -103,7 +104,7 @@ export class BaseCrudController<T extends BasePgTable> {
   async create(
     @Body()
     data: BaseCreateDto,
-    user: any,
+    @CurrentUser() user: any,
   ) {
     data.companyId = user.companyId;
     data.companyName = user.companyName;
@@ -116,7 +117,7 @@ export class BaseCrudController<T extends BasePgTable> {
   @Roles("admin", "user")
   @ApiOperation({ summary: `Update Item` })
   @ApiResponse({ status: 200, description: `Item updated` })
-  async update(@Param("id") id: string, @Body() data: BaseUpdateDto) {
+  async update(@Param("id") id: string, @Body() data: BaseUpdateDto, @CurrentUser() user: any) {
     console.log(`Updating ${this.entityName} with ID ${id} and data:`, data);
     return this.service.update(id, data);
   }

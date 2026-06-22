@@ -104,8 +104,8 @@ export class AcquirersController extends BaseCrudController<typeof acquirers> {
     description: `Acquirer updated`,
     type: AcquirerUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: AcquirerUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: AcquirerUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -106,8 +106,8 @@ export class ContasapagarsController extends BaseCrudController<
     description: `Contasapagar updated`,
     type: ContasapagarUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: ContasapagarUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: ContasapagarUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

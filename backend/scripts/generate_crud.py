@@ -325,7 +325,7 @@ export class {Entities}Controller extends BaseCrudController<typeof {entities}> 
   @ApiBody({{ type: {Entity}UpdateDto }})
   @ApiOperation({{ summary: `Update {Entity}` }})
   @ApiResponse({{ status: 201, description: `{Entity} updated`, type: {Entity}UpdateDto }})
-  async update(@Param('id') id: string, @Body() data: {Entity}UpdateDto) {{
+  async update(@Param('id') id: string, @Body() data: {Entity}UpdateDto, @CurrentUser() user: any) {{
     return super.update(id, data)
   }}
 

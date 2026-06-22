@@ -106,8 +106,8 @@ export class FacilitadorEsesController extends BaseCrudController<
     description: `FacilitadorEs updated`,
     type: FacilitadorEsUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: FacilitadorEsUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: FacilitadorEsUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -106,8 +106,8 @@ export class VasilhameloansController extends BaseCrudController<
     description: `Vasilhameloan updated`,
     type: VasilhameloanUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: VasilhameloanUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: VasilhameloanUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

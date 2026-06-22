@@ -106,8 +106,8 @@ export class ProductpickupsController extends BaseCrudController<
     description: `Productpickup updated`,
     type: ProductpickupUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: ProductpickupUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: ProductpickupUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

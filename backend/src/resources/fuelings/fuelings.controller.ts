@@ -104,8 +104,8 @@ export class FuelingsController extends BaseCrudController<typeof fuelings> {
     description: `Fueling updated`,
     type: FuelingUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: FuelingUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: FuelingUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

@@ -106,8 +106,8 @@ export class PaymenttypEsesController extends BaseCrudController<
     description: `PaymenttypEs updated`,
     type: PaymenttypEsUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: PaymenttypEsUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: PaymenttypEsUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")

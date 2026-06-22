@@ -58,8 +58,8 @@ export class BudgetsController extends BaseCrudController<typeof budgets> {
   @ApiBody({ type: BudgetUpdateDto })
   @ApiOperation({ summary: `Update Budget` })
   @ApiResponse({ status: 201, description: `Budget updated`, type: BudgetUpdateDto })
-  async update(@Param('id') id: string, @Body() data: BudgetUpdateDto) {
-    return super.update(id, data)
+  async update(@Param('id') id: string, @Body() data: BudgetUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user)
   }
 
   @Delete(':id')

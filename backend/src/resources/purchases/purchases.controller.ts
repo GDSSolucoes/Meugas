@@ -106,8 +106,8 @@ export class PurchasEsesController extends BaseCrudController<
     description: `PurchasEs updated`,
     type: PurchasEsUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: PurchasEsUpdateDto) {
-    return super.update(id, data);
+  async update(@Param("id") id: string, @Body() data: PurchasEsUpdateDto, @CurrentUser() user: any) {
+    return super.update(id, data, user);
   }
 
   @Delete(":id")
