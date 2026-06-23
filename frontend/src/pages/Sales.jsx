@@ -81,7 +81,7 @@ const generateInstallmentDetails = (paymentMethod, paymentTypes, saleDate) => {
     const newDetails = [];
     for (let i = 0; i < installments; i++) {
       const dueDate = new Date(saleDate);
-      dueDate.setMonth(dueDate.getMonth() + i); // Add months for subsequent installments
+      dueDate.setMonth(dueDate.getMonth() + (i + 1)); // Add months for subsequent installments
       newDetails.push({
         number: i + 1,
         dueDate: format(dueDate, "yyyy-MM-dd"),

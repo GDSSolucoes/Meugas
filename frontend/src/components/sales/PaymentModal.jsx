@@ -82,7 +82,7 @@ export default function PaymentModal({
 
     const installmentsDetails = [];
     for (let i = 0; i < currentPayment.installments; i++) {
-      const dueDate = addDays(startDate, daysInterval * i);
+      const dueDate = addDays(startDate, daysInterval * i + 1);
       installmentsDetails.push({
         number: i + 1,
         amount: installmentAmount,
