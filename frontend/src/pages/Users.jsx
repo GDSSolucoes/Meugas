@@ -443,7 +443,7 @@ export default function UsersPage() {
                     <div>
                       <Label>Empresa {isCreating ? "*" : ""}</Label>
                       <Select
-                        value={editingUser.companyId || ""}
+                        value={editingUser.companyId || null}
                         onValueChange={(value) => {
                           const company = companies.find((c) => c.id === value);
                           setEditingUser((prev) => ({
@@ -458,9 +458,7 @@ export default function UsersPage() {
                           <SelectValue placeholder="Selecione a empresa" />
                         </SelectTrigger>
                         <SelectContent>
-                          {isCreating && (
-                            <SelectItem value="">Não Associado</SelectItem>
-                          )}
+                          {isCreating && <SelectItem>Não Associado</SelectItem>}
                           {companies.map((company) => (
                             <SelectItem key={company.id} value={company.id}>
                               {company.name}
@@ -474,7 +472,7 @@ export default function UsersPage() {
                     <div>
                       <Label>Empresa {isCreating ? "*" : ""}</Label>
                       <Select
-                        value={editingUser.companyId || ""}
+                        value={editingUser.companyId || null}
                         onValueChange={(value) => {
                           if (value === "") {
                             setEditingUser((prev) => ({
@@ -524,7 +522,7 @@ export default function UsersPage() {
                   <div>
                     <Label>Tipo de Usuário *</Label>
                     <Select
-                      value={editingUser.userType || ""}
+                      value={editingUser.userType || null}
                       onValueChange={(value) =>
                         setEditingUser((prev) => ({ ...prev, userType: value }))
                       }

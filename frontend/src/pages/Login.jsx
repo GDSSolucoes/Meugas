@@ -1,55 +1,89 @@
-import { useState } from 'react'
-import { api, apiEnabled } from '@/api/apiClient'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/lib/AuthContext'
+import { useState } from "react";
+import { api, apiEnabled } from "@/api/apiClient";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState('email')
-  const [email, setEmail] = useState('')
-  const [cpf, setCpf] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const {checkAppState} = useAuth();
-  const navigate = useNavigate()
+  const [mode, setMode] = useState("email");
+  const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { checkAppState } = useAuth();
+  const navigate = useNavigate();
 
-  const submit = async e => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      if (!apiEnabled) throw new Error('API desabilitada')
-      const payload = mode === 'email' ? { email, password } : { cpf, password }
-      const r = await api.post('/auth/login', payload)
-      localStorage.setItem('accessToken', r.data.accessToken)
-      localStorage.setItem('refreshToken', r.data.refreshToken)
+      if (!apiEnabled) throw new Error("API desabilitada");
+      const payload =
+        mode === "email" ? { email, password } : { cpf, password };
+      const r = await api.post("/auth/login", payload);
+      localStorage.setItem("accessToken", r.data.accessToken);
+      localStorage.setItem("refreshToken", r.data.refreshToken);
       checkAppState();
+      navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || 'Falha ao autenticar')
+      setError(err.response?.data?.message || "Falha ao autenticar");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="w-full max-w-sm bg-white p-6 shadow rounded">
         <h1 className="text-xl font-semibold mb-4">Entrar</h1>
         <div className="flex gap-2 mb-4">
-          <button className={`px-3 py-1 rounded ${mode === 'email' ? 'bg-slate-900 text-white' : 'bg-slate-200'}`} onClick={() => setMode('email')}>Email</button>
-          <button className={`px-3 py-1 rounded ${mode === 'cpf' ? 'bg-slate-900 text-white' : 'bg-slate-200'}`} onClick={() => setMode('cpf')}>CPF</button>
+          <button
+            className={`px-3 py-1 rounded ${mode === "email" ? "bg-slate-900 text-white" : "bg-slate-200"}`}
+            onClick={() => setMode("email")}
+          >
+            Email
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${mode === "cpf" ? "bg-slate-900 text-white" : "bg-slate-200"}`}
+            onClick={() => setMode("cpf")}
+          >
+            CPF
+          </button>
         </div>
         <form onSubmit={submit} className="space-y-3">
-          {mode === 'email' ? (
-            <input className="w-full border rounded px-3 py-2" placeholder="email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+          {mode === "email" ? (
+            <input
+              className="w-full border rounded px-3 py-2"
+              placeholder="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           ) : (
-            <input className="w-full border rounded px-3 py-2" placeholder="cpf" value={cpf} onChange={e => setCpf(e.target.value)} />
+            <input
+              className="w-full border rounded px-3 py-2"
+              placeholder="cpf"
+              value={cpf}
+              onChange={(e) => setCpf(e.target.value)}
+            />
           )}
-          <input className="w-full border rounded px-3 py-2" placeholder="senha" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+          <input
+            className="w-full border rounded px-3 py-2"
+            placeholder="senha"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           {error ? <div className="text-red-600 text-sm">{error}</div> : null}
-          <button className="w-full bg-slate-900 text-white rounded px-3 py-2 disabled:opacity-50" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
+          <button
+            className="w-full bg-slate-900 text-white rounded px-3 py-2 disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
         </form>
       </div>
     </div>
-  )
+  );
 }
