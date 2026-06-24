@@ -3,6 +3,7 @@ import { BaseCrudService } from "../../common/base-crud.service";
 import { RequestContextService } from "../../database/request-context.service";
 import {
   sales,
+  saleItems,
   productStocks,
   vasilhameLoans,
   productPickups,
@@ -160,6 +161,20 @@ export class SalesService extends BaseCrudService<typeof sales> {
         status: OrdersStatusEnum.FINALIZADO,
         finalizedAt: new Date(),
       });
+    }
+
+    
+
+    // Insert into saleItems table
+    if (data.items && data.items.length > 0) {
+      await db.insert(saleItems).values(
+        data.items.map((item) => ({
+          saleId: savedSale.id,
+          ...item,
+          companyId,
+          companyName,
+        })),
+      );
     }
 
     // 3. Processar ESTOQUE
@@ -386,12 +401,13 @@ export class SalesService extends BaseCrudService<typeof sales> {
       await db.delete(cashMovements).where(eq(cashMovements.id, mov.id));
     }
 
-    // c. Excluir contas a receber, vasilhames, pickups
+    // c. Excluir contas a receber, vasilhames, pickups, saleItems
     await db
       .delete(accountsReceivables)
       .where(eq(accountsReceivables.saleId, id));
     await db.delete(vasilhameLoans).where(eq(vasilhameLoans.saleId, id));
     await db.delete(productPickups).where(eq(productPickups.saleId, id));
+    await db.delete(saleItems).where(eq(saleItems.saleId, id));
 
     // 3. ATUALIZAR VENDA
     const [updatedSale] = await db
@@ -401,6 +417,29 @@ export class SalesService extends BaseCrudService<typeof sales> {
       })
       .where(eq(sales.id, id))
       .returning();
+
+    // Insert new saleItems
+    if (data.items && data.items.length > 0) {
+      await db.insert(saleItems).values(
+        data.items.map((item) => ({
+          saleId: updatedSale.id,
+          productId: item.productId,
+          productCode: item.productCode,
+          productName: item.productName,
+          category: item.category,
+          vasilhameId: item.vasilhameId,
+          vasilhameName: item.vasilhameName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount,
+          total: item.total,
+          quantityToPickup: item.quantityToPickup,
+          vasilhameLoanQuantity: item.vasilhameLoanQuantity,
+          companyId,
+          companyName,
+        })),
+      );
+    }
 
     // 4. REPROCESSAR TUDO com os novos dados
     // (mesma lógica do create, reutilizando o id da venda existente)
