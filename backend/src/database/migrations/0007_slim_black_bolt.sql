@@ -1,0 +1,3 @@
+ALTER TABLE "accountsReceivables" ADD COLUMN "payment_type_id" uuid;--> statement-breakpoint
+ALTER TABLE "accountsReceivables" ADD CONSTRAINT "accountsReceivables_payment_type_id_paymentTypes_id_fk" FOREIGN KEY ("payment_type_id") REFERENCES "public"."paymentTypes"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "accountsReceivables_payment_type_id_index" ON "accountsReceivables" USING btree ("payment_type_id");

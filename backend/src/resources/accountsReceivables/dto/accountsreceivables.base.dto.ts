@@ -28,6 +28,11 @@ export class AccountsReceivablesBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsUUID()
+  paymentTypeId!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsNumber()
   installmentNumber!: number;
 

@@ -14,6 +14,7 @@ import { companies } from "./company.schema";
 import { sales } from "./sale.schema";
 import { sql } from "drizzle-orm";
 import { persons } from "./person.schema";
+import { paymentTypes } from "./paymentType.schema";
 
 export enum AccountsReceivableStatusEnum {
   PENDENTE = "pendente",
@@ -35,6 +36,9 @@ export const accountsReceivables = pgTable(
       .references(() => persons.id, { onDelete: "set null" }),
     personName: text("person_name"),
     saleId: uuid("sale_id").references(() => sales.id, {
+      onDelete: "set null",
+    }),
+    paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
       onDelete: "set null",
     }),
     installmentNumber: numeric("installment_number", { mode : "number"}).default(1),
@@ -65,5 +69,6 @@ export const accountsReceivables = pgTable(
     index("accountsReceivables_sale_id_index").on(table.saleId),
     index("accountsReceivables_person_id_index").on(table.personId),
     index("accountsReceivables_status_index").on(table.status),
+    index("accountsReceivables_payment_type_id_index").on(table.paymentTypeId),
   ],
 );

@@ -50,6 +50,20 @@
       "when": 1781738582980,
       "tag": "0006_nervous_winter_soldier",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782175185321,
+      "tag": "0007_slim_black_bolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782261691450,
+      "tag": "0008_cynical_lady_mastermind",
+      "breakpoints": true
     }
   ]
 }

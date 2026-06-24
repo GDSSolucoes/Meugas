@@ -64,6 +64,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
 import { createPageUrl } from "@/utils";
 import RenegociacaoModal from "@/components/financial/RenegociacaoModal";
+import { useForm, FormProvider, Controller } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormField,
+} from "@/components/ui/form";
 
 // Dialog de Baixa
 function BaixaDialog({
@@ -150,6 +160,54 @@ function BaixaDialog({
   );
 }
 
+// Schema Zod para os filtros com os nomes do backend diretamente
+const FilterSchema = z
+  .object({
+    personId: z.string().optional(),
+    sectorId: z.string().optional(),
+    cashAccountId: z.string().optional(),
+    paymentTypeId: z.string().optional(),
+    status: z.array(z.string()).optional(),
+    dueDate_gte: z.string().optional(),
+    dueDate_lte: z.string().optional(),
+    saleId: z.string().optional(),
+    id: z.string().optional(),
+    nfeNumber: z.string().optional(),
+    personDocument: z.string().optional(),
+    search_type: z.enum(["codigoVenda", "notaFiscal", "documento"]).optional(),
+    search_value: z.string().optional(),
+  })
+  .transform((data) => {
+    // Limpar valores vazios e organizar o search
+    const cleaned = {};
+    Object.entries(data).forEach(([key, value]) => {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !(Array.isArray(value) && value.length === 0)
+      ) {
+        cleaned[key] = value;
+      }
+    });
+
+    // Tratar o search separadamente
+    if (cleaned.search_type && cleaned.search_value) {
+      if (cleaned.search_type === "codigoVenda") {
+        cleaned.saleId = cleaned.search_value;
+        cleaned.id = cleaned.search_value;
+      } else if (cleaned.search_type === "notaFiscal") {
+        cleaned.nfeNumber = cleaned.search_value;
+      } else if (cleaned.search_type === "documento") {
+        cleaned.personDocument = cleaned.search_value;
+      }
+      delete cleaned.search_type;
+      delete cleaned.search_value;
+    }
+
+    return cleaned;
+  });
+
 export default function AccountsReceivablePage({ onComplete }) {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState(null);
@@ -176,33 +234,42 @@ export default function AccountsReceivablePage({ onComplete }) {
   });
   const [sacadoSelecionado, setSacadoSelecionado] = useState(null);
   const [showSacadoSearch, setShowSacadoSearch] = useState(false);
-  const [sacadoSearchTerm, setSacadoSearchTerm] = useState("");
-
-  // Pesquisa - Método de pesquisa
-  const [metodoPesquisa, setMetodoPesquisa] = useState("codigoVenda");
-  const [codigoPesquisa, setCodigoPesquisa] = useState("");
   const [showCodigoSearch, setShowCodigoSearch] = useState(false);
+  const [sacadoSearchTerm, setSacadoSearchTerm] = useState("");
 
   // Período
   const [usarPeriodo, setUsarPeriodo] = useState(false);
-  const [dataInicio, setDataInicio] = useState(
-    format(startOfMonth(new Date()), "yyyy-MM-dd"),
-  );
-  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
-
-  // Filtros
-  const [filtroConta, setFiltroConta] = useState("todas");
-  const [filtroSetor, setFiltroSetor] = useState("todos");
-  const [filtroTipoPagto, setFiltroTipoPagto] = useState("todos");
-  const [filtroRespCobranca, setFiltroRespCobranca] = useState("todos");
-  const [statusContas, setStatusContas] = useState({
-    naoPagas: true,
-    pagas: false,
-    emCobranca: false,
-  });
 
   // Ordenação
   const [ordenacao, setOrdenacao] = useState("vencimento");
+
+  // Initialize React Hook Form
+  const form = useForm({
+    resolver: zodResolver(FilterSchema),
+    defaultValues: {
+      personId: "",
+      sectorId: "",
+      cashAccountId: "",
+      paymentTypeId: "",
+      status: ["pendente"],
+      dueDate_gte: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+      dueDate_lte: format(new Date(), "yyyy-MM-dd"),
+      saleId: "",
+      id: "",
+      nfeNumber: "",
+      personDocument: "",
+      search_type: "codigoVenda",
+      search_value: "",
+    },
+  });
+
+  // Watch form values for easy access
+  const formValues = form.watch();
+
+  // Update personId in form when user selects a sacado
+  useEffect(() => {
+    form.setValue("personId", sacadoSelecionado?.id || "");
+  }, [sacadoSelecionado, form]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -219,6 +286,12 @@ export default function AccountsReceivablePage({ onComplete }) {
         return;
       }
 
+      const filters = FilterSchema.parse(formValues);
+      // Apply usarPeriodo logic to remove date filters if not using
+      if (!usarPeriodo) {
+        delete filters.dueDate_gte;
+        delete filters.dueDate_lte;
+      }
       const [
         contasData,
         cashAccountsData,
@@ -227,8 +300,8 @@ export default function AccountsReceivablePage({ onComplete }) {
         peopleData,
         employeesData,
       ] = await Promise.all([
-        AccountsReceivable.filter(
-          { companyId: user.companyId },
+        AccountsReceivable.filter(          
+          filters,
           { sort: "-dueDate" },
         ),
         CashAccount.filter({ companyId: user.companyId, active: true }),
@@ -237,12 +310,32 @@ export default function AccountsReceivablePage({ onComplete }) {
         Person.filter({ companyId: user.companyId }),
         Employee.filter({ companyId: user.companyId, active: true }),
       ]);
+      // Now add local properties (isVencida, isEmCobranca)
+      const today = startOfDay(new Date());
+      const processedContas = contasData
+        .map((c) => {
+          const dueDate = new Date(c.dueDate);
+          const isVencida = c.status === "pendente" && isBefore(dueDate, today);
+          const isEmCobranca = c.status === "emCobranca";
+
+          return { ...c, isVencida: isVencida, isEmCobranca: isEmCobranca };
+        })
+        .sort((a, b) => {
+          if (ordenacao === "vencimento")
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          if (ordenacao === "codigo")
+            return (a.id || "").localeCompare(b.id || "");
+          if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
+          return 0;
+        });
       setContas(contasData);
+      setDisplayedContas(processedContas);
       setCashAccounts(cashAccountsData);
       setPaymentTypes(paymentTypesData);
       setSectors(sectorsData);
       setPeople(peopleData);
       setEmployees(employeesData);
+      setShowResults(true);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast({
@@ -275,90 +368,62 @@ export default function AccountsReceivablePage({ onComplete }) {
   });
 
   // Função para aplicar filtros e exibir resultados
-  const applyFiltersAndShow = () => {
-    const today = startOfDay(new Date());
+  const applyFiltersAndShow = async () => {
+    setIsLoading(true);
+    try {
+      // Get parsed filters using zod transform
+      const filters = FilterSchema.parse(formValues);
 
-    const filtered = contas
-      .filter((c) => {
-        const dueDate = c.dueDate;
-        const isVencida = c.status === "pendente" && isBefore(dueDate, today);
-        const isPaga = c.status === "pago";
-        const isEmCobranca = c.status === "emCobranca";
+      // Apply usarPeriodo logic to remove date filters if not using
+      if (!usarPeriodo) {
+        delete filters.dueDate_gte;
+        delete filters.dueDate_lte;
+      }
 
-        // Filtro de status
-        if (!statusContas.naoPagas && !isPaga && !isEmCobranca) return false;
-        if (!statusContas.pagas && isPaga) return false;
-        if (!statusContas.emCobranca && isEmCobranca) return false;
-
-        // Filtro de sacado selecionado
-        if (sacadoSelecionado) {
-          if (c.personId !== sacadoSelecionado.id) return false;
-        }
-
-        // Filtro de código de pesquisa
-        if (codigoPesquisa) {
-          const term = codigoPesquisa.toLowerCase();
-          if (metodoPesquisa === "codigoVenda") {
-            if (
-              !c.saleId?.toLowerCase().includes(term) &&
-              !c.id?.toLowerCase().includes(term)
-            )
-              return false;
-          }
-          if (metodoPesquisa === "notaFiscal") {
-            if (!c.nfeNumber?.toLowerCase().includes(term)) return false;
-          }
-          if (metodoPesquisa === "documento") {
-            if (!c.personDocument?.toLowerCase().includes(term)) return false;
-          }
-        }
-
-        // Filtro de período
-        if (usarPeriodo) {
-          const inicio = new Date(dataInicio + "T00:00:00");
-          const fim = new Date(dataFinal + "T23:59:59");
-          if (dueDate < inicio || dueDate > fim) return false;
-        }
-
-        // Filtro de conta
-        if (filtroConta !== "todas" && c.cashAccountId !== filtroConta)
-          return false;
-
-        // Filtro de setor
-        if (filtroSetor !== "todos" && c.sectorId !== filtroSetor) return false;
-
-        // Filtro de tipo pagamento
-        if (filtroTipoPagto !== "todos" && c.paymentTypeId !== filtroTipoPagto)
-          return false;
-
-        // Filtro de responsável cobrança
-        if (
-          filtroRespCobranca !== "todos" &&
-          c.respCobrancaId !== filtroRespCobranca
-        )
-          return false;
-
-        return true;
-      })
-      .map((c) => {
-        const dueDate = c.dueDate;
-        const today = startOfDay(new Date());
-        const isVencida = c.status === "pendente" && isBefore(dueDate, today);
-        const isEmCobranca = c.status === "emCobranca";
-
-        return { ...c, isVencida: isVencida, isEmCobranca: isEmCobranca };
-      })
-      .sort((a, b) => {
-        if (ordenacao === "vencimento")
-          return new Date(a.dueDate) - new Date(b.dueDate);
-        if (ordenacao === "codigo")
-          return (a.id || "").localeCompare(b.id || "");
-        if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
-        return 0;
+      // Get data from backend using the custom list method
+      const contasData = await AccountsReceivable.filter(filters, {
+        sort:
+          ordenacao === "vencimento"
+            ? "dueDate"
+            : ordenacao === "valor"
+              ? "-amount"
+              : "id",
+        limit: 1000,
       });
 
-    setDisplayedContas(filtered);
-    setShowResults(true);
+      // Now add local properties (isVencida, isEmCobranca)
+      const today = startOfDay(new Date());
+      const processedContas = contasData
+        .map((c) => {
+          const dueDate = new Date(c.dueDate);
+          const isVencida = c.status === "pendente" && isBefore(dueDate, today);
+          const isEmCobranca = c.status === "emCobranca";
+
+          return { ...c, isVencida: isVencida, isEmCobranca: isEmCobranca };
+        })
+        .sort((a, b) => {
+          if (ordenacao === "vencimento")
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          if (ordenacao === "codigo")
+            return (a.id || "").localeCompare(b.id || "");
+          if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
+          return 0;
+        });
+
+      setContas(contasData);
+      setDisplayedContas(processedContas);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Erro ao aplicar filtros:", error);
+      toast({
+        title: "Erro",
+        description:
+          "Não foi possível carregar as contas a receber com os filtros aplicados.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredContas = showResults ? displayedContas : [];
@@ -481,99 +546,39 @@ export default function AccountsReceivablePage({ onComplete }) {
     setIsBaixaOpen(true);
   };
 
-  const handleConfirmBaixa = async (cashAccountId, paidDate) => {
-    if (!cashAccountId || !currentUser) {
+  const handleConfirmBaixa = async (cashAccountId, paymentDate) => {
+    if (!cashAccountId) {
       toast({
         title: "Erro",
-        description: "Dados incompletos para baixar as contas.",
+        description: "Conta de caixa não selecionada",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const receivingAccount = cashAccounts.find(
-        (acc) => acc.id === cashAccountId,
-      );
-      if (!receivingAccount) {
-        toast({
-          title: "Erro",
-          description: "Conta de caixa selecionada não encontrada.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Buscar ou criar grupo financeiro
-      let revenueGroup = await FinancialGroup.filter({
-        name: "Receitas de Contas a Receber",
-        companyId: currentUser.companyId,
+      const result = await AccountsReceivable.registerPayment({
+        accountReceivableIds: selectedContas,
+        cashAccountId: cashAccountId,
+        paymentDate: paymentDate,
       });
-      if (revenueGroup.length === 0) {
-        revenueGroup = [
-          await FinancialGroup.create({
-            name: "Receitas de Contas a Receber",
-            type: "receita",
-            active: true,
-            companyId: currentUser.companyId,
-            companyName: currentUser.companyName,
-            createdByName: currentUser.name,
-          }),
-        ];
-      }
-
-      let totalBaixado = 0;
-
-      for (const contaId of selectedContas) {
-        const conta = contas.find((c) => c.id === contaId);
-        if (!conta || conta.status === "pago") continue;
-
-        // Criar movimento de caixa
-        await CashMovement.create({
-          cashAccountId: receivingAccount.id,
-          cashAccountName: receivingAccount.name,
-          type: "receita",
-          description: `Recebimento: ${conta.description}`,
-          amount: conta.amount,
-          personId: conta.personId,
-          personName: conta.personName,
-          movementDate: paidDate,
-          groupId: revenueGroup[0].id,
-          groupName: revenueGroup[0].name,
-          companyId: currentUser.companyId,
-          companyName: currentUser.companyName,
-          createdByName: currentUser.name,
-        });
-
-        // Atualizar status da conta
-        await AccountsReceivable.update(contaId, {
-          status: "pago",
-          paymentDate: paidDate,
-        });
-
-        totalBaixado += conta.amount || 0;
-      }
-
-      // Atualizar saldo da conta
-      const newBalance = (receivingAccount.balance || 0) + totalBaixado;
-      await CashAccount.update(receivingAccount.id, { balance: newBalance });
 
       toast({
-        title: "Sucesso",
-        description: `${selectedContas.length} conta(s) baixada(s) com sucesso!`,
+        title: "Sucesso!",
+        description: result.message,
       });
+
       setIsBaixaOpen(false);
       setSelectedContas([]);
       await loadData();
-      // Reaplicar filtros para atualizar a tabela com as novas cores
-      setTimeout(() => {
-        if (showResults) applyFiltersAndShow();
-      }, 100);
+      if (showResults) {
+        await applyFiltersAndShow();
+      }
     } catch (error) {
       console.error("Erro ao baixar contas:", error);
       toast({
         title: "Erro",
-        description: `Não foi possível baixar as contas. ${error.message}`,
+        description: "Não foi possível registrar a baixa das contas",
         variant: "destructive",
       });
     }
@@ -707,11 +712,11 @@ export default function AccountsReceivablePage({ onComplete }) {
   // Handler para o botão Pesquisar da barra de ações
   const handlePesquisarClick = () => {
     // Abre modal de pesquisa baseado no método de pesquisa selecionado ou tipo de sacado
-    if (metodoPesquisa === "notaFiscal") {
+    if (formValues.search_type === "notaFiscal") {
       setShowCodigoSearch(true);
-    } else if (metodoPesquisa === "codigoVenda") {
+    } else if (formValues.search_type === "codigoVenda") {
       setShowCodigoSearch(true);
-    } else if (metodoPesquisa === "documento") {
+    } else if (formValues.search_type === "documento") {
       setShowCodigoSearch(true);
     } else if (tiposSacadoSelecionados > 0 && !sacadoSelecionado) {
       setShowSacadoSearch(true);
@@ -737,7 +742,7 @@ export default function AccountsReceivablePage({ onComplete }) {
 
   // Dados para modal de pesquisa de código
   const getCodigoSearchData = () => {
-    if (metodoPesquisa === "codigoVenda") {
+    if (formValues.search_type === "codigoVenda") {
       return contas.map((c) => ({
         id: c.id,
         label: c.saleId || c.id,
@@ -745,7 +750,7 @@ export default function AccountsReceivablePage({ onComplete }) {
         conta: c,
       }));
     }
-    if (metodoPesquisa === "notaFiscal") {
+    if (formValues.search_type === "notaFiscal") {
       return contas
         .filter((c) => c.nfeNumber)
         .map((c) => ({
@@ -755,7 +760,7 @@ export default function AccountsReceivablePage({ onComplete }) {
           conta: c,
         }));
     }
-    if (metodoPesquisa === "documento") {
+    if (formValues.search_type === "documento") {
       return contas
         .filter((c) => c.personDocument)
         .map((c) => ({
@@ -793,355 +798,414 @@ export default function AccountsReceivablePage({ onComplete }) {
           {/* SEÇÃO DE FILTROS - CAIXA ÚNICA */}
           <Card className="bg-white border-slate-300">
             <CardContent className="p-4">
-              <div className="grid grid-cols-12 gap-4">
-                {/* COLUNA 1: PESQUISAR */}
-                <div className="col-span-4 pr-4 border-r border-slate-200">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                    Pesquisar
-                  </h4>
+              <Form {...form}>
+                <div className="grid grid-cols-12 gap-4">
+                  {/* COLUNA 1: PESQUISAR */}
+                  <div className="col-span-4 pr-4 border-r border-slate-200">
+                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
+                      Pesquisar
+                    </h4>
 
-                  {/* Tipo Sacado */}
-                  <div className="mb-3">
-                    <Label className="text-xs font-medium">Tipo Sacado:</Label>
-                    <div className="flex gap-3 mt-1">
-                      <div className="flex items-center gap-1">
-                        <Checkbox
-                          id="cliente"
-                          checked={tipoSacado.cliente}
-                          onCheckedChange={(v) =>
-                            setTipoSacado((p) => ({ ...p, cliente: v }))
-                          }
-                        />
-                        <label htmlFor="cliente" className="text-xs">
-                          Cliente
-                        </label>
+                    {/* Tipo Sacado */}
+                    <div className="mb-3">
+                      <Label className="text-xs font-medium">
+                        Tipo Sacado:
+                      </Label>
+                      <div className="flex gap-3 mt-1">
+                        <div className="flex items-center gap-1">
+                          <Checkbox
+                            id="cliente"
+                            checked={tipoSacado.cliente}
+                            onCheckedChange={(v) =>
+                              setTipoSacado((p) => ({ ...p, cliente: v }))
+                            }
+                          />
+                          <label htmlFor="cliente" className="text-xs">
+                            Cliente
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Checkbox
+                            id="pontoVenda"
+                            checked={tipoSacado.pontoVenda}
+                            onCheckedChange={(v) =>
+                              setTipoSacado((p) => ({ ...p, pontoVenda: v }))
+                            }
+                          />
+                          <label htmlFor="pontoVenda" className="text-xs">
+                            Pto. Venda
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Checkbox
+                            id="conveniada"
+                            checked={tipoSacado.conveniada}
+                            onCheckedChange={(v) =>
+                              setTipoSacado((p) => ({ ...p, conveniada: v }))
+                            }
+                          />
+                          <label htmlFor="conveniada" className="text-xs">
+                            Convênio
+                          </label>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Checkbox
-                          id="pontoVenda"
-                          checked={tipoSacado.pontoVenda}
-                          onCheckedChange={(v) =>
-                            setTipoSacado((p) => ({ ...p, pontoVenda: v }))
-                          }
-                        />
-                        <label htmlFor="pontoVenda" className="text-xs">
-                          Pto. Venda
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Checkbox
-                          id="conveniada"
-                          checked={tipoSacado.conveniada}
-                          onCheckedChange={(v) =>
-                            setTipoSacado((p) => ({ ...p, conveniada: v }))
-                          }
-                        />
-                        <label htmlFor="conveniada" className="text-xs">
-                          Convênio
-                        </label>
+
+                      {/* Campo de sacado selecionado */}
+                      <div className="flex gap-1 mt-2">
+                        <div className="flex-1 relative">
+                          <Input
+                            value={sacadoSelecionado?.name || ""}
+                            readOnly
+                            placeholder="Use o botão Pesquisar"
+                            className="h-7 text-xs pr-6 bg-slate-50"
+                          />
+                          {sacadoSelecionado && (
+                            <button
+                              onClick={() => setSacadoSelecionado(null)}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Campo de sacado selecionado */}
-                    <div className="flex gap-1 mt-2">
-                      <div className="flex-1 relative">
-                        <Input
-                          value={sacadoSelecionado?.name || ""}
-                          readOnly
-                          placeholder="Use o botão Pesquisar"
-                          className="h-7 text-xs pr-6 bg-slate-50"
-                        />
-                        {sacadoSelecionado && (
-                          <button
-                            onClick={() => setSacadoSelecionado(null)}
-                            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    {/* Método de Pesquisa por Código */}
+                    <div className="border-t border-slate-200 pt-3">
+                      <Label className="text-xs font-medium mb-2 block">
+                        Pesquisar por:
+                      </Label>
+                      <FormField
+                        control={form.control}
+                        name="search_type"
+                        render={({ field }) => (
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex gap-3 mb-2"
                           >
-                            <X className="w-3 h-3" />
-                          </button>
+                            <div className="flex items-center gap-1">
+                              <RadioGroupItem
+                                value="codigoVenda"
+                                id="codigoVenda"
+                              />
+                              <label htmlFor="codigoVenda" className="text-xs">
+                                Cód. Venda
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <RadioGroupItem
+                                value="notaFiscal"
+                                id="notaFiscal"
+                              />
+                              <label htmlFor="notaFiscal" className="text-xs">
+                                Nota Fiscal
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <RadioGroupItem
+                                value="documento"
+                                id="documento"
+                              />
+                              <label htmlFor="documento" className="text-xs">
+                                Documento
+                              </label>
+                            </div>
+                          </RadioGroup>
                         )}
-                      </div>
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="search_value"
+                        render={({ field }) => (
+                          <div className="flex gap-1">
+                            <div className="flex-1 relative">
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                readOnly
+                                placeholder="Use o botão Pesquisar"
+                                className="h-7 text-xs pr-6 bg-slate-50"
+                              />
+                              {field.value && (
+                                <button
+                                  onClick={() => field.onChange("")}
+                                  className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      />
                     </div>
                   </div>
 
-                  {/* Método de Pesquisa por Código */}
-                  <div className="border-t border-slate-200 pt-3">
-                    <Label className="text-xs font-medium mb-2 block">
-                      Pesquisar por:
-                    </Label>
-                    <RadioGroup
-                      value={metodoPesquisa}
-                      onValueChange={setMetodoPesquisa}
-                      className="flex gap-3 mb-2"
-                    >
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="codigoVenda" id="codigoVenda" />
-                        <label htmlFor="codigoVenda" className="text-xs">
-                          Cód. Venda
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="notaFiscal" id="notaFiscal" />
-                        <label htmlFor="notaFiscal" className="text-xs">
-                          Nota Fiscal
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="documento" id="documento" />
-                        <label htmlFor="documento" className="text-xs">
-                          Documento
-                        </label>
-                      </div>
-                    </RadioGroup>
+                  {/* COLUNA 2: FILTROS */}
+                  <div className="col-span-5 px-4 border-r border-slate-200">
+                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
+                      Filtros
+                    </h4>
 
-                    <div className="flex gap-1">
-                      <div className="flex-1 relative">
-                        <Input
-                          value={codigoPesquisa}
-                          readOnly
-                          placeholder="Use o botão Pesquisar"
-                          className="h-7 text-xs pr-6 bg-slate-50"
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <Label className="text-xs">Conta:</Label>
+                        <FormField
+                          control={form.control}
+                          name="cashAccountId"
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">Todas</SelectItem>
+                                {cashAccounts.map((acc) => (
+                                  <SelectItem key={acc.id} value={acc.id}>
+                                    {acc.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                         />
-                        {codigoPesquisa && (
-                          <button
-                            onClick={() => setCodigoPesquisa("")}
-                            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      </div>
+                      <div>
+                        <Label className="text-xs">Setor:</Label>
+                        <FormField
+                          control={form.control}
+                          name="sectorId"
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue placeholder="Todos" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">Todos</SelectItem>
+                                {sectors.map((s) => (
+                                  <SelectItem key={s.id} value={s.id}>
+                                    {s.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Tipo Pagto.:</Label>
+                        <FormField
+                          control={form.control}
+                          name="paymentTypeId"
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue placeholder="Todos" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">Todos</SelectItem>
+                                {paymentTypes.map((pt) => (
+                                  <SelectItem key={pt.id} value={pt.id}>
+                                    {pt.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>                      
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <div className="flex items-center gap-4 pt-2 border-t border-slate-200">
+                          <div className="flex items-center gap-1">
+                            <Checkbox
+                              id="naoPaga"
+                              checked={field.value?.includes("pendente")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "pendente"]
+                                  : (field.value || []).filter(
+                                      (v) => v !== "pendente",
+                                    );
+                                field.onChange(newValue);
+                              }}
+                            />
+                            <label htmlFor="naoPaga" className="text-xs">
+                              Não Paga
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Checkbox
+                              id="paga"
+                              checked={field.value?.includes("pago")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "pago"]
+                                  : (field.value || []).filter(
+                                      (v) => v !== "pago",
+                                    );
+                                field.onChange(newValue);
+                              }}
+                            />
+                            <label htmlFor="paga" className="text-xs">
+                              Paga
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Checkbox
+                              id="emCobranca"
+                              checked={field.value?.includes("emCobranca")}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked
+                                  ? [...(field.value || []), "emCobranca"]
+                                  : (field.value || []).filter(
+                                      (v) => v !== "emCobranca",
+                                    );
+                                field.onChange(newValue);
+                              }}
+                            />
+                            <label htmlFor="emCobranca" className="text-xs">
+                              Em Cobrança
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    />
+
+                    {/* Período */}
+                    <div className="border-t border-slate-200 pt-3 mt-3">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="usarPeriodo"
+                            checked={usarPeriodo}
+                            onCheckedChange={setUsarPeriodo}
+                          />
+                          <label
+                            htmlFor="usarPeriodo"
+                            className="text-xs font-medium"
                           >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                            Período
+                          </label>
+                        </div>
 
-                {/* COLUNA 2: FILTROS */}
-                <div className="col-span-5 px-4 border-r border-slate-200">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                    Filtros
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <Label className="text-xs">Conta:</Label>
-                      <Select
-                        value={filtroConta}
-                        onValueChange={setFiltroConta}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todas">Todas</SelectItem>
-                          {cashAccounts.map((acc) => (
-                            <SelectItem key={acc.id} value={acc.id}>
-                              {acc.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Setor:</Label>
-                      <Select
-                        value={filtroSetor}
-                        onValueChange={setFiltroSetor}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
-                          {sectors.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Tipo Pagto.:</Label>
-                      <Select
-                        value={filtroTipoPagto}
-                        onValueChange={setFiltroTipoPagto}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
-                          {paymentTypes.map((pt) => (
-                            <SelectItem key={pt.id} value={pt.id}>
-                              {pt.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">Resp. Cob.:</Label>
-                      <Select
-                        value={filtroRespCobranca}
-                        onValueChange={setFiltroRespCobranca}
-                      >
-                        <SelectTrigger className="h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
-                          {employees.map((e) => (
-                            <SelectItem key={e.id} value={e.id}>
-                              {e.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 pt-2 border-t border-slate-200">
-                    <div className="flex items-center gap-1">
-                      <Checkbox
-                        id="naoPaga"
-                        checked={statusContas.naoPagas}
-                        onCheckedChange={(v) =>
-                          setStatusContas((p) => ({ ...p, naoPagas: v }))
-                        }
-                      />
-                      <label htmlFor="naoPaga" className="text-xs">
-                        Não Paga
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Checkbox
-                        id="paga"
-                        checked={statusContas.pagas}
-                        onCheckedChange={(v) =>
-                          setStatusContas((p) => ({ ...p, pagas: v }))
-                        }
-                      />
-                      <label htmlFor="paga" className="text-xs">
-                        Paga
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Checkbox
-                        id="emCobranca"
-                        checked={statusContas.emCobranca}
-                        onCheckedChange={(v) =>
-                          setStatusContas((p) => ({ ...p, emCobranca: v }))
-                        }
-                      />
-                      <label htmlFor="emCobranca" className="text-xs">
-                        Em Cobrança
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Período */}
-                  <div className="border-t border-slate-200 pt-3 mt-3">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="usarPeriodo"
-                          checked={usarPeriodo}
-                          onCheckedChange={setUsarPeriodo}
-                        />
-                        <label
-                          htmlFor="usarPeriodo"
-                          className="text-xs font-medium"
+                        <div
+                          className={`flex flex-col gap-1 ${!usarPeriodo ? "opacity-50 pointer-events-none" : ""}`}
                         >
-                          Período
-                        </label>
+                          <div className="flex items-center gap-1">
+                            <Label className="text-xs w-12">Início:</Label>
+                            <FormField
+                              control={form.control}
+                              name="dueDate_gte"
+                              render={({ field }) => (
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  className="h-7 text-xs w-40"
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Label className="text-xs w-12">Fim:</Label>
+                            <FormField
+                              control={form.control}
+                              name="dueDate_lte"
+                              render={({ field }) => (
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  className="h-7 text-xs w-40"
+                                />
+                              )}
+                            />
+                          </div>
+                        </div>
                       </div>
+                    </div>
+                  </div>
 
-                      <div
-                        className={`flex flex-col gap-1 ${!usarPeriodo ? "opacity-50 pointer-events-none" : ""}`}
+                  {/* COLUNA 3: LEGENDA + ORDENAÇÃO */}
+                  <div className="col-span-3 pl-4">
+                    <div className="mb-4">
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                        Legenda
+                      </h4>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-red-400 rounded"></div>
+                          <span className="text-xs">Vencida</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-green-400 rounded"></div>
+                          <span className="text-xs">Paga</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-blue-400 rounded"></div>
+                          <span className="text-xs">Em cobrança</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-3">
+                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
+                        Ordenação
+                      </h4>
+                      <RadioGroup
+                        value={ordenacao}
+                        onValueChange={setOrdenacao}
+                        className="flex flex-col gap-1"
                       >
                         <div className="flex items-center gap-1">
-                          <Label className="text-xs w-12">Início:</Label>
-                          <Input
-                            type="date"
-                            value={dataInicio}
-                            onChange={(e) => setDataInicio(e.target.value)}
-                            className="h-7 text-xs w-40"
+                          <RadioGroupItem
+                            value="vencimento"
+                            id="ordVencimento"
                           />
+                          <label htmlFor="ordVencimento" className="text-xs">
+                            Vencimento
+                          </label>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Label className="text-xs w-12">Fim:</Label>
-                          <Input
-                            type="date"
-                            value={dataFinal}
-                            onChange={(e) => setDataFinal(e.target.value)}
-                            className="h-7 text-xs w-40"
-                          />
+                          <RadioGroupItem value="codigo" id="ordCodigo" />
+                          <label htmlFor="ordCodigo" className="text-xs">
+                            Código
+                          </label>
                         </div>
-                      </div>
+                        <div className="flex items-center gap-1">
+                          <RadioGroupItem value="valor" id="ordValor" />
+                          <label htmlFor="ordValor" className="text-xs">
+                            Valor
+                          </label>
+                        </div>
+                      </RadioGroup>
                     </div>
-                  </div>
-                </div>
 
-                {/* COLUNA 3: LEGENDA + ORDENAÇÃO */}
-                <div className="col-span-3 pl-4">
-                  <div className="mb-4">
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                      Legenda
-                    </h4>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-red-400 rounded"></div>
-                        <span className="text-xs">Vencida</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-green-400 rounded"></div>
-                        <span className="text-xs">Paga</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-blue-400 rounded"></div>
-                        <span className="text-xs">Em cobrança</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-200 pt-3">
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                      Ordenação
-                    </h4>
-                    <RadioGroup
-                      value={ordenacao}
-                      onValueChange={setOrdenacao}
-                      className="flex flex-col gap-1"
+                    <Button
+                      className="w-full mt-4 text-white text-xs h-9 gap-1"
+                      style={{ backgroundColor: "#e78b3a" }}
+                      onClick={applyFiltersAndShow}
                     >
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="vencimento" id="ordVencimento" />
-                        <label htmlFor="ordVencimento" className="text-xs">
-                          Vencimento
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="codigo" id="ordCodigo" />
-                        <label htmlFor="ordCodigo" className="text-xs">
-                          Código
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <RadioGroupItem value="valor" id="ordValor" />
-                        <label htmlFor="ordValor" className="text-xs">
-                          Valor
-                        </label>
-                      </div>
-                    </RadioGroup>
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
                   </div>
-
-                  <Button
-                    className="w-full mt-4 text-white text-xs h-9 gap-1"
-                    style={{ backgroundColor: "#e78b3a" }}
-                    onClick={applyFiltersAndShow}
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
                 </div>
-              </div>
+              </Form>
             </CardContent>
           </Card>
 
@@ -1525,9 +1589,9 @@ export default function AccountsReceivablePage({ onComplete }) {
           <DialogHeader>
             <DialogTitle>
               Pesquisar{" "}
-              {metodoPesquisa === "codigoVenda"
+              {formValues.search_type === "codigoVenda"
                 ? "Código de Venda"
-                : metodoPesquisa === "notaFiscal"
+                : formValues.search_type === "notaFiscal"
                   ? "Nota Fiscal"
                   : "Documento"}
             </DialogTitle>
@@ -1535,8 +1599,8 @@ export default function AccountsReceivablePage({ onComplete }) {
           <div className="space-y-4">
             <Input
               placeholder="Filtrar..."
-              value={codigoPesquisa}
-              onChange={(e) => setCodigoPesquisa(e.target.value)}
+              value={formValues.search_value || ""}
+              onChange={(e) => form.setValue("search_value", e.target.value)}
               className="h-8"
               autoFocus
             />
@@ -1545,9 +1609,9 @@ export default function AccountsReceivablePage({ onComplete }) {
                 <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow>
                     <TableHead className="text-xs">
-                      {metodoPesquisa === "codigoVenda"
+                      {formValues.search_type === "codigoVenda"
                         ? "Código"
-                        : metodoPesquisa === "notaFiscal"
+                        : formValues.search_type === "notaFiscal"
                           ? "Nota Fiscal"
                           : "Documento"}
                     </TableHead>
@@ -1559,8 +1623,8 @@ export default function AccountsReceivablePage({ onComplete }) {
                 <TableBody>
                   {getCodigoSearchData()
                     .filter((item) => {
-                      if (!codigoPesquisa) return true;
-                      const term = codigoPesquisa.toLowerCase();
+                      if (!formValues.search_value) return true;
+                      const term = formValues.search_value.toLowerCase();
                       return (
                         item.label?.toLowerCase().includes(term) ||
                         item.extra?.toLowerCase().includes(term)
@@ -1571,7 +1635,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                         key={item.id}
                         className="cursor-pointer hover:bg-blue-50"
                         onDoubleClick={() => {
-                          setCodigoPesquisa(item.label);
+                          form.setValue("search_value", item.label);
                           setShowCodigoSearch(false);
                           setTimeout(() => applyFiltersAndShow(), 100);
                         }}
@@ -1591,8 +1655,8 @@ export default function AccountsReceivablePage({ onComplete }) {
                       </TableRow>
                     ))}
                   {getCodigoSearchData().filter((item) => {
-                    if (!codigoPesquisa) return true;
-                    const term = codigoPesquisa.toLowerCase();
+                    if (!formValues.search_value) return true;
+                    const term = formValues.search_value.toLowerCase();
                     return (
                       item.label?.toLowerCase().includes(term) ||
                       item.extra?.toLowerCase().includes(term)

@@ -16,6 +16,7 @@ import { persons } from "./person.schema";
 import { cashAccounts } from "./cashAccount.schema";
 import { paymentTypes } from "./paymentType.schema";
 import { sales } from "./sale.schema";
+import { accountsReceivables } from "./accountsReceivable.schema";
 
 export enum CashMovementTypeEnum {
   RECEITA = "receita",
@@ -51,6 +52,7 @@ export const cashMovements = pgTable(
     }),
     paymentTypeName: text("payment_type_name"),    
     saleId: uuid("sale_id").references(() => sales.id),
+    accountReceivableId: uuid("account_receivable_id").references(() => accountsReceivables.id),
     notes: text("notes"),
     isAccounting: boolean("is_accounting").default(false),
     relatedDocId: uuid("related_doc_id"),

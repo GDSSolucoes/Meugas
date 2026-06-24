@@ -1,0 +1,2 @@
+ALTER TABLE "cashMovements" ADD COLUMN "account_receivable_id" uuid;--> statement-breakpoint
+ALTER TABLE "cashMovements" ADD CONSTRAINT "cashMovements_account_receivable_id_accountsReceivables_id_fk" FOREIGN KEY ("account_receivable_id") REFERENCES "public"."accountsReceivables"("id") ON DELETE no action ON UPDATE no action;

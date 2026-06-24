@@ -26,6 +26,7 @@ import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { AccountsReceivablesUpdateDto } from "./dto/accountsreceivables.update.dto";
 import { CurrentUser } from "../../auth/current-user.decorator";
+import { AccountsReceivablesRegisterPaymentDto } from "./dto/accountsreceivables.register-payment.dto";
 
 @ApiTags("accountsReceivables")
 @ApiBearerAuth()
@@ -124,15 +125,27 @@ export class AccountsReceivablesController extends BaseCrudController<
   async update(
     @Param("id") id: string,
     @Body() data: AccountsReceivablesUpdateDto,
+    @CurrentUser() user: any
   ) {
-    return super.update(id, data);
+    return super.update(id, data, user);
   }
 
   @Delete(":id")
   @Roles("admin")
-  @ApiOperation({ summary: `Delete AccountsReceivables` })
-  @ApiResponse({ status: 200, description: `AccountsReceivables deleted` })
+  @ApiOperation({ summary: "Delete AccountsReceivables" })
+  @ApiResponse({ status: 200, description: "AccountsReceivables deleted" })
   async delete(@Param("id") id: string) {
     return super.delete(id);
+  }
+
+  @Post("register-payment")
+  @ApiBody({ type: AccountsReceivablesRegisterPaymentDto })
+  @ApiOperation({ summary: "Registrar baixa de contas a receber" })
+  @ApiResponse({
+    status: 201,
+    description: "Baixa de contas a receber registrada com sucesso",
+  })
+  async registerPayment(@Body() data: AccountsReceivablesRegisterPaymentDto, @CurrentUser() user?: any) {
+    return this.service.registerPayment(data, user.id, user.name, user.companyId, user.companyName);
   }
 }

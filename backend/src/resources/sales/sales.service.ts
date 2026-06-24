@@ -307,10 +307,11 @@ export class SalesService extends BaseCrudService<typeof sales> {
             dueDate: new Date(inst.dueDate),
             amount: inst.amount,
             status: AccountsReceivableStatusEnum.PENDENTE,
+            paymentTypeId: payment.paymentTypeId, // NEW: save the payment type id
             companyId,
             companyName,
             createdByName: userName,
-            observations: `Pagamento a prazo para a venda #${newSaleNumber} - Tipo de pagamento: ${payment.paymentTypeName}`,
+            description: `Pagamento a prazo para a venda #${newSaleNumber} - Tipo de pagamento: ${payment.paymentTypeName}`,
             active: true,
           })),
         ]);
@@ -552,6 +553,7 @@ export class SalesService extends BaseCrudService<typeof sales> {
               dueDate: new Date(inst.dueDate),
               amount: inst.amount,
               status: AccountsReceivableStatusEnum.PENDENTE,
+              paymentTypeId: payment.paymentTypeId, // NEW: save payment type id here too
               companyId,
               companyName,
               createdByName: userName,

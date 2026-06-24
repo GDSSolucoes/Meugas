@@ -1,4 +1,5 @@
 import { BaseEntity } from './BaseEntity';
+import { api } from '@/api/apiClient';
 
 
 export enum AccountsReceivableStatusEnum {
@@ -89,5 +90,19 @@ export class AccountsReceivable extends BaseEntity {
    */
   static async findById(id): Promise<AccountsReceivable | null> {
     return super._findById.call(this, this.baseUrl, id) as Promise<AccountsReceivable | null>;
+  }
+
+  /**
+   * Static method to register payment for accounts receivable
+   * @param data - Data with accountReceivableIds, cashAccountId, paymentDate
+   * @returns Promise<any>
+   */
+  static async registerPayment(data: {
+    accountReceivableIds: string[];
+    cashAccountId: string;
+    paymentDate: string;
+  }): Promise<any> {
+    const response = await api.post(`${this.baseUrl}/register-payment`, data);
+    return response.data;
   }
 }
