@@ -112,8 +112,9 @@ export class FinancialsubgroupsController extends BaseCrudController<
   async update(
     @Param("id") id: string,
     @Body() data: FinancialsubgroupUpdateDto,
+    @CurrentUser() user: any,
   ) {
-    return super.update(id, data);
+    return super.update(id, data, user);
   }
 
   @Delete(":id")
