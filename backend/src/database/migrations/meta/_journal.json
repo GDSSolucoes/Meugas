@@ -71,6 +71,34 @@
       "when": 1782343076855,
       "tag": "0009_dashing_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782345237102,
+      "tag": "0010_old_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782345586573,
+      "tag": "0011_fair_earthquake",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782347853738,
+      "tag": "0012_parallel_silver_sable",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783382067051,
+      "tag": "0013_wet_william_stryker",
+      "breakpoints": true
     }
   ]
 }

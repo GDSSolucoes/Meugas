@@ -1,0 +1,1 @@
+ALTER TABLE "productStockMovements" ADD COLUMN "active" boolean DEFAULT true;

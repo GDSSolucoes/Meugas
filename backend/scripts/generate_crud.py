@@ -723,8 +723,8 @@ def select_entity_interactive(schemas: Dict[str, Dict], existing_resources: Set[
     
     for idx, table_name in enumerate(schema_list, 1):
         entities_folder = mapper.table_to_entities_folder(table_name)
-        status = "✓ (exists)" if entities_folder in existing_resources else "(new)"
-        print(f"  {idx}. {table_name} {status}")
+        status = "(exists)" if entities_folder in existing_resources else "(new)"
+        print(f"  {idx} {table_name} {status}")
     
     print(f"\n  0. Generate all new entities")
     print(f"  q. Quit")

@@ -30,6 +30,16 @@ export class PurchasEsBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsUUID()
+  sectorId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  sectorName!: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PurchaseItemsItemDto)

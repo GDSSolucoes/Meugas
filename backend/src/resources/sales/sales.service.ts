@@ -21,6 +21,8 @@ import {
   ImmediatePaymentTypesType,
   PaymentTypesTypeEnum,
   paymentTypes,
+  productStockMovements,
+  StockMovementTypeEnum,
 } from "../../database/schemas";
 import { SalesCreateDto } from "./dto/sales.post.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
@@ -199,6 +201,21 @@ export class SalesService extends BaseCrudService<typeof sales> {
               quantity: sql`${productStocks.quantity} - ${item.quantity}`,
             },
           });
+        await db.insert(productStockMovements)
+          .values({
+            type: StockMovementTypeEnum.Sale,
+            productId: item.productId,
+            productName: item.productName,
+            sectorId: data.sectorId,
+            sectorName: data.sectorName,
+            saleId: savedSale.id,
+            quantity: -item.quantity,
+            previousBalance: sql`SELECT COALESCE(quantity, 0) FROM productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
+            newBalance: sql`SELECT COALESCE(quantity, 0) - ${item.quantity} from productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
+            movementDate: new Date(),
+            companyId,
+            companyName: savedSale.companyName,
+          })
       } catch (error: any) {
         throw new Error(
           `Erro ao processar estoque do produto ${item.productName} (${item.productId}) no setor ${data.sectorName}: ${
@@ -357,6 +374,11 @@ export class SalesService extends BaseCrudService<typeof sales> {
     if (oldSales.length === 0)
       throw new NotFoundException("Venda não encontrada");
     const oldSale = oldSales[0];
+
+    // Não pode atualizar vendas com data superior a 60 dias
+    if (oldSale.saleDate! < new Date(new Date().getTime() - 60 * 24 * 60 * 60 * 1000)) {
+      throw new Error("Venda não encontrada ou fora do prazo para atualização")
+    }
 
     // 2. REVERTER TODOS OS LANÇAMENTOS ANTIGOS
     // a. Reverter estoque
@@ -601,6 +623,8 @@ export class SalesService extends BaseCrudService<typeof sales> {
         }
       }
     }
+
+    await db.execute(sql`CALL rebuild_all_stock_movement_history()`)
 
     return updatedSale;
   }

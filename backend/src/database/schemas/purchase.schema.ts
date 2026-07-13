@@ -13,13 +13,6 @@ import {
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm";
 
-export type PurchaseItemsItem = {
-  productId?: string;
-  productName?: string;
-  quantity?: number;
-  unitPrice?: number;
-  total?: number;
-};
 
 export const purchases = pgTable(
   "purchases",
@@ -28,7 +21,6 @@ export const purchases = pgTable(
     supplierId: uuid("supplier_id").notNull(),
     supplierName: text("supplier_name"),
     invoiceNumber: text("invoice_number"),
-    items: json("items").$type<PurchaseItemsItem[]>(),
     totalAmount: numeric("total_amount", { mode : "number"}).notNull(),
     purchaseDate: date("purchase_date", { mode : "date"}),
     companyId: uuid("company_id")

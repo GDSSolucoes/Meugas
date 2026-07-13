@@ -25,7 +25,9 @@ import { PaymenttypEsesModule } from "./resources/paymentTypes/paymentTypes.modu
 import { PersonsModule } from "./resources/persons/persons.module";
 import { ProductpickupsModule } from "./resources/productPickups/productPickups.module";
 import { ProductstocksModule } from "./resources/productStocks/productStocks.module";
+import { ProductstockmovementsModule } from "./resources/productStockMovements/productStockMovements.module";
 import { PurchasEsesModule } from "./resources/purchases/purchases.module";
+import { PurchaseitemsModule } from "./resources/purchaseItems/purchaseItems.module";
 import { SalesModule } from "./resources/sales/sales.module";
 import { SectorsModule } from "./resources/sectors/sectors.module";
 import { SectormastersModule } from "./resources/sectorMasters/sectorMasters.module";
@@ -59,7 +61,9 @@ import { AccountsReceivablesModule } from "./resources/accountsReceivables/accou
     PersonsModule,
     ProductpickupsModule,
     ProductstocksModule,
+    ProductstockmovementsModule,
     PurchasEsesModule,
+    PurchaseitemsModule,
     SalesModule,
     SectorsModule,
     SectormastersModule,
