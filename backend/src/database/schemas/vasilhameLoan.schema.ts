@@ -8,10 +8,11 @@ import {
   pgEnum,
   pgPolicy,
   index,
-  boolean
+  boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sales } from "./sale.schema";
+import { sectors } from "./sector.schema";
 import { persons } from ".";
 import { sql } from "drizzle-orm/sql";
 
@@ -21,7 +22,10 @@ export enum VasilhameLoanStatusEnum {
   DEVOLVIDO_TOTAL = "devolvido_total",
 }
 
-export const vasilhameLoanStatusPGEnum = pgEnum("vasilhame_loan_status", VasilhameLoanStatusEnum);
+export const vasilhameLoanStatusPGEnum = pgEnum(
+  "vasilhame_loan_status",
+  VasilhameLoanStatusEnum,
+);
 
 export const vasilhameLoans = pgTable(
   "vasilhameLoans",
@@ -36,17 +40,29 @@ export const vasilhameLoans = pgTable(
     personName: text("person_name"),
     vasilhameId: uuid("vasilhame_id").notNull(),
     vasilhameName: text("vasilhame_name"),
-    loanQuantity: numeric("loan_quantity", { mode : "number"}).notNull(),
-    returnedQuantity: numeric("returned_quantity", { mode : "number"}).default(0),
-    loanDate: date("loan_date", { mode : "date"}),
-    status: vasilhameLoanStatusPGEnum("status").default(VasilhameLoanStatusEnum.PENDENTE),
+    sectorId: uuid("sector_id").references(() => sectors.id, {
+      onDelete: "set null",
+    }),
+    sectorName: text("sector_name"),
+    loanQuantity: numeric("loan_quantity", { mode: "number" }).notNull(),
+    returnedQuantity: numeric("returned_quantity", { mode: "number" }).default(
+      0,
+    ),
+    loanDate: date("loan_date", { mode: "date" }),
+    returnDate: date("return_date", { mode: "date" }),
+    status: vasilhameLoanStatusPGEnum("status").default(
+      VasilhameLoanStatusEnum.PENDENTE,
+    ),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("vasilhameLoans_tenant_isolation", {
@@ -59,4 +75,3 @@ export const vasilhameLoans = pgTable(
     index("vasilhameLoans_company_id_index").on(table.companyId),
   ],
 );
-

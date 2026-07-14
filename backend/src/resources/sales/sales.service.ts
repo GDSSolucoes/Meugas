@@ -165,8 +165,6 @@ export class SalesService extends BaseCrudService<typeof sales> {
       });
     }
 
-    
-
     // Insert into saleItems table
     if (data.items && data.items.length > 0) {
       await db.insert(saleItems).values(
@@ -201,21 +199,20 @@ export class SalesService extends BaseCrudService<typeof sales> {
               quantity: sql`${productStocks.quantity} - ${item.quantity}`,
             },
           });
-        await db.insert(productStockMovements)
-          .values({
-            type: StockMovementTypeEnum.Sale,
-            productId: item.productId,
-            productName: item.productName,
-            sectorId: data.sectorId,
-            sectorName: data.sectorName,
-            saleId: savedSale.id,
-            quantity: -item.quantity,
-            previousBalance: sql`SELECT COALESCE(quantity, 0) FROM productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
-            newBalance: sql`SELECT COALESCE(quantity, 0) - ${item.quantity} from productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
-            movementDate: new Date(),
-            companyId,
-            companyName: savedSale.companyName,
-          })
+        await db.insert(productStockMovements).values({
+          type: StockMovementTypeEnum.Sale,
+          productId: item.productId,
+          productName: item.productName,
+          sectorId: data.sectorId,
+          sectorName: data.sectorName,
+          saleId: savedSale.id,
+          quantity: -item.quantity,
+          previousBalance: sql`SELECT COALESCE(quantity, 0) FROM productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
+          newBalance: sql`SELECT COALESCE(quantity, 0) - ${item.quantity} from productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
+          movementDate: new Date(),
+          companyId,
+          companyName: savedSale.companyName,
+        });
       } catch (error: any) {
         throw new Error(
           `Erro ao processar estoque do produto ${item.productName} (${item.productId}) no setor ${data.sectorName}: ${
@@ -236,6 +233,8 @@ export class SalesService extends BaseCrudService<typeof sales> {
           personName: data.personName,
           vasilhameId: item.vasilhameId,
           vasilhameName: item.vasilhameName,
+          sectorId: data.sectorId,
+          sectorName: data.sectorName,
           loanQuantity: item.vasilhameLoanQuantity,
           returnedQuantity: 0,
           loanDate: new Date(data.saleDate),
@@ -376,8 +375,11 @@ export class SalesService extends BaseCrudService<typeof sales> {
     const oldSale = oldSales[0];
 
     // Não pode atualizar vendas com data superior a 60 dias
-    if (oldSale.saleDate! < new Date(new Date().getTime() - 60 * 24 * 60 * 60 * 1000)) {
-      throw new Error("Venda não encontrada ou fora do prazo para atualização")
+    if (
+      oldSale.saleDate! <
+      new Date(new Date().getTime() - 60 * 24 * 60 * 60 * 1000)
+    ) {
+      throw new Error("Venda não encontrada ou fora do prazo para atualização");
     }
 
     // 2. REVERTER TODOS OS LANÇAMENTOS ANTIGOS
@@ -505,6 +507,8 @@ export class SalesService extends BaseCrudService<typeof sales> {
           personName: data.personName!,
           vasilhameId: item.vasilhameId,
           vasilhameName: item.vasilhameName,
+          sectorId: data.sectorId,
+          sectorName: data.sectorName,
           loanQuantity: item.vasilhameLoanQuantity,
           returnedQuantity: 0,
           loanDate: new Date(data.saleDate!),
@@ -624,7 +628,7 @@ export class SalesService extends BaseCrudService<typeof sales> {
       }
     }
 
-    await db.execute(sql`CALL rebuild_all_stock_movement_history()`)
+    await db.execute(sql`CALL rebuild_all_stock_movement_history()`);
 
     return updatedSale;
   }

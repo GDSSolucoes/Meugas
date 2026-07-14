@@ -37,6 +37,16 @@ export class VasilhameloanBaseDto extends BaseCreateDto {
   vasilhameName!: string;
 
   @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  sectorId?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  sectorName?: string;
+
+  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   loanQuantity!: number;
@@ -50,6 +60,11 @@ export class VasilhameloanBaseDto extends BaseCreateDto {
   @IsOptional()
   @Type(() => Date)
   loanDate!: Date;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Date)
+  returnDate?: Date;
 
   @ApiProperty({ enum: VasilhameLoanStatusEnum })
   @IsOptional()
