@@ -23,6 +23,7 @@ export const purchases = pgTable(
     invoiceNumber: text("invoice_number"),
     totalAmount: numeric("total_amount", { mode : "number"}).notNull(),
     purchaseDate: date("purchase_date", { mode : "date"}),
+    nfeNumber: text("nfe_number"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "cascade" }),

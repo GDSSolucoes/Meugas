@@ -264,7 +264,6 @@ export default function PurchasesPage() {
       return;
     }
 
-    debugger;
     const found = suppliers.find(
       (s) =>
         s.document?.includes(searchSupplier) ||
@@ -465,7 +464,6 @@ export default function PurchasesPage() {
 
   const handleSavePurchase = async () => {
     if (purchaseType === "cadastrado" && !currentPurchase.supplierId) {
-      // Updated validation
       toast({
         title: "Erro",
         description: "Selecione um fornecedor.",
@@ -492,15 +490,6 @@ export default function PurchasesPage() {
       return;
     }
 
-    if (!currentPurchase.cashAccountId) {
-      toast({
-        title: "Erro",
-        description: "Selecione a conta de movimento.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!currentPurchase.paymentTypeId) {
       toast({
         title: "Erro",
@@ -510,76 +499,49 @@ export default function PurchasesPage() {
       return;
     }
 
-    try {
-      const user = await entities.User.me();
+    // Verificar se é pagamento à vista para validar cashAccountId
+    const selectedPaymentType = paymentTypes.find(
+      (pt) => pt.id === currentPurchase.paymentTypeId,
+    );
+    const isAPrazo =
+      selectedPaymentType &&
+      !["dinheiro", "pix", "cartao_debito"].includes(
+        selectedPaymentType.type,
+      );
 
-      // Gerar próximo código sequencial
-      const allPurchases = await entities.Purchase.filter({
-        companyId: user.companyId,
+    if (!isAPrazo && !currentPurchase.cashAccountId) {
+      toast({
+        title: "Erro",
+        description: "Para compras à vista, selecione a conta de movimento.",
+        variant: "destructive",
       });
-      const maxNumber = allPurchases.reduce((max, p) => {
-        const num = parseInt(p.invoiceNumber, 10);
-        return !isNaN(num) && num > max ? num : max;
-      }, 0);
-      const newNumber = String(maxNumber + 1);
+      return;
+    }
 
-      // Para compra avulsa, usar dados genéricos
+    try {
+      // Preparar dados para enviar ao backend
       const purchaseData = {
         ...currentPurchase,
-        invoiceNumber: newNumber,
         supplierId:
-          purchaseType === "avulsa" ? "avulsa" : currentPurchase.supplierId, // Handled 'avulsa'
+          purchaseType === "avulsa" ? "avulsa" : currentPurchase.supplierId,
         supplierName:
           purchaseType === "avulsa"
             ? "Compra Avulsa"
-            : currentPurchase.supplierName, // Handled 'avulsa'
-        companyId: user.companyId,
-        companyName: user.companyName,
-        createdByName: user.name,
+            : currentPurchase.supplierName,
       };
 
+      // Backend irá:
+      // 1. Gerar invoiceNumber automaticamente
+      // 2. Criar purchase e purchaseItems
+      // 3. Atualizar stocks de produtos
+      // 4. Se à prazo: criar contasAPagar
+      // 5. Se à vista: criar cashMovement e atualizar saldo da conta
       const createdPurchase = await entities.Purchase.create(purchaseData);
 
-      // Verificar se é pagamento a prazo
-      const selectedPaymentType = paymentTypes.find(
-        (pt) => pt.id === currentPurchase.paymentTypeId,
-      );
-      const isAPrazo =
-        selectedPaymentType &&
-        !["dinheiro", "pix", "cartao_debito"].includes(
-          selectedPaymentType.type,
-        );
-
-      if (isAPrazo && currentPurchase.installmentsDetails.length > 0) {
-        // Registrar cada parcela em Contas a Pagar
-        for (const installment of currentPurchase.installmentsDetails) {
-          await entities.ContasAPagar.create({
-            supplierId: purchaseData.supplierId,
-            supplierName: purchaseData.supplierName,
-            description: `Compra ${currentPurchase.invoiceNumber} - Parcela ${installment.number}/${currentPurchase.installments}`,
-            dueDate: installment.dueDate,
-            amount: installment.amount,
-            status: "aberto",
-            paymentTypeId: currentPurchase.paymentTypeId,
-            paymentTypeName: currentPurchase.paymentTypeName,
-            installmentNumber: installment.number,
-            purchaseId: createdPurchase.id,
-            nfeNumber: currentPurchase.nfeNumber || "",
-            companyId: user.companyId,
-            companyName: user.companyName,
-            createdByName: user.name,
-          });
-        }
-        toast({
-          title: "Sucesso",
-          description: `Compra #${createdPurchase.invoiceNumber} salva! ${currentPurchase.installments} parcela(s) registrada(s) em Contas a Pagar.`,
-        });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: `Compra #${createdPurchase.invoiceNumber} salva com sucesso!`,
-        });
-      }
+      toast({
+        title: "Sucesso",
+        description: `Compra #${createdPurchase.invoiceNumber} salva com sucesso!`,
+      });
 
       setCurrentPurchase(initialPurchaseState);
       setSelectedSupplier(null);
@@ -589,7 +551,7 @@ export default function PurchasesPage() {
       console.error("Erro ao salvar compra:", error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar compra.",
+        description: error.response?.data?.message || "Erro ao salvar compra.",
         variant: "destructive",
       });
     }

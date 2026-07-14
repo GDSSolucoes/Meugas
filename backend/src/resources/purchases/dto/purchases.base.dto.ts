@@ -12,6 +12,28 @@ import { Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { PurchaseItemsItemDto } from "./purchaseitemsitem.dto";
 
+export class InstallmentDetailDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  number?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  dueDate?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  amount?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  status?: string;
+}
+
 export class PurchasEsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
@@ -30,6 +52,11 @@ export class PurchasEsBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsString()
+  nfeNumber?: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsUUID()
   sectorId!: string;
 
@@ -37,6 +64,16 @@ export class PurchasEsBaseDto extends BaseCreateDto {
   @IsOptional()
   @IsString()
   sectorName!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
+  cashAccountId?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  cashAccountName?: string;
 
   @ApiProperty()
   @IsOptional()
@@ -54,4 +91,26 @@ export class PurchasEsBaseDto extends BaseCreateDto {
   @IsOptional()
   @Type(() => Date)
   purchaseDate!: Date;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  paymentTypeId?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  paymentTypeName?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  installments?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InstallmentDetailDto)
+  installmentsDetails?: InstallmentDetailDto[];
 }
