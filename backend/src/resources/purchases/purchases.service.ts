@@ -149,26 +149,6 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
           companyName: savedPurchase.companyName,
         })),
       );
-      await db
-        .insert(productStocks)
-        .values(
-          data.items.map((item) => ({
-            productId: item.productId,
-            productName: item.productName,
-            sectorId: data.sectorId,
-            sectorName: data.sectorName,
-            quantity: item.quantity,
-            initialDate: new Date(),
-            companyId,
-            companyName: savedPurchase.companyName,
-          })),
-        )
-        .onConflictDoUpdate({
-          target: [productStocks.productId, productStocks.sectorId],
-          set: {
-            quantity: sql`${productStocks.quantity} + excluded.quantity`,
-          },
-        });
 
       // Inserir movimentações de estoque com saldos calculados
       for (const item of data.items) {
@@ -185,6 +165,25 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
 
         const previousBalance = currentStockResult[0]?.quantity ?? 0;
         const newBalance = previousBalance + item.quantity;
+
+        await db
+          .insert(productStocks)
+          .values({
+            productId: item.productId,
+            productName: item.productName,
+            sectorId: data.sectorId,
+            sectorName: data.sectorName,
+            quantity: newBalance,
+            initialDate: new Date(),
+            companyId,
+            companyName: savedPurchase.companyName,
+          })
+          .onConflictDoUpdate({
+            target: [productStocks.productId, productStocks.sectorId],
+            set: {
+              quantity: newBalance,
+            },
+          });
 
         await db.insert(productStockMovements).values({
           productId: item.productId,

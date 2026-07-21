@@ -180,6 +180,66 @@ export class SalesService extends BaseCrudService<typeof sales> {
     // 3. Processar ESTOQUE
     for (const item of data.items) {
       try {
+        let vasilhameLoanId = null;
+        if (item.vasilhameLoanQuantity > 0 && item.vasilhameId) {
+          const [loan] = await db
+            .insert(vasilhameLoans)
+            .values({
+              saleId: savedSale.id,
+              personId: data.personId,
+              personName: data.personName,
+              vasilhameId: item.vasilhameId,
+              vasilhameName: item.vasilhameName,
+              sectorId: data.sectorId,
+              sectorName: data.sectorName,
+              loanQuantity: item.vasilhameLoanQuantity,
+              returnedQuantity: 0,
+              loanDate: new Date(data.saleDate),
+              status: VasilhameLoanStatusEnum.PENDENTE,
+              companyId,
+              companyName,
+              createdByName: userName,
+            })
+            .returning();
+          vasilhameLoanId = loan.id;
+        }
+        let productPickupId = null;
+        if (item.quantityToPickup > 0) {
+          const [productPickup] = await db
+            .insert(productPickups)
+            .values({
+              saleId: savedSale.id,
+              personId: data.personId,
+              personName: data.personName,
+              productId: item.productId,
+              productName: item.productName,
+              pickupQuantity: item.quantityToPickup,
+              saleDate: new Date(data.saleDate),
+              companyId,
+              companyName,
+              createdByName: userName,
+              status: ProductPickupStatusEnum.PENDENTE,
+            })
+            .returning();
+          productPickupId = productPickup.id;
+        }
+
+        await db.insert(productStockMovements).values({
+          type: StockMovementTypeEnum.Sale,
+          productId: item.productId,
+          productName: item.productName,
+          sectorId: data.sectorId,
+          sectorName: data.sectorName,
+          saleId: savedSale.id,
+          quantity: -item.quantity,
+          previousBalance: sql`(SELECT COALESCE(quantity, 0) FROM "productStocks" WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId})`,
+          newBalance: sql`(SELECT COALESCE(quantity, 0) - ${item.quantity} FROM "productStocks" WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId})`,
+          movementDate: new Date(),
+          companyId,
+          companyName: savedSale.companyName,
+          vasilhameLoanId,
+          productPickupId,
+        });
         await db
           .insert(productStocks)
           .values({
@@ -199,70 +259,14 @@ export class SalesService extends BaseCrudService<typeof sales> {
               quantity: sql`${productStocks.quantity} - ${item.quantity}`,
             },
           });
-        await db.insert(productStockMovements).values({
-          type: StockMovementTypeEnum.Sale,
-          productId: item.productId,
-          productName: item.productName,
-          sectorId: data.sectorId,
-          sectorName: data.sectorName,
-          saleId: savedSale.id,
-          quantity: -item.quantity,
-          previousBalance: sql`SELECT COALESCE(quantity, 0) FROM productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
-          newBalance: sql`SELECT COALESCE(quantity, 0) - ${item.quantity} from productStocks WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId}`,
-          movementDate: new Date(),
-          companyId,
-          companyName: savedSale.companyName,
-        });
       } catch (error: any) {
-        throw new Error(
+        console.error(
           `Erro ao processar estoque do produto ${item.productName} (${item.productId}) no setor ${data.sectorName}: ${
             error?.message || "erro de banco de dados"
           }`,
         );
+        throw error;
       }
-    }
-
-    const vasilhameLoansToInsert = data.items.filter(
-      (i) => i.vasilhameLoanQuantity > 0 && i.vasilhameId,
-    );
-    if (vasilhameLoansToInsert.length > 0) {
-      await db.insert(vasilhameLoans).values([
-        ...vasilhameLoansToInsert.map((item) => ({
-          saleId: savedSale.id,
-          personId: data.personId,
-          personName: data.personName,
-          vasilhameId: item.vasilhameId,
-          vasilhameName: item.vasilhameName,
-          sectorId: data.sectorId,
-          sectorName: data.sectorName,
-          loanQuantity: item.vasilhameLoanQuantity,
-          returnedQuantity: 0,
-          loanDate: new Date(data.saleDate),
-          status: VasilhameLoanStatusEnum.PENDENTE,
-          companyId,
-          companyName,
-          createdByName: userName,
-        })),
-      ]);
-    }
-
-    const lateTakes = data.items.filter((i) => i.quantityToPickup > 0);
-    if (lateTakes.length > 0) {
-      await db.insert(productPickups).values([
-        ...lateTakes.map((item) => ({
-          saleId: savedSale.id,
-          personId: data.personId,
-          personName: data.personName,
-          productId: item.productId,
-          productName: item.productName,
-          pickupQuantity: item.quantityToPickup,
-          saleDate: new Date(data.saleDate),
-          companyId,
-          companyName,
-          createdByName: userName,
-          status: ProductPickupStatusEnum.PENDENTE,
-        })),
-      ]);
     }
 
     // 5. Processar FINANCEIRO

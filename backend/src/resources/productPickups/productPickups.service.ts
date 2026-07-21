@@ -58,6 +58,7 @@ export class ProductpickupsService extends BaseCrudService<
 
     const newCollectedQuantity =
       data.collectedQuantity || currentPickup.collectedQuantity || 0;
+
     const quantityToCollect =
       newCollectedQuantity - (currentPickup.collectedQuantity || 0);
 

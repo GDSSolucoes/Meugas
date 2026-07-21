@@ -97,8 +97,6 @@ export const productStockMovements = pgTable(
       .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
 
-    active: boolean("active").default(true),
-
     // Dados de auditoria
     createdByName: text("created_by_name"),
     createdAt: timestamp("created_at", {

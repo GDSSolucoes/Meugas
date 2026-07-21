@@ -41,6 +41,7 @@ import { createPageUrl } from "@/utils";
 
 export default function PurchasesPage() {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -505,9 +506,7 @@ export default function PurchasesPage() {
     );
     const isAPrazo =
       selectedPaymentType &&
-      !["dinheiro", "pix", "cartao_debito"].includes(
-        selectedPaymentType.type,
-      );
+      !["dinheiro", "pix", "cartao_debito"].includes(selectedPaymentType.type);
 
     if (!isAPrazo && !currentPurchase.cashAccountId) {
       toast({
@@ -518,43 +517,47 @@ export default function PurchasesPage() {
       return;
     }
 
-    try {
-      // Preparar dados para enviar ao backend
-      const purchaseData = {
-        ...currentPurchase,
-        supplierId:
-          purchaseType === "avulsa" ? "avulsa" : currentPurchase.supplierId,
-        supplierName:
-          purchaseType === "avulsa"
-            ? "Compra Avulsa"
-            : currentPurchase.supplierName,
-      };
+    // Preparar dados para enviar ao backend
+    const purchaseData = {
+      ...currentPurchase,
+      supplierId:
+        purchaseType === "avulsa" ? "avulsa" : currentPurchase.supplierId,
+      supplierName:
+        purchaseType === "avulsa"
+          ? "Compra Avulsa"
+          : currentPurchase.supplierName,
+    };
 
-      // Backend irá:
-      // 1. Gerar invoiceNumber automaticamente
-      // 2. Criar purchase e purchaseItems
-      // 3. Atualizar stocks de produtos
-      // 4. Se à prazo: criar contasAPagar
-      // 5. Se à vista: criar cashMovement e atualizar saldo da conta
-      const createdPurchase = await entities.Purchase.create(purchaseData);
+    // Backend irá:
+    // 1. Gerar invoiceNumber automaticamente
+    // 2. Criar purchase e purchaseItems
+    // 3. Atualizar stocks de produtos
+    // 4. Se à prazo: criar contasAPagar
+    // 5. Se à vista: criar cashMovement e atualizar saldo da conta
+    setLoading(true);
+    entities.Purchase.create(purchaseData)
+      .then((createdPurchase) => {
+        setLoading(false);
+        toast({
+          title: "Sucesso",
+          description: `Compra #${createdPurchase.invoiceNumber} salva com sucesso!`,
+        });
 
-      toast({
-        title: "Sucesso",
-        description: `Compra #${createdPurchase.invoiceNumber} salva com sucesso!`,
+        setCurrentPurchase(initialPurchaseState);
+        setSelectedSupplier(null);
+        setSearchSupplier("");
+        loadData();
+      })
+      .catch((error) => {
+        setLoading(false);
+        console.error("Erro ao salvar compra:", error);
+        toast({
+          title: "Erro",
+          description:
+            error.response?.data?.message || "Erro ao salvar compra.",
+          variant: "destructive",
+        });
       });
-
-      setCurrentPurchase(initialPurchaseState);
-      setSelectedSupplier(null);
-      setSearchSupplier("");
-      loadData();
-    } catch (error) {
-      console.error("Erro ao salvar compra:", error);
-      toast({
-        title: "Erro",
-        description: error.response?.data?.message || "Erro ao salvar compra.",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -1288,6 +1291,7 @@ export default function PurchasesPage() {
           <Button
             onClick={handleSavePurchase}
             className="text-white hover:opacity-90"
+            disabled={loading}
             style={{ backgroundColor: "#e78b3a" }}
           >
             <Save className="w-4 h-4 mr-2" />
