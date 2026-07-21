@@ -38,7 +38,7 @@ export const users = pgTable(
     department: text("department"),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name").default(""),
     active: boolean("active").default(true),
     passwordHash: text("password_hash").notNull(),

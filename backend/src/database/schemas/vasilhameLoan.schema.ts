@@ -33,15 +33,15 @@ export const vasilhameLoans = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     saleId: uuid("sale_id")
       .notNull()
-      .references(() => sales.id, { onDelete: "cascade" }),
+      .references(() => sales.id, { onDelete: "restrict" }),
     personId: uuid("person_id")
       .notNull()
-      .references(() => persons.id, { onDelete: "cascade" }),
+      .references(() => persons.id, { onDelete: "restrict" }),
     personName: text("person_name"),
     vasilhameId: uuid("vasilhame_id").notNull(),
     vasilhameName: text("vasilhame_name"),
     sectorId: uuid("sector_id").references(() => sectors.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     sectorName: text("sector_name"),
     loanQuantity: numeric("loan_quantity", { mode: "number" }).notNull(),
@@ -55,7 +55,7 @@ export const vasilhameLoans = pgTable(
     ),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),

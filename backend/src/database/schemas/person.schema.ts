@@ -40,7 +40,7 @@ export const persons = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     personNumber: text("person_number"),
     name: text("name").notNull(),
     document: text("document"),
@@ -48,14 +48,17 @@ export const persons = pgTable(
     phone: json("phone").$type<string[]>(),
     type: personTypePGEnum("type").notNull(),
     address: json("address").$type<PersonAddress>(),
-    glpConsumptionDays: numeric("glp_consumption_days", { mode : "number"}),
-    birthday: date("birthday", { mode : "date"}),
+    glpConsumptionDays: numeric("glp_consumption_days", { mode: "number" }),
+    birthday: date("birthday", { mode: "date" }),
     conveniadaId: text("conveniada_id"),
     conveniadaName: text("conveniada_name"),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("persons_tenant_isolation", {
@@ -69,4 +72,3 @@ export const persons = pgTable(
     index("persons_type_index").on(table.type),
   ],
 );
-

@@ -31,16 +31,19 @@ export const vehicles = pgTable(
     fleetNumber: text("fleet_number"),
     type: vehicleTypePGEnum("type").notNull(),
     description: text("description").notNull(),
-    year: numeric("year", { mode : "number"}),
+    year: numeric("year", { mode: "number" }),
     color: text("color"),
-    initialKm: numeric("initial_km", { mode : "number"}).default(0),
+    initialKm: numeric("initial_km", { mode: "number" }).default(0),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("vehicles_tenant_isolation", {
@@ -53,4 +56,3 @@ export const vehicles = pgTable(
     index("vehicles_company_id_index").on(table.companyId),
   ],
 );
-

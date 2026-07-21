@@ -8,11 +8,10 @@ import {
   uuid,
   pgPolicy,
   index,
-  boolean
+  boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm";
-
 
 export const purchases = pgTable(
   "purchases",
@@ -21,16 +20,19 @@ export const purchases = pgTable(
     supplierId: uuid("supplier_id").notNull(),
     supplierName: text("supplier_name"),
     invoiceNumber: text("invoice_number"),
-    totalAmount: numeric("total_amount", { mode : "number"}).notNull(),
-    purchaseDate: date("purchase_date", { mode : "date"}),
+    totalAmount: numeric("total_amount", { mode: "number" }).notNull(),
+    purchaseDate: date("purchase_date", { mode: "date" }),
     nfeNumber: text("nfe_number"),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("purchases_tenant_isolation", {
@@ -43,4 +45,3 @@ export const purchases = pgTable(
     index("purchases_company_id_index").on(table.companyId),
   ],
 );
-

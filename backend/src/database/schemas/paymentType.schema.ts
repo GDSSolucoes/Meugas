@@ -44,10 +44,10 @@ export const paymentTypes = pgTable(
     daysInterval: numeric("days_interval", { mode: "number" }).default(30),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     acquirerId: uuid("acquirer_id").references(() => acquirers.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),

@@ -21,7 +21,10 @@ export enum ContasAPagarStatusEnum {
   VENCIDO = "vencido",
 }
 
-export const contasAPagarStatusPGEnum = pgEnum("contas_a_pagar_status", ContasAPagarStatusEnum);
+export const contasAPagarStatusPGEnum = pgEnum(
+  "contas_a_pagar_status",
+  ContasAPagarStatusEnum,
+);
 
 export const contasAPagar = pgTable(
   "contasAPagar",
@@ -30,16 +33,20 @@ export const contasAPagar = pgTable(
     supplierId: uuid("supplier_id"),
     supplierName: text("supplier_name"),
     description: text("description").notNull(),
-    dueDate: date("due_date", { mode : "date"}).notNull(),
-    amount: numeric("amount", { mode : "number"}).notNull(),
-    installmentNumber: numeric("installment_number", { mode : "number"}),
-    status: contasAPagarStatusPGEnum("status").default(ContasAPagarStatusEnum.ABERTO),
+    dueDate: date("due_date", { mode: "date" }).notNull(),
+    amount: numeric("amount", { mode: "number" }).notNull(),
+    installmentNumber: numeric("installment_number", { mode: "number" }),
+    status: contasAPagarStatusPGEnum("status").default(
+      ContasAPagarStatusEnum.ABERTO,
+    ),
     paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     paymentTypeName: text("payment_type_name"),
-    paymentDate: date("payment_date", { mode : "date"}),
-    purchaseId: uuid("purchase_id").references(() => purchases.id, { onDelete: "set null" }),
+    paymentDate: date("payment_date", { mode: "date" }),
+    purchaseId: uuid("purchase_id").references(() => purchases.id, {
+      onDelete: "restrict",
+    }),
     nfeNumber: text("nfe_number"),
     groupId: uuid("group_id"),
     groupName: text("group_name"),
@@ -47,14 +54,17 @@ export const contasAPagar = pgTable(
     subgroupName: text("subgroup_name"),
     documentNumber: text("document_number"),
     reagendamentoMotivo: text("reagendamento_motivo"),
-    reagendamentoData: date("reagendamento_data", { mode : "date"}),
+    reagendamentoData: date("reagendamento_data", { mode: "date" }),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("contasAPagar_tenant_isolation", {
@@ -68,4 +78,3 @@ export const contasAPagar = pgTable(
     index("contasAPagar_status_index").on(table.status),
   ],
 );
-

@@ -18,22 +18,28 @@ export const sectors = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     employeeId: uuid("employee_id").references(() => employees.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     employeeName: text("employee_name"),
     phone: text("phone"),
     isOwnStock: boolean("is_own_stock").default(true),
-    masterSectorId: uuid("master_sector_id").references(() => sectorMasters.id, {
-      onDelete: "set null",
-    }),
+    masterSectorId: uuid("master_sector_id").references(
+      () => sectorMasters.id,
+      {
+        onDelete: "restrict",
+      },
+    ),
     masterSectorName: text("master_sector_name"),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("sectors_tenant_isolation", {
@@ -46,4 +52,3 @@ export const sectors = pgTable(
     index("sectors_company_id_index").on(table.companyId),
   ],
 );
-

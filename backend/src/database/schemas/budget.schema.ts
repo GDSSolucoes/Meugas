@@ -37,15 +37,18 @@ export const budgets = pgTable(
     budgetNumber: text("budget_number").notNull(),
     customerData: json("customer_data").$type<BudgetCustomerData>(),
     items: json("items").$type<BudgetItemsItem[]>(),
-    totalAmount: numeric("total_amount", { mode : "number"}).default(0),
+    totalAmount: numeric("total_amount", { mode: "number" }).default(0),
     notes: text("notes"),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("budgets_tenant_isolation", {
@@ -58,4 +61,3 @@ export const budgets = pgTable(
     index("budgets_company_id_index").on(table.companyId),
   ],
 );
-

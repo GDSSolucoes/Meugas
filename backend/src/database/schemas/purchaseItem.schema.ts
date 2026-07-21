@@ -19,9 +19,9 @@ export const purchaseItems = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     purchaseId: uuid("purchase_id")
       .notNull()
-      .references(() => purchases.id, { onDelete: "cascade" }),
+      .references(() => purchases.id, { onDelete: "restrict" }),
     productId: uuid("product_id").references(() => products.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     productName: text("product_name"),
     quantity: numeric("quantity", { mode: "number" }),
@@ -29,7 +29,7 @@ export const purchaseItems = pgTable(
     total: numeric("total", { mode: "number" }),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),

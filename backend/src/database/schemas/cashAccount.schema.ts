@@ -14,11 +14,14 @@ import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 
 export enum CashAccountTypeEnum {
-  CAIXA_FISICO = 'caixa_fisico',
-  CONTA_BANCARIA = 'conta_bancaria',
+  CAIXA_FISICO = "caixa_fisico",
+  CONTA_BANCARIA = "conta_bancaria",
 }
 
-export const CashAccountTypePGEnum = pgEnum("cash_account_type", CashAccountTypeEnum);
+export const CashAccountTypePGEnum = pgEnum(
+  "cash_account_type",
+  CashAccountTypeEnum,
+);
 
 export const cashAccounts = pgTable(
   "cashAccounts",
@@ -26,16 +29,19 @@ export const cashAccounts = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     type: CashAccountTypePGEnum("type").notNull(),
-    balance: numeric("balance", { mode : "number"}).default(0),
-    initialBalance: numeric("initial_balance", { mode : "number"}).default(0),
-    initialBalanceDate: date("initial_balance_date", { mode : "date"}),
+    balance: numeric("balance", { mode: "number" }).default(0),
+    initialBalance: numeric("initial_balance", { mode: "number" }).default(0),
+    initialBalanceDate: date("initial_balance_date", { mode: "date" }),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("cashAccounts_tenant_isolation", {
@@ -49,4 +55,3 @@ export const cashAccounts = pgTable(
     index("cashAccounts_type_index").on(table.type),
   ],
 );
-

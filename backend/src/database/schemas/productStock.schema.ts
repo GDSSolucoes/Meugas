@@ -21,17 +21,17 @@ export const productStocks = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
+      .references(() => products.id, { onDelete: "restrict" }),
     productName: text("product_name"),
     sectorId: uuid("sector_id")
       .notNull()
-      .references(() => sectors.id, { onDelete: "cascade" }),
+      .references(() => sectors.id, { onDelete: "restrict" }),
     sectorName: text("sector_name"),
     quantity: numeric("quantity", { mode: "number" }).notNull(),
     initialDate: date("initial_date", { mode: "date" }),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),

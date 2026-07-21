@@ -18,16 +18,19 @@ export const financialSubgroups = pgTable(
     name: text("name").notNull(),
     financialGroupId: uuid("financial_group_id")
       .notNull()
-      .references(() => financialGroups.id, { onDelete: "cascade" }),
+      .references(() => financialGroups.id, { onDelete: "restrict" }),
     financialGroupName: text("financial_group_name"),
     description: text("description"),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("financialSubgroups_tenant_isolation", {
@@ -43,4 +46,3 @@ export const financialSubgroups = pgTable(
     ),
   ],
 );
-

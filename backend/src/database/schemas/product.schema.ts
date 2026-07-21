@@ -47,7 +47,7 @@ export const products = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
     code: text("code"),
     category: productCategoriesPGEnum("category"),

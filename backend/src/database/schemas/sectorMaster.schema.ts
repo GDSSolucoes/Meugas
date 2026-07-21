@@ -17,11 +17,14 @@ export const sectorMasters = pgTable(
     name: text("name").notNull(),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("sectorMasters_tenant_isolation", {
@@ -34,4 +37,3 @@ export const sectorMasters = pgTable(
     index("sectorMasters_company_id_index").on(table.companyId),
   ],
 );
-

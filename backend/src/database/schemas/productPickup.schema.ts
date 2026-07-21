@@ -23,37 +23,51 @@ export enum ProductPickupStatusEnum {
   RETIRADO_TOTAL = "retirado_total",
 }
 
-export const productPickupStatusPGEnum = pgEnum("product_pickup_status", ProductPickupStatusEnum);
+export const productPickupStatusPGEnum = pgEnum(
+  "product_pickup_status",
+  ProductPickupStatusEnum,
+);
 
 export const productPickups = pgTable(
   "productPickups",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    saleId: uuid("sale_id").notNull().references(() => sales.id, { onDelete: "cascade" }),
+    saleId: uuid("sale_id")
+      .notNull()
+      .references(() => sales.id, { onDelete: "restrict" }),
     personId: uuid("person_id")
       .notNull()
-      .references(() => persons.id, { onDelete: "cascade" }),
+      .references(() => persons.id, { onDelete: "restrict" }),
     personName: text("person_name"),
     productId: uuid("product_id")
       .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
+      .references(() => products.id, { onDelete: "restrict" }),
     productName: text("product_name"),
-    pickupQuantity: numeric("pickup_quantity", { mode : "number"}).notNull(),
-    collectedQuantity: numeric("collected_quantity", { mode : "number"}).default(0),
-    collectedDate: date("collected_date", { mode : "date"}),
-    saleDate: date("sale_date", { mode : "date"}),
-    sectorId: uuid("sector_id").references(() => sectors.id, { onDelete: "set null" }),
+    pickupQuantity: numeric("pickup_quantity", { mode: "number" }).notNull(),
+    collectedQuantity: numeric("collected_quantity", {
+      mode: "number",
+    }).default(0),
+    collectedDate: date("collected_date", { mode: "date" }),
+    saleDate: date("sale_date", { mode: "date" }),
+    sectorId: uuid("sector_id").references(() => sectors.id, {
+      onDelete: "restrict",
+    }),
     sectorName: text("sector_name"),
     notaFiscal: text("nota_fiscal"),
     pedido: text("pedido"),
-    status: productPickupStatusPGEnum("status").default(ProductPickupStatusEnum.PENDENTE),
+    status: productPickupStatusPGEnum("status").default(
+      ProductPickupStatusEnum.PENDENTE,
+    ),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("productPickups_tenant_isolation", {
@@ -67,4 +81,3 @@ export const productPickups = pgTable(
     index("productPickups_status_index").on(table.status),
   ],
 );
-

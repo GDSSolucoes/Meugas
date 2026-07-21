@@ -33,29 +33,34 @@ export const accountsReceivables = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     personId: uuid("person_id")
       .notNull()
-      .references(() => persons.id, { onDelete: "set null" }),
+      .references(() => persons.id, { onDelete: "restrict" }),
     personName: text("person_name"),
     saleId: uuid("sale_id").references(() => sales.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
-    installmentNumber: numeric("installment_number", { mode : "number"}).default(1),
+    installmentNumber: numeric("installment_number", {
+      mode: "number",
+    }).default(1),
     description: text("description"),
-    dueDate: date("due_date", {mode: "date"}).notNull(),
-    amount: numeric("amount", {mode: "number"}).notNull(),
+    dueDate: date("due_date", { mode: "date" }).notNull(),
+    amount: numeric("amount", { mode: "number" }).notNull(),
     status: AccountsReceivableStatusPGEnum("status")
       .notNull()
       .default(AccountsReceivableStatusEnum.PENDENTE),
-    paymentDate: date("payment_date", { mode : "date"}),
+    paymentDate: date("payment_date", { mode: "date" }),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("accountsReceivables_tenant_isolation", {

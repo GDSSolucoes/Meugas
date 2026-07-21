@@ -16,7 +16,10 @@ export enum FacilitadorModeloFiscalEnum {
   NFCeST = "65",
 }
 
-export const facilitadorModeloFiscalPGEnum = pgEnum("facilitador_modelo_fiscal", FacilitadorModeloFiscalEnum);
+export const facilitadorModeloFiscalPGEnum = pgEnum(
+  "facilitador_modelo_fiscal",
+  FacilitadorModeloFiscalEnum,
+);
 
 export enum FacilitadorTipoOperacaoEnum {
   VENDA = "venda",
@@ -27,7 +30,10 @@ export enum FacilitadorTipoOperacaoEnum {
   TRANSFERENCIA = "transferencia",
   OUTRAS = "outras",
 }
-export const facilitadorTipoOperacaoPGEnum = pgEnum("facilitador_tipo_operacao", FacilitadorTipoOperacaoEnum);
+export const facilitadorTipoOperacaoPGEnum = pgEnum(
+  "facilitador_tipo_operacao",
+  FacilitadorTipoOperacaoEnum,
+);
 
 export enum FacilitadorRegimeTributarioEnum {
   SIMPLES_NACIONAL = "simples_nacional",
@@ -35,7 +41,10 @@ export enum FacilitadorRegimeTributarioEnum {
   LUCRO_REAL = "lucro_real",
   MEI = "mei",
 }
-export const facilitadorRegimeTributarioPGEnum = pgEnum("facilitador_regime_tributario", FacilitadorRegimeTributarioEnum);
+export const facilitadorRegimeTributarioPGEnum = pgEnum(
+  "facilitador_regime_tributario",
+  FacilitadorRegimeTributarioEnum,
+);
 
 export const facilitadores = pgTable(
   "facilitadores",
@@ -58,10 +67,13 @@ export const facilitadores = pgTable(
     active: boolean("active").default(true),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("facilitadores_tenant_isolation", {
@@ -78,4 +90,3 @@ export const facilitadores = pgTable(
     index("facilitadores_empresa_id_index").on(table.empresaId),
   ],
 );
-

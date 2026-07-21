@@ -23,22 +23,27 @@ export enum CashMovementTypeEnum {
   DESPESA = "despesa",
 }
 
-export const CashMovementTypePGEnum = pgEnum("cash_movement_type", CashMovementTypeEnum);
+export const CashMovementTypePGEnum = pgEnum(
+  "cash_movement_type",
+  CashMovementTypeEnum,
+);
 
 export const cashMovements = pgTable(
   "cashMovements",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    cashAccountId: uuid("cash_account_id").notNull().references(() => cashAccounts.id, {
-      onDelete: "cascade",
-    }),
+    cashAccountId: uuid("cash_account_id")
+      .notNull()
+      .references(() => cashAccounts.id, {
+        onDelete: "restrict",
+      }),
     cashAccountName: text("cash_account_name"),
     type: CashMovementTypePGEnum("type").notNull(),
-    amount: numeric("amount", { mode : "number"}).notNull(),
+    amount: numeric("amount", { mode: "number" }).notNull(),
     description: text("description"),
-    movementDate: date("movement_date", { mode : "date"}),
+    movementDate: date("movement_date", { mode: "date" }),
     personId: uuid("person_id").references(() => persons.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     personName: text("person_name"),
     groupId: uuid("group_id"),
@@ -48,11 +53,13 @@ export const cashMovements = pgTable(
     documentNumber: text("document_number"),
     competenceMonth: text("competence_month"),
     paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
-    paymentTypeName: text("payment_type_name"),    
+    paymentTypeName: text("payment_type_name"),
     saleId: uuid("sale_id").references(() => sales.id),
-    accountReceivableId: uuid("account_receivable_id").references(() => accountsReceivables.id),
+    accountReceivableId: uuid("account_receivable_id").references(
+      () => accountsReceivables.id,
+    ),
     notes: text("notes"),
     isAccounting: boolean("is_accounting").default(false),
     relatedDocId: uuid("related_doc_id"),
@@ -60,11 +67,14 @@ export const cashMovements = pgTable(
     sectorName: text("sector_name"),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("cashMovements_tenant_isolation", {
@@ -81,4 +91,3 @@ export const cashMovements = pgTable(
     index("cashMovements_group_id_index").on(table.groupId),
   ],
 );
-

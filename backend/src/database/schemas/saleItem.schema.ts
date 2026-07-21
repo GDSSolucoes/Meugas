@@ -18,9 +18,9 @@ export const saleItems = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     saleId: uuid("sale_id")
       .notNull()
-      .references(() => sales.id, { onDelete: "cascade" }),
+      .references(() => sales.id, { onDelete: "restrict" }),
     productId: uuid("product_id").references(() => products.id, {
-      onDelete: "set null",
+      onDelete: "restrict",
     }),
     productCode: text("product_code"),
     productName: text("product_name"),
@@ -37,7 +37,7 @@ export const saleItems = pgTable(
     }),
     companyId: uuid("company_id")
       .notNull()
-      .references(() => companies.id, { onDelete: "cascade" }),
+      .references(() => companies.id, { onDelete: "restrict" }),
     companyName: text("company_name"),
     createdAt: timestamp("created_at", {
       mode: "date",
