@@ -117,4 +117,40 @@ export class ProductpickupsController extends BaseCrudController<
   async delete(@Param("id") id: string) {
     return super.delete(id);
   }
+
+  @Post(":id/darBaixa")
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        quantityToCollect: { type: "number" },
+        sectorId: { type: "string" },
+        sectorName: { type: "string", nullable: true },
+        collectedDate: { type: "string", format: "date" },
+        notaFiscal: { type: "string", nullable: true },
+        pedido: { type: "string", nullable: true },
+      },
+      required: ["quantityToCollect", "sectorId", "collectedDate"],
+    },
+  })
+  @ApiOperation({ summary: `Dar baixa em product pickup` })
+  @ApiResponse({
+    status: 200,
+    description: `Baixa realizada com sucesso`,
+  })
+  async darBaixa(
+    @Param("id") id: string,
+    @Body()
+    data: {
+      quantityToCollect: number;
+      sectorId: string;
+      sectorName?: string;
+      collectedDate: string;
+      notaFiscal?: string;
+      pedido?: string;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.service.darBaixa(id, data);
+  }
 }

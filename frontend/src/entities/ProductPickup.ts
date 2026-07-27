@@ -1,5 +1,5 @@
-import { BaseEntity } from './BaseEntity';
-
+import { api } from "@/api/apiClient";
+import { BaseEntity } from "./BaseEntity";
 
 export enum ProductPickupStatusEnum {
   PENDENTE = "pendente",
@@ -37,12 +37,15 @@ export class ProductPickup extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<ProductPickup[]>
    */
-  static async filter(filters: Partial<ProductPickup> = {}, pagination = {}): Promise<ProductPickup[]> {
+  static async filter(
+    filters: Partial<ProductPickup> = {},
+    pagination = {},
+  ): Promise<ProductPickup[]> {
     return super._filter.call(
       this,
       this.baseUrl,
       filters,
-      pagination
+      pagination,
     ) as Promise<ProductPickup[]>;
   }
 
@@ -53,7 +56,11 @@ export class ProductPickup extends BaseEntity {
    * @returns Promise<ProductPickup>
    */
   static async create(data: Partial<ProductPickup>): Promise<ProductPickup> {
-    return super._create.call(this, this.baseUrl, data) as Promise<ProductPickup>;
+    return super._create.call(
+      this,
+      this.baseUrl,
+      data,
+    ) as Promise<ProductPickup>;
   }
 
   /**
@@ -63,8 +70,16 @@ export class ProductPickup extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<ProductPickup>
    */
-  static async update(id: string, data: Partial<ProductPickup>): Promise<ProductPickup> {
-    return super._update.call(this, this.baseUrl, id, data) as Promise<ProductPickup>;
+  static async update(
+    id: string,
+    data: Partial<ProductPickup>,
+  ): Promise<ProductPickup> {
+    return super._update.call(
+      this,
+      this.baseUrl,
+      id,
+      data,
+    ) as Promise<ProductPickup>;
   }
 
   /**
@@ -84,6 +99,38 @@ export class ProductPickup extends BaseEntity {
    * @returns Promise<ProductPickup | null>
    */
   static async findById(id: string): Promise<ProductPickup | null> {
-    return super._findById.call(this, this.baseUrl, id) as Promise<ProductPickup | null>;
+    return super._findById.call(
+      this,
+      this.baseUrl,
+      id,
+    ) as Promise<ProductPickup | null>;
+  }
+
+  /**
+   * Static method to dar baixa in a ProductPickup
+   *
+   * @param id The entity ID
+   * @param data Object with dar baixa data
+   * @returns Promise<ProductPickup>
+   */
+  static async darBaixa(
+    id: string,
+    data: {
+      quantityToCollect: number;
+      sectorId: string;
+      sectorName?: string;
+      collectedDate: string;
+      notaFiscal?: string;
+      pedido?: string;
+    },
+  ): Promise<ProductPickup> {
+    try {
+      const endpoint = `${this.baseUrl}/${id}/darBaixa`;
+      const response = await api.post(endpoint, data);
+      return new this(response.data);
+    } catch (error) {
+      console.error(`Erro ao dar baixa ${this.name}:`, error);
+      throw error;
+    }
   }
 }

@@ -323,21 +323,13 @@ export default function ProductPickupManagementPage() {
     }
 
     try {
-      const novaQtdeColetada = (selectedPickup.collectedQuantity || 0) + qtde;
-      const totalPendente = selectedPickup.pickupQuantity || 0;
-      const novoStatus =
-        novaQtdeColetada >= totalPendente
-          ? "retirado_total"
-          : "retirado_parcial";
-
       const sector = sectors.find((s) => s.id === sectorBaixa);
 
-      await entities.ProductPickup.update(selectedPickup.id, {
-        status: novoStatus,
-        collectedQuantity: novaQtdeColetada,
-        collectedDate: dataBaixa,
+      await entities.ProductPickup.darBaixa(selectedPickup.id, {
+        quantityToCollect: qtde,
         sectorId: sectorBaixa,
         sectorName: sector?.name || "",
+        collectedDate: dataBaixa,
         notaFiscal: notaFiscal,
         pedido: pedido,
       });

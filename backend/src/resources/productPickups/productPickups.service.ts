@@ -28,6 +28,138 @@ export class ProductpickupsService extends BaseCrudService<
     return super.create(data);
   }
 
+  async darBaixa(
+    id: string,
+    data: {
+      quantityToCollect: number;
+      sectorId: string;
+      sectorName?: string;
+      collectedDate: string;
+      notaFiscal?: string;
+      pedido?: string;
+    },
+  ) {
+    const db = this.getDb();
+    const companyId = this.requestContext.getCompanyId();
+
+    if (!companyId) {
+      throw new Error(
+        "Não foi possível encontrar a empresa no contexto da solicitação",
+      );
+    }
+
+    // Obter o registro atual
+    const currentPickupResult = await db
+      .select()
+      .from(productPickups)
+      .where(eq(productPickups.id, id))
+      .limit(1);
+
+    if (!currentPickupResult || currentPickupResult.length === 0) {
+      throw new Error("Registro de retirada não encontrado");
+    }
+
+    const currentPickup = currentPickupResult[0];
+
+    // VALIDAÇÕES (antes de qualquer escrita no banco)
+    if (currentPickup.status === ProductPickupStatusEnum.RETIRADO_TOTAL) {
+      throw new Error("Este produto já foi totalmente retirado");
+    }
+
+    const quantityToCollect = data.quantityToCollect;
+    const newCollectedQuantity =
+      (currentPickup.collectedQuantity || 0) + quantityToCollect;
+
+    if (quantityToCollect <= 0) {
+      throw new Error("Informe uma quantidade válida para retirada");
+    }
+
+    const totalQuantityToPickup = currentPickup.pickupQuantity || 0;
+    if (newCollectedQuantity > totalQuantityToPickup) {
+      const pendente =
+        totalQuantityToPickup - (currentPickup.collectedQuantity || 0);
+      throw new Error(`Quantidade inválida. Máximo permitido: ${pendente}`);
+    }
+
+    if (!data.sectorId) {
+      throw new Error("É necessário informar o setor para a retirada");
+    }
+
+    if (!data.collectedDate) {
+      throw new Error("É necessário informar a data de retirada");
+    }
+
+    // VALIDAÇÕES CONCLUÍDAS - Agora pode gravar
+
+    // Calcular novo status
+    const newStatus =
+      newCollectedQuantity >= totalQuantityToPickup
+        ? ProductPickupStatusEnum.RETIRADO_TOTAL
+        : ProductPickupStatusEnum.RETIRADO_PARCIAL;
+
+    // Atualizar o productPickup
+    const updatedData = {
+      collectedQuantity: newCollectedQuantity,
+      status: newStatus,
+      sectorId: data.sectorId,
+      sectorName: data.sectorName,
+      collectedDate: data.collectedDate,
+      notaFiscal: data.notaFiscal,
+      pedido: data.pedido,
+    };
+
+    // Registrar movimentação de estoque
+    if (
+      quantityToCollect > 0 &&
+      currentPickup.productId &&
+      data.sectorId
+    ) {
+      // Obter saldo anterior do produto no setor
+      const currentStockResult = await db
+        .select({ quantity: productStocks.quantity })
+        .from(productStocks)
+        .where(
+          and(
+            eq(productStocks.productId, currentPickup.productId),
+            eq(productStocks.sectorId, data.sectorId),
+          ),
+        );
+
+      const previousBalance = currentStockResult[0]?.quantity ?? 0;
+      const quantityToRemove = -quantityToCollect; // Negativo porque é saída
+      const newBalance = previousBalance + quantityToRemove;
+
+      await db.insert(productStockMovements).values({
+        productId: currentPickup.productId as any,
+        productName: currentPickup.productName,
+        sectorId: data.sectorId as any,
+        sectorName: data.sectorName,
+        type: StockMovementTypeEnum.Pickup,
+        productPickupId: id as any,
+        quantity: quantityToRemove,
+        previousBalance,
+        newBalance,
+        movementDate: new Date(data.collectedDate),
+        companyId: companyId as any,
+        companyName: currentPickup.companyName,
+      });
+
+      // Atualizar o estoque do produto
+      await db
+        .update(productStocks)
+        .set({ quantity: newBalance })
+        .where(
+          and(
+            eq(productStocks.productId, currentPickup.productId),
+            eq(productStocks.sectorId, data.sectorId),
+          ),
+        );
+    }
+
+    // Atualizar o productPickup
+    return super.update(id, updatedData);
+  }
+
   async update(id: string, data: Partial<ProductpickupUpdateDto>) {
     const db = this.getDb();
     const companyId = this.requestContext.getCompanyId();
