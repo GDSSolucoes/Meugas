@@ -1941,21 +1941,6 @@ export default function SalesPage({ onSaleComplete }) {
           style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
         >
           <div className="flex flex-wrap gap-3 justify-center">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Edit2 className="w-4 h-4" />
-              <span className="text-sm">Alterar</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 text-red-600"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span className="text-sm">Excluir</span>
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              <span className="text-sm">Pesquisar</span>
-            </Button>
             <Button
               onClick={handleOpenPaymentModal}
               className="flex items-center gap-2"
@@ -1971,10 +1956,6 @@ export default function SalesPage({ onSaleComplete }) {
             >
               <X className="w-4 h-4" />
               <span className="text-sm">Cancelar</span>
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Printer className="w-4 h-4" />
-              <span className="text-sm">Imprimir</span>
             </Button>
           </div>
         </div>
