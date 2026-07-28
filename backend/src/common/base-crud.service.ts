@@ -77,12 +77,30 @@ export class BaseCrudService<T extends BasePgTable> {
         }
         continue;
       }
+      
+      if (key.endsWith("_gte")) {
+        const field = key.replace("_gte", "");
+        const column = (this.table as any)[field];
+        if (column) {
+          filterConditions.push(sql`${column} >= ${value}`);
+        }
+        continue;
+      }
 
       if (key.endsWith("_lt")) {
         const field = key.replace("_lt", "");
         const column = (this.table as any)[field];
         if (column) {
           filterConditions.push(sql`${column} < ${value}`);
+        }
+        continue;
+      }
+      
+      if (key.endsWith("_lte")) {
+        const field = key.replace("_lte", "");
+        const column = (this.table as any)[field];
+        if (column) {
+          filterConditions.push(sql`${column} <= ${value}`);
         }
         continue;
       }

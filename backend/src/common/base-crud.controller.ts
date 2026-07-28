@@ -64,14 +64,16 @@ export class BaseCrudController<T extends BasePgTable> {
   ) {
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 100;
-
+    
     // Remove page, limit e q dos filters se existirem
     const filters = { ...allFilters };
+    const searchFields = filters.searchFields || ["name"];
     delete filters.page;
     delete filters.limit;
     delete filters.q;
     delete filters.sort;
     delete filters.order;
+    delete filters.searchFields;
     console.log(
       `Listing ${this.entityName} with filters:`,
       filters,
@@ -87,6 +89,7 @@ export class BaseCrudController<T extends BasePgTable> {
       search,
       sort,
       order === "desc" ? "desc" : "asc",
+      searchFields,
     );
   }
 
