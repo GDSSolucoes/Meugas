@@ -69,13 +69,20 @@ export default function SalesListPage() {
     try {
       const user = await entities.User.me();
       setCurrentUser(user);
+      const filter = {
+        companyId: user.companyId,
+        saleDate_gte: filters.startDate,
+        saleDate_lte: filters.endDate,
+        q: filters.searchTerm,
+        searchFields: ["saleNumber", "personName"],
+      };
 
-      const salesData = await entities.Sale.filter(
-        { companyId: user.companyId },
-        { sort: "-createdAt", limit: 500 },
-      );
+      const salesData = await entities.Sale.filter(filter, {
+        sort: "-saleDate",
+        limit: 500,
+      });
 
-      setSales(salesData);
+      //setSales(salesData);
       setFilteredSales(salesData);
     } catch (error) {
       console.error("Erro ao carregar vendas:", error);
@@ -87,38 +94,35 @@ export default function SalesListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  }, [filters]);
 
   useEffect(() => {
     applyFilters();
-  }, [filters, sales]);
+  }, [filters]);
 
   const applyFilters = () => {
-    let filtered = [...sales];
+    loadData();
+    // let filtered = [...sales];
 
-    // Filtro de data
-    if (filters.startDate && filters.endDate) {
-      filtered = filtered.filter((sale) => {
-        const saleDate = sale.saleDate || sale.createdAt?.split("T")[0];
-        return saleDate >= filters.startDate && saleDate <= filters.endDate;
-      });
-    }
+    // // Filtro de data
+    // if (filters.startDate && filters.endDate) {
+    //   filtered = filtered.filter((sale) => {
+    //     const saleDate = sale.saleDate || sale.createdAt?.split("T")[0];
+    //     return saleDate >= filters.startDate && saleDate <= filters.endDate;
+    //   });
+    // }
 
-    // Filtro de busca
-    if (filters.searchTerm) {
-      const searchLower = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (sale) =>
-          sale.saleNumber?.toLowerCase().includes(searchLower) ||
-          sale.personName?.toLowerCase().includes(searchLower),
-      );
-    }
+    // // Filtro de busca
+    // if (filters.searchTerm) {
+    //   const searchLower = filters.searchTerm.toLowerCase();
+    //   filtered = filtered.filter(
+    //     (sale) =>
+    //       sale.saleNumber?.toLowerCase().includes(searchLower) ||
+    //       sale.personName?.toLowerCase().includes(searchLower),
+    //   );
+    // }
 
-    setFilteredSales(filtered);
+    // setFilteredSales(filtered);
   };
 
   const handleFilterChange = (field, value) => {
@@ -371,14 +375,6 @@ export default function SalesListPage() {
     0,
   );
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6 flex items-center justify-center">
-        <p className="text-lg text-slate-600">Carregando vendas...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -406,6 +402,7 @@ export default function SalesListPage() {
                 <Input
                   type="date"
                   value={filters.startDate}
+                  disabled={isLoading}
                   onChange={(e) =>
                     handleFilterChange("startDate", e.target.value)
                   }
@@ -417,6 +414,7 @@ export default function SalesListPage() {
                 <Input
                   type="date"
                   value={filters.endDate}
+                  disabled={isLoading}
                   onChange={(e) =>
                     handleFilterChange("endDate", e.target.value)
                   }
@@ -428,10 +426,10 @@ export default function SalesListPage() {
                 <div className="flex gap-2">
                   <Input
                     placeholder="Nº venda ou nome do cliente..."
-                    value={filters.searchTerm}
-                    onChange={(e) =>
+                    onBlur={(e) =>
                       handleFilterChange("searchTerm", e.target.value)
-                    }
+                    }                    
+                    disabled={isLoading}
                     className="bg-white"
                   />
                   <Button
@@ -446,6 +444,13 @@ export default function SalesListPage() {
           </CardContent>
         </Card>
 
+        {isLoading && (
+          <div className="absolute bg-black/50 flex h-full items-center justify-center left-0 top-0 w-full z-10">
+            <p className="text-4xl text-white">Carregando vendas...</p>
+          </div>
+        )}
+
+        
         {/* Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
