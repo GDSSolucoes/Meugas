@@ -33,7 +33,7 @@ import { CurrentUser } from "../../auth/current-user.decorator";
 @Roles("admin", "user")
 @Controller("productStockMovements")
 export class ProductstockmovementsController extends BaseCrudController<
-  typeof productStockMovements
+  any
 > {
   constructor(protected readonly service: ProductstockmovementsService) {
     super(service, "productStockMovements", true);

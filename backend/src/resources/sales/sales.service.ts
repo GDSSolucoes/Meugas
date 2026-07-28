@@ -219,6 +219,8 @@ export class SalesService extends BaseCrudService<typeof sales> {
               companyName,
               createdByName: userName,
               status: ProductPickupStatusEnum.PENDENTE,
+              sectorId: savedSale.sectorId,
+              sectorName: savedSale.sectorName,
             })
             .returning();
           productPickupId = productPickup.id;

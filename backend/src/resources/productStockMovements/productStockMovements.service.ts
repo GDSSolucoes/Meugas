@@ -6,9 +6,9 @@ import { ProductstockmovementCreateDto } from './dto/productstockmovement.post.d
 import { ProductstockmovementUpdateDto } from './dto/productstockmovement.update.dto'
 
 @Injectable()
-export class ProductstockmovementsService extends BaseCrudService<typeof productStockMovements> {
+export class ProductstockmovementsService extends BaseCrudService<any> {
   constructor(requestContext: RequestContextService) {
-    super(requestContext, productStockMovements, true) // hasCompanyId = true
+    super(requestContext, productStockMovements as any, true) // hasCompanyId = true
   }
 
   // Override if needed for custom logic

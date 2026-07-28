@@ -20,23 +20,19 @@ import {
 } from "@/components/ui/table";
 import { BarChart3, Filter, Loader2 } from "lucide-react";
 import { Sector } from "@/entities/Sector";
-import { Product } from "@/entities/Product";
-import { ProductStock } from "@/entities/ProductStock";
-import { Sale } from "@/entities/Sale";
-import { Purchase } from "@/entities/Purchase";
-import { StockTransfer } from "@/entities/StockTransfer";
-import { VasilhameLoan } from "@/entities/VasilhameLoan";
+import { SectorMaster } from "@/entities/SectorMaster";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { User } from "@/entities/User";
+import { api } from "@/api/apiClient";
 
 export default function StockReportPage() {
   const { toast } = useToast();
-  const [sectors, setSectors] = useState([]);
+  const [sectorOptions, setSectorOptions] = useState([]); // Combined list: [{id, name, type: 'sector' | 'master'}]
   const [reportData, setReportData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
-    sectorId: "",
+    sectorId: "", // Format: "sector:<id>" or "master:<id>"
     reportDate: format(new Date(), "yyyy-MM-dd"),
   });
   const [currentUser, setCurrentUser] = useState(null);
@@ -46,8 +42,32 @@ export default function StockReportPage() {
       try {
         const user = await User.me();
         setCurrentUser(user);
-        const sectorsData = await Sector.filter({ companyId: user.companyId });
-        setSectors(sectorsData);
+
+        // Carregar setores que possuem estoque proprio E setores master
+        const [sectorsData, sectorMastersData] = await Promise.all([
+          Sector.filter({
+            companyId: user.companyId,
+            active: true,
+            isOwnStock: true,
+          }),
+          SectorMaster.filter({ companyId: user.companyId, active: true }),
+        ]);
+
+        // Combinar em uma lista unica com prefixo para diferenciar
+        const combinedOptions = [
+          ...sectorsData.map((s) => ({
+            id: `sector:${s.id}`,
+            name: s.name,
+            type: "sector",
+          })),
+          ...sectorMastersData.map((m) => ({
+            id: `master:${m.id}`,
+            name: `${m.name} (Master)`,
+            type: "master",
+          })),
+        ];
+
+        setSectorOptions(combinedOptions);
       } catch (error) {
         toast({
           title: "Erro",
@@ -82,203 +102,13 @@ export default function StockReportPage() {
         setIsLoading(false);
         return;
       }
-      const companyId = currentUser.companyId;
-      const reportDate = startOfDay(filters.reportDate);
-      const endOfReportDate = endOfDay(filters.reportDate);
 
-      const [
-        allProducts,
-        allStocks,
-        allSales,
-        allPurchases,
-        allTransfers,
-        allLoans,
-        allPickups,
-      ] = await Promise.all([
-        Product.filter({ companyId }),
-        ProductStock.filter({ companyId }),
-        Sale.filter({ companyId }),
-        Purchase.filter({ companyId }),
-        StockTransfer.filter({ companyId }),
-        VasilhameLoan.filter({ companyId }),
-        // Assumindo que existe uma entidade para retiradas de produtos
-        // Se não existir, pode usar uma lista vazia ou implementar
-        Promise.resolve([]), // Placeholder for ProductPickup.list()
-      ]);
+      const response = await api.post("/reports/stock-movement", {
+        sectorId: filters.sectorId,
+        reportDate: filters.reportDate,
+      });
 
-      const calculatedData = allProducts
-        .map((product) => {
-          // 1. Encontrar o estoque base inicial
-          const initialStockRecord = allStocks.find(
-            (s) =>
-              s.productId === product.id && s.sectorId === filters.sectorId,
-          );
-          const stockStartDate = initialStockRecord
-            ? initialStockRecord.initialDate
-            : new Date(0);
-          let openingBalance = initialStockRecord
-            ? initialStockRecord.quantity || 0
-            : 0;
-
-          // 2. Calcular o saldo inicial no começo do dia do relatório
-          // Ajustar com todas as movimentações anteriores ao dia do relatório
-          allPurchases
-            .filter(
-              (p) =>
-                p.sectorId === filters.sectorId &&
-                p.items.some((i) => i.productId === product.id) &&
-                isBefore(p.purchaseDate, reportDate) &&
-                !isBefore(p.purchaseDate, stockStartDate),
-            )
-            .forEach((p) =>
-              p.items
-                .filter((i) => i.productId === product.id)
-                .forEach((i) => (openingBalance += i.quantity)),
-            );
-
-          allSales
-            .filter(
-              (s) =>
-                s.sectorId === filters.sectorId &&
-                s.items.some((i) => i.productId === product.id) &&
-                isBefore(s.saleDate, reportDate) &&
-                !isBefore(s.saleDate, stockStartDate),
-            )
-            .forEach((s) =>
-              s.items
-                .filter((i) => i.productId === product.id)
-                .forEach((i) => (openingBalance -= i.quantity)),
-            );
-
-          allTransfers
-            .filter(
-              (t) =>
-                t.productId === product.id &&
-                isBefore(t.transferDate, reportDate) &&
-                !isBefore(t.transferDate, stockStartDate),
-            )
-            .forEach((t) => {
-              if (t.toSectorId === filters.sectorId)
-                openingBalance += t.quantity;
-              if (t.fromSectorId === filters.sectorId)
-                openingBalance -= t.quantity;
-            });
-
-          allLoans
-            .filter(
-              (l) =>
-                l.vasilhameId === product.id &&
-                isBefore(l.loanDate, reportDate) &&
-                !isBefore(l.loanDate, stockStartDate),
-            )
-            .forEach((l) => {
-              const sale = allSales.find((s) => s.id === l.saleId);
-              if (sale && sale.sectorId === filters.sectorId) {
-                openingBalance -= l.loanQuantity;
-              }
-            });
-
-          // 3. Calcular cada tipo de movimentação que ocorreu DURANTE o dia do relatório
-
-          // Quantidade Comprada no dia
-          const qtdeComprada = allPurchases
-            .filter(
-              (p) =>
-                p.sectorId === filters.sectorId &&
-                p.items.some((i) => i.productId === product.id) &&
-                p.purchaseDate >= reportDate &&
-                p.purchaseDate <= endOfReportDate,
-            )
-            .flatMap((p) => p.items.filter((i) => i.productId === product.id))
-            .reduce((sum, i) => sum + i.quantity, 0);
-
-          // Quantidade Vendida no dia
-          const qtdeVendida = allSales
-            .filter(
-              (s) =>
-                s.sectorId === filters.sectorId &&
-                s.items.some((i) => i.productId === product.id) &&
-                s.saleDate >= reportDate &&
-                s.saleDate <= endOfReportDate,
-            )
-            .flatMap((s) => s.items.filter((i) => i.productId === product.id))
-            .reduce((sum, i) => sum + i.quantity, 0);
-
-          // Quantidade Transferida (entrada - saída) no dia
-          const transfersIn = allTransfers
-            .filter(
-              (t) =>
-                t.productId === product.id &&
-                t.toSectorId === filters.sectorId &&
-                t.transferDate >= reportDate &&
-                t.transferDate <= endOfReportDate,
-            )
-            .reduce((sum, t) => sum + t.quantity, 0);
-
-          const transfersOut = allTransfers
-            .filter(
-              (t) =>
-                t.productId === product.id &&
-                t.fromSectorId === filters.sectorId &&
-                t.transferDate >= reportDate &&
-                t.transferDate <= endOfReportDate,
-            )
-            .reduce((sum, t) => sum + t.quantity, 0);
-
-          const qtdeTransferida = transfersIn - transfersOut;
-
-          // Quantidade de Empréstimos de Vasilhame no dia (considerada como saída)
-          const qtdeEmprestada = allLoans
-            .filter(
-              (l) =>
-                l.vasilhameId === product.id &&
-                l.loanDate >= reportDate &&
-                l.loanDate <= endOfReportDate,
-            )
-            .filter((l) => {
-              const sale = allSales.find((s) => s.id === l.saleId);
-              return sale && sale.sectorId === filters.sectorId;
-            })
-            .reduce((sum, l) => sum + l.loanQuantity, 0);
-
-          // Quantidade Baixada/Retirada no dia
-          // Aqui você pode implementar a lógica para produtos retirados pelos clientes
-          // Por enquanto, vou usar os empréstimos como proxy para "produtos a retirar"
-          // Se houver uma entidade ProductPickup, seria allPickups.filter(...).reduce(...)
-          const qtdeBaixada = qtdeEmprestada;
-
-          // Calcular saldo final
-          const saldoFinal =
-            openingBalance +
-            qtdeComprada -
-            qtdeVendida +
-            qtdeTransferida -
-            qtdeBaixada;
-
-          // Apenas incluir produtos que tiveram estoque inicial ou movimentação no dia
-          if (
-            openingBalance !== 0 ||
-            qtdeComprada !== 0 ||
-            qtdeVendida !== 0 ||
-            qtdeTransferida !== 0 ||
-            qtdeBaixada !== 0
-          ) {
-            return {
-              productId: product.id,
-              productName: product.name,
-              estoqueInicial: openingBalance,
-              qtdeVendida,
-              qtdeComprada,
-              qtdeTransferida,
-              qtdeBaixada,
-              saldoFinal,
-            };
-          }
-          return null;
-        })
-        .filter(Boolean); // Remove entradas nulas
-
-      setReportData(calculatedData);
+      setReportData(response.data || []);
     } catch (error) {
       console.error("Erro ao gerar relatório:", error);
       toast({
@@ -326,7 +156,7 @@ export default function StockReportPage() {
                   <SelectValue placeholder="Selecione um setor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sectors.map((s) => (
+                  {sectorOptions.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
                     </SelectItem>
@@ -371,25 +201,37 @@ export default function StockReportPage() {
                   <TableRow>
                     <TableHead>Produto</TableHead>
                     <TableHead>Estoque Inicial</TableHead>
-                    <TableHead className="text-red-600">Qtde Vendida</TableHead>
                     <TableHead className="text-green-600">
                       Qtde Comprada
                     </TableHead>
+                    <TableHead className="text-red-600">Qtde Vendida</TableHead>
                     <TableHead className="text-blue-600">
-                      Qtde Transferida
+                      Transf. Entrada
+                    </TableHead>
+                    <TableHead className="text-purple-600">
+                      Transf. Saída
+                    </TableHead>
+                    <TableHead className="text-amber-600">
+                      Empréstimos
+                    </TableHead>
+                    <TableHead className="text-teal-600">
+                      Devoluções
+                    </TableHead>
+                    <TableHead className="text-indigo-600">
+                      A Retirar
                     </TableHead>
                     <TableHead className="text-orange-600">
-                      Qtde Baixada Produtos a Retirar
+                      Retirados
                     </TableHead>
                     <TableHead className="font-bold">
-                      Saldo Final do Dia
+                      Saldo Final
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center">
+                      <TableCell colSpan={11} className="text-center">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto my-8" />
                       </TableCell>
                     </TableRow>
@@ -400,21 +242,37 @@ export default function StockReportPage() {
                           {item.productName}
                         </TableCell>
                         <TableCell>{item.estoqueInicial}</TableCell>
-                        <TableCell className="text-red-600">
-                          {item.qtdeVendida > 0 ? item.qtdeVendida : "-"}
-                        </TableCell>
                         <TableCell className="text-green-600">
                           {item.qtdeComprada > 0 ? item.qtdeComprada : "-"}
                         </TableCell>
-                        <TableCell
-                          className={`${item.qtdeTransferida > 0 ? "text-green-600" : item.qtdeTransferida < 0 ? "text-red-600" : ""}`}
-                        >
-                          {item.qtdeTransferida !== 0
-                            ? item.qtdeTransferida
+                        <TableCell className="text-red-600">
+                          {item.qtdeVendida > 0 ? item.qtdeVendida : "-"}
+                        </TableCell>
+                        <TableCell className="text-blue-600">
+                          {item.qtdeTransferidaEntrada > 0
+                            ? item.qtdeTransferidaEntrada
                             : "-"}
                         </TableCell>
+                        <TableCell className="text-purple-600">
+                          {item.qtdeTransferidaSaida > 0
+                            ? item.qtdeTransferidaSaida
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-amber-600">
+                          {item.qtdeEmprestimos > 0
+                            ? item.qtdeEmprestimos
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-teal-600">
+                          {item.qtdeDevolucoes > 0
+                            ? item.qtdeDevolucoes
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-indigo-600">
+                          {item.qtdeARetirar > 0 ? item.qtdeARetirar : "-"}
+                        </TableCell>
                         <TableCell className="text-orange-600">
-                          {item.qtdeBaixada > 0 ? item.qtdeBaixada : "-"}
+                          {item.qtdeRetirada > 0 ? item.qtdeRetirada : "-"}
                         </TableCell>
                         <TableCell className="font-bold text-lg">
                           {item.saldoFinal}
@@ -424,7 +282,7 @@ export default function StockReportPage() {
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={11}
                         className="text-center py-8 text-slate-500"
                       >
                         Nenhum dado para exibir. Por favor, gere um relatório.
