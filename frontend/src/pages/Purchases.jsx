@@ -54,6 +54,7 @@ export default function PurchasesPage() {
   const [purchaseType, setPurchaseType] = useState("cadastrado");
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [searchSupplier, setSearchSupplier] = useState("");
+  const [showSupplierSearch, setShowSupplierSearch] = useState(false);
 
   const initialPurchaseState = {
     invoiceNumber: "",
@@ -255,6 +256,17 @@ export default function PurchasesPage() {
     currentPurchase.installmentsDetails,
   ]);
 
+  const handleSelectSupplier = (supplier) => {
+    setShowSupplierSearch(false);
+    setSelectedSupplier(supplier);
+    setCurrentPurchase((prev) => ({
+      ...prev,
+      supplierId: supplier.id,
+      supplierName: supplier.name,
+    }));
+    toast({ title: "Fornecedor selecionado", description: supplier.name });
+  };
+
   const handleSearchSupplier = () => {
     if (!searchSupplier.trim()) {
       toast({
@@ -272,12 +284,7 @@ export default function PurchasesPage() {
     );
 
     if (found) {
-      setSelectedSupplier(found);
-      setCurrentPurchase((prev) => ({
-        ...prev,
-        supplierId: found.id, // Changed from personId
-        supplierName: found.name, // Changed from personName
-      }));
+      handleSelectSupplier(found);
       toast({ title: "Fornecedor encontrado", description: found.name });
     } else {
       toast({
@@ -680,56 +687,121 @@ export default function PurchasesPage() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4 text-slate-800">
-                Fornecedor
-              </h3>
-
-              <div className="mb-4">
-                <Label className="mb-2 block">Tipo de Compra:</Label>
-                <RadioGroup
-                  value={purchaseType}
-                  onValueChange={setPurchaseType}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cadastrado" id="cad" />
-                    <Label htmlFor="cad" className="cursor-pointer">
-                      Fornecedor Cadastrado
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="avulsa" id="avu" />
-                    <Label htmlFor="avu" className="cursor-pointer">
-                      Compra Avulsa
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="mb-4">
-                <Label>Fornecedor</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Buscar por CNPJ/Nome"
-                    value={searchSupplier}
-                    onChange={(e) => setSearchSupplier(e.target.value)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && handleSearchSupplier()
-                    }
-                    className="bg-white"
-                    disabled={purchaseType === "avulsa"}
-                  />
-                  <Button
-                    onClick={handleSearchSupplier}
-                    variant="outline"
-                    size="icon"
-                    disabled={purchaseType === "avulsa"}
+        <Card className="bg-white/90 border-slate-200/60 mb-6">
+          <CardHeader
+            as="h3"
+            className="text-lg font-semibold mb-4 text-slate-800"
+          >
+            Fornecedor
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <div className="mb-4">
+                  <Label className="mb-2 block">Tipo de Compra:</Label>
+                  <RadioGroup
+                    value={purchaseType}
+                    onValueChange={setPurchaseType}
+                    className="flex gap-4"
                   >
-                    <Search className="w-4 h-4" />
-                  </Button>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="cadastrado" id="cad" />
+                      <Label htmlFor="cad" className="cursor-pointer">
+                        Fornecedor Cadastrado
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="avulsa" id="avu" />
+                      <Label htmlFor="avu" className="cursor-pointer">
+                        Compra Avulsa
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
+
+                <div className="mb-4">
+                  <Label>Fornecedor</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Buscar por CNPJ/Nome"
+                      value={searchSupplier}
+                      onChange={(e) => setSearchSupplier(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleSearchSupplier()
+                      }
+                      className="bg-white"
+                      disabled={purchaseType === "avulsa"}
+                    />
+                    <Button
+                      onClick={() => setShowSupplierSearch((prev) => !prev)}
+                      variant="outline"
+                      size="icon"
+                      disabled={purchaseType === "avulsa"}
+                    >
+                      <Search className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {showSupplierSearch && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                      <div
+                        className="p-4 border-b"
+                        style={{ background: "#1E3A8A" }}
+                      >
+                        <h3 className="text-lg font-semibold text-white">
+                          Selecionar Cliente
+                        </h3>
+                      </div>
+                      <div className="p-4">
+                        <Input
+                          value={searchSupplier}
+                          onChange={(e) => setSearchSupplier(e.target.value)}
+                          placeholder="Buscar por CNPJ/Nome..."
+                          className="mb-4"
+                        />
+                        <div className="max-h-96 overflow-y-auto">
+                          {suppliers
+                            .filter(
+                              (supplier) =>
+                                searchSupplier === "" ||
+                                supplier.document?.includes(searchSupplier) ||
+                                supplier.name
+                                  .toLowerCase()
+                                  .includes(searchSupplier.toLowerCase()),
+                            )
+                            .map((supplier) => (
+                              <div
+                                key={supplier.id}
+                                onClick={() => handleSelectSupplier(supplier)}
+                                className="p-3 border-b cursor-pointer hover:bg-gray-50"
+                              >
+                                <p className="font-medium">{supplier.name}</p>
+                                <p className="text-sm text-gray-600">
+                                  {supplier.document || "N/A"}
+                                  {Array.isArray(supplier.phone)
+                                    ? supplier.phone[0]
+                                    : supplier.phone || "N/A"}
+                                </p>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                      <div className="p-4 border-t flex justify-end">
+                        <Button
+                          onClick={() => setShowSupplierSearch(false)}
+                          variant="outline"
+                        >
+                          Fechar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedSupplier && (
@@ -1297,14 +1369,6 @@ export default function PurchasesPage() {
             <Save className="w-4 h-4 mr-2" />
             Salvar
           </Button>
-          <Button variant="outline">
-            <Search className="w-4 h-4 mr-2" />
-            Consultar
-          </Button>
-          <Button variant="outline">
-            <Upload className="w-4 h-4 mr-2" />
-            Anexar NF-e
-          </Button>
           <Link
             to={`${createPageUrl("CustomerRegistration")}?module=gerencial&return=purchases`}
           >
@@ -1313,10 +1377,6 @@ export default function PurchasesPage() {
               Cadastrar Fornecedor
             </Button>
           </Link>
-          <Button variant="outline">
-            <X className="w-4 h-4 mr-2" />
-            Cancelar
-          </Button>
         </div>
       </div>
     </div>
