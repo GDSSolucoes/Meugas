@@ -28,10 +28,10 @@ import {
 } from "lucide-react";
 import * as entities from "@/entities";
 import FiscalProvider from "@/providers/FiscalProvider";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom"; // Added useNavigate
+import { formatSaleDate } from "@/utils/DateUtils";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +45,7 @@ export default function SalesListPage() {
   const navigate = useNavigate(); // Added navigate
   const [sales, setSales] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -96,33 +96,8 @@ export default function SalesListPage() {
     }
   }, [filters]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [filters]);
-
   const applyFilters = () => {
     loadData();
-    // let filtered = [...sales];
-
-    // // Filtro de data
-    // if (filters.startDate && filters.endDate) {
-    //   filtered = filtered.filter((sale) => {
-    //     const saleDate = sale.saleDate || sale.createdAt?.split("T")[0];
-    //     return saleDate >= filters.startDate && saleDate <= filters.endDate;
-    //   });
-    // }
-
-    // // Filtro de busca
-    // if (filters.searchTerm) {
-    //   const searchLower = filters.searchTerm.toLowerCase();
-    //   filtered = filtered.filter(
-    //     (sale) =>
-    //       sale.saleNumber?.toLowerCase().includes(searchLower) ||
-    //       sale.personName?.toLowerCase().includes(searchLower),
-    //   );
-    // }
-
-    // setFilteredSales(filtered);
   };
 
   const handleFilterChange = (field, value) => {
@@ -428,7 +403,7 @@ export default function SalesListPage() {
                     placeholder="Nº venda ou nome do cliente..."
                     onBlur={(e) =>
                       handleFilterChange("searchTerm", e.target.value)
-                    }                    
+                    }
                     disabled={isLoading}
                     className="bg-white"
                   />
@@ -450,7 +425,6 @@ export default function SalesListPage() {
           </div>
         )}
 
-        
         {/* Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
@@ -531,13 +505,7 @@ export default function SalesListPage() {
                           {sale.saleNumber}
                         </TableCell>
                         <TableCell>
-                          {format(
-                            sale.saleDate
-                              ? parseISO(sale.saleDate)
-                              : parseISO(sale.createdAt),
-                            "dd/MM/yyyy",
-                            { locale: ptBR },
-                          )}
+                          {formatSaleDate(sale.saleDate || sale.createdAt)}
                         </TableCell>
                         <TableCell>{sale.personName}</TableCell>
                         <TableCell>{sale.sectorName || "-"}</TableCell>
@@ -797,10 +765,8 @@ export default function SalesListPage() {
                 </p>
                 <p className="text-sm">
                   <strong>Data:</strong>{" "}
-                  {format(
+                  {formatSaleDate(
                     selectedSale.saleDate ?? selectedSale.createdAt,
-                    "dd/MM/yyyy HH:mm",
-                    { locale: ptBR },
                   )}
                 </p>
                 <p className="text-sm">
