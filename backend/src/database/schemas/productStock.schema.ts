@@ -14,6 +14,7 @@ import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { products } from "./product.schema";
 import { sectors } from "./sector.schema";
+import { sectorMasters } from "./sectorMaster.schema";
 
 export const productStocks = pgTable(
   "productStocks",
@@ -23,10 +24,15 @@ export const productStocks = pgTable(
       .notNull()
       .references(() => products.id, { onDelete: "restrict" }),
     productName: text("product_name"),
-    sectorId: uuid("sector_id")
-      .notNull()
-      .references(() => sectors.id, { onDelete: "restrict" }),
+    sectorId: uuid("sector_id").references(() => sectors.id, {
+      onDelete: "restrict",
+    }),
     sectorName: text("sector_name"),
+    sectorMasterId: uuid("sector_master_id").references(
+      () => sectorMasters.id,
+      { onDelete: "restrict" },
+    ),
+    sectorMasterName: text("sector_master_name"),
     quantity: numeric("quantity", { mode: "number" }).notNull(),
     initialDate: date("initial_date", { mode: "date" }),
     companyId: uuid("company_id")
@@ -51,9 +57,11 @@ export const productStocks = pgTable(
     index("productStocks_company_id_index").on(table.companyId),
     index("productStocks_product_id_index").on(table.productId),
     index("productStocks_sector_id_index").on(table.sectorId),
+    index("productStocks_sector_master_id_index").on(table.sectorMasterId),
     uniqueIndex("productStocks_product_id_sector_id_unique").on(
       table.productId,
       table.sectorId,
+      table.sectorMasterId,
     ),
   ],
 );

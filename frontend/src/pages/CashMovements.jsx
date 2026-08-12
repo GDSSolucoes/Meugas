@@ -91,6 +91,14 @@ export default function CashMovementsPage({ onComplete }) {
   const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [activeTab, setActiveTab] = useState("gastar");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [appliedFilters, setAppliedFilters] = useState({
+    selectedAccount: "",
+    startDate: format(new Date(), "yyyy-MM-dd"),
+    endDate: format(new Date(), "yyyy-MM-dd"),
+  });
+  const PAGE_SIZE = 10;
 
   // Balance states
   const [openingBalance, setOpeningBalance] = useState(0);
@@ -294,64 +302,66 @@ export default function CashMovementsPage({ onComplete }) {
     }
   }, [people]);
 
+  const handleSearch = () => {
+    const nextFilters = {
+      selectedAccount,
+      startDate,
+      endDate,
+    };
+
+    setPage(1);
+    setAppliedFilters(nextFilters);
+  };
+
   useEffect(() => {
+    if (
+      !appliedFilters.selectedAccount ||
+      !cashAccounts.length ||
+      !currentUser
+    ) {
+      setMovements([]);
+      setOpeningBalance(0);
+      setCurrentBalance(0);
+      setTotalPages(1);
+      return;
+    }
+
     const updateFinancials = async () => {
-      if (!selectedAccount || !cashAccounts.length || !currentUser) {
+      try {
+        const summary = await CashMovement.getCashFlowSummary({
+          cashAccountId: appliedFilters.selectedAccount,
+          startDate: appliedFilters.startDate,
+          endDate: appliedFilters.endDate,
+          page,
+          limit: PAGE_SIZE,
+        });
+
+        setMovements(summary?.data || []);
+        setOpeningBalance(Number(summary?.openingBalance || 0));
+        setCurrentBalance(Number(summary?.currentBalance || 0));
+        setTotalPages(Number(summary?.totalPages || 1));
+      } catch (error) {
+        console.error("Erro ao calcular finanças:", error);
         setMovements([]);
         setOpeningBalance(0);
         setCurrentBalance(0);
-        return;
-      }
-
-      try {
-        const account = cashAccounts.find((a) => a.id === selectedAccount);
-        if (!account) return;
-
-        const allMovements = await CashMovement.filter({
-          companyId: currentUser.companyId,
-          cashAccountId: selectedAccount,
-        });
-
-        const periodStart = startOfDay(new Date(startDate + "T00:00:00"));
-        const periodEnd = endOfDay(new Date(endDate + "T23:59:59"));
-
-        let opening = account.initialBalance || 0;
-        allMovements
-          .filter((m) => startOfDay(m.movementDate) < periodStart)
-          .forEach((m) => {
-            opening += m.type === "receita" ? m.amount : -m.amount;
-          });
-        setOpeningBalance(opening);
-
-        const periodMovements = allMovements
-          .filter((m) => {
-            const movDate = new Date(m.movementDate);
-            return movDate >= periodStart && movDate <= periodEnd;
-          })
-          .sort((a, b) => a.movementDate - b.movementDate);
-
-        setMovements(periodMovements);
-
-        const receitas = periodMovements
-          .filter((m) => m.type === "receita")
-          .reduce((sum, m) => sum + m.amount, 0);
-        const despesas = periodMovements
-          .filter((m) => m.type === "despesa")
-          .reduce((sum, m) => sum + m.amount, 0);
-        setCurrentBalance(opening + receitas - despesas);
-      } catch (error) {
-        console.error("Erro ao calcular finanças:", error);
+        setTotalPages(1);
       }
     };
-    updateFinancials();
-  }, [selectedAccount, startDate, endDate, cashAccounts, currentUser]);
 
-  const filteredMovements = movements.filter((m) => {
-    if (activeTab === "gastar") return m.type === "despesa";
-    if (activeTab === "receber") return m.type === "receita";
-    if (activeTab === "transferencia") return m.type === "transferencia";
-    return true;
-  });
+    updateFinancials();
+  }, [appliedFilters, cashAccounts, currentUser, page]);
+
+  const visibleMovements = movements;
+  const detailTab = selectedMovement
+    ? selectedMovement.isTransfer ||
+      selectedMovement.transferFromAccountId ||
+      selectedMovement.transferToAccountId
+      ? "transferencia"
+      : selectedMovement.type === "receita"
+        ? "receber"
+        : "gastar"
+    : activeTab;
 
   const handleRowClick = (movement) => {
     setSelectedMovement(movement);
@@ -1142,15 +1152,27 @@ export default function CashMovementsPage({ onComplete }) {
               </div>
             </div>
 
-            <div className="ml-auto text-right">
-              <Label className="text-xs font-medium text-slate-600">
-                Saldo Anterior
-              </Label>
-              <p
-                className={`text-xl font-bold ${openingBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+            <div className="ml-auto flex items-end gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                className="h-9 text-xs gap-1 text-white hover:opacity-90"
+                style={{ backgroundColor: "#223f61" }}
+                onClick={handleSearch}
               >
-                {formatCurrency(openingBalance)}
-              </p>
+                <Search className="w-4 h-4" /> Pesquisar
+              </Button>
+
+              <div className="text-right">
+                <Label className="text-xs font-medium text-slate-600">
+                  Saldo Anterior
+                </Label>
+                <p
+                  className={`text-xl font-bold ${openingBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
+                  {formatCurrency(openingBalance)}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1183,7 +1205,7 @@ export default function CashMovementsPage({ onComplete }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredMovements.length === 0 ? (
+                    {visibleMovements.length === 0 ? (
                       <TableRow>
                         <TableCell
                           colSpan={8}
@@ -1193,7 +1215,7 @@ export default function CashMovementsPage({ onComplete }) {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredMovements.map((mov, idx) => {
+                      visibleMovements.map((mov, idx) => {
                         const runningBalance =
                           openingBalance +
                           movements
@@ -1204,7 +1226,9 @@ export default function CashMovementsPage({ onComplete }) {
                             .reduce(
                               (acc, m) =>
                                 acc +
-                                (m.type === "receita" ? m.amount : -m.amount),
+                                (m.type === "receita"
+                                  ? Number(m.amount || 0)
+                                  : -Number(m.amount || 0)),
                               0,
                             );
 
@@ -1218,7 +1242,8 @@ export default function CashMovementsPage({ onComplete }) {
                               {String(idx + 1).padStart(4, "0")}
                             </TableCell>
                             <TableCell className="text-xs">
-                              {mov.installmentNumber || "-"}
+                              {mov.installmentNumber ||
+                                (mov.isTransfer ? "TR" : "-")}
                             </TableCell>
                             <TableCell className="text-xs">
                               {format(mov.movementDate, "dd/MM/yy")}
@@ -1227,10 +1252,10 @@ export default function CashMovementsPage({ onComplete }) {
                               {mov.sectorName || "-"}
                             </TableCell>
                             <TableCell className="text-xs">
-                              {mov.personName || mov.description}
+                              {mov.personName || mov.description || "-"}
                             </TableCell>
                             <TableCell className="text-right text-xs font-mono text-red-600">
-                              {mov.type === "despesa"
+                              {mov.type === "despesa" || mov.isTransfer
                                 ? formatCurrency(mov.amount)
                                 : "-"}
                             </TableCell>
@@ -1250,6 +1275,32 @@ export default function CashMovementsPage({ onComplete }) {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 bg-slate-50">
+                <div className="text-xs text-slate-600">
+                  Página {page} de {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                    disabled={page <= 1}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={page >= totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1284,7 +1335,7 @@ export default function CashMovementsPage({ onComplete }) {
             </Tabs>
 
             <CardContent className="p-4 border-t border-slate-300">
-              {activeTab === "transferencia" ? (
+              {detailTab === "transferencia" ? (
                 <div
                   className={`space-y-3 ${isFormDisabled ? "opacity-60" : ""}`}
                 >

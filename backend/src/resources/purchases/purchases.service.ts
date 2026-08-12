@@ -16,7 +16,7 @@ import {
 } from "../../database/schemas";
 import { PurchasEsCreateDto } from "./dto/purchases.post.dto";
 import { PurchasEsUpdateDto } from "./dto/purchases.update.dto";
-import { eq, sql, desc, and } from "drizzle-orm";
+import { eq, sql, desc, and, or } from "drizzle-orm";
 
 @Injectable()
 export class PurchasEsesService extends BaseCrudService<typeof purchases> {
@@ -45,7 +45,7 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
       );
     }
 
-    if (!data.sectorId) {
+    if (!data.sectorId && !data.sectorMasterId) {
       throw new Error("Obrigatório informar o setor");
     }
 
@@ -159,7 +159,10 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
           .where(
             and(
               eq(productStocks.productId, item.productId),
-              eq(productStocks.sectorId, data.sectorId),
+              or(
+                eq(productStocks.sectorId, data.sectorId),
+                eq(productStocks.sectorMasterId, data.sectorMasterId),
+              ),
             ),
           );
 
@@ -173,13 +176,19 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
             productName: item.productName,
             sectorId: data.sectorId,
             sectorName: data.sectorName,
+            sectorMasterId: data.sectorMasterId,
+            sectorMasterName: data.sectorMasterName,
             quantity: newBalance,
             initialDate: new Date(),
             companyId,
             companyName: savedPurchase.companyName,
           })
           .onConflictDoUpdate({
-            target: [productStocks.productId, productStocks.sectorId],
+            target: [
+              productStocks.productId,
+              productStocks.sectorId,
+              productStocks.sectorMasterId,
+            ],
             set: {
               quantity: newBalance,
             },
@@ -190,6 +199,8 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
           productName: item.productName,
           sectorId: data.sectorId,
           sectorName: data.sectorName,
+          sectorMasterId: data.sectorMasterId,
+          sectorMasterName: data.sectorMasterName,
           type: StockMovementTypeEnum.Purchase,
           purchaseId: savedPurchase.id,
           quantity: item.quantity,

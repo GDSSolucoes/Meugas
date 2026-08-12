@@ -62,6 +62,8 @@ export default function PurchasesPage() {
     supplierName: "", // Changed from personName
     sectorId: "",
     sectorName: "",
+    sectorMasterId: "",
+    sectorMasterName: "",
     cashAccountId: "",
     cashAccountName: "",
     status: "rascunho",
@@ -489,7 +491,7 @@ export default function PurchasesPage() {
       return;
     }
 
-    if (!currentPurchase.sectorId) {
+    if (!currentPurchase.sectorId && !currentPurchase.sectorMasterId) {
       toast({
         title: "Erro",
         description: "Selecione o setor de estoque.",
@@ -600,8 +602,10 @@ export default function PurchasesPage() {
 
                     setCurrentPurchase((prev) => ({
                       ...prev,
-                      sectorId: value,
-                      sectorName: selectedSector?.name || "",
+                      sectorId: sector?.id,
+                      sectorName: sector?.name,
+                      sectorMasterId: sectorMaster?.id,
+                      sectorMasterName: sectorMaster?.name,
                     }));
                   }}
                 >

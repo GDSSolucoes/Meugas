@@ -68,6 +68,16 @@ export class PurchasEsBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsOptional()
   @IsUUID()
+  sectorMasterId!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  sectorMasterName!: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsUUID()
   cashAccountId?: string;
 
   @ApiProperty()

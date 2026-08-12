@@ -1,5 +1,5 @@
-import { BaseEntity } from './BaseEntity';
-
+import { BaseEntity } from "./BaseEntity";
+import { api, apiEnabled } from "@/api/apiClient";
 
 export enum CashMovementTypeEnum {
   RECEITA = "receita",
@@ -44,8 +44,16 @@ export class CashMovement extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<CashMovement[]>
    */
-  static async filter(filters: Partial<CashMovement> = {}, pagination = {}) : Promise<CashMovement[]> {
-    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<CashMovement[]>;
+  static async filter(
+    filters: Partial<CashMovement> = {},
+    pagination = {},
+  ): Promise<CashMovement[]> {
+    return super._filter.call(
+      this,
+      this.baseUrl,
+      filters,
+      pagination,
+    ) as Promise<CashMovement[]>;
   }
 
   /**
@@ -55,7 +63,11 @@ export class CashMovement extends BaseEntity {
    * @returns Promise<CashMovement>
    */
   static async create(data: Partial<CashMovement>): Promise<CashMovement> {
-    return super._create.call(this, this.baseUrl, data) as Promise<CashMovement>;
+    return super._create.call(
+      this,
+      this.baseUrl,
+      data,
+    ) as Promise<CashMovement>;
   }
 
   /**
@@ -65,8 +77,16 @@ export class CashMovement extends BaseEntity {
    * @param data Object with updated properties
    * @returns Promise<CashMovement>
    */
-  static async update(id: string, data: Partial<CashMovement>): Promise<CashMovement> {
-    return super._update.call(this, this.baseUrl, id, data) as Promise<CashMovement>;
+  static async update(
+    id: string,
+    data: Partial<CashMovement>,
+  ): Promise<CashMovement> {
+    return super._update.call(
+      this,
+      this.baseUrl,
+      id,
+      data,
+    ) as Promise<CashMovement>;
   }
 
   /**
@@ -86,6 +106,36 @@ export class CashMovement extends BaseEntity {
    * @returns Promise<CashMovement | null>
    */
   static async findById(id: string): Promise<CashMovement | null> {
-    return super._findById.call(this, this.baseUrl, id) as Promise<CashMovement | null>;
+    return super._findById.call(
+      this,
+      this.baseUrl,
+      id,
+    ) as Promise<CashMovement | null>;
+  }
+
+  static async getCashFlowSummary(params: {
+    cashAccountId: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+    type?: string;
+  }) {
+    if (!apiEnabled) {
+      throw new Error("API não configurada");
+    }
+
+    const query = new URLSearchParams();
+    query.set("cashAccountId", params.cashAccountId);
+    if (params.startDate) query.set("startDate", params.startDate);
+    if (params.endDate) query.set("endDate", params.endDate);
+    if (params.type) query.set("type", params.type);
+    if (params.page) query.set("page", String(params.page));
+    if (params.limit) query.set("limit", String(params.limit));
+
+    const response = await api.get(
+      `${this.baseUrl}/summary?${query.toString()}`,
+    );
+    return response.data;
   }
 }

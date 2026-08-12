@@ -18,6 +18,7 @@ import { purchases } from "./purchase.schema";
 import { stockTransfers } from "./stockTransfer.schema";
 import { productPickups } from "./productPickup.schema";
 import { vasilhameLoans } from "./vasilhameLoan.schema";
+import { sectorMasters } from "./sectorMaster.schema";
 
 // Tipos de movimentação de estoque
 export enum StockMovementTypeEnum {
@@ -44,10 +45,15 @@ export const productStockMovements = pgTable(
       .notNull()
       .references(() => products.id, { onDelete: "restrict" }),
     productName: text("product_name"),
-    sectorId: uuid("sector_id")
-      .notNull()
-      .references(() => sectors.id, { onDelete: "restrict" }),
+    sectorId: uuid("sector_id").references(() => sectors.id, {
+      onDelete: "restrict",
+    }),
     sectorName: text("sector_name"),
+    sectorMasterId: uuid("sector_master_id").references(
+      () => sectorMasters.id,
+      { onDelete: "restrict" },
+    ),
+    sectorMasterName: text("sector_master_name"),
 
     // Tipo da movimentação
     type: StockMovementTypePGEnum("type").notNull(),
@@ -115,6 +121,11 @@ export const productStockMovements = pgTable(
     index("productStockMovements_company_id_index").on(table.companyId),
     index("productStockMovements_product_id_index").on(table.productId),
     index("productStockMovements_sector_id_index").on(table.sectorId),
+    index("productStockMovements_sector_master_id_index").on(
+      table.sectorMasterId,
+    ),
+    index("productStockMovements_sale_id_index").on(table.saleId),
+    index("productStockMovements_purchase_id_index").on(table.purchaseId),
     index("productStockMovements_movement_date_index").on(table.movementDate),
     index("productStockMovements_type_index").on(table.type),
   ],

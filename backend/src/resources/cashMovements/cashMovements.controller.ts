@@ -51,6 +51,62 @@ export class CashmovementsController extends BaseCrudController<
     return super.create(data, user);
   }
 
+  @Get("summary")
+  @ApiOperation({ summary: `Get paginated cash flow summary` })
+  @ApiQuery({
+    name: "cashAccountId",
+    required: true,
+    type: "string",
+    description: "Cash account ID",
+  })
+  @ApiQuery({
+    name: "startDate",
+    required: false,
+    type: "string",
+    description: "Start date in YYYY-MM-DD",
+  })
+  @ApiQuery({
+    name: "endDate",
+    required: false,
+    type: "string",
+    description: "End date in YYYY-MM-DD",
+  })
+  @ApiQuery({
+    name: "type",
+    required: false,
+    type: "string",
+    description: "Movement type filter: receita or despesa",
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: "string",
+    description: "Page number",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: "string",
+    description: "Items per page (default: 10)",
+  })
+  async getSummary(
+    @Query("cashAccountId") cashAccountId?: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+    @Query("type") type?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+  ) {
+    return this.service.getCashFlowSummary({
+      cashAccountId: cashAccountId || "",
+      startDate,
+      endDate,
+      type,
+      page: Number(page || 1),
+      limit: Number(limit || 10),
+    });
+  }
+
   @Get(":id")
   @ApiOperation({ summary: `Get Cashmovement by ID` })
   @ApiResponse({
@@ -106,7 +162,11 @@ export class CashmovementsController extends BaseCrudController<
     description: `Cashmovement updated`,
     type: CashmovementUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: CashmovementUpdateDto, @CurrentUser() user: any) {
+  async update(
+    @Param("id") id: string,
+    @Body() data: CashmovementUpdateDto,
+    @CurrentUser() user: any,
+  ) {
     return super.update(id, data, user);
   }
 
