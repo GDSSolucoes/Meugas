@@ -263,7 +263,7 @@ export default function CustomerRegistrationPage() {
     try {
       // Filter out empty phone numbers before saving
       const phonesToSave = currentPerson.phone.filter(
-        (phone) => phone.trim() !== "",
+        (phone) => phone?.trim() !== "",
       );
 
       let personToSave = {
