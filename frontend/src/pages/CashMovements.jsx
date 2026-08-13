@@ -365,6 +365,18 @@ export default function CashMovementsPage({ onComplete }) {
 
   const handleRowClick = (movement) => {
     setSelectedMovement(movement);
+
+    // Determina a aba conforme o tipo do lançamento
+    const newTab =
+      movement.isTransfer ||
+      movement.transferFromAccountId ||
+      movement.transferToAccountId
+        ? "transferencia"
+        : movement.type === "receita"
+          ? "receber"
+          : "gastar";
+    setActiveTab(newTab);
+
     setFormData({
       sectorId: movement.sectorId || "",
       sectorName: movement.sectorName || "",

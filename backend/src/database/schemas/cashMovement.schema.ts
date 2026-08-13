@@ -17,6 +17,7 @@ import { cashAccounts } from "./cashAccount.schema";
 import { paymentTypes } from "./paymentType.schema";
 import { sales } from "./sale.schema";
 import { accountsReceivables } from "./accountsReceivable.schema";
+import { purchases } from "./purchase.schema";
 
 export enum CashMovementTypeEnum {
   RECEITA = "receita",
@@ -65,6 +66,9 @@ export const cashMovements = pgTable(
     relatedDocId: uuid("related_doc_id"),
     sectorId: uuid("sector_id"),
     sectorName: text("sector_name"),
+    sectorMasterId: uuid("sector_master_id"),
+    sectorMasterName: text("sector_master_name"),
+    purchaseId: uuid("purchase_id").references(() => purchases.id),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),

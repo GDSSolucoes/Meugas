@@ -249,7 +249,7 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
           purchaseId: savedPurchase.id as any,
           companyId: companyId as any,
           companyName: savedPurchase.companyName,
-        } as any);
+        });
 
         // Atualizar saldo da conta
         await db

@@ -571,23 +571,16 @@ export default function PurchasesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-[1600px] mx-auto">
-        <div className="flex justify-between items-center mb-8">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Compras</h1>
-            <p className="text-slate-600">Gerencie as compras de produtos</p>
+            <h1 className="text-3xl font-bold text-slate-800">Compras</h1>
           </div>
         </div>
 
-        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" />
-              Dados da Compra
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-4">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label>Setor *</Label>
                 <Select
@@ -694,15 +687,9 @@ export default function PurchasesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/90 border-slate-200/60 mb-6">
-          <CardHeader
-            as="h3"
-            className="text-lg font-semibold mb-4 text-slate-800"
-          >
-            Fornecedor
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-white/90 border-slate-200/60 mb-4">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div className="mb-4">
                   <Label className="mb-2 block">Tipo de Compra:</Label>
@@ -758,7 +745,7 @@ export default function PurchasesPage() {
                         style={{ background: "#1E3A8A" }}
                       >
                         <h3 className="text-lg font-semibold text-white">
-                          Selecionar Cliente
+                          Selecionar Fornecedor
                         </h3>
                       </div>
                       <div className="p-4">
@@ -838,14 +825,8 @@ export default function PurchasesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Adicionar Produto
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-4">
+          <CardContent className="p-4">
             {/* Linha única: Código, Quantidade, Descrição, Custo, Desconto e Botão Adicionar */}
             <div className="grid grid-cols-12 gap-4 mb-4">
               <div className="col-span-2">
@@ -945,171 +926,169 @@ export default function PurchasesPage() {
                 Somente Estoque
               </Label>
             </div>
+            <div
+              className="border rounded-lg overflow-hidden"
+              style={{ borderColor: "#E5E7EB" }}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow style={{ background: "#F3F4F6" }}>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Código
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Descrição
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Qtde
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Custo Un.
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Valor Total
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Desconto
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Vas
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold"
+                      style={{ color: "#374151" }}
+                    >
+                      Ret
+                    </TableHead>
+                    <TableHead
+                      className="text-xs font-semibold text-right"
+                      style={{ color: "#374151" }}
+                    >
+                      Ações
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentPurchase.items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="text-sm">
+                        {item.productCode || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {item.productName}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateItem(index, "quantity", e.target.value)
+                          }
+                          className="w-20"
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        R$ {item.unitPrice.toFixed(2)}
+                      </TableCell>
+                      <TableCell
+                        className="text-sm font-semibold"
+                        style={{ color: "#10B981" }}
+                      >
+                        R$ {item.subtotal.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.discount}
+                          onChange={(e) =>
+                            updateItem(index, "discount", e.target.value)
+                          }
+                          className="w-20"
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Input
+                          type="number"
+                          value={item.vasilhameLoanQuantity || 0}
+                          onChange={(e) =>
+                            updateItem(
+                              index,
+                              "vasilhameLoanQuantity",
+                              e.target.value,
+                            )
+                          }
+                          className="w-16"
+                          placeholder="0"
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Input
+                          type="number"
+                          value={item.quantityToPickup || 0}
+                          onChange={(e) =>
+                            updateItem(
+                              index,
+                              "quantityToPickup",
+                              e.target.value,
+                            )
+                          }
+                          className="w-16"
+                          placeholder="0"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeItem(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {currentPurchase.items.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={9}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        Nenhum produto adicionado
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
-        {currentPurchase.items.length > 0 && (
-          <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-6">
-            <CardHeader>
-              <CardTitle>
-                Itens da Compra ({currentPurchase.items.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                className="border rounded-lg overflow-hidden"
-                style={{ borderColor: "#E5E7EB" }}
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow style={{ background: "#F3F4F6" }}>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Código
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Descrição
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Qtde
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Custo Un.
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Valor Total
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Desconto
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Vas
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold"
-                        style={{ color: "#374151" }}
-                      >
-                        Ret
-                      </TableHead>
-                      <TableHead
-                        className="text-xs font-semibold text-right"
-                        style={{ color: "#374151" }}
-                      >
-                        Ações
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentPurchase.items.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="text-sm">
-                          {item.productCode || "-"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {item.productName}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              updateItem(index, "quantity", e.target.value)
-                            }
-                            className="w-20"
-                          />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          R$ {item.unitPrice.toFixed(2)}
-                        </TableCell>
-                        <TableCell
-                          className="text-sm font-semibold"
-                          style={{ color: "#10B981" }}
-                        >
-                          R$ {item.subtotal.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={item.discount}
-                            onChange={(e) =>
-                              updateItem(index, "discount", e.target.value)
-                            }
-                            className="w-20"
-                          />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <Input
-                            type="number"
-                            value={item.vasilhameLoanQuantity || 0}
-                            onChange={(e) =>
-                              updateItem(
-                                index,
-                                "vasilhameLoanQuantity",
-                                e.target.value,
-                              )
-                            }
-                            className="w-16"
-                            placeholder="0"
-                          />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <Input
-                            type="number"
-                            value={item.quantityToPickup || 0}
-                            onChange={(e) =>
-                              updateItem(
-                                index,
-                                "quantityToPickup",
-                                e.target.value,
-                              )
-                            }
-                            className="w-16"
-                            placeholder="0"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeItem(index)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Seção Observações */}
-        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-6">
+        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-4">
           <CardContent className="p-4">
             <Label className="text-xs font-medium" style={{ color: "#374151" }}>
               Observação da Compra:
@@ -1129,12 +1108,9 @@ export default function PurchasesPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
           <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
-            <CardHeader>
-              <CardTitle>Condições e Pagamento</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <div className="space-y-4">
                 <div>
                   <Label>Forma de Pagamento *</Label>
@@ -1292,10 +1268,7 @@ export default function PurchasesPage() {
           </Card>
 
           <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
-            <CardHeader>
-              <CardTitle>Resumo Financeiro</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>Subtotal Produtos:</span>
