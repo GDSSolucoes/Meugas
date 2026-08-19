@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import {
   FacilitadorRegimeTributarioEnum,

@@ -1,4 +1,4 @@
-import { IsDateString, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator'
+import { IsDateString, IsNumber, IsString, IsUUID } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 import { ProductstockmovementBaseDto } from './productstockmovement.base.dto'
 

@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common'
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common'
 import { QueryBus } from '@nestjs/cqrs'
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard'
 import { CurrentUser } from '../../auth/current-user.decorator'
 import { GetOrdersReportQuery } from '../queries/get-orders-report.query'

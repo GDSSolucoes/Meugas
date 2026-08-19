@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
-import { Type, Transform } from "class-transformer";
+import { Transform } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { EmployeePositionEnum } from "../../../database/schemas";
 

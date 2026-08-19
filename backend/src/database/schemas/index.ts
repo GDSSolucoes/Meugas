@@ -22,7 +22,6 @@ export * from "./purchaseItem.schema";
 export * from "./sale.schema";
 export * from "./saleItem.schema";
 export * from "./sector.schema";
-// sectorMaster schema removed as part of sector model simplification
 export * from "./stockTransfer.schema";
 export * from "./user.schema";
 export * from "./vasilhameLoan.schema";

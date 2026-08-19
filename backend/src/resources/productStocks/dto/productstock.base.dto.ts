@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsString,
   IsNumber,
-  IsUUID,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";

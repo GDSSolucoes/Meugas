@@ -140,6 +140,10 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
     const [sector] = data.sectorId
       ? await db.select().from(sectors).where(eq(sectors.id, data.sectorId))
       : [null];
+
+    if (!sector) {
+      throw new Error("Setor não encontrado");
+    }
     // Determine owner: if the selected sector has its own stock, it is the owner;
     // otherwise the sector.masterSectorId (another sector id) is the owner. Fallback to sectorId.
     const ownerSectorId: string = sector?.isOwnStock

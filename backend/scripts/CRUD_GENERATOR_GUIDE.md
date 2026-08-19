@@ -211,7 +211,6 @@ python scripts/generate_crud.py --entity shipments --only-service --regenerate
 - products
 - purchases
 - sales
-- sectorMasters
 - sectors
 - stockTransfers
 - users

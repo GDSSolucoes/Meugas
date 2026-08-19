@@ -19,7 +19,6 @@ import {
 } from "@nestjs/swagger";
 import { BaseCrudController } from "../../common/base-crud.controller";
 import { ProductstockmovementsService } from "./productStockMovements.service";
-import { productStockMovements } from "../../database/schemas";
 import { JwtAuthGuard } from "../../auth/jwt-auth.guard";
 import { ProductstockmovementCreateDto } from "./dto/productstockmovement.post.dto";
 import { Roles } from "../../auth/roles.decorator";
