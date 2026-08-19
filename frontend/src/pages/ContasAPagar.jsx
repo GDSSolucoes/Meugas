@@ -45,7 +45,6 @@ import { CashMovement } from "@/entities/CashMovement";
 import { FinancialGroup } from "@/entities/FinancialGroup";
 import { PaymentType } from "@/entities/PaymentType";
 import { Sector } from "@/entities/Sector";
-import { SectorMaster } from "@/entities/SectorMaster";
 import { Person } from "@/entities/Person";
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
@@ -203,7 +202,6 @@ export default function ContasAPagarPage() {
   const [cashAccounts, setCashAccounts] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [sectors, setSectors] = useState([]);
-  const [sectorMasters, setSectorMasters] = useState([]);
   const [groups, setGroups] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -229,7 +227,6 @@ export default function ContasAPagarPage() {
 
   // Filtros
   const [filtroConta, setFiltroConta] = useState("todas");
-  const [filtroSectorMaster, setFiltroSectorMaster] = useState("todos");
   const [filtroNFe, setFiltroNFe] = useState("");
   const [statusContas, setStatusContas] = useState({
     naoPagas: true,
@@ -259,7 +256,6 @@ export default function ContasAPagarPage() {
         cashAccountsData,
         paymentTypesData,
         sectorsData,
-        sectorMastersData,
         groupsData,
         suppliersData,
       ] = await Promise.all([
@@ -270,7 +266,6 @@ export default function ContasAPagarPage() {
         CashAccount.filter({ companyId: user.companyId, active: true }),
         PaymentType.filter({ companyId: user.companyId, active: true }),
         Sector.filter({ companyId: user.companyId, active: true }),
-        SectorMaster.filter({ companyId: user.companyId }),
         FinancialGroup.filter({
           companyId: user.companyId,
           type: "despesa",
@@ -282,7 +277,6 @@ export default function ContasAPagarPage() {
       setCashAccounts(cashAccountsData);
       setPaymentTypes(paymentTypesData);
       setSectors(sectorsData);
-      setSectorMasters(sectorMastersData);
       setGroups(groupsData);
       setSuppliers(suppliersData);
     } catch (error) {
@@ -323,13 +317,6 @@ export default function ContasAPagarPage() {
 
         // Filtro de conta
         if (filtroConta !== "todas" && c.cashAccountId !== filtroConta)
-          return false;
-
-        // Filtro de setor master
-        if (
-          filtroSectorMaster !== "todos" &&
-          c.sectorMasterId !== filtroSectorMaster
-        )
           return false;
 
         // Filtro de NFe
@@ -914,25 +901,7 @@ export default function ContasAPagarPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label className="text-xs">Setor Master:</Label>
-                        <Select
-                          value={filtroSectorMaster}
-                          onValueChange={setFiltroSectorMaster}
-                        >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="todos">Todos</SelectItem>
-                            {sectorMasters.map((sm) => (
-                              <SelectItem key={sm.id} value={sm.id}>
-                                {sm.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {/* Setor Master filter removed */}
                     </div>
 
                     <div className="flex items-center gap-4">

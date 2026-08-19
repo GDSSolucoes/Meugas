@@ -46,7 +46,6 @@ export default function PurchasesPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
   const [sectors, setSectors] = useState([]);
-  const [sectorMasters, setSectorMasters] = useState([]); // Added state
   const [cashAccounts, setCashAccounts] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -62,8 +61,6 @@ export default function PurchasesPage() {
     supplierName: "", // Changed from personName
     sectorId: "",
     sectorName: "",
-    sectorMasterId: "",
-    sectorMasterName: "",
     cashAccountId: "",
     cashAccountName: "",
     status: "rascunho",
@@ -99,8 +96,6 @@ export default function PurchasesPage() {
     discount: 0,
     subtotal: 0,
     stockOnly: false,
-    vasilhameLoanQuantity: 0,
-    quantityToPickup: 0,
   });
 
   const loadData = useCallback(async () => {
@@ -112,14 +107,16 @@ export default function PurchasesPage() {
         allPeople,
         productsData,
         sectorsData,
-        sectorMastersData,
         cashAccountsData,
         paymentTypesData,
       ] = await Promise.all([
         entities.Person.filter({ companyId: user.companyId }),
         entities.Product.filter({ companyId: user.companyId, active: true }),
-        entities.Sector.filter({ companyId: user.companyId, active: true }),
-        entities.SectorMaster.filter({ companyId: user.companyId }),
+        entities.Sector.filter({
+          companyId: user.companyId,
+          active: true,
+          isOwnStock: true,
+        }), // Only include sectors that have their own stock
         entities.CashAccount.filter({
           companyId: user.companyId,
           active: true,
@@ -134,7 +131,6 @@ export default function PurchasesPage() {
       setSuppliers(suppliersList);
       setProducts(productsData);
       setSectors(sectorsData);
-      setSectorMasters(sectorMastersData);
       setCashAccounts(cashAccountsData);
       setPaymentTypes(paymentTypesData);
 
@@ -386,13 +382,7 @@ export default function PurchasesPage() {
 
   const updateItem = (index, field, value) => {
     const newItems = [...currentPurchase.items];
-    const numericValue = [
-      "quantity",
-      "unitPrice",
-      "discount",
-      "vasilhameLoanQuantity",
-      "quantityToPickup",
-    ].includes(field)
+    const numericValue = ["quantity", "unitPrice", "discount"].includes(field)
       ? parseFloat(value) || 0
       : value;
 
@@ -491,7 +481,7 @@ export default function PurchasesPage() {
       return;
     }
 
-    if (!currentPurchase.sectorId && !currentPurchase.sectorMasterId) {
+    if (!currentPurchase.sectorId) {
       toast({
         title: "Erro",
         description: "Selecione o setor de estoque.",
@@ -586,19 +576,11 @@ export default function PurchasesPage() {
                 <Select
                   value={currentPurchase.sectorId}
                   onValueChange={(value) => {
-                    // Procurar em setores normais e master
                     const sector = sectors.find((s) => s.id === value);
-                    const sectorMaster = sectorMasters.find(
-                      (sm) => sm.id === value,
-                    );
-                    const selectedSector = sector || sectorMaster;
-
                     setCurrentPurchase((prev) => ({
                       ...prev,
                       sectorId: sector?.id,
                       sectorName: sector?.name,
-                      sectorMasterId: sectorMaster?.id,
-                      sectorMasterName: sectorMaster?.name,
                     }));
                   }}
                 >
@@ -606,25 +588,6 @@ export default function PurchasesPage() {
                     <SelectValue placeholder="Selecione o setor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sectorMasters.length > 0 && (
-                      <>
-                        <SelectItem
-                          value="master-header"
-                          disabled
-                          className="font-semibold text-blue-600"
-                        >
-                          --- Setores Master ---
-                        </SelectItem>
-                        {sectorMasters.map((sectorMaster) => (
-                          <SelectItem
-                            key={sectorMaster.id}
-                            value={sectorMaster.id}
-                          >
-                            {sectorMaster.name} (Master)
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
                     {sectors.length > 0 && (
                       <>
                         <SelectItem
@@ -970,18 +933,6 @@ export default function PurchasesPage() {
                       Desconto
                     </TableHead>
                     <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Vas
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Ret
-                    </TableHead>
-                    <TableHead
                       className="text-xs font-semibold text-right"
                       style={{ color: "#374151" }}
                     >
@@ -1029,36 +980,7 @@ export default function PurchasesPage() {
                           className="w-20"
                         />
                       </TableCell>
-                      <TableCell className="text-sm">
-                        <Input
-                          type="number"
-                          value={item.vasilhameLoanQuantity || 0}
-                          onChange={(e) =>
-                            updateItem(
-                              index,
-                              "vasilhameLoanQuantity",
-                              e.target.value,
-                            )
-                          }
-                          className="w-16"
-                          placeholder="0"
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <Input
-                          type="number"
-                          value={item.quantityToPickup || 0}
-                          onChange={(e) =>
-                            updateItem(
-                              index,
-                              "quantityToPickup",
-                              e.target.value,
-                            )
-                          }
-                          className="w-16"
-                          placeholder="0"
-                        />
-                      </TableCell>
+
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"

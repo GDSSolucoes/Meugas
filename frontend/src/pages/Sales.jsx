@@ -1044,69 +1044,6 @@ export default function SalesPage({ onSaleComplete }) {
       let savedSale;
 
       if (isEditingMode) {
-        // MODO EDIÇÃO: Primeiro reverte tudo o que a venda antiga fez
-        const oldSale = await entities.Sale.findById(editSaleId);
-
-        // 1. Reverter estoque
-        for (const item of oldSale.items) {
-          const stockEntries = await entities.ProductStock.filter({
-            productId: item.productId,
-            sectorId: oldSale.sectorId,
-            companyId: companyId,
-          });
-          if (stockEntries.length > 0) {
-            const stockEntry = stockEntries[0];
-            await entities.ProductStock.update(stockEntry.id, {
-              quantity: (stockEntry.quantity || 0) + item.quantity,
-            });
-          }
-        }
-
-        // 2. Excluir lançamentos financeiros (CashMovements) vinculados à venda
-        const movements = await entities.CashMovement.filter({
-          description: `Recebimento da Venda #${oldSale.saleNumber}`,
-          companyId: companyId,
-        });
-        for (const mov of movements) {
-          // Reverter saldo da conta antes de excluir o movimento
-          const cashAccount = await entities.CashAccount.findById(
-            mov.cashAccountId,
-          );
-          if (cashAccount) {
-            await entities.CashAccount.update(cashAccount.id, {
-              balance: (cashAccount.balance || 0) - mov.amount,
-            });
-          }
-          await entities.CashMovement.delete(mov.id);
-        }
-
-        // 3. Excluir Contas a Receber
-        const receivables = await entities.AccountsReceivable.filter({
-          saleId: oldSale.id,
-          companyId: companyId,
-        });
-        for (const rec of receivables) {
-          await entities.AccountsReceivable.delete(rec.id);
-        }
-
-        // 4. Excluir Empréstimos de Vasilhame
-        const loans = await entities.VasilhameLoan.filter({
-          saleId: oldSale.id,
-          companyId: companyId,
-        });
-        for (const loan of loans) {
-          await entities.VasilhameLoan.delete(loan.id);
-        }
-
-        // 5. Excluir Retiradas de Produto
-        const pickups = await entities.ProductPickup.filter({
-          saleId: oldSale.id,
-          companyId: companyId,
-        });
-        for (const pickup of pickups) {
-          await entities.ProductPickup.delete(pickup.id);
-        }
-
         // Agora atualiza a venda com os novos dados
         const updateData = {
           ...currentSale,

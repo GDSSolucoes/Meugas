@@ -13,29 +13,32 @@ DECLARE
   v_movement record;
 BEGIN
   -- Primeiro, deletar movimentações existentes a partir da data especificada
+  -- Delete movements for this product/owner sector from the given date
   DELETE FROM "productStockMovements"
   WHERE 
     product_id = p_product_id AND
-    sector_id = p_sector_id AND
+    owner_sector_id = p_sector_id AND
     movement_date >= p_from_date;
 
   -- Obter o último saldo anterior à data de início
+  -- Get last balance for this product/owner sector before start date
   SELECT COALESCE(new_balance, 0) INTO v_current_balance
   FROM "productStockMovements"
   WHERE
     product_id = p_product_id AND
-    sector_id = p_sector_id AND
+    owner_sector_id = p_sector_id AND
     movement_date < p_from_date
   ORDER BY movement_date DESC, created_at DESC
   LIMIT 1;
 
   -- Se não tiver movimentações anteriores, pegar o saldo inicial de productStocks
   IF NOT FOUND THEN
+    -- If none, get initial quantity from productStocks using owner_sector_id
     SELECT COALESCE(quantity, 0) INTO v_current_balance
     FROM "productStocks"
     WHERE
       product_id = p_product_id AND
-      sector_id = p_sector_id;
+      owner_sector_id = p_sector_id;
     
     -- Se não tiver nenhum registro em productStocks, começar com 0
     IF NOT FOUND THEN
@@ -44,6 +47,7 @@ BEGIN
   END IF;
 
   -- 1. Recriar histórico de compras
+  -- 1. Recreate purchase history. Derive owner/actor by joining sectors.
   FOR v_movement IN 
     SELECT 
       p.id AS purchase_id,
@@ -53,20 +57,26 @@ BEGIN
       pi.product_name,
       p.purchase_date AS movement_date,
       pi.quantity AS quantity,
-      'purchase' AS type
+      'purchase' AS type,
+      s.id AS actor_sector_id,
+      s.name AS actor_sector_name,
+      CASE WHEN s.is_own_stock THEN s.id ELSE s.master_sector_id END AS owner_sector_id
     FROM purchases p
     JOIN "purchaseItems" pi ON p.id = pi.purchase_id
+    LEFT JOIN sectors s ON s.id = p.sector_id
     WHERE
       pi.product_id = p_product_id AND
-      p.purchase_date >= p_from_date::date
+      p.purchase_date >= p_from_date::date AND
+      (CASE WHEN s.is_own_stock THEN s.id ELSE s.master_sector_id END) = p_sector_id
   LOOP
     INSERT INTO "productStockMovements" (
       id, product_id, product_name, sector_id, sector_name,
-      type, purchase_id, quantity, previous_balance, new_balance,
+      owner_sector_id, actor_sector_id, type, purchase_id, quantity, previous_balance, new_balance,
       movement_date, company_id, company_name, created_at
     ) VALUES (
       gen_random_uuid(), v_movement.product_id, v_movement.product_name,
-      p_sector_id, (SELECT name FROM sectors WHERE id = p_sector_id),
+      v_movement.actor_sector_id, v_movement.actor_sector_name,
+      v_movement.owner_sector_id, v_movement.actor_sector_id,
       v_movement.type, v_movement.purchase_id, v_movement.quantity,
       v_current_balance, v_current_balance + v_movement.quantity,
       v_movement.movement_date, v_movement.company_id, v_movement.company_name,
@@ -76,6 +86,7 @@ BEGIN
   END LOOP;
 
   -- 2. Recriar histórico de vendas
+  -- 2. Recreate sale history (negative quantities). derive owner/actor
   FOR v_movement IN 
     SELECT 
       s.id AS sale_id,
@@ -85,21 +96,26 @@ BEGIN
       si.product_name,
       s.sale_date AS movement_date,
       -si.quantity AS quantity,
-      'sale' AS type
+      'sale' AS type,
+      sec.id AS actor_sector_id,
+      sec.name AS actor_sector_name,
+      CASE WHEN sec.is_own_stock THEN sec.id ELSE sec.master_sector_id END AS owner_sector_id
     FROM sales s
     JOIN "saleItems" si ON s.id = si.sale_id
+    LEFT JOIN sectors sec ON sec.id = s.sector_id
     WHERE
       si.product_id = p_product_id AND
-      s.sector_id = p_sector_id AND
-      s.sale_date >= p_from_date::date
+      s.sale_date >= p_from_date::date AND
+      (CASE WHEN sec.is_own_stock THEN sec.id ELSE sec.master_sector_id END) = p_sector_id
   LOOP
     INSERT INTO "productStockMovements" (
       id, product_id, product_name, sector_id, sector_name,
-      type, sale_id, quantity, previous_balance, new_balance,
+      owner_sector_id, actor_sector_id, type, sale_id, quantity, previous_balance, new_balance,
       movement_date, company_id, company_name, created_at
     ) VALUES (
       gen_random_uuid(), v_movement.product_id, v_movement.product_name,
-      p_sector_id, (SELECT name FROM sectors WHERE id = p_sector_id),
+      v_movement.actor_sector_id, v_movement.actor_sector_name,
+      v_movement.owner_sector_id, v_movement.actor_sector_id,
       v_movement.type, v_movement.sale_id, v_movement.quantity,
       v_current_balance, v_current_balance + v_movement.quantity,
       v_movement.movement_date, v_movement.company_id, v_movement.company_name,
@@ -109,6 +125,7 @@ BEGIN
   END LOOP;
 
   -- 3. Recriar histórico de transferências (saída)
+  -- 3. Recreate transfer (outgoing) history
   FOR v_movement IN 
     SELECT 
       st.id AS stock_transfer_id,
@@ -118,20 +135,25 @@ BEGIN
       st.product_name,
       st.transfer_date AS movement_date,
       -st.quantity AS quantity,
-      'transfer' AS type
+      'transfer' AS type,
+      fs.id AS actor_sector_id,
+      fs.name AS actor_sector_name,
+      CASE WHEN fs.is_own_stock THEN fs.id ELSE fs.master_sector_id END AS owner_sector_id
     FROM "stockTransfers" st
+    LEFT JOIN sectors fs ON fs.id = st.from_sector_id
     WHERE
       st.product_id = p_product_id AND
-      st.from_sector_id = p_sector_id AND
-      st.transfer_date >= p_from_date
+      st.transfer_date >= p_from_date AND
+      (CASE WHEN fs.is_own_stock THEN fs.id ELSE fs.master_sector_id END) = p_sector_id
   LOOP
     INSERT INTO "productStockMovements" (
       id, product_id, product_name, sector_id, sector_name,
-      type, stock_transfer_id, quantity, previous_balance, new_balance,
+      owner_sector_id, actor_sector_id, type, stock_transfer_id, quantity, previous_balance, new_balance,
       movement_date, company_id, company_name, created_at
     ) VALUES (
       gen_random_uuid(), v_movement.product_id, v_movement.product_name,
-      p_sector_id, (SELECT name FROM sectors WHERE id = p_sector_id),
+      v_movement.actor_sector_id, v_movement.actor_sector_name,
+      v_movement.owner_sector_id, v_movement.actor_sector_id,
       v_movement.type, v_movement.stock_transfer_id, v_movement.quantity,
       v_current_balance, v_current_balance + v_movement.quantity,
       v_movement.movement_date, v_movement.company_id, v_movement.company_name,
@@ -141,6 +163,7 @@ BEGIN
   END LOOP;
 
   -- 4. Recriar histórico de transferências (entrada)
+  -- 4. Recreate transfer (incoming) history
   FOR v_movement IN 
     SELECT 
       st.id AS stock_transfer_id,
@@ -150,20 +173,25 @@ BEGIN
       st.product_name,
       st.transfer_date AS movement_date,
       st.quantity AS quantity,
-      'transfer' AS type
+      'transfer' AS type,
+      ts.id AS actor_sector_id,
+      ts.name AS actor_sector_name,
+      CASE WHEN ts.is_own_stock THEN ts.id ELSE ts.master_sector_id END AS owner_sector_id
     FROM "stockTransfers" st
+    LEFT JOIN sectors ts ON ts.id = st.to_sector_id
     WHERE
       st.product_id = p_product_id AND
-      st.to_sector_id = p_sector_id AND
-      st.transfer_date >= p_from_date
+      st.transfer_date >= p_from_date AND
+      (CASE WHEN ts.is_own_stock THEN ts.id ELSE ts.master_sector_id END) = p_sector_id
   LOOP
     INSERT INTO "productStockMovements" (
       id, product_id, product_name, sector_id, sector_name,
-      type, stock_transfer_id, quantity, previous_balance, new_balance,
+      owner_sector_id, actor_sector_id, type, stock_transfer_id, quantity, previous_balance, new_balance,
       movement_date, company_id, company_name, created_at
     ) VALUES (
       gen_random_uuid(), v_movement.product_id, v_movement.product_name,
-      p_sector_id, (SELECT name FROM sectors WHERE id = p_sector_id),
+      v_movement.actor_sector_id, v_movement.actor_sector_name,
+      v_movement.owner_sector_id, v_movement.actor_sector_id,
       v_movement.type, v_movement.stock_transfer_id, v_movement.quantity,
       v_current_balance, v_current_balance + v_movement.quantity,
       v_movement.movement_date, v_movement.company_id, v_movement.company_name,
@@ -173,6 +201,7 @@ BEGIN
   END LOOP;
 
   -- 5. Recriar histórico de retiradas
+  -- 5. Recreate pickups: derive owner/actor from pickup sector
   FOR v_movement IN 
     SELECT 
       pp.id AS product_pickup_id,
@@ -182,19 +211,25 @@ BEGIN
       pp.product_name,
       pp.sale_date AS movement_date,
       -pp.pickup_quantity AS quantity,
-      'pickup' AS type
+      'pickup' AS type,
+      s.id AS actor_sector_id,
+      s.name AS actor_sector_name,
+      CASE WHEN s.is_own_stock THEN s.id ELSE s.master_sector_id END AS owner_sector_id
     FROM "productPickups" pp
+    LEFT JOIN sectors s ON s.id = pp.sector_id
     WHERE
       pp.product_id = p_product_id AND
-      pp.sale_date >= p_from_date
+      pp.sale_date >= p_from_date AND
+      (CASE WHEN s.is_own_stock THEN s.id ELSE s.master_sector_id END) = p_sector_id
   LOOP
     INSERT INTO "productStockMovements" (
       id, product_id, product_name, sector_id, sector_name,
-      type, product_pickup_id, quantity, previous_balance, new_balance,
+      owner_sector_id, actor_sector_id, type, product_pickup_id, quantity, previous_balance, new_balance,
       movement_date, company_id, company_name, created_at
     ) VALUES (
       gen_random_uuid(), v_movement.product_id, v_movement.product_name,
-      p_sector_id, (SELECT name FROM sectors WHERE id = p_sector_id),
+      v_movement.actor_sector_id, v_movement.actor_sector_name,
+      v_movement.owner_sector_id, v_movement.actor_sector_id,
       v_movement.type, v_movement.product_pickup_id, v_movement.quantity,
       v_current_balance, v_current_balance + v_movement.quantity,
       v_movement.movement_date, v_movement.company_id, v_movement.company_name,
@@ -204,6 +239,7 @@ BEGIN
   END LOOP;
 
   -- 6. Recriar histórico de empréstimos
+  -- 6. Recreate loans: derive owner/actor from loan sector
   FOR v_movement IN 
     SELECT 
       vl.id AS vasilhame_loan_id,
@@ -213,19 +249,25 @@ BEGIN
       vl.vasilhame_name AS product_name,
       vl.loan_date AS movement_date,
       -vl.loan_quantity AS quantity,
-      'loan' AS type
+      'loan' AS type,
+      s.id AS actor_sector_id,
+      s.name AS actor_sector_name,
+      CASE WHEN s.is_own_stock THEN s.id ELSE s.master_sector_id END AS owner_sector_id
     FROM "vasilhameLoans" vl
+    LEFT JOIN sectors s ON s.id = vl.sector_id
     WHERE
       vl.vasilhame_id = p_product_id AND
-      vl.loan_date >= p_from_date
+      vl.loan_date >= p_from_date AND
+      (CASE WHEN s.is_own_stock THEN s.id ELSE s.master_sector_id END) = p_sector_id
   LOOP
     INSERT INTO "productStockMovements" (
       id, product_id, product_name, sector_id, sector_name,
-      type, vasilhame_loan_id, quantity, previous_balance, new_balance,
+      owner_sector_id, actor_sector_id, type, vasilhame_loan_id, quantity, previous_balance, new_balance,
       movement_date, company_id, company_name, created_at
     ) VALUES (
       gen_random_uuid(), v_movement.product_id, v_movement.product_name,
-      p_sector_id, (SELECT name FROM sectors WHERE id = p_sector_id),
+      v_movement.actor_sector_id, v_movement.actor_sector_name,
+      v_movement.owner_sector_id, v_movement.actor_sector_id,
       v_movement.type, v_movement.vasilhame_loan_id, v_movement.quantity,
       v_current_balance, v_current_balance + v_movement.quantity,
       v_movement.movement_date, v_movement.company_id, v_movement.company_name,

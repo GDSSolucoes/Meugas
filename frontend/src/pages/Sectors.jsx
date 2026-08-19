@@ -23,7 +23,6 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, Warehouse } from "lucide-react";
 import { Sector } from "@/entities/Sector";
 import { Employee } from "@/entities/Employee";
-import { SectorMaster } from "@/entities/SectorMaster"; // Importar SectorMaster
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -31,7 +30,6 @@ export default function SectorsPage() {
   const { toast } = useToast();
   const [sectors, setSectors] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [sectorMasters, setSectorMasters] = useState([]); // Novo estado para Setores Master
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -48,21 +46,15 @@ export default function SectorsPage() {
 
   const [currentSector, setCurrentSector] = useState(initialSectorState);
 
-  // The previous useMemo for masterSectors is removed as we now load SectorMaster entities directly.
-
   const loadData = useCallback(async () => {
     try {
       const user = await User.me();
-      const [sectorsData, employeesData, sectorMastersData] = await Promise.all(
-        [
-          Sector.filter({ companyId: user.companyId }, { sort: "-createdAt" }),
-          Employee.filter({ companyId: user.companyId, active: true }),
-          SectorMaster.filter({ companyId: user.companyId }), // Carregar Setores Master
-        ],
-      );
+      const [sectorsData, employeesData] = await Promise.all([
+        Sector.filter({ companyId: user.companyId }, { sort: "-createdAt" }),
+        Employee.filter({ companyId: user.companyId, active: true }),
+      ]);
       setSectors(sectorsData);
       setEmployees(employeesData);
-      setSectorMasters(sectorMastersData); // Salvar Setores Master no estado
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast({
@@ -108,34 +100,35 @@ export default function SectorsPage() {
       const selectedEmployee = employees.find(
         (emp) => emp.id === currentSector.employeeId,
       );
-      const selectedMasterSector = sectorMasters.find(
+      const selectedMasterSector = sectors.find(
         (ms) => ms.id === currentSector.masterSectorId,
-      ); // Use sectorMasters
+      );
 
       const payload = {
         ...currentSector,
         employeeName: selectedEmployee ? selectedEmployee.name : "",
         masterSectorId: currentSector.isOwnStock
           ? null
-          : currentSector.masterSectorId,
+          : selectedMasterSector
+            ? selectedMasterSector.id
+            : "",
         masterSectorName: currentSector.isOwnStock
           ? null
           : selectedMasterSector
             ? selectedMasterSector.name
             : "",
-        companyId: user.companyId,
-        companyName: user.companyName,
       };
 
-      if (isEditing) {
-        const { id, ...sectorData } = payload;
-        await Sector.update(id, sectorData);
+      if (isEditing && currentSector.id) {
+        await Sector.update(currentSector.id, payload);
       } else {
-        await Sector.create({ ...payload, createdByName: user.name });
+        await Sector.create(payload);
       }
+
+      await loadData();
       setShowForm(false);
       resetForm();
-      loadData();
+
       toast({
         title: "Sucesso",
         description: `Setor ${isEditing ? "atualizado" : "salvo"} com sucesso.`,
@@ -286,17 +279,18 @@ export default function SectorsPage() {
                           <SelectValue placeholder="Selecione o setor master" />
                         </SelectTrigger>
                         <SelectContent>
-                          {sectorMasters.map((ms) => (
-                            <SelectItem key={ms.id} value={ms.id}>
-                              {ms.name}
-                            </SelectItem>
-                          ))}
+                          {sectors
+                            .filter((s) => s.isOwnStock)
+                            .map((ms) => (
+                              <SelectItem key={ms.id} value={ms.id}>
+                                {ms.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
-                      {sectorMasters.length === 0 && (
+                      {sectors.filter((s) => s.isOwnStock).length === 0 && (
                         <p className="text-xs text-red-500 mt-1">
-                          Nenhum setor master foi encontrado. Cadastre um
-                          primeiro na tela de Setor Master.
+                          Nenhum setor com estoque próprio foi encontrado.
                         </p>
                       )}
                     </div>

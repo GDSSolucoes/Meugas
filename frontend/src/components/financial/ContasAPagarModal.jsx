@@ -43,7 +43,7 @@ import { Person } from "@/entities/Person";
 import { ContasAPagar } from "@/entities/ContasAPagar";
 import { CashAccount } from "@/entities/CashAccount";
 import { CashMovement } from "@/entities/CashMovement";
-import { SectorMaster } from "@/entities/SectorMaster";
+// SectorMaster removed
 import { useToast } from "@/components/ui/use-toast";
 import {
   format,
@@ -155,7 +155,6 @@ export default function ContasAPagarModal({
   const [contas, setContas] = useState([]);
   const [displayedContas, setDisplayedContas] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [sectorMasters, setSectorMasters] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isBaixaOpen, setIsBaixaOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -178,7 +177,6 @@ export default function ContasAPagarModal({
 
   // Filtros
   const [filtroConta, setFiltroConta] = useState("todas");
-  const [filtroSectorMaster, setFiltroSectorMaster] = useState("todos");
   const [filtroNFe, setFiltroNFe] = useState("");
   const [statusContas, setStatusContas] = useState({
     naoPagas: true,
@@ -192,16 +190,14 @@ export default function ContasAPagarModal({
     if (!currentUser?.companyId) return;
     setIsLoading(true);
     try {
-      const [contasData, sectorMastersData, suppliersData] = await Promise.all([
+      const [contasData, suppliersData] = await Promise.all([
         ContasAPagar.filter(
           { companyId: currentUser.companyId },
           { sort: "-dueDate" },
         ),
-        SectorMaster.filter({ companyId: currentUser.companyId }),
         Person.filter({ companyId: currentUser.companyId, type: "fornecedor" }),
       ]);
       setContas(contasData);
-      setSectorMasters(sectorMastersData);
       setSuppliers(suppliersData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -246,13 +242,6 @@ export default function ContasAPagarModal({
 
         // Filtro de conta
         if (filtroConta !== "todas" && c.cashAccountId !== filtroConta)
-          return false;
-
-        // Filtro de setor master
-        if (
-          filtroSectorMaster !== "todos" &&
-          c.sectorMasterId !== filtroSectorMaster
-        )
           return false;
 
         // Filtro de NFe
@@ -728,7 +717,7 @@ export default function ContasAPagarModal({
                     Filtros
                   </h4>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       <div>
                         <Label className="text-xs">Conta:</Label>
                         <Select
@@ -743,25 +732,6 @@ export default function ContasAPagarModal({
                             {cashAccounts.map((acc) => (
                               <SelectItem key={acc.id} value={acc.id}>
                                 {acc.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Setor Master:</Label>
-                        <Select
-                          value={filtroSectorMaster}
-                          onValueChange={setFiltroSectorMaster}
-                        >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="todos">Todos</SelectItem>
-                            {sectorMasters.map((sm) => (
-                              <SelectItem key={sm.id} value={sm.id}>
-                                {sm.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

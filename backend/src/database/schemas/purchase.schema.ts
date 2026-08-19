@@ -1,7 +1,6 @@
 import {
   pgTable,
   date,
-  json,
   numeric,
   text,
   timestamp,

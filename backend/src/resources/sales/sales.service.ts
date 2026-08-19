@@ -23,6 +23,7 @@ import {
   paymentTypes,
   productStockMovements,
   StockMovementTypeEnum,
+  sectors,
 } from "../../database/schemas";
 import { SalesCreateDto } from "./dto/sales.post.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
@@ -133,6 +134,18 @@ export class SalesService extends BaseCrudService<typeof sales> {
       }
     }
 
+    const [sector] = await db
+      .select()
+      .from(sectors)
+      .where(eq(sectors.id, data.sectorId));
+
+    // If the sector has its own stock, it owns the product stocks; otherwise
+    // the referenced `masterSectorId` (another sector id) is considered owner.
+    const ownerSectorId = sector.isOwnStock
+      ? sector?.id
+      : sector.masterSectorId;
+    const actorSectorId = data.sectorId;
+
     // 1. Gerar numero da venda
     const allSales = await db
       .select()
@@ -230,12 +243,16 @@ export class SalesService extends BaseCrudService<typeof sales> {
           type: StockMovementTypeEnum.Sale,
           productId: item.productId,
           productName: item.productName,
-          sectorId: data.sectorId,
-          sectorName: data.sectorName,
+          // actor/owner fields
+          sectorId: actorSectorId,
+          sectorName: sector?.name,
+          // new explicit fields
+          actorSectorId,
+          ownerSectorId,
           saleId: savedSale.id,
           quantity: -item.quantity,
-          previousBalance: sql`(SELECT COALESCE(quantity, 0) FROM "productStocks" WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId})`,
-          newBalance: sql`(SELECT COALESCE(quantity, 0) - ${item.quantity} FROM "productStocks" WHERE product_id = ${item.productId} AND sector_id = ${data.sectorId})`,
+          previousBalance: sql`(SELECT COALESCE(quantity, 0) FROM "productStocks" WHERE product_id = ${item.productId} AND owner_sector_id = ${ownerSectorId})`,
+          newBalance: sql`(SELECT COALESCE(quantity, 0) - ${item.quantity} FROM "productStocks" WHERE product_id = ${item.productId} AND owner_sector_id = ${ownerSectorId})`,
           movementDate: new Date(),
           companyId,
           companyName: savedSale.companyName,
@@ -247,8 +264,9 @@ export class SalesService extends BaseCrudService<typeof sales> {
           .values({
             productId: item.productId,
             productName: item.productName,
-            sectorId: data.sectorId,
-            sectorName: data.sectorName,
+            sectorId: actorSectorId,
+            sectorName: sector?.name,
+            ownerSectorId,
             quantity: -item.quantity,
             initialDate: new Date(),
             companyId,
@@ -256,7 +274,7 @@ export class SalesService extends BaseCrudService<typeof sales> {
             createdByName: userName,
           })
           .onConflictDoUpdate({
-            target: [productStocks.productId, productStocks.sectorId],
+            target: [productStocks.productId, productStocks.ownerSectorId],
             set: {
               quantity: sql`${productStocks.quantity} - ${item.quantity}`,
             },

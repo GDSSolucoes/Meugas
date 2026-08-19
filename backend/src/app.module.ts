@@ -30,7 +30,6 @@ import { PurchasEsesModule } from "./resources/purchases/purchases.module";
 import { PurchaseitemsModule } from "./resources/purchaseItems/purchaseItems.module";
 import { SalesModule } from "./resources/sales/sales.module";
 import { SectorsModule } from "./resources/sectors/sectors.module";
-import { SectormastersModule } from "./resources/sectorMasters/sectorMasters.module";
 import { StocktransfersModule } from "./resources/stockTransfers/stockTransfers.module";
 import { VasilhameloansModule } from "./resources/vasilhameLoans/vasilhameLoans.module";
 import { AccountsReceivablesModule } from "./resources/accountsReceivables/accountsReceivables.module";
@@ -66,7 +65,6 @@ import { AccountsReceivablesModule } from "./resources/accountsReceivables/accou
     PurchaseitemsModule,
     SalesModule,
     SectorsModule,
-    SectormastersModule,
     StocktransfersModule,
     VasilhameloansModule,
     VehiclesModule,

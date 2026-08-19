@@ -33,7 +33,6 @@ import StockTransfer from './pages/StockTransfer';
 import StockReportPage from './pages/StockReport';
 import AdminCompaniesPage from './pages/AdminCompanies';
 import DataMigrationPage from './pages/DataMigration';
-import SectorMaster from './pages/SectorMaster';
 import AcquirersPage from './pages/Acquirers';
 import SalesListPage from './pages/SalesList';
 import FacilitadoresPage from './pages/Facilitadores';
@@ -78,7 +77,7 @@ export const PAGES = {
     "StockReport": StockReportPage,
     "AdminCompanies": AdminCompaniesPage,
     "DataMigration": DataMigrationPage,
-    "SectorMaster": SectorMaster,
+    
     "Acquirers": AcquirersPage,
     "SalesList": SalesListPage,
     //"Facilitadores": FacilitadoresPage,

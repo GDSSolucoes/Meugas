@@ -13,10 +13,11 @@ import {
   paymentTypes,
   ContasAPagarStatusEnum,
   CashMovementTypeEnum,
+  sectors,
 } from "../../database/schemas";
 import { PurchasEsCreateDto } from "./dto/purchases.post.dto";
 import { PurchasEsUpdateDto } from "./dto/purchases.update.dto";
-import { eq, sql, desc, and, or } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
 
 @Injectable()
 export class PurchasEsesService extends BaseCrudService<typeof purchases> {
@@ -45,7 +46,7 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
       );
     }
 
-    if (!data.sectorId && !data.sectorMasterId) {
+    if (!data.sectorId) {
       throw new Error("Obrigatório informar o setor");
     }
 
@@ -135,6 +136,17 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
 
     const savedPurchase = (await super.create(data)) as any;
 
+    // Load sector to determine owner/actor logic (sector.masterSectorId references another sector)
+    const [sector] = data.sectorId
+      ? await db.select().from(sectors).where(eq(sectors.id, data.sectorId))
+      : [null];
+    // Determine owner: if the selected sector has its own stock, it is the owner;
+    // otherwise the sector.masterSectorId (another sector id) is the owner. Fallback to sectorId.
+    const ownerSectorId: string = sector?.isOwnStock
+      ? (sector?.id as string)
+      : (sector?.masterSectorId ?? sector?.id ?? data.sectorId);
+    const actorSectorId = data.sectorId;
+
     if (savedPurchase?.id) {
       // Inserir itens na purchaseItems
       await db.insert(purchaseItems).values(
@@ -152,17 +164,14 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
 
       // Inserir movimentações de estoque com saldos calculados
       for (const item of data.items) {
-        // Obter saldo anterior do produto neste setor
+        // Obter saldo anterior do produto para o ownerSectorId
         const currentStockResult = await db
           .select({ quantity: productStocks.quantity })
           .from(productStocks)
           .where(
             and(
               eq(productStocks.productId, item.productId),
-              or(
-                eq(productStocks.sectorId, data.sectorId),
-                eq(productStocks.sectorMasterId, data.sectorMasterId),
-              ),
+              eq(productStocks.ownerSectorId, ownerSectorId),
             ),
           );
 
@@ -176,19 +185,14 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
             productName: item.productName,
             sectorId: data.sectorId,
             sectorName: data.sectorName,
-            sectorMasterId: data.sectorMasterId,
-            sectorMasterName: data.sectorMasterName,
+            ownerSectorId,
             quantity: newBalance,
             initialDate: new Date(),
             companyId,
             companyName: savedPurchase.companyName,
           })
           .onConflictDoUpdate({
-            target: [
-              productStocks.productId,
-              productStocks.sectorId,
-              productStocks.sectorMasterId,
-            ],
+            target: [productStocks.productId, productStocks.ownerSectorId],
             set: {
               quantity: newBalance,
             },
@@ -197,10 +201,12 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
         await db.insert(productStockMovements).values({
           productId: item.productId,
           productName: item.productName,
+          // actor/owner fields
           sectorId: data.sectorId,
           sectorName: data.sectorName,
-          sectorMasterId: data.sectorMasterId,
-          sectorMasterName: data.sectorMasterName,
+          // new explicit fields
+          actorSectorId,
+          ownerSectorId,
           type: StockMovementTypeEnum.Purchase,
           purchaseId: savedPurchase.id,
           quantity: item.quantity,

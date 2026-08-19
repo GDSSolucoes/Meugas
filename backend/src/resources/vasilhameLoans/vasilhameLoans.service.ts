@@ -7,6 +7,7 @@ import {
   productStockMovements,
   StockMovementTypeEnum,
 } from "../../database/schemas";
+import { sectors } from "../../database/schemas";
 import { VasilhameloanCreateDto } from "./dto/vasilhameloan.post.dto";
 import { VasilhameloanUpdateDto } from "./dto/vasilhameloan.update.dto";
 import { and, eq } from "drizzle-orm";
@@ -49,14 +50,24 @@ export class VasilhameloansService extends BaseCrudService<
       // Registrar movimentação de estoque: SAÍDA (quantidade negativa)
       // O vasilhame está sendo emprestado, portanto, sai do estoque
 
-      // Obter saldo anterior do vasilhame neste setor
+      // Determine owner/actor sectors
+      const [sector] = await db
+        .select()
+        .from(sectors)
+        .where(eq(sectors.id, data.sectorId));
+      const ownerSectorId = sector?.isOwnStock
+        ? sector.id
+        : (sector?.masterSectorId ?? data.sectorId);
+      const actorSectorId = data.sectorId;
+
+      // Obter saldo anterior do vasilhame para o ownerSectorId
       const currentStockResult = await db
         .select({ quantity: productStocks.quantity })
         .from(productStocks)
         .where(
           and(
             eq(productStocks.productId, data.vasilhameId),
-            eq(productStocks.sectorId, data.sectorId),
+            eq(productStocks.ownerSectorId, ownerSectorId),
           ),
         );
 
@@ -69,6 +80,8 @@ export class VasilhameloansService extends BaseCrudService<
         productName: data.vasilhameName,
         sectorId: data.sectorId as any,
         sectorName: data.sectorName,
+        ownerSectorId,
+        actorSectorId,
         type: StockMovementTypeEnum.Loan,
         vasilhameLoanId: createdLoan.id as any,
         quantity: quantityToRemove,
@@ -79,16 +92,24 @@ export class VasilhameloansService extends BaseCrudService<
         companyName: createdLoan.companyName,
       });
 
-      // Atualizar o estoque do vasilhame
+      // Upsert the productStocks using (productId, ownerSectorId)
       await db
-        .update(productStocks)
-        .set({ quantity: newBalance })
-        .where(
-          and(
-            eq(productStocks.productId, data.vasilhameId),
-            eq(productStocks.sectorId, data.sectorId),
-          ),
-        );
+        .insert(productStocks)
+        .values({
+          productId: data.vasilhameId,
+          productName: data.vasilhameName,
+          sectorId: data.sectorId,
+          sectorName: data.sectorName,
+          ownerSectorId,
+          quantity: newBalance,
+          initialDate: new Date(),
+          companyId,
+          companyName: createdLoan.companyName,
+        })
+        .onConflictDoUpdate({
+          target: [productStocks.productId, productStocks.ownerSectorId],
+          set: { quantity: newBalance },
+        });
     }
 
     return createdLoan;

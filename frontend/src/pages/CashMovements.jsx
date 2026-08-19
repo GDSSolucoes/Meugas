@@ -57,7 +57,7 @@ import { CashMovement } from "@/entities/CashMovement";
 import { CashAccount } from "@/entities/CashAccount";
 import { Person } from "@/entities/Person";
 import { Sector } from "@/entities/Sector";
-import { SectorMaster } from "@/entities/SectorMaster";
+// SectorMaster removed
 import { FinancialGroup } from "@/entities/FinancialGroup";
 import { FinancialSubgroup } from "@/entities/FinancialSubgroup";
 import { PaymentType } from "@/entities/PaymentType";
@@ -79,7 +79,6 @@ export default function CashMovementsPage({ onComplete }) {
   const [cashAccounts, setCashAccounts] = useState([]);
   const [movements, setMovements] = useState([]);
   const [sectors, setSectors] = useState([]);
-  const [sectorMasters, setSectorMasters] = useState([]);
   const [people, setPeople] = useState([]);
   const [groups, setGroups] = useState([]);
   const [subgroups, setSubgroups] = useState([]);
@@ -226,7 +225,6 @@ export default function CashMovementsPage({ onComplete }) {
       const [
         accountsData,
         sectorsData,
-        sectorMastersData,
         peopleData,
         groupsData,
         subgroupsData,
@@ -234,7 +232,6 @@ export default function CashMovementsPage({ onComplete }) {
       ] = await Promise.all([
         CashAccount.filter({ companyId, active: true }),
         Sector.filter({ companyId, active: true }),
-        SectorMaster.filter({ companyId }),
         Person.filter({ companyId }),
         FinancialGroup.filter({ companyId, active: true }),
         FinancialSubgroup.filter({ companyId, active: true }),
@@ -243,7 +240,6 @@ export default function CashMovementsPage({ onComplete }) {
 
       setCashAccounts(accountsData);
       setSectors(sectorsData);
-      setSectorMasters(sectorMastersData);
       setPeople(peopleData);
       setGroups(groupsData);
       setSubgroups(subgroupsData);
@@ -1107,8 +1103,6 @@ export default function CashMovementsPage({ onComplete }) {
     }
   };
 
-  const masterSector = sectors.find((s) => s.isOwnStock);
-
   const isFormDisabled = editMode === "none";
   const disabledInputClass = isFormDisabled
     ? "bg-slate-100 text-slate-500 cursor-not-allowed"
@@ -1525,14 +1519,10 @@ export default function CashMovementsPage({ onComplete }) {
                         value={transferData.sectorId}
                         onValueChange={(v) => {
                           const sector = sectors.find((s) => s.id === v);
-                          const sectorMaster = sectorMasters.find(
-                            (sm) => sm.id === v,
-                          );
                           setTransferData((prev) => ({
                             ...prev,
                             sectorId: v,
-                            sectorName:
-                              sector?.name || sectorMaster?.name || "",
+                            sectorName: sector?.name || "",
                           }));
                         }}
                         disabled={isFormDisabled}
@@ -1543,12 +1533,6 @@ export default function CashMovementsPage({ onComplete }) {
                           <SelectValue placeholder="Selecionar setor..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {sectorMasters.length > 0 &&
-                            sectorMasters.map((sm) => (
-                              <SelectItem key={sm.id} value={sm.id}>
-                                {sm.name} (Master)
-                              </SelectItem>
-                            ))}
                           {sectors.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
                               {s.name}
@@ -1627,15 +1611,6 @@ export default function CashMovementsPage({ onComplete }) {
                               <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {sectorMasters.length > 0 && (
-                                <>
-                                  {sectorMasters.map((sm) => (
-                                    <SelectItem key={sm.id} value={sm.id}>
-                                      {sm.name} (Master)
-                                    </SelectItem>
-                                  ))}
-                                </>
-                              )}
                               {sectors.map((s) => (
                                 <SelectItem key={s.id} value={s.id}>
                                   {s.name}
@@ -1643,12 +1618,7 @@ export default function CashMovementsPage({ onComplete }) {
                               ))}
                             </SelectContent>
                           </Select>
-                          {masterSector &&
-                            formData.sectorId === masterSector.id && (
-                              <Badge variant="secondary" className="text-xs">
-                                (Master)
-                              </Badge>
-                            )}
+                          {/* Master badge removed */}
                         </div>
                       </div>
 

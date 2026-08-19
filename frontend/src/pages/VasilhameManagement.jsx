@@ -36,7 +36,6 @@ export default function VasilhameManagementPage() {
   const [people, setPeople] = useState([]);
   const [vasilhames, setVasilhames] = useState([]);
   const [sectors, setSectors] = useState([]);
-  const [sectorMasters, setSectorMasters] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedLoan, setSelectedLoan] = useState(null);
@@ -86,32 +85,25 @@ export default function VasilhameManagementPage() {
       const user = await entities.User.me();
       setCurrentUser(user);
 
-      const [
-        loansData,
-        peopleData,
-        vasilhamesData,
-        sectorsData,
-        sectorMastersData,
-      ] = await Promise.all([
-        entities.VasilhameLoan.filter(
-          { companyId: user.companyId },
-          { sort: "-createdAt" },
-        ),
-        entities.Person.filter({ companyId: user.companyId }),
-        entities.Product.filter({
-          companyId: user.companyId,
-          category: "vasilhame",
-          active: true,
-        }),
-        entities.Sector.filter({ companyId: user.companyId, active: true }),
-        entities.SectorMaster.filter({ companyId: user.companyId }),
-      ]);
+      const [loansData, peopleData, vasilhamesData, sectorsData] =
+        await Promise.all([
+          entities.VasilhameLoan.filter(
+            { companyId: user.companyId },
+            { sort: "-createdAt" },
+          ),
+          entities.Person.filter({ companyId: user.companyId }),
+          entities.Product.filter({
+            companyId: user.companyId,
+            category: "vasilhame",
+            active: true,
+          }),
+          entities.Sector.filter({ companyId: user.companyId, active: true }),
+        ]);
 
       setLoans(loansData);
       setPeople(peopleData);
       setVasilhames(vasilhamesData);
       setSectors(sectorsData);
-      setSectorMasters(sectorMastersData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast({
@@ -153,12 +145,7 @@ export default function VasilhameManagementPage() {
       });
     }
 
-    // Filtro por Setor Master
-    if (setorMaster && setorMasterValue) {
-      filtered = filtered.filter(
-        (loan) => loan.sectorMasterId === setorMasterValue,
-      );
-    }
+    // Setor Master filter removed
 
     // Filtro por Setor Estoque Próprio
     if (setorEstqProprio && setorEstqProprioValue) {

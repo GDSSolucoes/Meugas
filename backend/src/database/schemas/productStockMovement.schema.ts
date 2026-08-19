@@ -7,7 +7,6 @@ import {
   pgPolicy,
   index,
   pgEnum,
-  boolean,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
@@ -18,7 +17,6 @@ import { purchases } from "./purchase.schema";
 import { stockTransfers } from "./stockTransfer.schema";
 import { productPickups } from "./productPickup.schema";
 import { vasilhameLoans } from "./vasilhameLoan.schema";
-import { sectorMasters } from "./sectorMaster.schema";
 
 // Tipos de movimentação de estoque
 export enum StockMovementTypeEnum {
@@ -49,11 +47,15 @@ export const productStockMovements = pgTable(
       onDelete: "restrict",
     }),
     sectorName: text("sector_name"),
-    sectorMasterId: uuid("sector_master_id").references(
-      () => sectorMasters.id,
-      { onDelete: "restrict" },
-    ),
-    sectorMasterName: text("sector_master_name"),
+    // legacy sector master fields removed
+    // Owner of the stock (which sector actually owns the stock)
+    ownerSectorId: uuid("owner_sector_id").references(() => sectors.id, {
+      onDelete: "restrict",
+    }),
+    // Actor: the sector that performed the action (sale, pickup, etc.)
+    actorSectorId: uuid("actor_sector_id").references(() => sectors.id, {
+      onDelete: "restrict",
+    }),
 
     // Tipo da movimentação
     type: StockMovementTypePGEnum("type").notNull(),
@@ -121,8 +123,11 @@ export const productStockMovements = pgTable(
     index("productStockMovements_company_id_index").on(table.companyId),
     index("productStockMovements_product_id_index").on(table.productId),
     index("productStockMovements_sector_id_index").on(table.sectorId),
-    index("productStockMovements_sector_master_id_index").on(
-      table.sectorMasterId,
+    index("productStockMovements_owner_sector_id_index").on(
+      table.ownerSectorId,
+    ),
+    index("productStockMovements_actor_sector_id_index").on(
+      table.actorSectorId,
     ),
     index("productStockMovements_sale_id_index").on(table.saleId),
     index("productStockMovements_purchase_id_index").on(table.purchaseId),

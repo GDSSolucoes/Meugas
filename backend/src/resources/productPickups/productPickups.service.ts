@@ -8,6 +8,7 @@ import {
   StockMovementTypeEnum,
   ProductPickupStatusEnum,
 } from "../../database/schemas";
+import { sectors } from "../../database/schemas";
 import { ProductpickupCreateDto } from "./dto/productpickup.post.dto";
 import { ProductpickupUpdateDto } from "./dto/productpickup.update.dto";
 import { and, eq } from "drizzle-orm";
@@ -109,19 +110,24 @@ export class ProductpickupsService extends BaseCrudService<
     };
 
     // Registrar movimentação de estoque
-    if (
-      quantityToCollect > 0 &&
-      currentPickup.productId &&
-      data.sectorId
-    ) {
-      // Obter saldo anterior do produto no setor
+    if (quantityToCollect > 0 && currentPickup.productId && data.sectorId) {
+      // Determine owner/actor sectors
+      const [sector] = await db
+        .select()
+        .from(sectors)
+        .where(eq(sectors.id, data.sectorId));
+      const ownerSectorId = sector?.isOwnStock
+        ? sector.id
+        : (sector?.masterSectorId ?? data.sectorId);
+      const actorSectorId = data.sectorId;
+      // Obter saldo anterior do produto para o ownerSectorId
       const currentStockResult = await db
         .select({ quantity: productStocks.quantity })
         .from(productStocks)
         .where(
           and(
             eq(productStocks.productId, currentPickup.productId),
-            eq(productStocks.sectorId, data.sectorId),
+            eq(productStocks.ownerSectorId, ownerSectorId),
           ),
         );
 
@@ -134,6 +140,8 @@ export class ProductpickupsService extends BaseCrudService<
         productName: currentPickup.productName,
         sectorId: data.sectorId as any,
         sectorName: data.sectorName,
+        ownerSectorId,
+        actorSectorId,
         type: StockMovementTypeEnum.Pickup,
         productPickupId: id as any,
         quantity: quantityToRemove,
@@ -144,16 +152,24 @@ export class ProductpickupsService extends BaseCrudService<
         companyName: currentPickup.companyName,
       });
 
-      // Atualizar o estoque do produto
+      // Upsert the productStocks using (productId, ownerSectorId)
       await db
-        .update(productStocks)
-        .set({ quantity: newBalance })
-        .where(
-          and(
-            eq(productStocks.productId, currentPickup.productId),
-            eq(productStocks.sectorId, data.sectorId),
-          ),
-        );
+        .insert(productStocks)
+        .values({
+          productId: currentPickup.productId,
+          productName: currentPickup.productName,
+          sectorId: data.sectorId,
+          sectorName: data.sectorName,
+          ownerSectorId,
+          quantity: newBalance,
+          initialDate: new Date(),
+          companyId,
+          companyName: currentPickup.companyName,
+        })
+        .onConflictDoUpdate({
+          target: [productStocks.productId, productStocks.ownerSectorId],
+          set: { quantity: newBalance },
+        });
     }
 
     // Atualizar o productPickup

@@ -56,6 +56,7 @@ export default function StockMovementPage() {
         const sectorData = await Sector.filter({
           companyId: user.companyId,
           active: true,
+          isOwnStock: true, // Only include sectors that have their own stock
         }); // Filter sectors by company
         setSectors(sectorData);
 
@@ -103,7 +104,10 @@ export default function StockMovementPage() {
             sectorId: selectedSectorId,
             companyId: companyId,
           }), // Get stocks specifically for the selected sector and company
-          Sector.filter({ companyId: companyId }), // Re-fetch sectors to ensure up-to-date names, filtered by company
+          Sector.filter({
+            companyId: companyId,
+            isOwnStock: true,
+          }), // Re-fetch sectors to ensure up-to-date names, filtered by company
         ]);
 
       const currentSector = allSectors.find((s) => s.id === selectedSectorId);
@@ -125,7 +129,10 @@ export default function StockMovementPage() {
 
       for (const product of allProducts) {
         // If an active product does not have an existing stock entry in the current sector, create one
-        if (!existingProductIdsInSector.has(product.id)) {
+        if (
+          !existingProductIdsInSector.has(product.id) &&
+          currentSector.isOwnStock
+        ) {
           const newStock = await ProductStock.create({
             productId: product.id,
             productName: product.name,

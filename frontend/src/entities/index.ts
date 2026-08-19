@@ -21,37 +21,35 @@ import { ProductStock } from "./ProductStock";
 import { Purchase } from "./Purchase";
 import { Sale } from "./Sale";
 import { Sector } from "./Sector";
-import { SectorMaster } from "./SectorMaster";
 
 import { User } from "./User";
 import { VasilhameLoan } from "./VasilhameLoan";
 import { Vehicle } from "./Vehicle";
 
 export {
-    AccountsReceivable,
-    Acquirer,
-    Budget,
-    CashAccount,
-    CashMovement,
-    Company,
-    ContasAPagar,
-    Employee,
-    Facilitador,
-    FinancialGroup,
-    FinancialSubgroup,
-    Fueling,
-    Order,
-    PaymentType,
-    Person,
-    Product,
-    ProductPickup,
-    ProductStock,
-    Purchase,
-    Sale,
-    Sector,
-    SectorMaster,
-    StockTransfer,
-    User,
-    VasilhameLoan,
-    Vehicle
+  AccountsReceivable,
+  Acquirer,
+  Budget,
+  CashAccount,
+  CashMovement,
+  Company,
+  ContasAPagar,
+  Employee,
+  Facilitador,
+  FinancialGroup,
+  FinancialSubgroup,
+  Fueling,
+  Order,
+  PaymentType,
+  Person,
+  Product,
+  ProductPickup,
+  ProductStock,
+  Purchase,
+  Sale,
+  Sector,
+  StockTransfer,
+  User,
+  VasilhameLoan,
+  Vehicle,
 };

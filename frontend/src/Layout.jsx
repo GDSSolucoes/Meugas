@@ -83,11 +83,6 @@ const moduleGerencial = [
     icon: FolderOpen,
     items: [
       { title: "Produtos", url: createPageUrl("Products"), icon: Package },
-      {
-        title: "Setor Master",
-        url: createPageUrl("SectorMaster"),
-        icon: Warehouse,
-      },
       { title: "Setores", url: createPageUrl("Sectors"), icon: Warehouse },
       { title: "Pessoas", url: createPageUrl("People"), icon: UsersIcon },
       {

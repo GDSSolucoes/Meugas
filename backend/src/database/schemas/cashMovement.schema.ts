@@ -66,8 +66,6 @@ export const cashMovements = pgTable(
     relatedDocId: uuid("related_doc_id"),
     sectorId: uuid("sector_id"),
     sectorName: text("sector_name"),
-    sectorMasterId: uuid("sector_master_id"),
-    sectorMasterName: text("sector_master_name"),
     purchaseId: uuid("purchase_id").references(() => purchases.id),
     companyId: uuid("company_id")
       .notNull()

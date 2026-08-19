@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/table";
 import { BarChart3, Filter, Loader2 } from "lucide-react";
 import { Sector } from "@/entities/Sector";
-import { SectorMaster } from "@/entities/SectorMaster";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { User } from "@/entities/User";
@@ -28,11 +27,11 @@ import { api } from "@/api/apiClient";
 
 export default function StockReportPage() {
   const { toast } = useToast();
-  const [sectorOptions, setSectorOptions] = useState([]); // Combined list: [{id, name, type: 'sector' | 'master'}]
+  const [sectorOptions, setSectorOptions] = useState([]);
   const [reportData, setReportData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
-    sectorId: "", // Format: "sector:<id>" or "master:<id>"
+    sectorId: "",
     reportDate: format(new Date(), "yyyy-MM-dd"),
   });
   const [currentUser, setCurrentUser] = useState(null);
@@ -43,29 +42,17 @@ export default function StockReportPage() {
         const user = await User.me();
         setCurrentUser(user);
 
-        // Carregar setores que possuem estoque proprio E setores master
-        const [sectorsData, sectorMastersData] = await Promise.all([
-          Sector.filter({
-            companyId: user.companyId,
-            active: true,
-            isOwnStock: true,
-          }),
-          SectorMaster.filter({ companyId: user.companyId, active: true }),
-        ]);
+        const sectorsData = await Sector.filter({
+          companyId: user.companyId,
+          active: true,
+          isOwnStock: true,
+        });
 
-        // Combinar em uma lista unica com prefixo para diferenciar
-        const combinedOptions = [
-          ...sectorsData.map((s) => ({
-            id: `sector:${s.id}`,
-            name: s.name,
-            type: "sector",
-          })),
-          ...sectorMastersData.map((m) => ({
-            id: `master:${m.id}`,
-            name: `${m.name} (Master)`,
-            type: "master",
-          })),
-        ];
+        const combinedOptions = sectorsData.map((s) => ({
+          id: `sector:${s.id}`,
+          name: s.name,
+          type: "sector",
+        }));
 
         setSectorOptions(combinedOptions);
       } catch (error) {
@@ -214,18 +201,10 @@ export default function StockReportPage() {
                     <TableHead className="text-amber-600">
                       Empréstimos
                     </TableHead>
-                    <TableHead className="text-teal-600">
-                      Devoluções
-                    </TableHead>
-                    <TableHead className="text-indigo-600">
-                      A Retirar
-                    </TableHead>
-                    <TableHead className="text-orange-600">
-                      Retirados
-                    </TableHead>
-                    <TableHead className="font-bold">
-                      Saldo Final
-                    </TableHead>
+                    <TableHead className="text-teal-600">Devoluções</TableHead>
+                    <TableHead className="text-indigo-600">A Retirar</TableHead>
+                    <TableHead className="text-orange-600">Retirados</TableHead>
+                    <TableHead className="font-bold">Saldo Final</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -264,9 +243,7 @@ export default function StockReportPage() {
                             : "-"}
                         </TableCell>
                         <TableCell className="text-teal-600">
-                          {item.qtdeDevolucoes > 0
-                            ? item.qtdeDevolucoes
-                            : "-"}
+                          {item.qtdeDevolucoes > 0 ? item.qtdeDevolucoes : "-"}
                         </TableCell>
                         <TableCell className="text-indigo-600">
                           {item.qtdeARetirar > 0 ? item.qtdeARetirar : "-"}

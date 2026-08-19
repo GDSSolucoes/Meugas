@@ -19,9 +19,7 @@ import {
   lt,
   isNotNull,
   sql,
-  desc,
 } from "drizzle-orm";
-import { startOfDay, endOfDay, isBefore, parseISO } from "date-fns";
 
 @QueryHandler(GetStockReportQuery)
 export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery> {
@@ -32,14 +30,12 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
     if (!db) throw new Error("DB not available");
 
     const { sectorId, reportDate, companyId } = query;
-    
+
     // Parse date correctly: assume yyyy-MM-dd is local date, create local datetime
     // Manually parse to avoid timezone shifts from new Date() on date-only string
     const [year, month, day] = reportDate.split("-").map(Number);
-    const reportStart = new Date(year, month-1, day, 0, 0, 0, 0);
-    const reportEnd = new Date(year, month-1, day, 23, 59, 59, 999);
-
-    
+    const reportStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const reportEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
 
     // Decodificar o filtro para saber se é setor normal ou master
     const [filterType, filterId] = sectorId.split(":");
@@ -68,54 +64,59 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
     const allProducts = await db
       .select()
       .from(products)
-      .where(
-        and(eq(products.companyId, companyId), eq(products.active, true)),
-      );
+      .where(and(eq(products.companyId, companyId), eq(products.active, true)));
 
-    // Buscar estoques iniciais (productStocks) relevantes
+    // Buscar estoques iniciais (productStocks) relevantes by ownerSectorId
     const relevantStocks = await db
       .select()
       .from(productStocks)
       .where(
         and(
           eq(productStocks.companyId, companyId),
-          inArray(productStocks.sectorId, relevantSectorIds),
+          inArray(productStocks.ownerSectorId, relevantSectorIds),
         ),
       );
 
     // Buscar movimentações relevantes (anteriores à data do relatório) para cálculo do saldo inicial
+    // Movements before report filtered by ownerSectorId
     const movementsBeforeReport = await db
       .select()
       .from(productStockMovements)
       .where(
         and(
           eq(productStockMovements.companyId, companyId),
-          inArray(productStockMovements.sectorId, relevantSectorIds),
+          inArray(productStockMovements.ownerSectorId, relevantSectorIds),
           lt(productStockMovements.movementDate, reportStart),
         ),
       );
 
     // Buscar movimentações DURANTE o dia do relatório
+    // Movements during the report day filtered by ownerSectorId
     const movementsInReport = await db
       .select()
       .from(productStockMovements)
       .where(
         and(
           eq(productStockMovements.companyId, companyId),
-          inArray(productStockMovements.sectorId, relevantSectorIds),
+          inArray(productStockMovements.ownerSectorId, relevantSectorIds),
           gte(productStockMovements.movementDate, reportStart),
           lte(productStockMovements.movementDate, reportEnd),
         ),
       );
 
     // Buscar empréstimos de vasilhame (loanDate no dia) para qtdeEmprestimos
+    // Loans: derive owner sector from loan.sectorId and filter by relevant owner sectors
     const loansInDay = await db
       .select()
       .from(vasilhameLoans)
+      .leftJoin(sectors, eq(sectors.id, vasilhameLoans.sectorId))
       .where(
         and(
           eq(vasilhameLoans.companyId, companyId),
-          inArray(vasilhameLoans.sectorId, relevantSectorIds),
+          inArray(
+            sql`CASE WHEN ${sectors.isOwnStock} THEN ${sectors.id} ELSE ${sectors.masterSectorId} END`,
+            relevantSectorIds,
+          ),
           gte(vasilhameLoans.loanDate, reportStart),
           lte(vasilhameLoans.loanDate, reportEnd),
         ),
@@ -125,10 +126,14 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
     const returnsInDay = await db
       .select()
       .from(vasilhameLoans)
+      .leftJoin(sectors, eq(sectors.id, vasilhameLoans.sectorId))
       .where(
         and(
           eq(vasilhameLoans.companyId, companyId),
-          inArray(vasilhameLoans.sectorId, relevantSectorIds),
+          inArray(
+            sql`CASE WHEN ${sectors.isOwnStock} THEN ${sectors.id} ELSE ${sectors.masterSectorId} END`,
+            relevantSectorIds,
+          ),
           isNotNull(vasilhameLoans.returnDate),
           gte(vasilhameLoans.returnDate, reportStart),
           lte(vasilhameLoans.returnDate, reportEnd),
@@ -139,10 +144,14 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
     const pickupsRegisteredDay = await db
       .select()
       .from(productPickups)
+      .leftJoin(sectors, eq(sectors.id, productPickups.sectorId))
       .where(
         and(
           eq(productPickups.companyId, companyId),
-          inArray(productPickups.sectorId, relevantSectorIds),
+          inArray(
+            sql`CASE WHEN ${sectors.isOwnStock} THEN ${sectors.id} ELSE ${sectors.masterSectorId} END`,
+            relevantSectorIds,
+          ),
           gte(productPickups.saleDate, reportStart),
           lte(productPickups.saleDate, reportEnd),
         ),
@@ -152,10 +161,14 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
     const pickupsCollectedDay = await db
       .select()
       .from(productPickups)
+      .leftJoin(sectors, eq(sectors.id, productPickups.sectorId))
       .where(
         and(
           eq(productPickups.companyId, companyId),
-          inArray(productPickups.sectorId, relevantSectorIds),
+          inArray(
+            sql`CASE WHEN ${sectors.isOwnStock} THEN ${sectors.id} ELSE ${sectors.masterSectorId} END`,
+            relevantSectorIds,
+          ),
           isNotNull(productPickups.collectedDate),
           gte(productPickups.collectedDate, reportStart),
           lte(productPickups.collectedDate, reportEnd),
@@ -212,23 +225,23 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
 
         // 3. Empréstimos de vasilhame no dia
         const qtdeEmprestimos = loansInDay
-          .filter((l) => l.vasilhameId === productId)
-          .reduce((sum, l) => sum + Number(l.loanQuantity || 0), 0);
+          .filter((row) => row.vasilhameLoans && row.vasilhameLoans.vasilhameId === productId)
+          .reduce((sum, row) => sum + Number(row.vasilhameLoans?.loanQuantity || 0), 0);
 
         // 4. Devoluções de vasilhame no dia
         const qtdeDevolucoes = returnsInDay
-          .filter((l) => l.vasilhameId === productId)
-          .reduce((sum, l) => sum + Number(l.returnedQuantity || 0), 0);
+          .filter((row) => row.vasilhameLoans && row.vasilhameLoans.vasilhameId === productId)
+          .reduce((sum, row) => sum + Number(row.vasilhameLoans?.returnedQuantity || 0), 0);
 
         // 5. Quantidade a Retirar (productPickups criados no dia)
         const qtdeARetirar = pickupsRegisteredDay
-          .filter((p) => p.productId === productId)
-          .reduce((sum, p) => sum + Number(p.pickupQuantity || 0), 0);
+          .filter((row) => row.productPickups && row.productPickups.productId === productId)
+          .reduce((sum, row) => sum + Number(row.productPickups?.pickupQuantity || 0), 0);
 
         // 6. Quantidade Retirada (productPickups coletados no dia)
         const qtdeRetirada = pickupsCollectedDay
-          .filter((p) => p.productId === productId)
-          .reduce((sum, p) => sum + Number(p.collectedQuantity || 0), 0);
+          .filter((row) => row.productPickups && row.productPickups.productId === productId)
+          .reduce((sum, row) => sum + Number(row.productPickups?.collectedQuantity || 0), 0);
 
         // 7. Calcular saldo final
         const saldoFinal =

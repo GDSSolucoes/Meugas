@@ -10,7 +10,6 @@ import {
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { employees } from "./employee.schema";
-import { sectorMasters } from "./sectorMaster.schema";
 
 export const sectors = pgTable(
   "sectors",
@@ -23,12 +22,7 @@ export const sectors = pgTable(
     employeeName: text("employee_name"),
     phone: text("phone"),
     isOwnStock: boolean("is_own_stock").default(true),
-    masterSectorId: uuid("master_sector_id").references(
-      () => sectorMasters.id,
-      {
-        onDelete: "restrict",
-      },
-    ),
+    masterSectorId: uuid("master_sector_id"),
     masterSectorName: text("master_sector_name"),
     companyId: uuid("company_id")
       .notNull()
