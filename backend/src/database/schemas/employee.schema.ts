@@ -1,7 +1,6 @@
 import {
   pgTable,
   boolean,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   pgPolicy,
   index,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 
@@ -36,9 +36,9 @@ export const employees = pgTable(
     phone: text("phone"),
     position: EmployeePositionPGEnum("position").notNull(),
     salary: numeric("salary", { mode: "number" }),
-    hireDate: date("hire_date", { mode: "date" }),
-    vacationStart: date("vacation_start", { mode: "date" }),
-    vacationEnd: date("vacation_end", { mode: "date" }),
+    hireDate: dateOnly("hire_date"),
+    vacationStart: dateOnly("vacation_start"),
+    vacationEnd: dateOnly("vacation_end"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),

@@ -18,10 +18,14 @@ import {
 import { PurchasEsCreateDto } from "./dto/purchases.post.dto";
 import { PurchasEsUpdateDto } from "./dto/purchases.update.dto";
 import { eq, sql, desc, and } from "drizzle-orm";
+import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
 
 @Injectable()
 export class PurchasEsesService extends BaseCrudService<typeof purchases> {
-  constructor(requestContext: RequestContextService) {
+  constructor(
+    requestContext: RequestContextService,
+    private readonly stockMovementRebuild: StockMovementRebuildService,
+  ) {
     super(requestContext, purchases, true); // hasCompanyId = true
   }
 
@@ -149,6 +153,10 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
     const ownerSectorId: string = sector?.isOwnStock
       ? (sector?.id as string)
       : (sector?.masterSectorId ?? sector?.id ?? data.sectorId);
+    const [ownerSector] = await db
+      .select()
+      .from(sectors)
+      .where(eq(sectors.id, ownerSectorId));
     const actorSectorId = data.sectorId;
 
     if (savedPurchase?.id) {
@@ -169,38 +177,39 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
       // Inserir movimentações de estoque com saldos calculados
       for (const item of data.items) {
         // Obter saldo anterior do produto para o ownerSectorId
-        const currentStockResult = await db
-          .select({ quantity: productStocks.quantity })
-          .from(productStocks)
-          .where(
-            and(
-              eq(productStocks.productId, item.productId),
-              eq(productStocks.ownerSectorId, ownerSectorId),
-            ),
-          );
-
-        const previousBalance = currentStockResult[0]?.quantity ?? 0;
+        let previousBalance = 0;
+        if (ownerSector?.isOwnStock) {
+          const currentStockResult = await db
+            .select({ quantity: productStocks.quantity })
+            .from(productStocks)
+            .where(
+              and(
+                eq(productStocks.productId, item.productId),
+                eq(productStocks.sectorId, ownerSectorId),
+              ),
+            );
+          previousBalance = currentStockResult[0]?.quantity ?? 0;
+        }
         const newBalance = previousBalance + item.quantity;
 
-        await db
-          .insert(productStocks)
-          .values({
-            productId: item.productId,
-            productName: item.productName,
-            sectorId: data.sectorId,
-            sectorName: data.sectorName,
-            ownerSectorId,
-            quantity: newBalance,
-            initialDate: new Date(),
-            companyId,
-            companyName: savedPurchase.companyName,
-          })
-          .onConflictDoUpdate({
-            target: [productStocks.productId, productStocks.ownerSectorId],
-            set: {
+        if (ownerSector?.isOwnStock) {
+          await db
+            .insert(productStocks)
+            .values({
+              productId: item.productId,
+              productName: item.productName,
+              sectorId: ownerSectorId,
+              sectorName: ownerSector.name,
               quantity: newBalance,
-            },
-          });
+              initialDate: new Date(),
+              companyId,
+              companyName: savedPurchase.companyName,
+            })
+            .onConflictDoUpdate({
+              target: [productStocks.productId, productStocks.sectorId],
+              set: { quantity: newBalance },
+            });
+        }
 
         await db.insert(productStockMovements).values({
           productId: item.productId,
@@ -332,8 +341,28 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
         })),
       );
 
-      // TODO: Recalcular estoque - para manutenção chamar a stored procedure rebuild_stock_movement_history
-      await db.execute(sql`CALL rebuild_all_stock_movement_history()`);
+      await this.stockMovementRebuild.rebuild({
+        productIds: Array.from(
+          new Set(
+            data.items
+              .map((item) => item.productId)
+              .filter((productId): productId is string => Boolean(productId)),
+          ),
+        ),
+        sectorIds: Array.from(
+          new Set(
+            [currentPurchase[0].sectorId, data.sectorId].filter(
+              (sectorId): sectorId is string => Boolean(sectorId),
+            ),
+          ),
+        ),
+        fromDate: new Date(
+          Math.min(
+            currentPurchase[0].purchaseDate!.getTime(),
+            data.purchaseDate!.getTime(),
+          ),
+        ),
+      });
     }
 
     return updatedPurchase;

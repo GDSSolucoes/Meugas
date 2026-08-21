@@ -1,5 +1,4 @@
 import {
-  date,
   json,
   pgTable,
   text,
@@ -11,6 +10,7 @@ import {
   pgEnum,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { sql } from "drizzle-orm/sql/sql";
 
 export type CompanyAddress = {
@@ -28,11 +28,7 @@ export type CompanyParametrosFiscais = {
   cnpj?: string;
   razaoSocial?: string;
   inscricaoEstadual?: string;
-  regimeTributario?:
-    | "simplesNacional"
-    | "lucroPresumido"
-    | "lucroReal"
-    | "mei";
+  regimeTributario?: "simplesNacional" | "lucroPresumido" | "lucroReal" | "mei";
   ambienteNfe?: "homologacao" | "producao";
   emitirNfe?: boolean;
   emitirNfce?: boolean;
@@ -71,8 +67,8 @@ export const companies = pgTable(
     parametrosFiscais:
       json("parametros_fiscais").$type<CompanyParametrosFiscais>(),
     planType: PlanTypePGEnum("plan_type").default(PlanTypeEnum.BASIC),
-    monthlyFee: numeric("monthly_fee", {mode: "number"}),
-    dueDate: date("due_date", { mode : "date"}),
+    monthlyFee: numeric("monthly_fee", { mode: "number" }),
+    dueDate: dateOnly("due_date"),
     status: CompanyStatusPGEnum("status").default(CompanyStatusEnum.ATIVA),
     suspensionReason: text("suspension_reason"),
     adminName: text("admin_name").notNull(),
@@ -80,7 +76,10 @@ export const companies = pgTable(
     active: boolean("active").default(true),
     createdByName: text("created_by_name"),
     notes: text("notes"),
-    createdAt: timestamp("created_at", { mode : "date",  withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    }).defaultNow(),
   },
   (table) => [
     pgPolicy("companies_tenant_isolation", {
@@ -93,4 +92,3 @@ export const companies = pgTable(
     index("companies_status_index").on(table.status),
   ],
 );
-

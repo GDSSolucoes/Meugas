@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   uniqueIndex,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { products } from "./product.schema";
@@ -27,13 +27,8 @@ export const productStocks = pgTable(
       onDelete: "restrict",
     }),
     sectorName: text("sector_name"),
-    // legacy sector master fields removed
-    // Owner of the stock (which sector actually owns the stock)
-    ownerSectorId: uuid("owner_sector_id").references(() => sectors.id, {
-      onDelete: "restrict",
-    }),
     quantity: numeric("quantity", { mode: "number" }).notNull(),
-    initialDate: date("initial_date", { mode: "date" }),
+    initialDate: dateOnly("initial_date"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),
@@ -56,10 +51,9 @@ export const productStocks = pgTable(
     index("productStocks_company_id_index").on(table.companyId),
     index("productStocks_product_id_index").on(table.productId),
     index("productStocks_sector_id_index").on(table.sectorId),
-    index("productStocks_owner_sector_id_index").on(table.ownerSectorId),
-    uniqueIndex("productStocks_product_id_owner_sector_id_unique").on(
+    uniqueIndex("productStocks_product_id_sector_id_unique").on(
       table.productId,
-      table.ownerSectorId,
+      table.sectorId,
     ),
   ],
 );

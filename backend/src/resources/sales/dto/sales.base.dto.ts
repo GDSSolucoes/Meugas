@@ -8,11 +8,12 @@ import {
   IsArray,
   ValidateNested,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { SaleItemsItemDto } from "./saleitemsitem.dto";
 import { SalePaymentMethodsItemDto } from "./salepaymentmethodsitem.dto";
 import { SaleStatusEnum } from "../../../database/schemas";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class SalesBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -46,7 +47,7 @@ export class SalesBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   saleDate!: Date;
 
   @ApiProperty()

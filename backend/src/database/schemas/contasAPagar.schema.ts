@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   index,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { paymentTypes } from "./paymentType.schema";
@@ -33,7 +33,7 @@ export const contasAPagar = pgTable(
     supplierId: uuid("supplier_id"),
     supplierName: text("supplier_name"),
     description: text("description").notNull(),
-    dueDate: date("due_date", { mode: "date" }).notNull(),
+    dueDate: dateOnly("due_date").notNull(),
     amount: numeric("amount", { mode: "number" }).notNull(),
     installmentNumber: numeric("installment_number", { mode: "number" }),
     status: contasAPagarStatusPGEnum("status").default(
@@ -43,7 +43,7 @@ export const contasAPagar = pgTable(
       onDelete: "restrict",
     }),
     paymentTypeName: text("payment_type_name"),
-    paymentDate: date("payment_date", { mode: "date" }),
+    paymentDate: dateOnly("payment_date"),
     purchaseId: uuid("purchase_id").references(() => purchases.id, {
       onDelete: "restrict",
     }),
@@ -54,7 +54,7 @@ export const contasAPagar = pgTable(
     subgroupName: text("subgroup_name"),
     documentNumber: text("document_number"),
     reagendamentoMotivo: text("reagendamento_motivo"),
-    reagendamentoData: date("reagendamento_data", { mode: "date" }),
+    reagendamentoData: dateOnly("reagendamento_data"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),

@@ -1,7 +1,6 @@
 import {
   pgTable,
   boolean,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   index,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 
@@ -31,7 +31,7 @@ export const cashAccounts = pgTable(
     type: CashAccountTypePGEnum("type").notNull(),
     balance: numeric("balance", { mode: "number" }).default(0),
     initialBalance: numeric("initial_balance", { mode: "number" }).default(0),
-    initialBalanceDate: date("initial_balance_date", { mode: "date" }),
+    initialBalanceDate: dateOnly("initial_balance_date"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),

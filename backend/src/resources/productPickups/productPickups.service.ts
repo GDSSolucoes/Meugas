@@ -119,6 +119,9 @@ export class ProductpickupsService extends BaseCrudService<
       const ownerSectorId = sector?.isOwnStock
         ? sector.id
         : (sector?.masterSectorId ?? data.sectorId);
+      const [ownerSector] = ownerSectorId
+        ? await db.select().from(sectors).where(eq(sectors.id, ownerSectorId))
+        : [];
       const actorSectorId = data.sectorId;
       // Obter saldo anterior do produto para o ownerSectorId
       const currentStockResult = await db
@@ -127,7 +130,7 @@ export class ProductpickupsService extends BaseCrudService<
         .where(
           and(
             eq(productStocks.productId, currentPickup.productId),
-            eq(productStocks.ownerSectorId, ownerSectorId),
+            eq(productStocks.sectorId, ownerSectorId),
           ),
         );
 
@@ -153,23 +156,24 @@ export class ProductpickupsService extends BaseCrudService<
       });
 
       // Upsert the productStocks using (productId, ownerSectorId)
-      await db
-        .insert(productStocks)
-        .values({
-          productId: currentPickup.productId,
-          productName: currentPickup.productName,
-          sectorId: data.sectorId,
-          sectorName: data.sectorName,
-          ownerSectorId,
-          quantity: newBalance,
-          initialDate: new Date(),
-          companyId,
-          companyName: currentPickup.companyName,
-        })
-        .onConflictDoUpdate({
-          target: [productStocks.productId, productStocks.ownerSectorId],
-          set: { quantity: newBalance },
-        });
+      if (ownerSector?.isOwnStock) {
+        await db
+          .insert(productStocks)
+          .values({
+            productId: currentPickup.productId,
+            productName: currentPickup.productName,
+            sectorId: ownerSectorId,
+            sectorName: ownerSector.name,
+            quantity: newBalance,
+            initialDate: new Date(),
+            companyId,
+            companyName: currentPickup.companyName,
+          })
+          .onConflictDoUpdate({
+            target: [productStocks.productId, productStocks.sectorId],
+            set: { quantity: newBalance },
+          });
+      }
     }
 
     // Atualizar o productPickup
@@ -246,14 +250,24 @@ export class ProductpickupsService extends BaseCrudService<
 
     // Registrar movimentação de estoque
     if (quantityToCollect > 0 && currentPickup.productId && data.sectorId) {
-      // Obter saldo anterior do produto no setor
+      const [sector] = await db
+        .select()
+        .from(sectors)
+        .where(eq(sectors.id, data.sectorId));
+      const ownerSectorId = sector?.isOwnStock
+        ? data.sectorId
+        : sector?.masterSectorId;
+      const stockSectorId = ownerSectorId ?? data.sectorId;
+      const [ownerSector] = ownerSectorId
+        ? await db.select().from(sectors).where(eq(sectors.id, ownerSectorId))
+        : [];
       const currentStockResult = await db
         .select({ quantity: productStocks.quantity })
         .from(productStocks)
         .where(
           and(
             eq(productStocks.productId, currentPickup.productId),
-            eq(productStocks.sectorId, data.sectorId),
+            eq(productStocks.sectorId, stockSectorId),
           ),
         );
 
@@ -277,15 +291,17 @@ export class ProductpickupsService extends BaseCrudService<
       });
 
       // Atualizar o estoque do produto
-      await db
-        .update(productStocks)
-        .set({ quantity: newBalance })
-        .where(
-          and(
-            eq(productStocks.productId, currentPickup.productId),
-            eq(productStocks.sectorId, data.sectorId),
-          ),
-        );
+      if (ownerSector?.isOwnStock) {
+        await db
+          .update(productStocks)
+          .set({ quantity: newBalance })
+          .where(
+            and(
+              eq(productStocks.productId, currentPickup.productId),
+              eq(productStocks.sectorId, stockSectorId),
+            ),
+          );
+      }
     }
 
     return super.update(id, updatedData);

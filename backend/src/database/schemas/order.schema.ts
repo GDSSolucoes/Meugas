@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   json,
   numeric,
   text,
@@ -11,6 +10,7 @@ import {
   index,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { persons } from "./person.schema";
@@ -73,7 +73,7 @@ export const orders = pgTable(
     status: ordersStatusPGEnum("status").default(OrdersStatusEnum.PENDENTE),
     items: json("items").$type<OrderItemsItem[]>(),
     totalAmount: numeric("total_amount", { mode: "number" }).default(0),
-    deliveryDate: date("delivery_date", { mode: "date" }),
+    deliveryDate: dateOnly("delivery_date"),
     notes: text("notes"),
     attendedAt: timestamp("attended_at", { mode: "date", withTimezone: true }),
     finalizedAt: timestamp("finalized_at", {

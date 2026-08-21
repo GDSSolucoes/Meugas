@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   pgEnum,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { persons } from "./person.schema";
@@ -42,7 +42,7 @@ export const cashMovements = pgTable(
     type: CashMovementTypePGEnum("type").notNull(),
     amount: numeric("amount", { mode: "number" }).notNull(),
     description: text("description"),
-    movementDate: date("movement_date", { mode: "date" }),
+    movementDate: dateOnly("movement_date"),
     personId: uuid("person_id").references(() => persons.id, {
       onDelete: "restrict",
     }),

@@ -58,6 +58,9 @@ export class VasilhameloansService extends BaseCrudService<
       const ownerSectorId = sector?.isOwnStock
         ? sector.id
         : (sector?.masterSectorId ?? data.sectorId);
+      const [ownerSector] = ownerSectorId
+        ? await db.select().from(sectors).where(eq(sectors.id, ownerSectorId))
+        : [];
       const actorSectorId = data.sectorId;
 
       // Obter saldo anterior do vasilhame para o ownerSectorId
@@ -67,7 +70,7 @@ export class VasilhameloansService extends BaseCrudService<
         .where(
           and(
             eq(productStocks.productId, data.vasilhameId),
-            eq(productStocks.ownerSectorId, ownerSectorId),
+            eq(productStocks.sectorId, ownerSectorId),
           ),
         );
 
@@ -93,23 +96,24 @@ export class VasilhameloansService extends BaseCrudService<
       });
 
       // Upsert the productStocks using (productId, ownerSectorId)
-      await db
-        .insert(productStocks)
-        .values({
-          productId: data.vasilhameId,
-          productName: data.vasilhameName,
-          sectorId: data.sectorId,
-          sectorName: data.sectorName,
-          ownerSectorId,
-          quantity: newBalance,
-          initialDate: new Date(),
-          companyId,
-          companyName: createdLoan.companyName,
-        })
-        .onConflictDoUpdate({
-          target: [productStocks.productId, productStocks.ownerSectorId],
-          set: { quantity: newBalance },
-        });
+      if (ownerSector?.isOwnStock) {
+        await db
+          .insert(productStocks)
+          .values({
+            productId: data.vasilhameId,
+            productName: data.vasilhameName,
+            sectorId: ownerSectorId,
+            sectorName: ownerSector.name,
+            quantity: newBalance,
+            initialDate: new Date(),
+            companyId,
+            companyName: createdLoan.companyName,
+          })
+          .onConflictDoUpdate({
+            target: [productStocks.productId, productStocks.sectorId],
+            set: { quantity: newBalance },
+          });
+      }
     }
 
     return createdLoan;
@@ -144,6 +148,17 @@ export class VasilhameloansService extends BaseCrudService<
       const quantityReturned = newReturnedQuantity - previousReturnedQuantity;
 
       if (loan.sectorId) {
+        const [sector] = await db
+          .select()
+          .from(sectors)
+          .where(eq(sectors.id, loan.sectorId));
+        const ownerSectorId = sector?.isOwnStock
+          ? loan.sectorId
+          : sector?.masterSectorId;
+        const stockSectorId = ownerSectorId ?? loan.sectorId;
+        const [ownerSector] = ownerSectorId
+          ? await db.select().from(sectors).where(eq(sectors.id, ownerSectorId))
+          : [];
         // Registrar movimentação de estoque: ENTRADA (quantidade positiva)
         const currentStockResult = await db
           .select({ quantity: productStocks.quantity })
@@ -151,7 +166,7 @@ export class VasilhameloansService extends BaseCrudService<
           .where(
             and(
               eq(productStocks.productId, loan.vasilhameId),
-              eq(productStocks.sectorId, loan.sectorId),
+              eq(productStocks.sectorId, stockSectorId),
             ),
           );
 
@@ -174,15 +189,17 @@ export class VasilhameloansService extends BaseCrudService<
         });
 
         // Atualizar o estoque do vasilhame
-        await db
-          .update(productStocks)
-          .set({ quantity: newBalance })
-          .where(
-            and(
-              eq(productStocks.productId, loan.vasilhameId),
-              eq(productStocks.sectorId, loan.sectorId),
-            ),
-          );
+        if (ownerSector?.isOwnStock) {
+          await db
+            .update(productStocks)
+            .set({ quantity: newBalance })
+            .where(
+              and(
+                eq(productStocks.productId, loan.vasilhameId),
+                eq(productStocks.sectorId, stockSectorId),
+              ),
+            );
+        }
       }
     }
 

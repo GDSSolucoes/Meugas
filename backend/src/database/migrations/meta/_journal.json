@@ -120,6 +120,41 @@
       "when": 1786580786818,
       "tag": "0016_youthful_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1787180648935,
+      "tag": "0017_mature_proemial_gods",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1787180812716,
+      "tag": "0018_youthful_venom",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1787184848869,
+      "tag": "0019_condemned_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1787189043277,
+      "tag": "0020_fantastic_silvermane",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787270851293,
+      "tag": "0021_mighty_ares",
+      "breakpoints": true
     }
   ]
 }

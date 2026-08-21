@@ -1,7 +1,6 @@
 import {
   pgTable,
   boolean,
-  date,
   json,
   numeric,
   text,
@@ -11,6 +10,7 @@ import {
   pgPolicy,
   index,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { persons } from "./person.schema";
 import { sectors } from "./sector.schema";
@@ -61,7 +61,7 @@ export const sales = pgTable(
     }),
     sectorName: text("sector_name"),
     status: saleStatusPGEnum("status").default(SaleStatusEnum.CONCLUIDA),
-    saleDate: date("sale_date", { mode: "date" }).notNull(),
+    saleDate: dateOnly("sale_date").notNull(),
     items: json("items").$type<SaleItemsItem[]>(),
     paymentMethods: json("payment_methods").$type<SalePaymentMethodsItem[]>(),
     totalAmount: numeric("total_amount", { mode: "number" }).notNull(),

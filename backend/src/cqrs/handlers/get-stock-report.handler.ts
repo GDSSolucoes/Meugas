@@ -10,16 +10,7 @@ import {
   productPickups,
   StockMovementTypeEnum,
 } from "../../database/schemas";
-import {
-  eq,
-  and,
-  inArray,
-  gte,
-  lte,
-  lt,
-  isNotNull,
-  sql,
-} from "drizzle-orm";
+import { eq, and, inArray, gte, lte, lt, isNotNull, sql } from "drizzle-orm";
 
 @QueryHandler(GetStockReportQuery)
 export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery> {
@@ -66,14 +57,14 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
       .from(products)
       .where(and(eq(products.companyId, companyId), eq(products.active, true)));
 
-    // Buscar estoques iniciais (productStocks) relevantes by ownerSectorId
+    // ProductStocks stores only sectors that own their stock.
     const relevantStocks = await db
       .select()
       .from(productStocks)
       .where(
         and(
           eq(productStocks.companyId, companyId),
-          inArray(productStocks.ownerSectorId, relevantSectorIds),
+          inArray(productStocks.sectorId, relevantSectorIds),
         ),
       );
 
@@ -225,23 +216,51 @@ export class GetStockReportHandler implements IQueryHandler<GetStockReportQuery>
 
         // 3. Empréstimos de vasilhame no dia
         const qtdeEmprestimos = loansInDay
-          .filter((row) => row.vasilhameLoans && row.vasilhameLoans.vasilhameId === productId)
-          .reduce((sum, row) => sum + Number(row.vasilhameLoans?.loanQuantity || 0), 0);
+          .filter(
+            (row) =>
+              row.vasilhameLoans &&
+              row.vasilhameLoans.vasilhameId === productId,
+          )
+          .reduce(
+            (sum, row) => sum + Number(row.vasilhameLoans?.loanQuantity || 0),
+            0,
+          );
 
         // 4. Devoluções de vasilhame no dia
         const qtdeDevolucoes = returnsInDay
-          .filter((row) => row.vasilhameLoans && row.vasilhameLoans.vasilhameId === productId)
-          .reduce((sum, row) => sum + Number(row.vasilhameLoans?.returnedQuantity || 0), 0);
+          .filter(
+            (row) =>
+              row.vasilhameLoans &&
+              row.vasilhameLoans.vasilhameId === productId,
+          )
+          .reduce(
+            (sum, row) =>
+              sum + Number(row.vasilhameLoans?.returnedQuantity || 0),
+            0,
+          );
 
         // 5. Quantidade a Retirar (productPickups criados no dia)
         const qtdeARetirar = pickupsRegisteredDay
-          .filter((row) => row.productPickups && row.productPickups.productId === productId)
-          .reduce((sum, row) => sum + Number(row.productPickups?.pickupQuantity || 0), 0);
+          .filter(
+            (row) =>
+              row.productPickups && row.productPickups.productId === productId,
+          )
+          .reduce(
+            (sum, row) => sum + Number(row.productPickups?.pickupQuantity || 0),
+            0,
+          );
 
         // 6. Quantidade Retirada (productPickups coletados no dia)
         const qtdeRetirada = pickupsCollectedDay
-          .filter((row) => row.productPickups && row.productPickups.productId === productId)
-          .reduce((sum, row) => sum + Number(row.productPickups?.collectedQuantity || 0), 0);
+          .filter(
+            (row) =>
+              row.productPickups && row.productPickups.productId === productId,
+          )
+          .reduce(
+            (sum, row) =>
+              sum + Number(row.productPickups?.collectedQuantity || 0),
+            0,
+          );
 
         // 7. Calcular saldo final
         const saldoFinal =

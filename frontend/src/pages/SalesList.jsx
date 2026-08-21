@@ -78,8 +78,8 @@ export default function SalesListPage() {
       };
 
       const salesData = await entities.Sale.filter(filter, {
-        sort: "-saleDate",
-        limit: 500,
+        sort: "-saleNumber",
+        limit: 50,
       });
 
       //setSales(salesData);

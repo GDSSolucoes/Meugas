@@ -5,12 +5,12 @@ import {
   timestamp,
   boolean,
   json,
-  date,
   numeric,
   pgEnum,
   pgPolicy,
   index,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 
@@ -49,7 +49,7 @@ export const persons = pgTable(
     type: personTypePGEnum("type").notNull(),
     address: json("address").$type<PersonAddress>(),
     glpConsumptionDays: numeric("glp_consumption_days", { mode: "number" }),
-    birthday: date("birthday", { mode: "date" }),
+    birthday: dateOnly("birthday"),
     conveniadaId: text("conveniada_id"),
     conveniadaName: text("conveniada_name"),
     companyName: text("company_name"),

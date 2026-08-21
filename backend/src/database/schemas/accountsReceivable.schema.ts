@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   pgPolicy,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sales } from "./sale.schema";
 import { sql } from "drizzle-orm";
@@ -45,12 +45,12 @@ export const accountsReceivables = pgTable(
       mode: "number",
     }).default(1),
     description: text("description"),
-    dueDate: date("due_date", { mode: "date" }).notNull(),
+    dueDate: dateOnly("due_date").notNull(),
     amount: numeric("amount", { mode: "number" }).notNull(),
     status: AccountsReceivableStatusPGEnum("status")
       .notNull()
       .default(AccountsReceivableStatusEnum.PENDENTE),
-    paymentDate: date("payment_date", { mode: "date" }),
+    paymentDate: dateOnly("payment_date"),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),

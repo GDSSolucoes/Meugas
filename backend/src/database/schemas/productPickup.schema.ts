@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   index,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { persons } from "./person.schema";
 import { products } from "./product.schema";
@@ -47,8 +47,8 @@ export const productPickups = pgTable(
     collectedQuantity: numeric("collected_quantity", {
       mode: "number",
     }).default(0),
-    collectedDate: date("collected_date", { mode: "date" }),
-    saleDate: date("sale_date", { mode: "date" }),
+    collectedDate: dateOnly("collected_date"),
+    saleDate: dateOnly("sale_date"),
     sectorId: uuid("sector_id").references(() => sectors.id, {
       onDelete: "restrict",
     }),

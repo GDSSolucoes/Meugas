@@ -28,10 +28,14 @@ import {
 import { SalesCreateDto } from "./dto/sales.post.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
 
 @Injectable()
 export class SalesService extends BaseCrudService<typeof sales> {
-  constructor(requestContext: RequestContextService) {
+  constructor(
+    requestContext: RequestContextService,
+    private readonly stockMovementRebuild: StockMovementRebuildService,
+  ) {
     super(requestContext, sales, true); // hasCompanyId = true
   }
 
@@ -143,7 +147,11 @@ export class SalesService extends BaseCrudService<typeof sales> {
     // the referenced `masterSectorId` (another sector id) is considered owner.
     const ownerSectorId = sector.isOwnStock
       ? sector?.id
-      : sector.masterSectorId;
+      : (sector.masterSectorId ?? sector.id);
+    const [ownerSector] = await db
+      .select()
+      .from(sectors)
+      .where(eq(sectors.id, ownerSectorId));
     const actorSectorId = data.sectorId;
 
     // 1. Gerar numero da venda
@@ -251,34 +259,35 @@ export class SalesService extends BaseCrudService<typeof sales> {
           ownerSectorId,
           saleId: savedSale.id,
           quantity: -item.quantity,
-          previousBalance: sql`(SELECT COALESCE(quantity, 0) FROM "productStocks" WHERE product_id = ${item.productId} AND owner_sector_id = ${ownerSectorId})`,
-          newBalance: sql`(SELECT COALESCE(quantity, 0) - ${item.quantity} FROM "productStocks" WHERE product_id = ${item.productId} AND owner_sector_id = ${ownerSectorId})`,
+          previousBalance: sql`(SELECT COALESCE(quantity, 0) FROM "productStocks" WHERE product_id = ${item.productId} AND sector_id = ${ownerSectorId})`,
+          newBalance: sql`(SELECT COALESCE(quantity, 0) - ${item.quantity} FROM "productStocks" WHERE product_id = ${item.productId} AND sector_id = ${ownerSectorId})`,
           movementDate: new Date(),
           companyId,
           companyName: savedSale.companyName,
           vasilhameLoanId,
           productPickupId,
         });
-        await db
-          .insert(productStocks)
-          .values({
-            productId: item.productId,
-            productName: item.productName,
-            sectorId: actorSectorId,
-            sectorName: sector?.name,
-            ownerSectorId,
-            quantity: -item.quantity,
-            initialDate: new Date(),
-            companyId,
-            companyName,
-            createdByName: userName,
-          })
-          .onConflictDoUpdate({
-            target: [productStocks.productId, productStocks.ownerSectorId],
-            set: {
-              quantity: sql`${productStocks.quantity} - ${item.quantity}`,
-            },
-          });
+        if (ownerSector?.isOwnStock) {
+          await db
+            .insert(productStocks)
+            .values({
+              productId: item.productId,
+              productName: item.productName,
+              sectorId: ownerSectorId,
+              sectorName: ownerSector.name,
+              quantity: -item.quantity,
+              initialDate: new Date(),
+              companyId,
+              companyName,
+              createdByName: userName,
+            })
+            .onConflictDoUpdate({
+              target: [productStocks.productId, productStocks.sectorId],
+              set: {
+                quantity: sql`${productStocks.quantity} - ${item.quantity}`,
+              },
+            });
+        }
       } catch (error: any) {
         console.error(
           `Erro ao processar estoque do produto ${item.productName} (${item.productId}) no setor ${data.sectorName}: ${
@@ -652,7 +661,33 @@ export class SalesService extends BaseCrudService<typeof sales> {
       }
     }
 
-    await db.execute(sql`CALL rebuild_all_stock_movement_history()`);
+    await this.stockMovementRebuild.rebuild({
+      productIds: Array.from(
+        new Set(
+          [
+            ...(oldSale.items ?? []).flatMap((item) => [
+              item.productId,
+              item.vasilhameId,
+            ]),
+            ...(data.items ?? []).flatMap((item) => [
+              item.productId,
+              item.vasilhameId,
+            ]),
+          ].filter((productId): productId is string => Boolean(productId)),
+        ),
+      ),
+      sectorIds: Array.from(
+        new Set(
+          [oldSale.sectorId, data.sectorId].filter(
+            (sectorId): sectorId is string => Boolean(sectorId),
+          ),
+        ),
+      ),
+
+      fromDate: new Date(
+        Math.min(oldSale.createdAt!.getTime(), data.saleDate!.getTime()),
+      ),
+    });
 
     return updatedSale;
   }

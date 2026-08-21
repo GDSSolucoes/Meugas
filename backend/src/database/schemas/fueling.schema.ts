@@ -1,7 +1,6 @@
 import {
   pgTable,
   boolean,
-  date,
   numeric,
   text,
   timestamp,
@@ -9,6 +8,7 @@ import {
   pgPolicy,
   index,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
 import { vehicles } from "./vehicle.schema";
@@ -25,7 +25,7 @@ export const fuelings = pgTable(
     fleetNumber: text("fleet_number"),
     driverId: uuid("driver_id"),
     driverName: text("driver_name"),
-    fuelingDate: date("fueling_date", { mode: "date" }).notNull(),
+    fuelingDate: dateOnly("fueling_date").notNull(),
     currentKm: numeric("current_km", { mode: "number" }).notNull(),
     liters: numeric("liters", { mode: "number" }).notNull(),
     totalValue: numeric("total_value", { mode: "number" }).notNull(),

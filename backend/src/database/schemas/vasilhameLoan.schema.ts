@@ -1,6 +1,5 @@
 import {
   pgTable,
-  date,
   numeric,
   text,
   timestamp,
@@ -10,6 +9,7 @@ import {
   index,
   boolean,
 } from "drizzle-orm/pg-core";
+import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
 import { sales } from "./sale.schema";
 import { sectors } from "./sector.schema";
@@ -48,8 +48,8 @@ export const vasilhameLoans = pgTable(
     returnedQuantity: numeric("returned_quantity", { mode: "number" }).default(
       0,
     ),
-    loanDate: date("loan_date", { mode: "date" }),
-    returnDate: date("return_date", { mode: "date" }),
+    loanDate: dateOnly("loan_date"),
+    returnDate: dateOnly("return_date"),
     status: vasilhameLoanStatusPGEnum("status").default(
       VasilhameLoanStatusEnum.PENDENTE,
     ),
