@@ -1158,7 +1158,7 @@ export default function CashMovementsPage({ onComplete }) {
               </div>
             </div>
 
-            <div className="ml-auto flex items-end gap-2">
+            <div className="flex items-end gap-2">
               <Button
                 variant="default"
                 size="sm"
@@ -1168,25 +1168,25 @@ export default function CashMovementsPage({ onComplete }) {
               >
                 <Search className="w-4 h-4" /> Pesquisar
               </Button>
+            </div>
 
-              <div className="text-right">
-                <Label className="text-xs font-medium text-slate-600">
-                  Saldo Anterior
-                </Label>
-                <p
-                  className={`text-xl font-bold ${openingBalance >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {formatCurrency(openingBalance)}
-                </p>
-              </div>
+            <div className="ml-auto items-end text-right">
+              <Label className="text-xs font-medium text-slate-600">
+                Saldo Anterior
+              </Label>
+              <p
+                className={`text-xl font-bold ${openingBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {formatCurrency(openingBalance)}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="max-w-full mx-auto space-y-4">
+      <div className="flex p-4 overflow-auto">
+        <div className="min-w-full mx-auto space-y-4">
           {/* Grid de Transações */}
           <Card className="bg-white border-slate-300">
             <CardContent className="p-0">
@@ -2111,39 +2111,41 @@ export default function CashMovementsPage({ onComplete }) {
       </div>
 
       {/* Barra de Ações */}
-      <div className="bg-slate-200 border-t border-slate-300 p-2">
-        <div className="flex flex-wrap gap-1 items-center">
+      <div
+        className="p-4 rounded-lg"
+        style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+      >
+        <div className="flex flex-wrap gap-3 justify-center">
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
+            className="flex items-center gap-2"
             disabled={!selectedMovement || editMode !== "none"}
             onClick={handleModificar}
           >
-            <Edit className="w-4 h-4" /> Alterar
+            <Edit className="w-4 h-4" />
+            <span className="text-sm">Alterar</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1 text-red-600 hover:bg-red-50"
+            className="flex items-center gap-2 text-red-600 hover:bg-red-50"
             disabled={!selectedMovement || editMode !== "none"}
             onClick={handleExcluir}
           >
-            <Trash2 className="w-4 h-4" /> Excluir
+            <Trash2 className="w-4 h-4" />
+            <span className="text-sm">Excluir</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
+            className="flex items-center gap-2 "
             disabled={editMode !== "none"}
             onClick={handleIncluir}
           >
-            <Plus className="w-4 h-4" /> Incluir
+            <Plus className="w-4 h-4" />
+            <span className="text-sm">Incluir</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
+            className="flex items-center gap-2 "
             disabled={editMode === "none"}
             onClick={() => {
               if (activeTab === "receber" || activeTab === "gastar") {
@@ -2151,12 +2153,11 @@ export default function CashMovementsPage({ onComplete }) {
               }
             }}
           >
-            <Search className="w-4 h-4" /> Pesquisar
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Pesquisar</span>
           </Button>
           <Button
-            variant="default"
-            size="sm"
-            className="h-9 text-xs gap-1 text-white hover:opacity-90"
+            className="flex items-center gap-2  text-white hover:opacity-90"
             style={{ backgroundColor: "#e78b3a" }}
             disabled={editMode === "none" || isSaving}
             onClick={
@@ -2166,119 +2167,37 @@ export default function CashMovementsPage({ onComplete }) {
             }
             type="button"
           >
-            <Save className="w-4 h-4" /> {isSaving ? "Salvando..." : "Ok"}
+            <Save className="w-4 h-4" />
+            <span className="text-sm">{isSaving ? "Salvando..." : "Ok"}</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
+            className="flex items-center gap-2"
             disabled={editMode === "none"}
             onClick={handleCancelar}
           >
-            <X className="w-4 h-4" /> Cancelar
+            <X className="w-4 h-4" />
+            <span className="text-sm">Canceler</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
-            disabled={editMode !== "none"}
-            onClick={() => {
-              if (onComplete) {
-                onComplete();
-              } else {
-                window.location.href = createPageUrl("Dashboard");
-              }
-            }}
-          >
-            <LogOut className="w-4 h-4" /> Sair
-          </Button>
-
           <div className="w-px h-6 bg-slate-400 mx-1" />
 
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
+            className="flex items-center gap-2 "
             disabled={editMode !== "none"}
           >
-            <Printer className="w-4 h-4" /> Imprimir
+            <Printer className="w-4 h-4" />
+            <span className="text-sm">Imprimir</span>
           </Button>
-
-          <div className="w-px h-6 bg-slate-400 mx-1" />
-
-          <Link to={createPageUrl("FinancialGroups")}>
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
-              <FolderOpen className="w-4 h-4" /> Grupo
-            </Button>
-          </Link>
-          <Link to={createPageUrl("FinancialSubgroups")}>
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
-              <Folder className="w-4 h-4" /> SubGrupo
-            </Button>
-          </Link>
-
-          <div className="w-px h-6 bg-slate-400 mx-1" />
 
           <Button
             variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
-            onClick={() => setShowContasAReceberModal(true)}
-          >
-            <TrendingUp className="w-4 h-4" /> Ctas.Rec
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
-            onClick={() => setShowContasAPagarModal(true)}
-          >
-            <TrendingDown className="w-4 h-4" /> Ctas.Pag
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1"
+            className="flex items-center gap-2 "
             onClick={() => setShowFuelingModal(true)}
           >
-            <Fuel className="w-4 h-4" /> Abastec
+            <Fuel className="w-4 h-4" />
+            <span className="text-sm">Abastec</span>
           </Button>
-          <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
-            <CreditCard className="w-4 h-4" /> Bx.Cartao
-          </Button>
-
-          <div className="w-px h-6 bg-slate-400 mx-1" />
-
-          <Link
-            to={
-              createPageUrl("CustomerRegistration") +
-              "?type=fornecedor&return=cashMovements"
-            }
-          >
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
-              <Factory className="w-4 h-4" /> Fornecedor
-            </Button>
-          </Link>
-          <Link
-            to={
-              createPageUrl("CustomerRegistration") +
-              "?type=pontoVenda&return=cashMovements"
-            }
-          >
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
-              <Store className="w-4 h-4" /> PDV
-            </Button>
-          </Link>
-          <Link
-            to={
-              createPageUrl("CustomerRegistration") +
-              "?type=cliente&return=cashMovements"
-            }
-          >
-            <Button variant="outline" size="sm" className="h-9 text-xs gap-1">
-              <User className="w-4 h-4" /> Cliente
-            </Button>
-          </Link>
         </div>
       </div>
 
