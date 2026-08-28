@@ -300,10 +300,7 @@ export default function AccountsReceivablePage({ onComplete }) {
         peopleData,
         employeesData,
       ] = await Promise.all([
-        AccountsReceivable.filter(          
-          filters,
-          { sort: "-dueDate" },
-        ),
+        AccountsReceivable.filter(filters, { sort: "-dueDate" }),
         CashAccount.filter({ companyId: user.companyId, active: true }),
         PaymentType.filter({ companyId: user.companyId, active: true }),
         Sector.filter({ companyId: user.companyId, active: true }),
@@ -793,8 +790,8 @@ export default function AccountsReceivablePage({ onComplete }) {
       />
 
       {/* Main Content */}
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="max-w-full mx-auto space-y-4">
+      <div className="flex p-4 overflow-auto">
+        <div className="min-w-full mx-auto space-y-4">
           {/* SEÇÃO DE FILTROS - CAIXA ÚNICA */}
           <Card className="bg-white border-slate-300">
             <CardContent className="p-4">
@@ -1025,7 +1022,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                             </Select>
                           )}
                         />
-                      </div>                      
+                      </div>
                     </div>
 
                     <FormField
@@ -1387,89 +1384,87 @@ export default function AccountsReceivablePage({ onComplete }) {
       </div>
 
       {/* BARRA DE AÇÕES */}
-      <div className="bg-slate-200 border-t border-slate-300 p-2">
-        <div className="flex flex-wrap gap-1 items-center">
+      <div
+        className="p-4 rounded-lg"
+        style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+      >
+        <div className="flex flex-wrap gap-3 justify-center">
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="flex items-center gap-2"
             disabled={!hasSelection}
             onClick={handleModificar}
           >
-            <Edit className="w-3 h-3" /> Alterar
+            <Edit className="w-4 h-4" /> Alterar
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1 text-red-600 hover:bg-red-50"
+            className="flex items-center gap-2 text-red-600 hover:bg-red-50"
             disabled={!hasSelection}
             onClick={handleExcluir}
           >
-            <Trash2 className="w-3 h-3" /> Excluir
+            <Trash2 className="w-4 h-4" /> Excluir
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="flex items-center gap-2"
             onClick={handlePesquisarClick}
           >
-            <Search className="w-3 h-3" /> Pesquisar
+            <Search className="w-4 h-4" /> Pesquisar
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="flex items-center gap-2"
             onClick={handleSair}
           >
-            <LogOut className="w-3 h-3" /> Sair
+            <LogOut className="w-4 h-4" /> Sair
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="flex items-center gap-2"
             disabled={!hasSelection}
             onClick={handleImprimir}
           >
-            <Printer className="w-3 h-3" /> Imprimir
+            <Printer className="w-4 h-4" /> Imprimir
           </Button>
           <Button
-            size="sm"
             className="h-8 text-xs gap-1 text-white hover:opacity-90"
             style={{ backgroundColor: "#e78b3a" }}
             onClick={handleBaixar}
             disabled={selectedContas.length === 0}
           >
-            <DollarSign className="w-3 h-3" /> Baixar
+            <DollarSign className="w-4 h-4" /> Baixar
           </Button>
 
           <div className="w-px h-6 bg-slate-400 mx-1" />
 
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="flex items-center gap-2"
             disabled={selectedContas.length === 0}
             onClick={() => setIsRenegociacaoOpen(true)}
           >
-            <RefreshCw className="w-3 h-3" /> Renegocia
+            <RefreshCw className="w-4 h-4" /> Renegocia
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="flex items-center gap-2"
             onClick={selectAll}
           >
-            <CheckSquare className="w-3 h-3" /> Selecionar
+            <CheckSquare className="w-4 h-4" /> Selecionar
+          </Button>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setSelectedContas([])}
+          >
+            <X className="w-4 h-4" /> Desmarcar
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={() => setSelectedContas([])}
+            className="flex items-center gap-2"
           >
-            <X className="w-3 h-3" /> Desmarcar
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
             Agrupar
           </Button>
         </div>
