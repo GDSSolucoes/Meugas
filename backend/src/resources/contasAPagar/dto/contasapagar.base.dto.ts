@@ -1,13 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsNumber,
-} from "class-validator";
-import { Type } from "class-transformer";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { ContasAPagarStatusEnum } from "../../../database/schemas";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class ContasapagarBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -27,7 +23,7 @@ export class ContasapagarBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   dueDate!: Date;
 
   @ApiProperty()
@@ -56,7 +52,7 @@ export class ContasapagarBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   paymentDate!: Date;
 
   @ApiProperty()
@@ -101,6 +97,6 @@ export class ContasapagarBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   reagendamentoData!: Date;
 }

@@ -27,7 +27,7 @@ import {
 } from "../../database/schemas";
 import { SalesCreateDto } from "./dto/sales.post.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
 
 @Injectable()
@@ -65,7 +65,7 @@ export class SalesService extends BaseCrudService<typeof sales> {
       .select()
       .from(paymentTypes)
       .where(
-        and(
+        or(
           ...data.paymentMethods.map((pm) =>
             eq(paymentTypes.id, pm.paymentTypeId),
           ),

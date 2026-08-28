@@ -1,8 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNumber,
-  IsDate,
-} from "class-validator";
+import { Transform } from "class-transformer";
+import { IsNumber, IsDate } from "class-validator";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class SaleInstallmentsDetailsDto {
   @ApiProperty()
@@ -10,7 +9,7 @@ export class SaleInstallmentsDetailsDto {
   number!: number;
 
   @ApiProperty()
-  @IsDate()
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   dueDate!: Date;
 
   @ApiProperty()

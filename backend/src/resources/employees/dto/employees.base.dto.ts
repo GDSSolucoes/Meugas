@@ -3,6 +3,7 @@ import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
 import { Transform } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { EmployeePositionEnum } from "../../../database/schemas";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class EmployeEsBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -36,28 +37,16 @@ export class EmployeEsBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Transform(({ value }) =>
-    value === "" || value === null || value === undefined
-      ? undefined
-      : new Date(value),
-  )
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   hireDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  @Transform(({ value }) =>
-    value === "" || value === null || value === undefined
-      ? undefined
-      : new Date(value),
-  )
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   vacationStart!: Date;
 
   @ApiProperty()
   @IsOptional()
-  @Transform(({ value }) =>
-    value === "" || value === null || value === undefined
-      ? undefined
-      : new Date(value),
-  )
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   vacationEnd!: Date;
 }

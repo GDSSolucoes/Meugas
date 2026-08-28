@@ -6,8 +6,9 @@ import {
   IsNumber,
   IsBoolean,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class FuelingBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -42,7 +43,7 @@ export class FuelingBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   fuelingDate!: Date;
 
   @ApiProperty()

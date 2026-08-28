@@ -1,13 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsNumber,
-} from "class-validator";
-import { Type } from "class-transformer";
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { ProductPickupStatusEnum } from "../../../database/schemas";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class ProductpickupBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -47,12 +43,12 @@ export class ProductpickupBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   collectedDate!: Date;
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   saleDate!: Date;
 
   @ApiProperty()

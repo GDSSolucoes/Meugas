@@ -6,9 +6,10 @@ import {
   IsNumber,
   IsUUID,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { AccountsReceivableStatusEnum } from "../../../database/schemas";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class AccountsReceivablesBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -43,7 +44,7 @@ export class AccountsReceivablesBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   dueDate!: Date;
 
   @ApiProperty()
@@ -57,6 +58,6 @@ export class AccountsReceivablesBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   paymentDate!: Date;
 }

@@ -6,11 +6,12 @@ import {
   IsNumber,
   ValidateNested,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { CompanyParametrosFiscaisDto } from "./companyparametrosfiscais.dto";
 import { CompanyAddressDto } from "./companyaddress.dto";
 import { CompanyStatusEnum, PlanTypeEnum } from "../../../database/schemas";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class CompanyBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -60,7 +61,7 @@ export class CompanyBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   dueDate!: Date;
 
   @ApiProperty({

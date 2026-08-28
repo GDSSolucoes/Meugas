@@ -8,9 +8,10 @@ import {
   IsArray,
   ValidateNested,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { PurchaseItemsItemDto } from "./purchaseitemsitem.dto";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class InstallmentDetailDto {
   @ApiProperty()
@@ -89,7 +90,7 @@ export class PurchasEsBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   purchaseDate!: Date;
 
   @ApiProperty()
