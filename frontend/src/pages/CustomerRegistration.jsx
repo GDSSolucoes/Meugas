@@ -492,7 +492,9 @@ export default function CustomerRegistrationPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cliente">Cliente</SelectItem>
-                      <SelectItem value="pontoVenda">Ponto de Venda</SelectItem>
+                      <SelectItem value="ponto_venda">
+                        Ponto de Venda
+                      </SelectItem>
                       <SelectItem value="fornecedor">Fornecedor</SelectItem>
                       <SelectItem value="conveniada">Conveniada</SelectItem>
                     </SelectContent>
