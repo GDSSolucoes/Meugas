@@ -38,6 +38,8 @@ import { format } from "date-fns";
 // Added import
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import ProductEntryPanel from "@/components/products/ProductEntryPanel";
+import ProductItemsTable from "@/components/products/ProductItemsTable";
 
 export default function PurchasesPage() {
   const { toast } = useToast();
@@ -372,6 +374,59 @@ export default function PurchasesPage() {
       quantityToPickup: 0,
     });
   };
+
+  const handleProductSelect = (product) => {
+    handleProductCodeChange(product?.id || "");
+  };
+
+  const purchaseProductColumns = [
+    {
+      key: "productCode",
+      header: "Código",
+      render: (item) => item.productCode || "-",
+    },
+    { key: "productName", header: "Descrição" },
+    {
+      key: "quantity",
+      header: "Qtde",
+      render: (item, index) => (
+        <Input
+          type="number"
+          step="0.01"
+          value={item.quantity}
+          onChange={(event) =>
+            updateItem(index, "quantity", event.target.value)
+          }
+          className="w-20"
+        />
+      ),
+    },
+    {
+      key: "unitPrice",
+      header: "Custo Un.",
+      render: (item) => `R$ ${Number(item.unitPrice || 0).toFixed(2)}`,
+    },
+    {
+      key: "subtotal",
+      header: "Valor Total",
+      render: (item) => `R$ ${Number(item.subtotal || 0).toFixed(2)}`,
+    },
+    {
+      key: "discount",
+      header: "Desconto",
+      render: (item, index) => (
+        <Input
+          type="number"
+          step="0.01"
+          value={item.discount}
+          onChange={(event) =>
+            updateItem(index, "discount", event.target.value)
+          }
+          className="w-20"
+        />
+      ),
+    },
+  ];
 
   const removeItem = (index) => {
     setCurrentPurchase((prev) => ({
@@ -790,105 +845,109 @@ export default function PurchasesPage() {
 
         <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60 mb-4">
           <CardContent className="p-4">
-            {/* Linha única: Código, Quantidade, Descrição, Custo, Desconto e Botão Adicionar */}
-            <div className="grid grid-cols-12 gap-4 mb-4">
-              <div className="col-span-2">
-                <Label>Código</Label>
-                <Select
-                  value={currentItem.productId}
-                  onValueChange={(value) => handleProductCodeChange(value)}
-                >
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.code
-                          ? `${product.code} - ${product.name}`
-                          : product.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <ProductEntryPanel
+              products={products}
+              variant="purchase"
+              draft={currentItem}
+              onDraftChange={updateItemField}
+              onProductSelect={handleProductSelect}
+              onAdd={addItem}
+            />
+            {false && (
+              <div className="grid grid-cols-12 gap-4 mb-4">
+                <div className="col-span-2">
+                  <Label>Código</Label>
+                  <Select
+                    value={currentItem.productId}
+                    onValueChange={(value) => handleProductCodeChange(value)}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.code
+                            ? `${product.code} - ${product.name}`
+                            : product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-1">
+                  <Label>Qtd</Label>
+                  <Input
+                    type="number"
+                    value={currentItem.quantity}
+                    onChange={(e) =>
+                      updateItemField("quantity", parseInt(e.target.value) || 0)
+                    }
+                    className="bg-white"
+                  />
+                </div>
+                <div className="col-span-3">
+                  {" "}
+                  {/* Changed from col-span-4 to col-span-3 */}
+                  <Label>Descrição do Produto</Label>
+                  <Input
+                    value={currentItem.productName}
+                    readOnly
+                    placeholder="Selecione um produto"
+                    className="bg-slate-50"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Custo Unit.</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={currentItem.unitPrice}
+                    onChange={(e) =>
+                      updateItemField(
+                        "unitPrice",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
+                    className="bg-white"
+                  />
+                </div>
+                <div className="col-span-2">
+                  {" "}
+                  {/* Moved Desconto here */}
+                  <Label>Desconto</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={currentItem.discount}
+                    onChange={(e) =>
+                      updateItemField(
+                        "discount",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
+                    className="bg-white"
+                  />
+                </div>
+                <div className="col-span-2 flex items-end">
+                  {" "}
+                  {/* Changed from col-span-3 to col-span-2 */}
+                  <Button
+                    onClick={addItem}
+                    className="w-full text-white hover:opacity-90"
+                    style={{ backgroundColor: "#e78b3a" }}
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
-              <div className="col-span-1">
-                <Label>Qtd</Label>
-                <Input
-                  type="number"
-                  value={currentItem.quantity}
-                  onChange={(e) =>
-                    updateItemField("quantity", parseInt(e.target.value) || 0)
-                  }
-                  className="bg-white"
-                />
-              </div>
-              <div className="col-span-3">
-                {" "}
-                {/* Changed from col-span-4 to col-span-3 */}
-                <Label>Descrição do Produto</Label>
-                <Input
-                  value={currentItem.productName}
-                  readOnly
-                  placeholder="Selecione um produto"
-                  className="bg-slate-50"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label>Custo Unit.</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={currentItem.unitPrice}
-                  onChange={(e) =>
-                    updateItemField(
-                      "unitPrice",
-                      parseFloat(e.target.value) || 0,
-                    )
-                  }
-                  className="bg-white"
-                />
-              </div>
-              <div className="col-span-2">
-                {" "}
-                {/* Moved Desconto here */}
-                <Label>Desconto</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={currentItem.discount}
-                  onChange={(e) =>
-                    updateItemField("discount", parseFloat(e.target.value) || 0)
-                  }
-                  className="bg-white"
-                />
-              </div>
-              <div className="col-span-2 flex items-end">
-                {" "}
-                {/* Changed from col-span-3 to col-span-2 */}
-                <Button
-                  onClick={addItem}
-                  className="w-full text-white hover:opacity-90"
-                  style={{ backgroundColor: "#e78b3a" }}
-                >
-                  <Plus className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
+            )}
 
-            {/* Linha: Checkbox Somente Estoque */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={currentItem.stockOnly || false}
-                onCheckedChange={(checked) =>
-                  updateItemField("stockOnly", checked)
-                }
-                id="stockOnly"
-              />
-              <Label htmlFor="stockOnly" className="cursor-pointer text-sm">
-                Somente Estoque
-              </Label>
-            </div>
+            <ProductItemsTable
+              items={currentPurchase.items}
+              columns={purchaseProductColumns}
+              onRemove={removeItem}
+            />
             <div
               className="border rounded-lg overflow-hidden"
               style={{ borderColor: "#E5E7EB" }}

@@ -32,6 +32,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import ProductEntryPanel from "@/components/products/ProductEntryPanel";
+import ProductItemsTable from "@/components/products/ProductItemsTable";
 
 const initialSaleState = {
   saleNumber: "",
@@ -735,6 +737,90 @@ export default function SalesPage({ onSaleComplete }) {
     }
   };
 
+  const handleProductSelect = (product) => {
+    handleProductCodeChange(product?.id || "");
+  };
+
+  const saleProductColumns = [
+    {
+      key: "productCode",
+      header: "Código",
+      render: (item) => item.productCode || "-",
+    },
+    { key: "productName", header: "Descrição" },
+    {
+      key: "quantity",
+      header: "Qtde",
+      render: (item, index) => (
+        <Input
+          type="number"
+          min="1"
+          value={item.quantity}
+          onChange={(event) =>
+            updateItem(index, "quantity", event.target.value)
+          }
+          className="w-20"
+        />
+      ),
+    },
+    {
+      key: "unitPrice",
+      header: "Preço Un.",
+      render: (item) => `R$ ${Number(item.unitPrice || 0).toFixed(2)}`,
+    },
+    {
+      key: "total",
+      header: "Valor Total",
+      render: (item) => `R$ ${Number(item.total || 0).toFixed(2)}`,
+    },
+    {
+      key: "discount",
+      header: "Desconto",
+      render: (item, index) => (
+        <Input
+          type="number"
+          step="0.01"
+          value={item.discount}
+          onChange={(event) =>
+            updateItem(index, "discount", event.target.value)
+          }
+          className="w-20"
+        />
+      ),
+    },
+    {
+      key: "vasilhameLoanQuantity",
+      header: "Vasilhame",
+      render: (item, index) =>
+        item.category === "glp" && item.vasilhameId ? (
+          <Input
+            type="number"
+            value={item.vasilhameLoanQuantity}
+            onChange={(event) =>
+              updateItem(index, "vasilhameLoanQuantity", event.target.value)
+            }
+            className="w-16"
+          />
+        ) : (
+          "-"
+        ),
+    },
+    {
+      key: "quantityToPickup",
+      header: "A Retirar",
+      render: (item, index) => (
+        <Input
+          type="number"
+          value={item.quantityToPickup}
+          onChange={(event) =>
+            updateItem(index, "quantityToPickup", event.target.value)
+          }
+          className="w-16"
+        />
+      ),
+    },
+  ];
+
   const handleAddProduct = () => {
     if (!selectedProductObj) {
       toast({
@@ -1323,257 +1409,28 @@ export default function SalesPage({ onSaleComplete }) {
           }}
         >
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 mb-4 items-end">
-              <div className="md:col-span-2">
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Código:
-                </Label>
-                <Select
-                  value={productId}
-                  onValueChange={handleProductCodeChange}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.code} - {product.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-1">
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Qtde:
-                </Label>
-                <Input
-                  type="number"
-                  step="1"
-                  min="1"
-                  value={productQuantity}
-                  onChange={(e) =>
-                    setProductQuantity(
-                      Math.floor(parseFloat(e.target.value) || 1).toString(),
-                    )
-                  }
-                  className="mt-1"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Preço Un.:
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={productPrice}
-                  onChange={(e) => setProductPrice(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div className="md:col-span-4">
-                <Label
-                  className="text-xs font-medium"
-                  style={{ color: "#374151" }}
-                >
-                  Descrição:
-                </Label>
-                <Input
-                  value={productDescription}
-                  readOnly
-                  className="mt-1 bg-gray-50"
-                />
-              </div>
-              <div className="md:col-span-3">
-                <Button
-                  onClick={handleAddProduct}
-                  className="w-full mt-1"
-                  style={{ background: "#e78b3a", color: "white" }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </Button>
-              </div>
-            </div>
-
-            <div
-              className="border rounded-lg overflow-hidden"
-              style={{ borderColor: "#E5E7EB" }}
-            >
-              <Table>
-                <TableHeader>
-                  <TableRow style={{ background: "#F3F4F6" }}>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Código
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Descrição
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Qtde
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Preço Un.
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Valor Total
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Desconto
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      Vasilhame
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold"
-                      style={{ color: "#374151" }}
-                    >
-                      A Retirar
-                    </TableHead>
-                    <TableHead
-                      className="text-xs font-semibold text-right"
-                      style={{ color: "#374151" }}
-                    >
-                      Ações
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentSale.items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="text-sm">
-                        {item.productCode || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {item.productName}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <Input
-                          type="number"
-                          step="1"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            updateItem(
-                              index,
-                              "quantity",
-                              Math.floor(parseFloat(e.target.value) || 1),
-                            )
-                          }
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        R$ {item.unitPrice.toFixed(2)}
-                      </TableCell>
-                      <TableCell
-                        className="text-sm font-semibold"
-                        style={{ color: "#10B981" }}
-                      >
-                        R$ {item.total.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={item.discount}
-                          onChange={(e) =>
-                            updateItem(index, "discount", e.target.value)
-                          }
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {item.category === "glp" && item.vasilhameId ? (
-                          <Input
-                            type="number"
-                            value={item.vasilhameLoanQuantity}
-                            onChange={(e) =>
-                              updateItem(
-                                index,
-                                "vasilhameLoanQuantity",
-                                e.target.value,
-                              )
-                            }
-                            className="w-16"
-                            placeholder="0"
-                          />
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <Input
-                          type="number"
-                          value={item.quantityToPickup}
-                          onChange={(e) =>
-                            updateItem(
-                              index,
-                              "quantityToPickup",
-                              e.target.value,
-                            )
-                          }
-                          className="w-16"
-                          placeholder="0"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItem(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {currentSale.items.length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={9}
-                        className="text-center py-8 text-gray-500"
-                      >
-                        Nenhum produto adicionado
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <ProductEntryPanel
+              products={products}
+              variant="sale"
+              draft={{
+                productId,
+                productName: productDescription,
+                quantity: productQuantity,
+                unitPrice: productPrice,
+                discount: 0,
+              }}
+              onDraftChange={(field, value) => {
+                if (field === "quantity") setProductQuantity(value);
+                if (field === "unitPrice") setProductPrice(value);
+              }}
+              onProductSelect={handleProductSelect}
+              onAdd={handleAddProduct}
+            />
+            <ProductItemsTable
+              items={currentSale.items}
+              columns={saleProductColumns}
+              onRemove={removeItem}
+            />
           </CardContent>
         </Card>
 

@@ -33,6 +33,9 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User } from "@/entities";
 import * as entities from "@/entities";
+import ProductSearchDialog from "@/components/products/ProductSearchDialog";
+import ProductItemsTable from "@/components/products/ProductItemsTable";
+import ProductEntryPanel from "@/components/products/ProductEntryPanel";
 
 export default function BudgetPage() {
   const { toast } = useToast();
@@ -489,6 +492,30 @@ export default function BudgetPage() {
   };
 
   const totalGeral = items.reduce((sum, item) => sum + item.total, 0);
+  const budgetProductColumns = [
+    { key: "productCode", header: "Código", cellClassName: "text-xs" },
+    { key: "productName", header: "Produto", cellClassName: "text-xs" },
+    {
+      key: "quantity",
+      header: "Qtde",
+      headerClassName: "text-xs text-right",
+      cellClassName: "text-xs text-right",
+    },
+    {
+      key: "unitPrice",
+      header: "Vlr. Unit.",
+      headerClassName: "text-xs text-right",
+      cellClassName: "text-xs text-right",
+      render: (item) => `R$ ${Number(item.unitPrice || 0).toFixed(2)}`,
+    },
+    {
+      key: "total",
+      header: "Total",
+      headerClassName: "text-xs text-right",
+      cellClassName: "text-xs text-right font-semibold",
+      render: (item) => `R$ ${Number(item.total || 0).toFixed(2)}`,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
@@ -600,109 +627,29 @@ export default function BudgetPage() {
               <h3 className="text-sm font-semibold mb-4 pb-2 border-b">
                 Produtos
               </h3>
-
-              <div className="grid grid-cols-12 gap-3 items-end mb-4">
-                <div className="col-span-3">
-                  <Label className="text-sm">Código:</Label>
-                  <Input
-                    ref={codigoProdutoInputRef}
-                    value={codigoProduto}
-                    onChange={(e) => setCodigoProduto(e.target.value)}
-                    onFocus={() => setLastFocusedField("produto")}
-                    className="h-8 mt-1"
-                    placeholder="Produto"
-                    readOnly
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-sm">Quantidade:</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={quantidade}
-                    onChange={(e) => setQuantidade(e.target.value)}
-                    className="h-8 mt-1"
-                  />
-                </div>
-                <div className="col-span-3">
-                  <Label className="text-sm">Valor Unitário:</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={valorUnitario}
-                    onChange={(e) => setValorUnitario(e.target.value)}
-                    className="h-8 mt-1"
-                  />
-                </div>
-                <div className="col-span-4">
-                  <Button
-                    onClick={handleAdicionarProduto}
-                    className="w-full h-8 text-white"
-                    style={{ background: "#e78b3a" }}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Adicionar
-                  </Button>
-                </div>
-              </div>
+              <ProductEntryPanel
+                products={products}
+                variant="budget"
+                draft={{
+                  productId: selectedProduct?.id,
+                  productName: selectedProduct?.name,
+                  quantity: quantidade,
+                  unitPrice: valorUnitario,
+                }}
+                onDraftChange={(field, value) => {
+                  if (field === "quantity") setQuantidade(value);
+                  if (field === "unitPrice") setValorUnitario(value);
+                }}
+                onProductSelect={handleSelectProduct}
+                onAdd={handleAdicionarProduto}
+              />
 
               {/* Lista de Produtos */}
-              {items.length > 0 && (
-                <div className="border rounded mt-4">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="text-xs">Código</TableHead>
-                        <TableHead className="text-xs">Produto</TableHead>
-                        <TableHead className="text-xs text-right">
-                          Qtde
-                        </TableHead>
-                        <TableHead className="text-xs text-right">
-                          Vlr. Unit.
-                        </TableHead>
-                        <TableHead className="text-xs text-right">
-                          Total
-                        </TableHead>
-                        <TableHead className="text-xs text-center">
-                          Ações
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="text-xs">
-                            {item.productCode}
-                          </TableCell>
-                          <TableCell className="text-xs">
-                            {item.productName}
-                          </TableCell>
-                          <TableCell className="text-xs text-right">
-                            {item.quantity}
-                          </TableCell>
-                          <TableCell className="text-xs text-right">
-                            R$ {item.unitPrice.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-xs text-right font-semibold">
-                            R$ {item.total.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoverItem(index)}
-                              className="h-6 w-6 text-red-500"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+              <ProductItemsTable
+                items={items}
+                columns={budgetProductColumns}
+                onRemove={handleRemoverItem}
+              />
 
               {/* Total */}
               {items.length > 0 && (
@@ -889,75 +836,12 @@ export default function BudgetPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Pesquisa Produto */}
-      <Dialog open={showProductSearch} onOpenChange={setShowProductSearch}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Pesquisar Produto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o código ou nome do produto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
-            <div className="max-h-80 overflow-auto border rounded">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Nome</TableHead>
-                    <TableHead className="text-xs">Categoria</TableHead>
-                    <TableHead className="text-xs text-right">Preço</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products
-                    .filter((prod) => {
-                      if (!searchTerm) return true;
-                      const term = searchTerm.toLowerCase();
-                      return (
-                        prod.name?.toLowerCase().includes(term) ||
-                        prod.code?.toLowerCase().includes(term)
-                      );
-                    })
-                    .map((prod) => (
-                      <TableRow
-                        key={prod.id}
-                        className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => handleSelectProduct(prod)}
-                      >
-                        <TableCell className="text-xs font-mono">
-                          {prod.code || prod.id?.slice(-6)}
-                        </TableCell>
-                        <TableCell className="text-xs">{prod.name}</TableCell>
-                        <TableCell className="text-xs">
-                          {prod.category || "-"}
-                        </TableCell>
-                        <TableCell className="text-xs text-right">
-                          R$ {(prod.unitPrice || 0).toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-            <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowProductSearch(false)}
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProductSearchDialog
+        open={showProductSearch}
+        onOpenChange={setShowProductSearch}
+        products={products}
+        onSelect={handleSelectProduct}
+      />
     </div>
   );
 }
