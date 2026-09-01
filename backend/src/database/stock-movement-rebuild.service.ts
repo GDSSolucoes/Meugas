@@ -14,6 +14,7 @@ import {
   StockMovementTypeEnum,
   vasilhameLoans,
 } from "./schemas";
+import { parseDateOnly } from "./schemas/date-only";
 
 type RebuildRequest = {
   productIds: string[];
@@ -298,7 +299,7 @@ export class StockMovementRebuildService {
           type: StockMovementTypeEnum.Transfer,
           sourceId: transfer.id,
           quantity: -Number(transfer.quantity),
-          movementDate: new Date(transfer.transferDate),
+          movementDate: parseDateOnly(transfer.transferDate),
           createdAt: transfer.createdAt,
           sequence: 0,
         });
@@ -316,7 +317,7 @@ export class StockMovementRebuildService {
           type: StockMovementTypeEnum.Transfer,
           sourceId: transfer.id,
           quantity: Number(transfer.quantity),
-          movementDate: new Date(transfer.transferDate),
+          movementDate: parseDateOnly(transfer.transferDate),
           createdAt: transfer.createdAt,
           sequence: 1,
         });
@@ -347,7 +348,7 @@ export class StockMovementRebuildService {
         type: StockMovementTypeEnum.Pickup,
         sourceId: pickup.id,
         quantity: -Number(pickup.collectedQuantity),
-        movementDate: new Date(pickup.collectedDate),
+        movementDate: parseDateOnly(pickup.collectedDate),
         createdAt: pickup.createdAt,
         sequence: 0,
       });
@@ -364,7 +365,7 @@ export class StockMovementRebuildService {
       );
     for (const loan of loans) {
       if (!loan.sectorId) continue;
-      if (loan.loanDate && new Date(loan.loanDate) >= fromDate)
+      if (loan.loanDate && parseDateOnly(loan.loanDate) >= fromDate)
         add({
           productId: key.productId,
           productName: loan.vasilhameName,
@@ -373,14 +374,14 @@ export class StockMovementRebuildService {
           type: StockMovementTypeEnum.Loan,
           sourceId: loan.id,
           quantity: -Number(loan.loanQuantity),
-          movementDate: new Date(loan.loanDate),
+          movementDate: parseDateOnly(loan.loanDate),
           createdAt: loan.createdAt,
           sequence: 0,
         });
       if (
         loan.returnDate &&
         Number(loan.returnedQuantity ?? 0) > 0 &&
-        new Date(loan.returnDate) >= fromDate
+        parseDateOnly(loan.returnDate) >= fromDate
       )
         add({
           productId: key.productId,
@@ -390,7 +391,7 @@ export class StockMovementRebuildService {
           type: StockMovementTypeEnum.Loan,
           sourceId: loan.id,
           quantity: Number(loan.returnedQuantity),
-          movementDate: new Date(loan.returnDate),
+          movementDate: parseDateOnly(loan.returnDate),
           createdAt: loan.createdAt,
           sequence: 1,
         });

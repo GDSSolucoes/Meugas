@@ -12,6 +12,7 @@ import { sectors } from "../../database/schemas";
 import { ProductpickupCreateDto } from "./dto/productpickup.post.dto";
 import { ProductpickupUpdateDto } from "./dto/productpickup.update.dto";
 import { and, eq } from "drizzle-orm";
+import { parseDateOnly } from "../../database/schemas/date-only";
 
 @Injectable()
 export class ProductpickupsService extends BaseCrudService<
@@ -150,7 +151,7 @@ export class ProductpickupsService extends BaseCrudService<
         quantity: quantityToRemove,
         previousBalance,
         newBalance,
-        movementDate: new Date(data.collectedDate),
+        movementDate: parseDateOnly(data.collectedDate),
         companyId: companyId as any,
         companyName: currentPickup.companyName,
       });
@@ -285,7 +286,7 @@ export class ProductpickupsService extends BaseCrudService<
         quantity: quantityToRemove,
         previousBalance,
         newBalance,
-        movementDate: new Date(data.collectedDate),
+        movementDate: parseDateOnly(data.collectedDate),
         companyId: companyId as any,
         companyName: currentPickup.companyName,
       });

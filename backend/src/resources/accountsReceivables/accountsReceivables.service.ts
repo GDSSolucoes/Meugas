@@ -2,20 +2,23 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq, ilike, or, sql, desc, asc } from "drizzle-orm";
 import { BaseCrudService } from "../../common/base-crud.service";
 import { RequestContextService } from "../../database/request-context.service";
-import { 
-  accountsReceivables, 
-  sales, 
-  persons, 
-  financialGroups, 
-  cashAccounts, 
-  cashMovements, 
+import {
+  accountsReceivables,
+  sales,
+  persons,
+  financialGroups,
+  cashAccounts,
+  cashMovements,
+  paymentTypes,
+  financialSubgroups,
   FinancialGroupTypeEnum,
   CashMovementTypeEnum,
-  AccountsReceivableStatusEnum
+  AccountsReceivableStatusEnum,
 } from "../../database/schemas";
 import { AccountsReceivablesCreateDto } from "./dto/accountsreceivables.post.dto";
 import { AccountsReceivablesUpdateDto } from "./dto/accountsreceivables.update.dto";
 import { AccountsReceivablesRegisterPaymentDto } from "./dto/accountsreceivables.register-payment.dto";
+import { parseDateOnly } from "../../database/schemas/date-only";
 
 @Injectable()
 export class AccountsReceivablesService extends BaseCrudService<
@@ -43,20 +46,35 @@ export class AccountsReceivablesService extends BaseCrudService<
 
     // Process filters
     for (const [key, value] of Object.entries(filters)) {
-      if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) continue;
-      
+      if (
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0)
+      )
+        continue;
+
       // Normalize value to array for easier processing
-      const values = Array.isArray(value) ? value : String(value).split(",").map((item) => item.trim()).filter(Boolean);
+      const values = Array.isArray(value)
+        ? value
+        : String(value)
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
       if (values.length === 0) continue;
 
       // Direct filters on accountsReceivables
-      if (["personId", "cashAccountId", "paymentTypeId", "status"].includes(key)) {
+      if (
+        ["personId", "cashAccountId", "paymentTypeId", "status"].includes(key)
+      ) {
         const column = (this.table as any)[key];
         if (column) {
           if (values.length === 1) {
             filterConditions.push(eq(column, values[0]));
           } else {
-            filterConditions.push(or(...values.map((item) => eq(column, item))));
+            filterConditions.push(
+              or(...values.map((item) => eq(column, item))),
+            );
           }
         }
         continue;
@@ -76,14 +94,16 @@ export class AccountsReceivablesService extends BaseCrudService<
         continue;
       }
       if (key === "saleId") {
-        filterConditions.push(ilike(accountsReceivables.saleId, `%${values[0]}%`));
+        filterConditions.push(
+          ilike(accountsReceivables.saleId, `%${values[0]}%`),
+        );
         continue;
       }
       if (key === "id") {
         filterConditions.push(ilike(accountsReceivables.id, `%${values[0]}%`));
         continue;
       }
-      
+
       // Date range filters
       if (key === "dueDate_gte") {
         const column = (this.table as any)["dueDate"];
@@ -118,7 +138,7 @@ export class AccountsReceivablesService extends BaseCrudService<
         }
         continue;
       }
-      
+
       const column = (this.table as any)[key];
       if (column) {
         if (values.length === 1) {
@@ -137,7 +157,7 @@ export class AccountsReceivablesService extends BaseCrudService<
     let query: any = db
       .select({
         ...Object.fromEntries(
-          Object.keys(this.table).map((key) => [key, (this.table as any)[key]])
+          Object.keys(this.table).map((key) => [key, (this.table as any)[key]]),
         ),
         // Join fields from sales
         nfeNumber: sales.nfeNumber,
@@ -204,16 +224,25 @@ export class AccountsReceivablesService extends BaseCrudService<
     return super.update(id, data);
   }
 
-  async registerPayment(data: AccountsReceivablesRegisterPaymentDto, userId: string, userName: string, companyId: string, companyName: string) {
+  async registerPayment(
+    data: AccountsReceivablesRegisterPaymentDto,
+    userId: string,
+    userName: string,
+    companyId: string,
+    companyName: string,
+  ) {
     const db = this.getDb();
 
     // 1. Find the cash account
-    const cashAccountResult = await db.select().from(cashAccounts).where(
-      and(
-        eq(cashAccounts.id, data.cashAccountId),
-        eq(cashAccounts.companyId, companyId)
-      )
-    );
+    const cashAccountResult = await db
+      .select()
+      .from(cashAccounts)
+      .where(
+        and(
+          eq(cashAccounts.id, data.cashAccountId),
+          eq(cashAccounts.companyId, companyId),
+        ),
+      );
 
     if (cashAccountResult.length === 0) {
       throw new NotFoundException("Conta de caixa não encontrada");
@@ -222,23 +251,29 @@ export class AccountsReceivablesService extends BaseCrudService<
     const cashAccount = cashAccountResult[0];
 
     // 2. Find or create the financial group
-    let revenueGroupResult = await db.select().from(financialGroups).where(
-      and(
-        eq(financialGroups.name, "Receitas de Contas a Receber"),
-        eq(financialGroups.companyId, companyId)
-      )
-    );
+    let revenueGroupResult = await db
+      .select()
+      .from(financialGroups)
+      .where(
+        and(
+          eq(financialGroups.name, "Receitas de Contas a Receber"),
+          eq(financialGroups.companyId, companyId),
+        ),
+      );
 
     let revenueGroup;
     if (revenueGroupResult.length === 0) {
-      [revenueGroup] = await db.insert(financialGroups).values({
-        name: "Receitas de Contas a Receber",
-        type: FinancialGroupTypeEnum.RECEITA,
-        active: true,
-        companyId: companyId,
-        companyName: companyName,
-        createdByName: userName,
-      }).returning();
+      [revenueGroup] = await db
+        .insert(financialGroups)
+        .values({
+          name: "Receitas de Contas a Receber",
+          type: FinancialGroupTypeEnum.RECEITA,
+          active: true,
+          companyId: companyId,
+          companyName: companyName,
+          createdByName: userName,
+        })
+        .returning();
     } else {
       revenueGroup = revenueGroupResult[0];
     }
@@ -248,12 +283,15 @@ export class AccountsReceivablesService extends BaseCrudService<
     const accountsToProcess = [];
 
     for (const accountId of data.accountReceivableIds) {
-      const accountResult = await db.select().from(accountsReceivables).where(
-        and(
-          eq(accountsReceivables.id, accountId),
-          eq(accountsReceivables.companyId, companyId)
-        )
-      );
+      const accountResult = await db
+        .select()
+        .from(accountsReceivables)
+        .where(
+          and(
+            eq(accountsReceivables.id, accountId),
+            eq(accountsReceivables.companyId, companyId),
+          ),
+        );
 
       if (accountResult.length === 0) continue;
 
@@ -265,6 +303,28 @@ export class AccountsReceivablesService extends BaseCrudService<
     }
     // 4. Process each account
     for (const account of accountsToProcess) {
+      // 4.1 Get payment type info if available
+      let paymentTypeData: any = {
+        paymentTypeId: null,
+        paymentTypeName: null,
+      };
+
+      if (account.paymentTypeId) {
+        const paymentTypeResult = await db
+          .select()
+          .from(paymentTypes)
+          .where(eq(paymentTypes.id, account.paymentTypeId));
+        if (paymentTypeResult.length > 0) {
+          paymentTypeData.paymentTypeId = paymentTypeResult[0].id;
+          paymentTypeData.paymentTypeName = paymentTypeResult[0].name;
+        }
+      }
+
+      const [sale] = await db
+        .select()
+        .from(sales)
+        .where(eq(sales.id, account.saleId!));
+
       // Create cash movement
       await db.insert(cashMovements).values({
         cashAccountId: cashAccount.id,
@@ -276,25 +336,34 @@ export class AccountsReceivablesService extends BaseCrudService<
         amount: account.amount,
         personId: account.personId,
         personName: account.personName,
-        movementDate: new Date(data.paymentDate),
+        movementDate: parseDateOnly(data.paymentDate),
         groupId: revenueGroup.id,
         groupName: revenueGroup.name,
+        paymentTypeId: paymentTypeData.paymentTypeId,
+        paymentTypeName: paymentTypeData.paymentTypeName,
+        sectorId: sale?.sectorId || null,
+        sectorName: sale?.sectorName || null,
         companyId: companyId,
         companyName: companyName,
         createdByName: userName,
       });
 
-
       // Update account receivable status
-      await db.update(accountsReceivables).set({
-        status: AccountsReceivableStatusEnum.PAGO,
-        paymentDate: new Date(data.paymentDate),
-      }).where(eq(accountsReceivables.id, account.id));
+      await db
+        .update(accountsReceivables)
+        .set({
+          status: AccountsReceivableStatusEnum.PAGO,
+          paymentDate: parseDateOnly(data.paymentDate),
+        })
+        .where(eq(accountsReceivables.id, account.id));
     }
 
     // 5. Update cash account balance
     const newBalance = (cashAccount.balance || 0) + totalPaid;
-    await db.update(cashAccounts).set({ balance: newBalance }).where(eq(cashAccounts.id, cashAccount.id));
+    await db
+      .update(cashAccounts)
+      .set({ balance: newBalance })
+      .where(eq(cashAccounts.id, cashAccount.id));
 
     return {
       message: `${accountsToProcess.length} conta(s) baixada(s) com sucesso`,

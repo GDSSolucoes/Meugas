@@ -1,4 +1,11 @@
-import { IsArray, IsDateString, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import {
+  IsArray,
+  IsDateString,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  IsOptional,
+} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class AccountsReceivablesRegisterPaymentDto {
@@ -18,4 +25,10 @@ export class AccountsReceivablesRegisterPaymentDto {
   @IsDateString()
   @IsNotEmpty()
   paymentDate!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @IsUUID("4")
+  subgroupId?: string;
 }

@@ -19,6 +19,7 @@ import { PurchasEsCreateDto } from "./dto/purchases.post.dto";
 import { PurchasEsUpdateDto } from "./dto/purchases.update.dto";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
+import { parseDateOnly } from "../../database/schemas/date-only";
 
 @Injectable()
 export class PurchasEsesService extends BaseCrudService<typeof purchases> {
@@ -243,7 +244,7 @@ export class PurchasEsesService extends BaseCrudService<typeof purchases> {
             supplierId: savedPurchase.supplierId as any,
             supplierName: savedPurchase.supplierName,
             description: `Compra ${savedPurchase.invoiceNumber} - Parcela ${installment.number}/${data.installments}`,
-            dueDate: new Date(installment.dueDate!),
+            dueDate: parseDateOnly(installment.dueDate!),
             amount: installment.amount,
             status: ContasAPagarStatusEnum.ABERTO,
             paymentTypeId: data.paymentTypeId as any,

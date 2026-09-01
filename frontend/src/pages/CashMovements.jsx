@@ -616,14 +616,6 @@ export default function CashMovementsPage({ onComplete }) {
       });
       return;
     }
-    if (!formData.subgroupId) {
-      toast({
-        title: "Erro",
-        description: "Selecione um sub grupo.",
-        variant: "destructive",
-      });
-      return;
-    }
     if (!formData.groupId) {
       toast({
         title: "Erro",
@@ -1384,7 +1376,7 @@ export default function CashMovementsPage({ onComplete }) {
                       </Label>
                       <Input
                         type="date"
-                        value={transferData.transferDate}
+                        value={new Date(transferData.transferDate)}
                         onChange={(e) =>
                           setTransferData((prev) => ({
                             ...prev,
@@ -1639,9 +1631,7 @@ export default function CashMovementsPage({ onComplete }) {
                       </div>
 
                       <div>
-                        <Label className="text-xs font-medium">
-                          Sub Grupo <span className="text-red-500">*</span>
-                        </Label>
+                        <Label className="text-xs font-medium">Sub Grupo</Label>
                         <Select
                           value={formData.subgroupId}
                           onValueChange={handleSubgroupChange}
@@ -1817,7 +1807,10 @@ export default function CashMovementsPage({ onComplete }) {
                         </Label>
                         <Input
                           type="date"
-                          value={formData.movementDate}
+                          value={format(
+                            new Date(formData.movementDate),
+                            "yyyy-MM-dd",
+                          )}
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
