@@ -26,7 +26,6 @@ import {
   X,
   LogOut,
   Printer,
-  Plus,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";

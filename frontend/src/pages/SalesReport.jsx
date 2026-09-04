@@ -12,15 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Receipt, DollarSign, TrendingUp, Filter } from "lucide-react";
 import { Sale } from "@/entities/Sale";
-import { format, parseISO, startOfDay, endOfDay } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { User } from "@/entities/User";
+import { formatDateOnly } from "@/utils";
 
 export default function SalesReportPage() {
   const [allSales, setAllSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   });
 
   useEffect(() => {

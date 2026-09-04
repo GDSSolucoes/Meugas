@@ -46,8 +46,9 @@ import { FinancialGroup } from "@/entities/FinancialGroup";
 import { PaymentType } from "@/entities/PaymentType";
 import { Sector } from "@/entities/Sector";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
+import { format, isBefore, startOfDay, startOfMonth } from "date-fns";
 import RenegociacaoModal from "./RenegociacaoModal";
+import { formatDateOnly } from "@/utils";
 
 // Dialog de Baixa
 function BaixaDialog({
@@ -63,7 +64,7 @@ function BaixaDialog({
     preSelectedAccountId || "",
   );
   const [paymentDate, setPaymentDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
 
   useEffect(() => {
@@ -176,9 +177,11 @@ export default function ContasAReceberModal({
   // Filtros - Período
   const [usarPeriodo, setUsarPeriodo] = useState(false);
   const [dataInicio, setDataInicio] = useState(
-    format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    formatDateOnly(startOfMonth(new Date()), "yyyy-MM-dd"),
   );
-  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dataFinal, setDataFinal] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
 
   // Filtros - Dropdowns
   const [filtroConta, setFiltroConta] = useState("todas");

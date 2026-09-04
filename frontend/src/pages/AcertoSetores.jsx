@@ -36,11 +36,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 import SalesPage from "./Sales";
-import AccountsReceivable from "./AccountsReceivable";
 import CashMovementsPage from "./CashMovements";
 import PaymentModal from "@/components/acerto/PaymentModal";
 import * as entities from "@/entities";
@@ -75,7 +74,7 @@ export default function AcertoSetoresPage() {
   const storedFilters = getStoredFilters();
 
   const [lancamento, setLancamento] = useState(
-    storedFilters?.lancamento || format(new Date(), "yyyy-MM-dd"),
+    storedFilters?.lancamento || formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
   const [setorSelecionado, setSetorSelecionado] = useState(null);
   const [mostrarEntregues, setMostrarEntregues] = useState(
@@ -85,13 +84,13 @@ export default function AcertoSetoresPage() {
     storedFilters?.mostrarNaoEntregues ?? true,
   );
   const [dataInicial, setDataInicial] = useState(
-    storedFilters?.dataInicial || format(new Date(), "yyyy-MM-dd"),
+    storedFilters?.dataInicial || formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
   const [horaInicial, setHoraInicial] = useState(
     storedFilters?.horaInicial || "00:00",
   );
   const [dataFinal, setDataFinal] = useState(
-    storedFilters?.dataFinal || format(new Date(), "yyyy-MM-dd"),
+    storedFilters?.dataFinal || formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
   const [horaFinal, setHoraFinal] = useState(
     storedFilters?.horaFinal || "23:59",
@@ -310,7 +309,7 @@ export default function AcertoSetoresPage() {
         sectorId: pedido.sectorId || "",
         sectorName: pedido.sectorName || "",
         status: "concluida",
-        saleDate: format(new Date(), "yyyy-MM-dd"),
+        saleDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
         items: pedido.items || [],
         paymentMethods: payments.map((p) => {
           const paymentType = paymentTypes.find((pt) => pt.id === p.tipo);
@@ -392,7 +391,7 @@ export default function AcertoSetoresPage() {
             type: "receita",
             amount: payment.valor,
             description: `Venda ${newSale.saleNumber} - ${paymentType.name}`,
-            movementDate: format(new Date(), "yyyy-MM-dd"),
+            movementDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
             personId: pedido.personId,
             personName: pedido.personName,
             relatedDocId: newSale.id,

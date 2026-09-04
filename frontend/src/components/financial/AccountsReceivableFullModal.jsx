@@ -49,8 +49,9 @@ import { Sector } from "@/entities/Sector";
 import { Person } from "@/entities/Person";
 import { Employee } from "@/entities/Employee";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
+import { format, isBefore, startOfDay, startOfMonth } from "date-fns";
 import RenegociacaoModal from "./RenegociacaoModal";
+import { formatDateOnly } from "@/utils";
 
 // Dialog de Baixa
 function BaixaDialog({
@@ -63,7 +64,7 @@ function BaixaDialog({
 }) {
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [paymentDate, setPaymentDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
 
   useEffect(() => {
@@ -177,9 +178,11 @@ export default function AccountsReceivableFullModal({
   // Período
   const [usarPeriodo, setUsarPeriodo] = useState(false);
   const [dataInicio, setDataInicio] = useState(
-    format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    formatDateOnly(startOfMonth(new Date()), "yyyy-MM-dd"),
   );
-  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dataFinal, setDataFinal] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
 
   // Filtros
   const [filtroConta, setFiltroConta] = useState("todas");
@@ -1103,10 +1106,7 @@ export default function AccountsReceivableFullModal({
                           </TableCell>
                           <TableCell className="text-xs">
                             {conta.createdAt
-                              ? format(
-                                  conta.createdAt,
-                                  "dd/MM/yy",
-                                )
+                              ? format(conta.createdAt, "dd/MM/yy")
                               : "-"}
                           </TableCell>
                           <TableCell className="text-xs font-mono">
@@ -1126,10 +1126,7 @@ export default function AccountsReceivableFullModal({
                           </TableCell>
                           <TableCell className="text-xs">
                             {conta.paymentDate
-                              ? format(
-                                  conta.paymentDate,
-                                  "dd/MM/yyyy",
-                                )
+                              ? format(conta.paymentDate, "dd/MM/yyyy")
                               : "-"}
                           </TableCell>
                           <TableCell className="text-xs text-right font-mono">
@@ -1445,10 +1442,7 @@ export default function AccountsReceivableFullModal({
                           </TableCell>
                           <TableCell className="text-xs">
                             {item.conta.dueDate
-                              ? format(
-                                  item.conta.dueDate,
-                                  "dd/MM/yyyy",
-                                )
+                              ? format(item.conta.dueDate, "dd/MM/yyyy")
                               : "-"}
                           </TableCell>
                           <TableCell className="text-xs text-right">

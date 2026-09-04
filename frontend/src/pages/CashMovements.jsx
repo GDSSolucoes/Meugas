@@ -18,24 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Search,
   X,
-  LogOut,
   Printer,
   Plus,
-  FolderOpen,
-  Folder,
-  TrendingUp,
-  TrendingDown,
   Fuel,
-  CreditCard,
-  Factory,
-  Store,
-  User,
   Edit,
   Trash2,
   Check,
@@ -65,9 +55,8 @@ import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { ContasAPagar } from "@/entities/ContasAPagar";
 import { User as UserEntity } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, startOfDay, endOfDay } from "date-fns";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { format } from "date-fns";
+import { formatDateOnly } from "@/utils/DateUtils";
 import FuelingModal from "@/components/financial/FuelingModal";
 import ContasAPagarModal from "@/components/financial/ContasAPagarModal";
 import AccountsReceivableFullModal from "@/components/financial/AccountsReceivableFullModal";
@@ -87,15 +76,19 @@ export default function CashMovementsPage({ onComplete }) {
 
   // Filter states
   const [selectedAccount, setSelectedAccount] = useState("");
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [startDate, setStartDate] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
+  const [endDate, setEndDate] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
   const [activeTab, setActiveTab] = useState("gastar");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [appliedFilters, setAppliedFilters] = useState({
     selectedAccount: "",
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   });
   const PAGE_SIZE = 10;
 
@@ -139,7 +132,7 @@ export default function CashMovementsPage({ onComplete }) {
     subgroupError: "",
     groupId: "",
     groupName: "",
-    transferDate: format(new Date(), "yyyy-MM-dd"),
+    transferDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     notes: "",
   });
 
@@ -155,7 +148,7 @@ export default function CashMovementsPage({ onComplete }) {
     personName: "",
     documentNumber: "",
     competenceMonth: format(new Date(), "MM/yyyy"),
-    movementDate: format(new Date(), "yyyy-MM-dd"),
+    movementDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     amount: 0,
     paymentTypeId: "",
     paymentTypeName: "",
@@ -386,7 +379,8 @@ export default function CashMovementsPage({ onComplete }) {
       documentNumber: movement.documentNumber || "",
       competenceMonth:
         movement.competenceMonth || format(new Date(), "MM/yyyy"),
-      movementDate: movement.movementDate || format(new Date(), "yyyy-MM-dd"),
+      movementDate:
+        movement.movementDate || formatDateOnly(new Date(), "yyyy-MM-dd"),
       amount: movement.amount || 0,
       paymentTypeId: movement.paymentTypeId || "",
       paymentTypeName: movement.paymentTypeName || "",
@@ -454,7 +448,7 @@ export default function CashMovementsPage({ onComplete }) {
       subgroupError: "",
       groupId: "",
       groupName: "",
-      transferDate: format(new Date(), "yyyy-MM-dd"),
+      transferDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
       notes: "",
     });
   };
@@ -481,7 +475,7 @@ export default function CashMovementsPage({ onComplete }) {
       personName: "",
       documentNumber: "",
       competenceMonth: format(new Date(), "MM/yyyy"),
-      movementDate: format(new Date(), "yyyy-MM-dd"),
+      movementDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
       amount: 0,
       paymentTypeId: dinheiroPt?.id || "",
       paymentTypeName: dinheiroPt?.name || "",
@@ -809,7 +803,7 @@ export default function CashMovementsPage({ onComplete }) {
       installments.push({
         number: i + 1,
         description: `Parcela ${i + 1}/${formData.installments}`,
-        dueDate: format(dueDate, "yyyy-MM-dd"),
+        dueDate: formatDateOnly(dueDate, "yyyy-MM-dd"),
         amount: Math.round(installmentValue * 100) / 100,
         isEntry: false,
       });
@@ -1244,7 +1238,7 @@ export default function CashMovementsPage({ onComplete }) {
                                 (mov.isTransfer ? "TR" : "-")}
                             </TableCell>
                             <TableCell className="text-xs">
-                              {format(mov.movementDate, "dd/MM/yy")}
+                              {formatDateOnly(mov.movementDate, "dd/MM/yyyy")}
                             </TableCell>
                             <TableCell className="text-xs">
                               {mov.sectorName || "-"}
@@ -1807,8 +1801,8 @@ export default function CashMovementsPage({ onComplete }) {
                         </Label>
                         <Input
                           type="date"
-                          value={format(
-                            new Date(formData.movementDate),
+                          value={formatDateOnly(
+                            formData.movementDate,
                             "yyyy-MM-dd",
                           )}
                           onChange={(e) =>

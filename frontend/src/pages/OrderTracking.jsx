@@ -35,7 +35,7 @@ import {
   MapPin,
   XCircle,
 } from "lucide-react"; // Added XCircle
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -117,8 +117,8 @@ export default function OrderTrackingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [filters, setFilters] = useState({
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     employeeId: "all",
     status: "all",
   });

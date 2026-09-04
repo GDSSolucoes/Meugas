@@ -27,16 +27,17 @@ import {
 } from "lucide-react";
 import { Order } from "@/entities/Order";
 import { Employee } from "@/entities/Employee";
-import { format, parseISO, startOfDay, endOfDay } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { User } from "@/entities/User";
+import { formatDateOnly } from "@/utils";
 
 export default function OrdersReportPage() {
   const [allOrders, setAllOrders] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     employeeId: "all",
     status: "all",
   });

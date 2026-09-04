@@ -19,10 +19,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Trash2, Edit2, Save, X, Printer } from "lucide-react";
+import { Plus, Search, Trash2, Save, X } from "lucide-react";
 import * as entities from "@/entities";
 import { useQueryClient } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useLocation } from "react-router-dom"; // Added useLocation
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import ProductEntryPanel from "@/components/products/ProductEntryPanel";
 import ProductItemsTable from "@/components/products/ProductItemsTable";
+import { formatDateOnly } from "@/utils";
 
 const initialSaleState = {
   saleNumber: "",
@@ -42,7 +43,7 @@ const initialSaleState = {
   sectorId: "",
   sectorName: "",
   status: "concluida",
-  saleDate: format(new Date(), "yyyy-MM-dd"),
+  saleDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   notes: "",
   items: [],
   paymentMethods: [], // Initial state is empty, PaymentModal will add first one if needed
@@ -86,7 +87,7 @@ const generateInstallmentDetails = (paymentMethod, paymentTypes, saleDate) => {
       dueDate.setMonth(dueDate.getMonth() + (i + 1)); // Add months for subsequent installments
       newDetails.push({
         number: i + 1,
-        dueDate: format(dueDate, "yyyy-MM-dd"),
+        dueDate: formatDateOnly(dueDate, "yyyy-MM-dd"),
         amount: installmentAmount,
         status: "pendente",
       });
@@ -714,8 +715,8 @@ export default function SalesPage({ onSaleComplete }) {
       setCurrentSale({
         ...sale,
         saleDate: sale.saleDate
-          ? format(parseISO(sale.saleDate), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd"),
+          ? formatDateOnly(parseISO(sale.saleDate), "yyyy-MM-dd")
+          : formatDateOnly(new Date(), "yyyy-MM-dd"),
       });
 
       if (sale.conveniadaId) {
@@ -1029,8 +1030,8 @@ export default function SalesPage({ onSaleComplete }) {
       sectorName: orderSector ? orderSector.name : "",
       status: "concluida",
       saleDate: order.deliveryDate
-        ? format(new Date(order.deliveryDate), "yyyy-MM-dd")
-        : format(new Date(), "yyyy-MM-dd"),
+        ? formatDateOnly(new Date(order.deliveryDate), "yyyy-MM-dd")
+        : formatDateOnly(new Date(), "yyyy-MM-dd"),
       notes: order.notes || "",
       items: saleItems,
       paymentMethods: [

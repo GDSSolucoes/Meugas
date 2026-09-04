@@ -30,7 +30,8 @@ import { Sale } from "@/entities/Sale";
 import { Purchase } from "@/entities/Purchase";
 import { VasilhameLoan } from "@/entities/VasilhameLoan";
 import { ProductPickup } from "@/entities/ProductPickup";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function StockTransferPage() {
   const { toast } = useToast();
@@ -54,7 +55,7 @@ export default function StockTransferPage() {
     toSectorId: "",
     toSectorName: "",
     quantity: 1,
-    transferDate: format(new Date(), "yyyy-MM-dd"),
+    transferDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     notes: "",
     createdByName: "",
   };

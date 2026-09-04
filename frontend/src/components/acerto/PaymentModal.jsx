@@ -26,11 +26,12 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import { addMonths, format } from "date-fns";
+import { addMonths } from "date-fns";
 import { User } from "@/entities/User";
 import { CashAccount } from "@/entities/CashAccount";
 import { PaymentType } from "@/entities/PaymentType";
 import { Acquirer } from "@/entities/Acquirer";
+import { formatDateOnly } from "@/utils";
 
 export default function PaymentModal({
   open,
@@ -49,7 +50,7 @@ export default function PaymentModal({
   const [payments, setPayments] = useState([]);
   const [parcelas, setParcelas] = useState([]);
   const [firstDueDate, setFirstDueDate] = useState(
-    format(addMonths(new Date(), 1), "yyyy-MM-dd"),
+    formatDateOnly(addMonths(new Date(), 1), "yyyy-MM-dd"),
   );
   const [installmentCount, setInstallmentCount] = useState(1);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);

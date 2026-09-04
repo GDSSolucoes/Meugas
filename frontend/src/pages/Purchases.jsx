@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,23 +21,12 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  ShoppingCart,
-  Search,
-  Plus,
-  Trash2,
-  Save,
-  Package,
-  X,
-  Upload,
-  UserPlus,
-} from "lucide-react";
+import { Search, Plus, Trash2, Save, UserPlus } from "lucide-react";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
 // Added import
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 import ProductEntryPanel from "@/components/products/ProductEntryPanel";
 import ProductItemsTable from "@/components/products/ProductItemsTable";
 
@@ -82,9 +71,9 @@ export default function PurchasesPage() {
     nfeReceived: false,
     nfeNumber: "",
     nfeSeries: "001",
-    nfeDate: format(new Date(), "yyyy-MM-dd"),
+    nfeDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     createdByName: "",
-    purchaseDate: format(new Date(), "yyyy-MM-dd"),
+    purchaseDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   };
 
   const [currentPurchase, setCurrentPurchase] = useState(initialPurchaseState);
@@ -456,7 +445,7 @@ export default function PurchasesPage() {
       purchase.getMonth() + 1 + installmentIndex,
       10,
     );
-    return format(baseDate, "yyyy-MM-dd");
+    return formatDateOnly(baseDate, "yyyy-MM-dd");
   };
 
   const handlePaymentTypeChange = (paymentTypeId) => {

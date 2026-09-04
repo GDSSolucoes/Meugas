@@ -17,7 +17,6 @@ import { Plus, Edit, Trash2, CreditCard } from "lucide-react";
 import { Acquirer } from "@/entities/Acquirer";
 import { User } from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
-import { some } from "lodash";
 
 export default function AcquirersPage() {
   const { toast } = useToast();

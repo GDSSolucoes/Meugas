@@ -21,9 +21,9 @@ import {
 import { BarChart3, Filter, Loader2 } from "lucide-react";
 import { Sector } from "@/entities/Sector";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
 import { User } from "@/entities/User";
 import { api } from "@/api/apiClient";
+import { formatDateOnly } from "@/utils";
 
 export default function StockReportPage() {
   const { toast } = useToast();
@@ -32,7 +32,7 @@ export default function StockReportPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
     sectorId: "",
-    reportDate: format(new Date(), "yyyy-MM-dd"),
+    reportDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   });
   const [currentUser, setCurrentUser] = useState(null);
 

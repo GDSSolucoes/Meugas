@@ -11,8 +11,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, DollarSign, Calendar, Phone } from "lucide-react";
 import { Employee } from "@/entities/Employee";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { User } from "@/entities/User";
+import { formatDateOnly } from "@/utils";
 
 export default function EmployeesReportPage() {
   const [employees, setEmployees] = useState([]);
@@ -170,7 +171,7 @@ export default function EmployeesReportPage() {
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-500" />
                             {employee.hireDate
-                              ? format(employee.hireDate, "dd/MM/yyyy")
+                              ? formatDateOnly(employee.hireDate, "dd/MM/yyyy")
                               : "-"}
                           </div>
                         </TableCell>

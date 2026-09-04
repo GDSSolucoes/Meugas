@@ -21,9 +21,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, UserCheck, Edit, Trash2 } from "lucide-react";
 import { Employee } from "@/entities/Employee";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
+import { formatDateOnly } from "@/utils";
 
 export default function EmployeesPage() {
   const { toast } = useToast();
@@ -39,7 +40,7 @@ export default function EmployeesPage() {
     phone: "",
     position: "",
     salary: 0,
-    hireDate: format(new Date(), "yyyy-MM-dd"),
+    hireDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     vacationStart: "",
     vacationEnd: "",
     active: true,
@@ -71,13 +72,13 @@ export default function EmployeesPage() {
     setCurrentEmployee({
       ...employee,
       hireDate: employee.hireDate
-        ? format(employee.hireDate, "yyyy-MM-dd")
+        ? formatDateOnly(employee.hireDate, "yyyy-MM-dd")
         : "",
       vacationStart: employee.vacationStart
-        ? format(employee.vacationStart, "yyyy-MM-dd")
+        ? formatDateOnly(employee.vacationStart, "yyyy-MM-dd")
         : "",
       vacationEnd: employee.vacationEnd
-        ? format(employee.vacationEnd, "yyyy-MM-dd")
+        ? formatDateOnly(employee.vacationEnd, "yyyy-MM-dd")
         : "",
     });
     setShowForm(true);

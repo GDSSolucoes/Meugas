@@ -23,8 +23,9 @@ import { PaymentType } from "@/entities/PaymentType";
 import { CashAccount } from "@/entities/CashAccount";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { User as UserEntity } from "@/entities/User";
-import { format, parseISO, addDays } from "date-fns";
+import { format, addDays } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
+import { formatDateOnly } from "@/utils";
 
 const normalizeString = (str) => {
   if (!str) return "";
@@ -78,7 +79,7 @@ export default function OrdersPage() {
     cashAccountId: "",
     cashAccountName: "",
     status: "pendente",
-    deliveryDate: format(new Date(), "yyyy-MM-dd"),
+    deliveryDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     notes: "",
     items: [],
     totalAmount: 0,
@@ -136,7 +137,10 @@ export default function OrdersPage() {
               saleId: order.id,
               installmentNumber: i,
               description: `Parcela ${i}/${payment.installments} do Pedido ${order.orderNumber}`,
-              dueDate: format(addDays(baseDueDate, (i - 1) * 30), "yyyy-MM-dd"),
+              dueDate: formatDateOnly(
+                addDays(baseDueDate, (i - 1) * 30),
+                "yyyy-MM-dd",
+              ),
               amount: payment.amount / payment.installments,
               status: "pendente",
               companyId: user.companyId,

@@ -1,30 +1,37 @@
 import { customType } from "drizzle-orm/pg-core";
 
+/** Parses legacy date-only inputs without interpreting them in local time. */
 export function parseDateOnly(value: string | Date): Date {
   if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      throw new Error("Invalid date-only value");
+    }
+
     return new Date(
       value.getUTCFullYear(),
       value.getUTCMonth(),
       value.getUTCDate(),
     );
   }
-  const [year, month, day] = value.split("-").map(Number);
+
+  const datePart = value.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    throw new Error("Date-only value must use YYYY-MM-DD format");
+  }
+
+  const [year, month, day] = datePart.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
-/** PostgreSQL date without UTC conversion when exposed as a JavaScript Date. */
+/** PostgreSQL date represented as YYYY-MM-DD, never as a JavaScript Date. */
 export const dateOnly = customType<{
   data: Date;
-  driverData: string;
+  driverData: string | Date;
 }>({
   dataType: () => "date",
-  fromDriver: (value) => {
-    return parseDateOnly(value);
-  },
-  toDriver: (value) => {
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const day = String(value.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  },
+  fromDriver: (value) => value as unknown as Date,
+  toDriver: (value) =>
+    value instanceof Date
+      ? value.toISOString().slice(0, 10)
+      : parseDateOnly(value).toISOString().slice(0, 10),
 });

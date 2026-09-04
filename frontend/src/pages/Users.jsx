@@ -19,11 +19,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { UsersIcon, Edit, Info, Plus } from "lucide-react";
+import { UsersIcon, Edit, Plus } from "lucide-react";
 import { User, userRoleEnum, userTypeEnum } from "@/entities/User";
 import { Company } from "@/entities/Company"; // Importar a entidade Company
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast"; // Importar useToast
+import { formatDateOnly } from "@/utils";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -610,7 +611,7 @@ export default function UsersPage() {
                       <TableCell>{getStatusBadge(user.active)}</TableCell>
                       <TableCell className="text-sm text-slate-500">
                         {user.createdAt
-                          ? format(user.createdAt, "dd/MM/yyyy")
+                          ? formatDateOnly(user.createdAt, "dd/MM/yyyy")
                           : "-"}
                       </TableCell>
                       <TableCell className="text-right">

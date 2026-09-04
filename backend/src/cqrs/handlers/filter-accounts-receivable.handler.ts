@@ -13,6 +13,7 @@ import {
   asc,
   getTableColumns,
 } from "drizzle-orm";
+import { parseDateOnly } from "../../database/schemas/date-only";
 
 @QueryHandler(FilterAccountsReceivableQuery)
 export class FilteraccountsReceivablesHandler implements IQueryHandler<FilterAccountsReceivableQuery> {
@@ -51,13 +52,13 @@ export class FilteraccountsReceivablesHandler implements IQueryHandler<FilterAcc
 
     if (filters.dueDate_gte) {
       filterConditions.push(
-        gte(accountsReceivables.dueDate, new Date(filters.dueDate_gte)),
+        gte(accountsReceivables.dueDate, parseDateOnly(filters.dueDate_gte)),
       );
     }
 
     if (filters.dueDate_lte) {
       filterConditions.push(
-        lte(accountsReceivables.dueDate, new Date(filters.dueDate_lte)),
+        lte(accountsReceivables.dueDate, parseDateOnly(filters.dueDate_lte)),
       );
     }
 

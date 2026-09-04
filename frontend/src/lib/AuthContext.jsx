@@ -1,6 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { appParams } from "@/lib/app-params";
-import { api, apiEnabled } from "@/api/apiClient";
 import { User } from "@/entities/User";
 
 const AuthContext = createContext();

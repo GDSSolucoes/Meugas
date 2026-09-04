@@ -37,7 +37,7 @@ import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 import { Company } from "@/entities";
 
 export default function AdminCompaniesPage() {
@@ -67,7 +67,7 @@ export default function AdminCompaniesPage() {
     },
     planType: "basic",
     monthlyFee: 0,
-    dueDate: format(new Date(), "yyyy-MM-dd"),
+    dueDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     status: "ativa",
     suspensionReason: "",
     notes: "",

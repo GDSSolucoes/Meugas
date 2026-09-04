@@ -24,9 +24,9 @@ import {
 import { Edit, Search, X, LogOut, Printer, ArrowRight } from "lucide-react";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
+import { format, startOfDay, endOfDay, isBefore } from "date-fns";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 
 export default function VasilhameManagementPage() {
   const { toast } = useToast();
@@ -65,9 +65,11 @@ export default function VasilhameManagementPage() {
 
   const [periodoTipo, setPeriodoTipo] = useState("aDevolver");
   const [dataInicial, setDataInicial] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
-  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dataFinal, setDataFinal] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
 
   const [filtroProduto, setFiltroProduto] = useState("");
   const [filtroProdutoNome, setFiltroProdutoNome] = useState("");
@@ -217,8 +219,8 @@ export default function VasilhameManagementPage() {
     setSetorEstqProprioValue("");
     setSetorEstqProprioNome("");
     setPeriodoTipo("aDevolver");
-    setDataInicial(format(new Date(), "yyyy-MM-dd"));
-    setDataFinal(format(new Date(), "yyyy-MM-dd"));
+    setDataInicial(formatDateOnly(new Date(), "yyyy-MM-dd"));
+    setDataFinal(formatDateOnly(new Date(), "yyyy-MM-dd"));
     setFiltroProduto("");
     setFiltroProdutoNome("");
     setDisplayedLoans([]);
@@ -237,7 +239,7 @@ export default function VasilhameManagementPage() {
     }
     setModDevolvido(selectedLoan.status === "devolvido_total");
     setModDataDevolucao(
-      selectedLoan.returnDate || format(new Date(), "yyyy-MM-dd"),
+      selectedLoan.returnDate || formatDateOnly(new Date(), "yyyy-MM-dd"),
     );
     setShowModificarModal(true);
   };
@@ -415,7 +417,7 @@ export default function VasilhameManagementPage() {
         returnedQuantity: novaQtdeDevolvida,
         returnDate:
           novoStatus === "devolvido_total"
-            ? format(new Date(), "yyyy-MM-dd")
+            ? formatDateOnly(new Date(), "yyyy-MM-dd")
             : selectedLoan.returnDate,
       });
 

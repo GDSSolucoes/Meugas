@@ -35,7 +35,6 @@ import AdminCompaniesPage from './pages/AdminCompanies';
 import DataMigrationPage from './pages/DataMigration';
 import AcquirersPage from './pages/Acquirers';
 import SalesListPage from './pages/SalesList';
-import FacilitadoresPage from './pages/Facilitadores';
 import BudgetPage from './pages/Budget';
 import AcertoSetoresPage from './pages/AcertoSetores';
 import __Layout from './Layout.jsx';

@@ -52,6 +52,7 @@ import {
   startOfDay,
   differenceInDays,
 } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 // Dialog de Baixa (Pagamento)
 function BaixaDialog({
@@ -67,7 +68,7 @@ function BaixaDialog({
     preSelectedAccountId || "",
   );
   const [paymentDate, setPaymentDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
 
   useEffect(() => {

@@ -21,7 +21,8 @@ import {
   FileText,
   Calendar,
 } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { addDays } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function PaymentModal({
   isOpen,
@@ -86,7 +87,7 @@ export default function PaymentModal({
       installmentsDetails.push({
         number: i + 1,
         amount: installmentAmount,
-        dueDate: format(dueDate, "yyyy-MM-dd"),
+        dueDate: formatDateOnly(dueDate, "yyyy-MM-dd"),
       });
     }
 

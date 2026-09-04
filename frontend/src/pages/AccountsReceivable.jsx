@@ -62,16 +62,13 @@ import {
 } from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 import RenegociacaoModal from "@/components/financial/RenegociacaoModal";
-import { useForm, FormProvider, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
-  FormItem,
-  FormLabel,
-  FormControl,
   FormField,
 } from "@/components/ui/form";
 
@@ -86,7 +83,7 @@ function BaixaDialog({
 }) {
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [paymentDate, setPaymentDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
 
   useEffect(() => {
@@ -252,8 +249,8 @@ export default function AccountsReceivablePage({ onComplete }) {
       cashAccountId: "",
       paymentTypeId: "",
       status: ["pendente"],
-      dueDate_gte: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-      dueDate_lte: format(new Date(), "yyyy-MM-dd"),
+      dueDate_gte: formatDateOnly(startOfMonth(new Date()), "yyyy-MM-dd"),
+      dueDate_lte: formatDateOnly(new Date(), "yyyy-MM-dd"),
       saleId: "",
       id: "",
       nfeNumber: "",
@@ -311,7 +308,7 @@ export default function AccountsReceivablePage({ onComplete }) {
       const today = startOfDay(new Date());
       const processedContas = contasData
         .map((c) => {
-          const dueDate = new Date(c.dueDate);
+          const dueDate = parseISO(c.dueDate);
           const isVencida = c.status === "pendente" && isBefore(dueDate, today);
           const isEmCobranca = c.status === "emCobranca";
 
@@ -319,7 +316,7 @@ export default function AccountsReceivablePage({ onComplete }) {
         })
         .sort((a, b) => {
           if (ordenacao === "vencimento")
-            return new Date(a.dueDate) - new Date(b.dueDate);
+            return parseISO(a.dueDate) - parseISO(b.dueDate);
           if (ordenacao === "codigo")
             return (a.id || "").localeCompare(b.id || "");
           if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
@@ -392,7 +389,7 @@ export default function AccountsReceivablePage({ onComplete }) {
       const today = startOfDay(new Date());
       const processedContas = contasData
         .map((c) => {
-          const dueDate = new Date(c.dueDate);
+          const dueDate = parseISO(c.dueDate);
           const isVencida = c.status === "pendente" && isBefore(dueDate, today);
           const isEmCobranca = c.status === "emCobranca";
 
@@ -400,7 +397,7 @@ export default function AccountsReceivablePage({ onComplete }) {
         })
         .sort((a, b) => {
           if (ordenacao === "vencimento")
-            return new Date(a.dueDate) - new Date(b.dueDate);
+            return parseISO(a.dueDate) - parseISO(b.dueDate);
           if (ordenacao === "codigo")
             return (a.id || "").localeCompare(b.id || "");
           if (ordenacao === "valor") return (b.amount || 0) - (a.amount || 0);
@@ -635,12 +632,12 @@ export default function AccountsReceivablePage({ onComplete }) {
               .map(
                 (conta) => `
               <tr>
-                <td>${conta.createdAt ? format(conta.createdAt, "dd/MM/yyyy") : "-"}</td>
+                <td>${conta.createdAt ? formatDateOnly(conta.createdAt, "dd/MM/yyyy") : "-"}</td>
                 <td>${conta.saleId?.slice(-6) || "-"}</td>
                 <td>${conta.nfeNumber || "-"}</td>
-                <td>${format(conta.dueDate, "dd/MM/yyyy")}</td>
+                <td>${formatDateOnly(conta.dueDate, "dd/MM/yyyy")}</td>
                 <td class="text-right">${formatCurrency(conta.amount)}</td>
-                <td>${conta.paymentDate ? format(conta.paymentDate, "dd/MM/yyyy") : "-"}</td>
+                <td>${conta.paymentDate ? formatDateOnly(conta.paymentDate, "dd/MM/yyyy") : "-"}</td>
                 <td class="text-right">${conta.status === "pago" ? formatCurrency(conta.amount) : "-"}</td>
                 <td>${conta.personName || "-"}</td>
               </tr>
@@ -1284,7 +1281,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                             </TableCell>
                             <TableCell className="text-xs">
                               {conta.createdAt
-                                ? format(conta.createdAt, "dd/MM/yy")
+                                ? formatDateOnly(conta.createdAt, "dd/MM/yy")
                                 : "-"}
                             </TableCell>
                             <TableCell className="text-xs font-mono">
@@ -1300,14 +1297,17 @@ export default function AccountsReceivablePage({ onComplete }) {
                               {conta.installmentNumber || "1"}
                             </TableCell>
                             <TableCell className="text-xs">
-                              {format(conta.dueDate, "dd/MM/yyyy")}
+                              {formatDateOnly(conta.dueDate, "dd/MM/yyyy")}
                             </TableCell>
                             <TableCell className="text-xs text-right font-mono">
                               {formatCurrency(conta.amount)}
                             </TableCell>
                             <TableCell className="text-xs">
                               {conta.paymentDate
-                                ? format(conta.paymentDate, "dd/MM/yyyy")
+                                ? formatDateOnly(
+                                    conta.paymentDate,
+                                    "dd/MM/yyyy",
+                                  )
                                 : "-"}
                             </TableCell>
                             <TableCell className="text-xs text-right font-mono">
@@ -1641,7 +1641,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                         <TableCell className="text-xs">{item.extra}</TableCell>
                         <TableCell className="text-xs">
                           {item.conta.dueDate
-                            ? format(item.conta.dueDate, "dd/MM/yyyy")
+                            ? formatDateOnly(item.conta.dueDate, "dd/MM/yyyy")
                             : "-"}
                         </TableCell>
                         <TableCell className="text-xs text-right">
@@ -1727,7 +1727,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                     </p>
                     <p>
                       <strong>Vencimento:</strong>{" "}
-                      {format(conta.dueDate, "dd/MM/yyyy")}
+                      {formatDateOnly(conta.dueDate, "dd/MM/yyyy")}
                     </p>
                   </div>
                 ))}

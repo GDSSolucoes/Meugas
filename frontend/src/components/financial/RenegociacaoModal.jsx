@@ -41,7 +41,8 @@ import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { CashMovement } from "@/entities/CashMovement";
 import { CashAccount } from "@/entities/CashAccount";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, addDays } from "date-fns";
+import { format, addDays } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function RenegociacaoModal({
   open,
@@ -56,7 +57,7 @@ export default function RenegociacaoModal({
 
   // Dados da renegociação
   const [dataRenegociacao, setDataRenegociacao] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
   const [setorId, setSetorId] = useState("");
   const [valorTotal, setValorTotal] = useState(0);
@@ -67,7 +68,7 @@ export default function RenegociacaoModal({
   // Controles de parcelamento
   const [numParcelas, setNumParcelas] = useState(1);
   const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState(
-    format(addDays(new Date(), 30), "yyyy-MM-dd"),
+    formatDateOnly(addDays(new Date(), 30), "yyyy-MM-dd"),
   );
   const [intervalo, setIntervalo] = useState(30);
 
@@ -89,7 +90,9 @@ export default function RenegociacaoModal({
       setValorDinheiro(0);
       setParcelas([]);
       setNumParcelas(1);
-      setDataPrimeiraParcela(format(addDays(new Date(), 30), "yyyy-MM-dd"));
+      setDataPrimeiraParcela(
+        formatDateOnly(addDays(new Date(), 30), "yyyy-MM-dd"),
+      );
       setObservacoes("");
       setSetorId("");
       setContaDestinoId(cashAccounts.length > 0 ? cashAccounts[0].id : "");
@@ -157,7 +160,7 @@ export default function RenegociacaoModal({
       );
       novasParcelas.push({
         numero: i + 1,
-        vencimento: format(dataVencimento, "yyyy-MM-dd"),
+        vencimento: formatDateOnly(dataVencimento, "yyyy-MM-dd"),
         valor: Math.round(valorParcela * 100) / 100,
       });
     }
@@ -474,7 +477,7 @@ export default function RenegociacaoModal({
                 type="date"
                 value={dataRenegociacao}
                 onChange={(e) => setDataRenegociacao(e.target.value)}
-                max={format(new Date(), "yyyy-MM-dd")}
+                max={formatDateOnly(new Date(), "yyyy-MM-dd")}
                 className="h-8"
               />
             </div>

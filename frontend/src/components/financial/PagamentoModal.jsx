@@ -33,7 +33,8 @@ import { CashMovement } from "@/entities/CashMovement";
 import { CashAccount } from "@/entities/CashAccount";
 import { ContasAPagar } from "@/entities/ContasAPagar";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, isFuture } from "date-fns";
+import { format, isFuture } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function PagamentoModal({
   open,
@@ -49,7 +50,7 @@ export default function PagamentoModal({
 
   // Dados do pagamento
   const [paymentDate, setPaymentDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [desconto, setDesconto] = useState("");
@@ -80,7 +81,7 @@ export default function PagamentoModal({
   // Reset ao abrir
   useEffect(() => {
     if (open) {
-      setPaymentDate(format(new Date(), "yyyy-MM-dd"));
+      setPaymentDate(formatDateOnly(new Date(), "yyyy-MM-dd"));
       setSelectedAccountId(cashAccounts.length > 0 ? cashAccounts[0].id : "");
       setDesconto("");
       setJurosMulta("");

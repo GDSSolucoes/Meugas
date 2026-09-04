@@ -29,7 +29,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/entities/User";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 
 export default function PeoplePage() {
   const { toast } = useToast();

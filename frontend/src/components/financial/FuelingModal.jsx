@@ -46,7 +46,8 @@ import { CashMovement } from "@/entities/CashMovement";
 import { CashAccount } from "@/entities/CashAccount";
 import { FinancialGroup } from "@/entities/FinancialGroup";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function FuelingModal({
   open,
@@ -75,7 +76,7 @@ export default function FuelingModal({
     driverName: "",
     lastFuelingDate: "",
     lastKm: 0,
-    fuelingDate: format(new Date(), "yyyy-MM-dd"),
+    fuelingDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     currentKm: "",
     liters: "",
     totalValue: "",
@@ -134,7 +135,7 @@ export default function FuelingModal({
       driverName: "",
       lastFuelingDate: "",
       lastKm: 0,
-      fuelingDate: format(new Date(), "yyyy-MM-dd"),
+      fuelingDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
       currentKm: "",
       liters: "",
       totalValue: "",
@@ -607,7 +608,7 @@ export default function FuelingModal({
                         fuelingDate: e.target.value,
                       }))
                     }
-                    max={format(new Date(), "yyyy-MM-dd")}
+                    max={formatDateOnly(new Date(), "yyyy-MM-dd")}
                     className={`h-8 ${isFormDisabled ? "bg-slate-100" : "bg-white"}`}
                     disabled={isFormDisabled}
                   />

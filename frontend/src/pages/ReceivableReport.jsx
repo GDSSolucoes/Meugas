@@ -19,17 +19,18 @@ import {
   Filter,
 } from "lucide-react";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
-import { format, parseISO, startOfDay, endOfDay, isBefore } from "date-fns";
+import { format, startOfDay, endOfDay, isBefore } from "date-fns";
 import { User } from "@/entities/User";
+import { formatDateOnly } from "@/utils";
 
 export default function ReceivableReportPage() {
   const [allReceivables, setAllReceivables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
-    dueStartDate: format(new Date(), "yyyy-MM-dd"),
-    dueEndDate: format(new Date(), "yyyy-MM-dd"),
-    createdStartDate: format(new Date(), "yyyy-MM-dd"),
-    createdEndDate: format(new Date(), "yyyy-MM-dd"),
+    dueStartDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    dueEndDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    createdStartDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    createdEndDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   });
 
   useEffect(() => {

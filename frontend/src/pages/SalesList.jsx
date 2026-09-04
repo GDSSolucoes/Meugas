@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,24 +14,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  FileText,
   Search,
   Filter,
   Receipt,
   CreditCard,
   Eye,
   Calendar,
-  Download,
-  XCircle,
-  FileCode,
   Edit2, // Added Edit2 icon
 } from "lucide-react";
 import * as entities from "@/entities";
 import FiscalProvider from "@/providers/FiscalProvider";
-import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom"; // Added useNavigate
-import { formatSaleDate } from "@/utils/DateUtils";
+import { formatDateOnly } from "@/utils/DateUtils";
 import {
   Dialog,
   DialogContent,
@@ -49,8 +44,8 @@ export default function SalesListPage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   const [filters, setFilters] = useState({
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: format(new Date(), "yyyy-MM-dd"),
+    startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
+    endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     searchTerm: "",
   });
 
@@ -505,7 +500,7 @@ export default function SalesListPage() {
                           {sale.saleNumber}
                         </TableCell>
                         <TableCell>
-                          {formatSaleDate(sale.saleDate || sale.createdAt)}
+                          {formatDateOnly(sale.saleDate || sale.createdAt)}
                         </TableCell>
                         <TableCell>{sale.personName}</TableCell>
                         <TableCell>{sale.sectorName || "-"}</TableCell>
@@ -765,7 +760,7 @@ export default function SalesListPage() {
                 </p>
                 <p className="text-sm">
                   <strong>Data:</strong>{" "}
-                  {formatSaleDate(
+                  {formatDateOnly(
                     selectedSale.saleDate ?? selectedSale.createdAt,
                   )}
                 </p>

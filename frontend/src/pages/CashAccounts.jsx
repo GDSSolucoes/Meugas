@@ -23,7 +23,7 @@ import {
 import { Plus, Wallet, Edit, Trash2 } from "lucide-react";
 import { CashAccount } from "@/entities/CashAccount";
 import { User } from "@/entities/User";
-import { format } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function CashAccountsPage() {
   const [accounts, setAccounts] = useState([]);
@@ -37,7 +37,7 @@ export default function CashAccountsPage() {
     type: "caixa_fisico", // Added type with a default value
     balance: 0,
     initialBalance: 0,
-    initialBalanceDate: format(new Date(), "yyyy-MM-dd"),
+    initialBalanceDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     active: true,
     createdByName: "",
   };

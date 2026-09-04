@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { UsersIcon, UserCheck, Phone, MapPin, Gift } from "lucide-react";
 import { Person } from "@/entities/Person";
 import { User } from "@/entities/User";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
+import { formatDateOnly } from "@/utils";
 
 export default function PeopleReportPage() {
   const [people, setPeople] = useState([]);
@@ -179,7 +180,7 @@ export default function PeopleReportPage() {
                             {person.birthday ? (
                               <>
                                 <Gift className="w-3 h-3 text-pink-500" />
-                                {format(person.birthday, "dd/MM/yyyy")}
+                                {formatDateOnly(person.birthday, "dd/MM/yyyy")}
                               </>
                             ) : (
                               "-"

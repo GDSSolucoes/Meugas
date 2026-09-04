@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,6 @@ import { Sector } from "@/entities/Sector";
 import { Product } from "@/entities/Product";
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO } from "date-fns";
 
 export default function StockMovementPage() {
   const { toast } = useToast();
@@ -311,7 +310,10 @@ export default function StockMovementPage() {
                             type="date"
                             value={
                               stock.initialDate
-                                ? format(stock.initialDate, "yyyy-MM-dd")
+                                ? formatDateOnly(
+                                    stock.initialDate,
+                                    "yyyy-MM-dd",
+                                  )
                                 : ""
                             }
                             onChange={(e) =>

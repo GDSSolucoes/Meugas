@@ -48,14 +48,8 @@ import { Sector } from "@/entities/Sector";
 import { Person } from "@/entities/Person";
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  format,
-  parseISO,
-  isBefore,
-  startOfDay,
-  differenceInDays,
-} from "date-fns";
-import { createPageUrl } from "@/utils";
+import { format, isBefore, startOfDay, differenceInDays } from "date-fns";
+import { createPageUrl, formatDateOnly } from "@/utils";
 import PagamentoModal from "@/components/financial/PagamentoModal";
 
 // Dialog de Baixa (Pagamento)
@@ -69,7 +63,7 @@ function BaixaDialog({
 }) {
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [paymentDate, setPaymentDate] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
 
   useEffect(() => {
@@ -145,7 +139,9 @@ function BaixaDialog({
 
 // Dialog de Reagendamento
 function ReagendarDialog({ isOpen, onClose, onConfirm, contas }) {
-  const [novaData, setNovaData] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [novaData, setNovaData] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
   const [motivo, setMotivo] = useState("");
 
   if (!contas || contas.length === 0) return null;
@@ -614,7 +610,7 @@ export default function ContasAPagarPage() {
         await ContasAPagar.update(contaId, {
           dueDate: novaData,
           reagendamentoMotivo: motivo,
-          reagendamentoData: format(new Date(), "yyyy-MM-dd"),
+          reagendamentoData: formatDateOnly(new Date(), "yyyy-MM-dd"),
         });
       }
 

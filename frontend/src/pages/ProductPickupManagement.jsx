@@ -39,9 +39,9 @@ import {
 } from "@/components/ui/select";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO, startOfDay, endOfDay } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, formatDateOnly } from "@/utils";
 
 export default function ProductPickupManagementPage() {
   const { toast } = useToast();
@@ -67,9 +67,11 @@ export default function ProductPickupManagementPage() {
 
   const [tipoProduto, setTipoProduto] = useState("aRetirar"); // 'aRetirar', 'retiradosEntre'
   const [dataInicial, setDataInicial] = useState(
-    format(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
-  const [dataFinal, setDataFinal] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dataFinal, setDataFinal] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
 
   const [codigoVendaInput, setCodigoVendaInput] = useState("");
   const [codigoVendaLabel, setCodigoVendaLabel] = useState("TODAS");
@@ -84,7 +86,9 @@ export default function ProductPickupManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [qtdeBaixar, setQtdeBaixar] = useState("");
   const [sectorBaixa, setSectorBaixa] = useState("");
-  const [dataBaixa, setDataBaixa] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dataBaixa, setDataBaixa] = useState(
+    formatDateOnly(new Date(), "yyyy-MM-dd"),
+  );
   const [notaFiscal, setNotaFiscal] = useState("");
   const [pedido, setPedido] = useState("");
   const [activeCaixa, setActiveCaixa] = useState(null); // 'cliente', 'produto', 'venda'
@@ -233,8 +237,8 @@ export default function ProductPickupManagementPage() {
     setClienteInput("");
     setProdutoInput("");
     setTipoProduto("aRetirar");
-    setDataInicial(format(new Date(), "yyyy-MM-dd"));
-    setDataFinal(format(new Date(), "yyyy-MM-dd"));
+    setDataInicial(formatDateOnly(new Date(), "yyyy-MM-dd"));
+    setDataFinal(formatDateOnly(new Date(), "yyyy-MM-dd"));
     setCodigoVendaInput("");
     setDisplayedPickups([]);
     setShowResults(false);
@@ -271,7 +275,7 @@ export default function ProductPickupManagementPage() {
     const pendente =
       (pickupToUse.pickupQuantity || 0) - (pickupToUse.collectedQuantity || 0);
     setQtdeBaixar(pendente.toString());
-    setDataBaixa(format(new Date(), "yyyy-MM-dd"));
+    setDataBaixa(formatDateOnly(new Date(), "yyyy-MM-dd"));
     setSectorBaixa(sectors.length > 0 ? sectors[0].id : "");
     setNotaFiscal("");
     setPedido("");
@@ -1025,7 +1029,7 @@ export default function ProductPickupManagementPage() {
                     value={dataBaixa}
                     onChange={(e) => setDataBaixa(e.target.value)}
                     className="h-9 mt-1"
-                    max={format(new Date(), "yyyy-MM-dd")}
+                    max={formatDateOnly(new Date(), "yyyy-MM-dd")}
                   />
                 </div>
               </div>
