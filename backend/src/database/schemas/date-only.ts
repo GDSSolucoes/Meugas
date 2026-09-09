@@ -1,7 +1,9 @@
 import { customType } from "drizzle-orm/pg-core";
 
 /** Parses legacy date-only inputs without interpreting them in local time. */
-export function parseDateOnly(value: string | Date): Date {
+export function parseDateOnly(value: string | Date): Date | null {
+  if (value == null) return null;
+
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) {
       throw new Error("Invalid date-only value");
@@ -33,5 +35,5 @@ export const dateOnly = customType<{
   toDriver: (value) =>
     value instanceof Date
       ? value.toISOString().slice(0, 10)
-      : parseDateOnly(value).toISOString().slice(0, 10),
+      : (parseDateOnly(value)?.toISOString().slice(0, 10) ?? ""),
 });
