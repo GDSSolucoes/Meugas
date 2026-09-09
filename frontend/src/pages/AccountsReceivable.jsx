@@ -67,10 +67,7 @@ import RenegociacaoModal from "@/components/financial/RenegociacaoModal";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormField,
-} from "@/components/ui/form";
+import { Form, FormField } from "@/components/ui/form";
 
 // Dialog de Baixa
 function BaixaDialog({
@@ -1061,7 +1058,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                               Paga
                             </label>
                           </div>
-                          <div className="flex items-center gap-1">
+                          {/* <div className="flex items-center gap-1">
                             <Checkbox
                               id="emCobranca"
                               checked={field.value?.includes("emCobranca")}
@@ -1077,7 +1074,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                             <label htmlFor="emCobranca" className="text-xs">
                               Em Cobrança
                             </label>
-                          </div>
+                          </div> */}
                         </div>
                       )}
                     />

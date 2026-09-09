@@ -1030,7 +1030,7 @@ export default function ContasAReceberModal({
                       Pagas
                     </label>
                   </div>
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <Checkbox
                       id="emCobranca"
                       checked={statusContas.emCobranca}
@@ -1041,7 +1041,7 @@ export default function ContasAReceberModal({
                     <label htmlFor="emCobranca" className="text-xs">
                       Em Cobrança
                     </label>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

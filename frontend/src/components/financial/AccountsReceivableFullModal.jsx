@@ -646,7 +646,6 @@ export default function AccountsReceivableFullModal({
 
   const getRowColor = (conta) => {
     if (conta.status === "pago") return "bg-green-50";
-    if (conta.status === "emCobranca") return "bg-blue-50";
     if (conta.isVencida) return "bg-red-50";
     return "";
   };
@@ -914,7 +913,7 @@ export default function AccountsReceivableFullModal({
                         Paga
                       </label>
                     </div>
-                    <div className="flex items-center gap-1">
+                    {/* <div className="flex items-center gap-1">
                       <Checkbox
                         id="modalEmCobranca"
                         checked={statusContas.emCobranca}
@@ -926,6 +925,7 @@ export default function AccountsReceivableFullModal({
                         Cobrança
                       </label>
                     </div>
+                    */}
                   </div>
 
                   <div className="border-t border-slate-200 pt-2 mt-2">
