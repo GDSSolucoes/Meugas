@@ -2,11 +2,14 @@ import { ApiProperty } from "@nestjs/swagger";
 import {
   IsNotEmpty,
   IsOptional,
-  IsString,
   IsNumber,
+  IsPositive,
+  IsString,
+  IsUUID,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
+import { parseDateOnly } from "../../../database/schemas/date-only";
 
 export class StocktransferBaseDto extends BaseCreateDto {
   @ApiProperty()
@@ -16,7 +19,7 @@ export class StocktransferBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   productId!: string;
 
   @ApiProperty()
@@ -26,7 +29,7 @@ export class StocktransferBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   fromSectorId!: string;
 
   @ApiProperty()
@@ -36,7 +39,7 @@ export class StocktransferBaseDto extends BaseCreateDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUUID()
   toSectorId!: string;
 
   @ApiProperty()
@@ -47,11 +50,12 @@ export class StocktransferBaseDto extends BaseCreateDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
+  @IsPositive()
   quantity!: number;
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => Date)
+  @Transform(({ value }) => parseDateOnly(value), { toClassOnly: true })
   transferDate!: Date;
 
   @ApiProperty()
