@@ -18,15 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Edit,
-  Trash2,
-  Search,
-  Save,
-  X,
-  LogOut,
-  Printer,
-} from "lucide-react";
+import { Edit, Trash2, Search, Save, X, LogOut, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -517,7 +509,7 @@ export default function BudgetPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
       <div className="bg-white border-b border-slate-300 p-4">
         <h1 className="text-xl font-bold" style={{ color: "#223f61" }}>
@@ -540,10 +532,18 @@ export default function BudgetPage() {
               className="w-32 h-8"
               placeholder=""
             />
-            <span className="text-xs text-slate-500">
-              Digite o código do orçamento e pressione Enter/Tab. Deixe em
-              branco para novo orçamento.
-            </span>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              onClick={handlePesquisar}
+              title="Pesquisar produto"
+              aria-label="Pesquisar produto"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
           </div>
 
           {/* Dados do Cliente */}
@@ -691,15 +691,6 @@ export default function BudgetPage() {
           <Button
             variant="outline"
             size="sm"
-            className="h-12 flex flex-col gap-1 px-4"
-            onClick={handlePesquisar}
-          >
-            <Search className="w-4 h-4" />
-            <span className="text-xs">Pesquisar</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             className="h-12 flex flex-col gap-1 px-4 text-white"
             style={{ backgroundColor: "#e78b3a" }}
             onClick={handleOk}
@@ -708,25 +699,6 @@ export default function BudgetPage() {
             <Save className="w-4 h-4" />
             <span className="text-xs">{isSaving ? "Salvando..." : "Ok"}</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-12 flex flex-col gap-1 px-4"
-            onClick={limparCampos}
-          >
-            <X className="w-4 h-4" />
-            <span className="text-xs">Cancelar</span>
-          </Button>
-          <Link to={createPageUrl("Dashboard")}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-12 flex flex-col gap-1 px-4"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-xs">Sair</span>
-            </Button>
-          </Link>
           <Button
             variant="outline"
             size="sm"
