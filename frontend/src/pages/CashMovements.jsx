@@ -1851,60 +1851,81 @@ export default function CashMovementsPage({ onComplete }) {
                               ? "Cliente"
                               : "Pto. Venda"}
                           </Label>
-                          <Input
-                            value={
-                              formData.personId
-                                ? `${formData.personName}`
-                                : formData.sacadoInput || ""
-                            }
-                            onFocus={() => setSacadoFieldFocused(true)}
-                            onBlur={() =>
-                              setTimeout(
-                                () => setSacadoFieldFocused(false),
-                                200,
-                              )
-                            }
-                            onChange={(e) => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                sacadoInput: e.target.value,
-                                personId: "",
-                                personName: "",
-                              }));
-                              setSacadoError("");
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const code = formData.sacadoInput?.trim();
-                                if (!code) return;
-
-                                const found = people.find(
-                                  (p) =>
-                                    p.type === sacadoType &&
-                                    (p.personNumber === code ||
-                                      p.id.endsWith(code)),
-                                );
-
-                                if (found) {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    personId: found.id,
-                                    personName: found.name,
-                                    sacadoInput: "",
-                                  }));
-                                  setSacadoError("");
-                                } else {
-                                  setSacadoError(
-                                    "Código não encontrado. Use o botão Pesquisar.",
-                                  );
-                                }
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={
+                                formData.personId
+                                  ? `${formData.personName}`
+                                  : formData.sacadoInput || ""
                               }
-                            }}
-                            placeholder="Digite o código e pressione ENTER"
-                            className={`h-8 ${disabledInputClass} ${sacadoError ? "border-red-500" : sacadoFieldFocused ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-300"}`}
-                            disabled={isFormDisabled}
-                          />
+                              onFocus={() => setSacadoFieldFocused(true)}
+                              onBlur={() =>
+                                setTimeout(
+                                  () => setSacadoFieldFocused(false),
+                                  200,
+                                )
+                              }
+                              onChange={(e) => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  sacadoInput: e.target.value,
+                                  personId: "",
+                                  personName: "",
+                                }));
+                                setSacadoError("");
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  const code = formData.sacadoInput?.trim();
+                                  if (!code) return;
+
+                                  const found = people.find(
+                                    (p) =>
+                                      p.type === sacadoType &&
+                                      (p.personNumber === code ||
+                                        p.id.endsWith(code)),
+                                  );
+
+                                  if (found) {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      personId: found.id,
+                                      personName: found.name,
+                                      sacadoInput: "",
+                                    }));
+                                    setSacadoError("");
+                                  } else {
+                                    setSacadoError(
+                                      "Código não encontrado. Use o botão Pesquisar.",
+                                    );
+                                  }
+                                }
+                              }}
+                              placeholder="Digite o código e pressione ENTER"
+                              className={`h-8 ${disabledInputClass} ${sacadoError ? "border-red-500" : sacadoFieldFocused ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-300"}`}
+                              disabled={isFormDisabled}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 shrink-0"
+                              disabled={editMode === "none"}
+                              onClick={() => {
+                                if (
+                                  activeTab === "receber" ||
+                                  activeTab === "gastar"
+                                ) {
+                                  setShowSearchModal(true);
+                                }
+                              }}
+                              title="Pesquisar produto"
+                              aria-label="Pesquisar produto"
+                            >
+                              <Search className="w-4 h-4" />
+                            </Button>
+                          </div>
                           {sacadoError && (
                             <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                               <AlertCircle className="w-3 h-3" /> {sacadoError}
@@ -2129,19 +2150,6 @@ export default function CashMovementsPage({ onComplete }) {
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm">Incluir</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 "
-            disabled={editMode === "none"}
-            onClick={() => {
-              if (activeTab === "receber" || activeTab === "gastar") {
-                setShowSearchModal(true);
-              }
-            }}
-          >
-            <Search className="w-4 h-4" />
-            <span className="text-sm">Pesquisar</span>
           </Button>
           <Button
             className="flex items-center gap-2  text-white hover:opacity-90"

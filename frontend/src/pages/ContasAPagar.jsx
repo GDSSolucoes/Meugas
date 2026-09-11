@@ -773,459 +773,350 @@ export default function ContasAPagarPage() {
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold text-slate-800">Contas a Pagar</h1>
-      </div>
+        <h1 className="text-xl font-bold text-slate-800 mb-4">
+          Contas a Pagar
+        </h1>
 
-      {/* Dialogs */}
-      <BaixaDialog
-        isOpen={isBaixaOpen}
-        onClose={() => setIsBaixaOpen(false)}
-        onConfirm={handleConfirmPagamento}
-        cashAccounts={cashAccounts}
-        contas={selectedContas
-          .map((id) => contas.find((c) => c.id === id))
-          .filter(Boolean)}
-        totalSelecionado={totais.selecionado}
-      />
-
-      <ReagendarDialog
-        isOpen={isReagendarOpen}
-        onClose={() => setIsReagendarOpen(false)}
-        onConfirm={handleConfirmReagendar}
-        contas={selectedContas
-          .map((id) => contas.find((c) => c.id === id))
-          .filter(Boolean)}
-      />
-
-      <PagamentoModal
-        open={isPagamentoOpen}
-        onOpenChange={setIsPagamentoOpen}
-        contas={selectedContas
-          .map((id) => contas.find((c) => c.id === id))
-          .filter(Boolean)
-          .filter((c) => c.status !== "pago")}
-        cashAccounts={cashAccounts}
-        currentUser={currentUser}
-        onPaymentComplete={() => {
-          setSelectedContas([]);
-          loadData();
-          setTimeout(() => {
-            if (showResults) applyFiltersAndShow();
-          }, 100);
-        }}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="max-w-full mx-auto space-y-4">
-          {/* SEÇÃO DE FILTROS - 4 BLOCOS */}
-          <div className="grid grid-cols-12 gap-4">
-            {/* 1. PESQUISA */}
-            <div className="col-span-3">
-              <Card className="bg-white border-slate-300 h-full">
-                <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                    Pesquisa
-                  </h4>
-                  <div>
-                    <Label className="text-xs">Fornecedor:</Label>
-                    <div className="flex gap-1">
-                      <div className="flex-1 relative">
-                        <Input
-                          value={
-                            fornecedorSelecionado?.name || fornecedorPesquisa
-                          }
-                          onChange={(e) => {
-                            setFornecedorPesquisa(e.target.value);
-                            setFornecedorSelecionado(null);
-                          }}
-                          onKeyDown={handleKeyDown}
-                          onFocus={() => setActiveSearchField("fornecedor")}
-                          onBlur={() =>
-                            setTimeout(() => setActiveSearchField(null), 200)
-                          }
-                          className={`h-8 text-xs pr-6 ${activeSearchField === "fornecedor" ? "ring-2 ring-blue-500" : ""}`}
-                          placeholder="Digite o nome ou use Pesquisar..."
-                        />
-                        {(fornecedorSelecionado || fornecedorPesquisa) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFornecedorSelecionado(null);
-                              setFornecedorPesquisa("");
-                            }}
-                            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Deixe em branco para todos
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* 2. FILTROS */}
-            <div className="col-span-4">
-              <Card className="bg-white border-slate-300 h-full">
-                <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                    Filtros
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs">Conta:</Label>
-                        <Select
-                          value={filtroConta}
-                          onValueChange={setFiltroConta}
-                        >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="todas">Todas</SelectItem>
-                            {cashAccounts.map((acc) => (
-                              <SelectItem key={acc.id} value={acc.id}>
-                                {acc.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* Setor Master filter removed */}
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="naoPagasPagar"
-                          checked={statusContas.naoPagas}
-                          onCheckedChange={(v) =>
-                            setStatusContas((p) => ({ ...p, naoPagas: v }))
-                          }
-                        />
-                        <label htmlFor="naoPagasPagar" className="text-xs">
-                          Não Pagas
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="pagasPagar"
-                          checked={statusContas.pagas}
-                          onCheckedChange={(v) =>
-                            setStatusContas((p) => ({ ...p, pagas: v }))
-                          }
-                        />
-                        <label htmlFor="pagasPagar" className="text-xs">
-                          Pagas
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-xs">Número da NF:</Label>
-                      <div className="flex gap-1">
-                        <div className="flex-1 relative">
-                          <Input
-                            value={filtroNFe}
-                            onChange={(e) => setFiltroNFe(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            onFocus={() => setActiveSearchField("nf")}
-                            onBlur={() =>
-                              setTimeout(() => setActiveSearchField(null), 200)
-                            }
-                            className={`h-7 text-xs pr-6 ${activeSearchField === "nf" ? "ring-2 ring-blue-500" : ""}`}
-                            placeholder="Digite o número ou use Pesquisar..."
-                          />
-                          {filtroNFe && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setFiltroNFe("");
-                              }}
-                              className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* 3. LEGENDA */}
-            <div className="col-span-2">
-              <Card className="bg-white border-slate-300 h-full">
-                <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                    Legenda
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-red-400 rounded"></div>
-                      <span className="text-xs">Conta vencida</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-400 rounded"></div>
-                      <span className="text-xs">Conta paga</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-                      <span className="text-xs">Vence hoje</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-orange-400 rounded"></div>
-                      <span className="text-xs">Vence em 3 dias</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* 4. ORDENAÇÃO */}
-            <div className="col-span-3">
-              <Card className="bg-white border-slate-300 h-full">
-                <CardContent className="p-4">
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                    Ordenação
-                  </h4>
-                  <RadioGroup
-                    value={ordenacao}
-                    onValueChange={setOrdenacao}
-                    className="space-y-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value="vencimento"
-                        id="ordVencimentoPagar"
-                      />
-                      <label htmlFor="ordVencimentoPagar" className="text-xs">
-                        Vencimento
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="codigo" id="ordCodigoPagar" />
-                      <label htmlFor="ordCodigoPagar" className="text-xs">
-                        Código
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="fornecedor" id="ordFornecedor" />
-                      <label htmlFor="ordFornecedor" className="text-xs">
-                        Fornecedor
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="valor" id="ordValorPagar" />
-                      <label htmlFor="ordValorPagar" className="text-xs">
-                        Valor
-                      </label>
-                    </div>
-                  </RadioGroup>
+        <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label className="text-xs">Fornecedor:</Label>
+                <div className="flex w-full">
+                  <Input
+                    value={fornecedorSelecionado?.name || fornecedorPesquisa}
+                    onChange={(e) => {
+                      setFornecedorPesquisa(e.target.value);
+                      setFornecedorSelecionado(null);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setActiveSearchField("fornecedor")}
+                    onBlur={() =>
+                      setTimeout(() => setActiveSearchField(null), 200)
+                    }
+                    className={`w-full h-8 text-xs pr-6 ${activeSearchField === "fornecedor" ? "ring-2 ring-blue-500" : ""}`}
+                    placeholder="Buscar por CNPJ/Nome"
+                  />
 
                   <Button
-                    className="w-full mt-3 text-white text-xs h-8 gap-1"
-                    style={{ backgroundColor: "#e78b3a" }}
-                    onClick={applyFiltersAndShow}
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => setShowFornecedorSearch(true)}
+                    title="Pesquisar produto"
+                    aria-label="Pesquisar produto"
                   >
-                    <ArrowRight className="w-4 h-4" />
+                    <Search className="w-4 h-4" />
                   </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* GRID DE CONTAS */}
-          <Card className="bg-white border-slate-300">
-            <CardContent className="p-0">
-              <div className="max-h-[400px] overflow-auto">
-                {!showResults ? (
-                  <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
-                    <div className="text-center">
-                      <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>
-                        Selecione os filtros e clique em{" "}
-                        <strong>Pesquisar</strong>
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader className="bg-slate-100 sticky top-0">
-                      <TableRow>
-                        <TableHead className="w-8 text-xs">S</TableHead>
-                        <TableHead className="text-xs w-20">Data</TableHead>
-                        <TableHead className="text-xs w-20">Código</TableHead>
-                        <TableHead className="text-xs w-20">N Fiscal</TableHead>
-                        <TableHead className="text-xs w-16">Tipo</TableHead>
-                        <TableHead className="text-xs w-20">Tp Pagto</TableHead>
-                        <TableHead className="text-xs w-12">Parc</TableHead>
-                        <TableHead className="text-xs w-24">
-                          Dt Vencto
-                        </TableHead>
-                        <TableHead className="text-xs w-24 text-right">
-                          Valor
-                        </TableHead>
-                        <TableHead className="text-xs w-24">Dt Pagto</TableHead>
-                        <TableHead className="text-xs w-24 text-right">
-                          Vl Pago
-                        </TableHead>
-                        <TableHead className="text-xs w-20">Situação</TableHead>
-                        <TableHead className="text-xs">Fornecedor</TableHead>
-                        <TableHead className="text-xs w-24">Grupo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={14} className="text-center py-8">
-                            Carregando...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredContas.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={14}
-                            className="text-center py-8 text-slate-500"
-                          >
-                            Nenhuma conta encontrada com os filtros
-                            selecionados.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredContas.map((conta) => (
-                          <TableRow
-                            key={conta.id}
-                            className={`${getRowColor(conta)} hover:bg-slate-100 cursor-pointer ${selectedContaForAction?.id === conta.id ? "ring-2 ring-blue-500" : ""}`}
-                            onClick={() => handleRowClick(conta)}
-                          >
-                            <TableCell
-                              className="text-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Checkbox
-                                checked={selectedContas.includes(conta.id)}
-                                onCheckedChange={() =>
-                                  toggleSelectConta(conta.id)
-                                }
-                                disabled={conta.status === "pago"}
-                              />
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.createdAt
-                                ? format(conta.createdAt, "dd/MM/yy")
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="text-xs font-mono">
-                              {conta.purchaseId?.slice(-6) ||
-                                conta.id?.slice(-6)}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.nfeNumber || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.documentType || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.paymentTypeName || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs text-center">
-                              {conta.installmentNumber || "1"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {format(conta.dueDate, "dd/MM/yyyy")}
-                            </TableCell>
-                            <TableCell className="text-xs text-right font-mono">
-                              {formatCurrency(conta.amount)}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.paymentDate
-                                ? format(conta.paymentDate, "dd/MM/yyyy")
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="text-xs text-right font-mono">
-                              {conta.status === "pago"
-                                ? formatCurrency(conta.amount)
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.status === "pago" ? (
-                                <Badge className="bg-green-100 text-green-800 text-xs">
-                                  Pago
-                                </Badge>
-                              ) : conta.isVencida ? (
-                                <Badge className="bg-red-100 text-red-800 text-xs">
-                                  Vencido
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-yellow-100 text-yellow-800 text-xs">
-                                  Aberto
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.supplierName}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {conta.groupName || "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
+                  {(fornecedorSelecionado || fornecedorPesquisa) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFornecedorSelecionado(null);
+                        setFornecedorPesquisa("");
+                      }}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* TOTAIS */}
-          <div className="grid grid-cols-5 gap-4 p-3 bg-white rounded-lg border border-slate-300">
-            <div className="text-center">
-              <p className="text-xs text-slate-600">Pago:</p>
-              <p className="text-sm font-bold text-green-600">
-                {formatCurrency(totais.pago)}
-              </p>
+              <div>
+                <Label className="text-xs">Conta:</Label>
+                <Select value={filtroConta} onValueChange={setFiltroConta}>
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {cashAccounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Status:</Label>
+                <div className="flex items-center gap-4 align-center mt-1">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="naoPagasPagar"
+                      checked={statusContas.naoPagas}
+                      onCheckedChange={(v) =>
+                        setStatusContas((p) => ({ ...p, naoPagas: v }))
+                      }
+                    />
+                    <label htmlFor="naoPagasPagar" className="text-xs">
+                      Não Pagas
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="pagasPagar"
+                      checked={statusContas.pagas}
+                      onCheckedChange={(v) =>
+                        setStatusContas((p) => ({ ...p, pagas: v }))
+                      }
+                    />
+                    <label htmlFor="pagasPagar" className="text-xs">
+                      Pagas
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Ordenação</Label>
+                <RadioGroup
+                  value={ordenacao}
+                  onValueChange={setOrdenacao}
+                  className="flex items-center gap-4 mt-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem
+                      value="vencimento"
+                      id="ordVencimentoPagar"
+                    />
+                    <label htmlFor="ordVencimentoPagar" className="text-xs">
+                      Vencimento
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="codigo" id="ordCodigoPagar" />
+                    <label htmlFor="ordCodigoPagar" className="text-xs">
+                      Código
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="fornecedor" id="ordFornecedor" />
+                    <label htmlFor="ordFornecedor" className="text-xs">
+                      Fornecedor
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="valor" id="ordValorPagar" />
+                    <label htmlFor="ordValorPagar" className="text-xs">
+                      Valor
+                    </label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div>
+                <Button
+                  className="w-full mt-3 text-white text-xs h-8 gap-1"
+                  style={{ backgroundColor: "#e78b3a" }}
+                  onClick={applyFiltersAndShow}
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-600">A pagar:</p>
-              <p className="text-sm font-bold text-blue-600">
-                {formatCurrency(totais.aPagar)}
-              </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-slate-300 mb-4">
+          <CardContent className="p-0">
+            <div className="max-h-[400px] overflow-auto">
+              {!showResults ? (
+                <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
+                  <div className="text-center">
+                    <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p>
+                      Selecione os filtros e clique em{" "}
+                      <strong>Pesquisar</strong>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader className="bg-slate-100 sticky top-0">
+                    <TableRow>
+                      <TableHead className="w-8 text-xs">S</TableHead>
+                      <TableHead className="text-xs w-20">Data</TableHead>
+                      <TableHead className="text-xs w-20">Código</TableHead>
+                      <TableHead className="text-xs w-20">N Fiscal</TableHead>
+                      <TableHead className="text-xs w-16">Tipo</TableHead>
+                      <TableHead className="text-xs w-20">Tp Pagto</TableHead>
+                      <TableHead className="text-xs w-12">Parc</TableHead>
+                      <TableHead className="text-xs w-24">Dt Vencto</TableHead>
+                      <TableHead className="text-xs w-24 text-right">
+                        Valor
+                      </TableHead>
+                      <TableHead className="text-xs w-24">Dt Pagto</TableHead>
+                      <TableHead className="text-xs w-24 text-right">
+                        Vl Pago
+                      </TableHead>
+                      <TableHead className="text-xs w-20">Situação</TableHead>
+                      <TableHead className="text-xs">Fornecedor</TableHead>
+                      <TableHead className="text-xs w-24">Grupo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={14} className="text-center py-8">
+                          Carregando...
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredContas.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={14}
+                          className="text-center py-8 text-slate-500"
+                        >
+                          Nenhuma conta encontrada com os filtros selecionados.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredContas.map((conta) => (
+                        <TableRow
+                          key={conta.id}
+                          className={`${getRowColor(conta)} hover:bg-slate-100 cursor-pointer ${selectedContaForAction?.id === conta.id ? "ring-2 ring-blue-500" : ""}`}
+                          onClick={() => handleRowClick(conta)}
+                        >
+                          <TableCell
+                            className="text-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedContas.includes(conta.id)}
+                              onCheckedChange={() =>
+                                toggleSelectConta(conta.id)
+                              }
+                              disabled={conta.status === "pago"}
+                            />
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.createdAt
+                              ? format(conta.createdAt, "dd/MM/yy")
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {conta.purchaseId?.slice(-6) || conta.id?.slice(-6)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.nfeNumber || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.documentType || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.paymentTypeName || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-center">
+                            {conta.installmentNumber || "1"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {format(conta.dueDate, "dd/MM/yyyy")}
+                          </TableCell>
+                          <TableCell className="text-xs text-right font-mono">
+                            {formatCurrency(conta.amount)}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.paymentDate
+                              ? format(conta.paymentDate, "dd/MM/yyyy")
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-right font-mono">
+                            {conta.status === "pago"
+                              ? formatCurrency(conta.amount)
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.status === "pago" ? (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Pago
+                              </Badge>
+                            ) : conta.isVencida ? (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                Vencido
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                Aberto
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.supplierName}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {conta.groupName || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-600">Total Vencido:</p>
-              <p className="text-sm font-bold text-red-600">
-                {formatCurrency(totais.vencido)}
-              </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-slate-300 h-full mb-4">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-400 rounded"></div>
+                <span className="text-xs">Conta vencida</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-400 rounded"></div>
+                <span className="text-xs">Conta paga</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+                <span className="text-xs">Vence hoje</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-orange-400 rounded"></div>
+                <span className="text-xs">Vence em 3 dias</span>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-600">Total a Vencer:</p>
-              <p className="text-sm font-bold text-blue-600">
-                {formatCurrency(totais.aVencer)}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-slate-600">Total Selecionado:</p>
-              <p className="text-sm font-bold text-green-700">
-                {formatCurrency(totais.selecionado)}
-              </p>
-            </div>
+          </CardContent>
+        </Card>
+
+        {/* TOTAIS */}
+        <div className="grid grid-cols-5 gap-4 p-3 bg-white rounded-lg border border-slate-300">
+          <div className="text-center">
+            <p className="text-xs text-slate-600">Pago:</p>
+            <p className="text-sm font-bold text-green-600">
+              {formatCurrency(totais.pago)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-slate-600">A pagar:</p>
+            <p className="text-sm font-bold text-blue-600">
+              {formatCurrency(totais.aPagar)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-slate-600">Total Vencido:</p>
+            <p className="text-sm font-bold text-red-600">
+              {formatCurrency(totais.vencido)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-slate-600">Total a Vencer:</p>
+            <p className="text-sm font-bold text-blue-600">
+              {formatCurrency(totais.aVencer)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-slate-600">Total Selecionado:</p>
+            <p className="text-sm font-bold text-green-700">
+              {formatCurrency(totais.selecionado)}
+            </p>
           </div>
         </div>
       </div>
 
       {/* BARRA DE AÇÕES */}
-      <div className="bg-slate-200 border-t border-slate-300 p-2">
-        <div className="flex flex-wrap gap-1 items-center">
+      <div className="p-4 rounded-lg bg-slate-100 border border-slate-300 border-1">
+        <CardContent className="flex flex-wrap gap-3 justify-center">
           <Button
             variant="outline"
             size="sm"
@@ -1248,22 +1139,6 @@ export default function ContasAPagarPage() {
             variant="outline"
             size="sm"
             className="h-8 text-xs gap-1"
-            onClick={handlePesquisarClick}
-          >
-            <Search className="w-3 h-3" /> Pesquisar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleSair}
-          >
-            <LogOut className="w-3 h-3" /> Sair
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
             disabled={!hasSelection}
             onClick={handleImprimir}
           >
@@ -1280,26 +1155,8 @@ export default function ContasAPagarPage() {
           </Button>
 
           <div className="w-px h-6 bg-slate-400 mx-1" />
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={selectAll}
-          >
-            <CheckSquare className="w-3 h-3" /> Selecionar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={deselectAll}
-          >
-            <X className="w-3 h-3" /> Desmarcar
-          </Button>
-        </div>
+        </CardContent>
       </div>
-
       {/* Modal de Pesquisa de Fornecedor */}
       <Dialog
         open={showFornecedorSearch}
@@ -1559,6 +1416,45 @@ export default function ContasAPagarPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialogs */}
+      <BaixaDialog
+        isOpen={isBaixaOpen}
+        onClose={() => setIsBaixaOpen(false)}
+        onConfirm={handleConfirmPagamento}
+        cashAccounts={cashAccounts}
+        contas={selectedContas
+          .map((id) => contas.find((c) => c.id === id))
+          .filter(Boolean)}
+        totalSelecionado={totais.selecionado}
+      />
+
+      <ReagendarDialog
+        isOpen={isReagendarOpen}
+        onClose={() => setIsReagendarOpen(false)}
+        onConfirm={handleConfirmReagendar}
+        contas={selectedContas
+          .map((id) => contas.find((c) => c.id === id))
+          .filter(Boolean)}
+      />
+
+      <PagamentoModal
+        open={isPagamentoOpen}
+        onOpenChange={setIsPagamentoOpen}
+        contas={selectedContas
+          .map((id) => contas.find((c) => c.id === id))
+          .filter(Boolean)
+          .filter((c) => c.status !== "pago")}
+        cashAccounts={cashAccounts}
+        currentUser={currentUser}
+        onPaymentComplete={() => {
+          setSelectedContas([]);
+          loadData();
+          setTimeout(() => {
+            if (showResults) applyFiltersAndShow();
+          }, 100);
+        }}
+      />
     </div>
   );
 }

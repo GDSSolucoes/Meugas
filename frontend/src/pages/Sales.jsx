@@ -1234,7 +1234,7 @@ export default function SalesPage({ onSaleComplete }) {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "#F3F4F6" }}>
+    <div className="min-h-screen bg-slate-100">
       <div className="max-w-[1400px] mx-auto p-6">
         <h1 className="text-3xl font-bold text-slate-800 mb-6">
           {isEditingMode
@@ -1244,13 +1244,7 @@ export default function SalesPage({ onSaleComplete }) {
 
         {/* Seção Pedido */}
         {!isEditingMode && (
-          <Card
-            className="mb-4"
-            style={{
-              background: "white",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
+          <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
