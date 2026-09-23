@@ -28,17 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  DollarSign,
-  Search,
-  LogOut,
-  Printer,
-  Edit,
-  Trash2,
-  CheckSquare,
-  X,
-  ArrowRight,
-} from "lucide-react";
+import { DollarSign, Search, Printer, Trash2, X } from "lucide-react";
 import { ContasAPagar } from "@/entities/ContasAPagar";
 import { CashAccount } from "@/entities/CashAccount";
 import { CashMovement } from "@/entities/CashMovement";
@@ -76,9 +66,11 @@ function BaixaDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Pagar Contas</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-blue-900">
+            Pagar Contas
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <p>
@@ -94,7 +86,9 @@ function BaixaDialog({
             </span>
           </p>
           <div>
-            <Label>Data do Pagamento</Label>
+            <Label className="text-xs font-medium text-gray-700">
+              Data do Pagamento
+            </Label>
             <Input
               type="date"
               value={paymentDate}
@@ -102,7 +96,9 @@ function BaixaDialog({
             />
           </div>
           <div>
-            <Label>Conta/Caixa de Origem *</Label>
+            <Label className="text-xs font-medium text-gray-700">
+              Conta/Caixa de Origem *
+            </Label>
             <Select
               value={selectedAccountId}
               onValueChange={setSelectedAccountId}
@@ -127,7 +123,8 @@ function BaixaDialog({
           <Button
             onClick={() => onConfirm(selectedAccountId, paymentDate)}
             disabled={!selectedAccountId}
-            className="bg-red-600 hover:bg-red-700"
+            className="text-white hover:opacity-90"
+            style={{ backgroundColor: "#e78b3a" }}
           >
             Confirmar Pagamento
           </Button>
@@ -148,16 +145,20 @@ function ReagendarDialog({ isOpen, onClose, onConfirm, contas }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Reagendar Vencimento</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-blue-900">
+            Reagendar Vencimento
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <p>
             <strong>Quantidade:</strong> {contas.length} conta(s) selecionada(s)
           </p>
           <div>
-            <Label>Nova Data de Vencimento *</Label>
+            <Label className="text-xs font-medium text-gray-700">
+              Nova Data de Vencimento *
+            </Label>
             <Input
               type="date"
               value={novaData}
@@ -165,7 +166,9 @@ function ReagendarDialog({ isOpen, onClose, onConfirm, contas }) {
             />
           </div>
           <div>
-            <Label>Motivo do Reagendamento</Label>
+            <Label className="text-xs font-medium text-gray-700">
+              Motivo do Reagendamento
+            </Label>
             <Input
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
@@ -179,7 +182,8 @@ function ReagendarDialog({ isOpen, onClose, onConfirm, contas }) {
           </Button>
           <Button
             onClick={() => onConfirm(novaData, motivo)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="text-white hover:opacity-90"
+            style={{ backgroundColor: "#e78b3a" }}
           >
             Confirmar Reagendamento
           </Button>
@@ -770,10 +774,9 @@ export default function ContasAPagarPage() {
     }).format(value || 0);
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold text-slate-800 mb-4">
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
           Contas a Pagar
         </h1>
 
@@ -781,8 +784,10 @@ export default function ContasAPagarPage() {
           <CardContent className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label className="text-xs">Fornecedor:</Label>
-                <div className="flex w-full">
+                <Label className="text-xs font-medium text-gray-700">
+                  Fornecedor:
+                </Label>
+                <div className="relative flex w-full mt-1">
                   <Input
                     value={fornecedorSelecionado?.name || fornecedorPesquisa}
                     onChange={(e) => {
@@ -794,7 +799,7 @@ export default function ContasAPagarPage() {
                     onBlur={() =>
                       setTimeout(() => setActiveSearchField(null), 200)
                     }
-                    className={`w-full h-8 text-xs pr-6 ${activeSearchField === "fornecedor" ? "ring-2 ring-blue-500" : ""}`}
+                    className={`w-full h-9 text-xs pr-6 ${activeSearchField === "fornecedor" ? "ring-2 ring-blue-500" : ""}`}
                     placeholder="Buscar por CNPJ/Nome"
                   />
 
@@ -804,8 +809,8 @@ export default function ContasAPagarPage() {
                     size="icon"
                     className="h-8 w-8 shrink-0"
                     onClick={() => setShowFornecedorSearch(true)}
-                    title="Pesquisar produto"
-                    aria-label="Pesquisar produto"
+                    title="Pesquisar fornecedor"
+                    aria-label="Pesquisar fornecedor"
                   >
                     <Search className="w-4 h-4" />
                   </Button>
@@ -825,9 +830,11 @@ export default function ContasAPagarPage() {
               </div>
 
               <div>
-                <Label className="text-xs">Conta:</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Conta:
+                </Label>
                 <Select value={filtroConta} onValueChange={setFiltroConta}>
-                  <SelectTrigger className="h-7 text-xs">
+                  <SelectTrigger className="mt-1 h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -842,7 +849,9 @@ export default function ContasAPagarPage() {
               </div>
 
               <div>
-                <Label className="text-xs">Status:</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Status:
+                </Label>
                 <div className="flex items-center gap-4 align-center mt-1">
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -872,7 +881,9 @@ export default function ContasAPagarPage() {
               </div>
 
               <div>
-                <Label className="text-xs">Ordenação</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Ordenação
+                </Label>
                 <RadioGroup
                   value={ordenacao}
                   onValueChange={setOrdenacao}
@@ -907,21 +918,21 @@ export default function ContasAPagarPage() {
                   </div>
                 </RadioGroup>
               </div>
-
-              <div>
+              <div></div>
+              <div className="ms-auto me-0">
                 <Button
-                  className="w-full mt-3 text-white text-xs h-8 gap-1"
+                  className="w-full mt-1 text-white text-xs h-9 gap-2"
                   style={{ backgroundColor: "#e78b3a" }}
                   onClick={applyFiltersAndShow}
                 >
-                  <ArrowRight className="w-4 h-4" />
+                  <Search className="w-4 h-4" /> Pesquisar
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-slate-300 mb-4">
+        <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-0">
             <div className="max-h-[400px] overflow-auto">
               {!showResults ? (
@@ -936,26 +947,50 @@ export default function ContasAPagarPage() {
                 </div>
               ) : (
                 <Table>
-                  <TableHeader className="bg-slate-100 sticky top-0">
+                  <TableHeader className="bg-slate-50 sticky top-0">
                     <TableRow>
-                      <TableHead className="w-8 text-xs">S</TableHead>
-                      <TableHead className="text-xs w-20">Data</TableHead>
-                      <TableHead className="text-xs w-20">Código</TableHead>
-                      <TableHead className="text-xs w-20">N Fiscal</TableHead>
-                      <TableHead className="text-xs w-16">Tipo</TableHead>
-                      <TableHead className="text-xs w-20">Tp Pagto</TableHead>
-                      <TableHead className="text-xs w-12">Parc</TableHead>
-                      <TableHead className="text-xs w-24">Dt Vencto</TableHead>
-                      <TableHead className="text-xs w-24 text-right">
+                      <TableHead className="w-8 text-xs font-semibold">
+                        S
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-20">
+                        Data
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-20">
+                        Código
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-20">
+                        N Fiscal
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-16">
+                        Tipo
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-20">
+                        Tp Pagto
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-12">
+                        Parc
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-24">
+                        Dt Vencto
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-24 text-right">
                         Valor
                       </TableHead>
-                      <TableHead className="text-xs w-24">Dt Pagto</TableHead>
-                      <TableHead className="text-xs w-24 text-right">
+                      <TableHead className="text-xs font-semibold w-24">
+                        Dt Pagto
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-24 text-right">
                         Vl Pago
                       </TableHead>
-                      <TableHead className="text-xs w-20">Situação</TableHead>
-                      <TableHead className="text-xs">Fornecedor</TableHead>
-                      <TableHead className="text-xs w-24">Grupo</TableHead>
+                      <TableHead className="text-xs font-semibold w-20">
+                        Situação
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold">
+                        Fornecedor
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-24">
+                        Grupo
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1059,9 +1094,9 @@ export default function ContasAPagarPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border-slate-300 h-full mb-4">
+        <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
-            <div className="grid grid-cols-4 space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-400 rounded"></div>
                 <span className="text-xs">Conta vencida</span>
@@ -1083,7 +1118,7 @@ export default function ContasAPagarPage() {
         </Card>
 
         {/* TOTAIS */}
-        <div className="grid grid-cols-5 gap-4 p-3 bg-white rounded-lg border border-slate-300">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 mb-4 bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="text-center">
             <p className="text-xs text-slate-600">Pago:</p>
             <p className="text-sm font-bold text-green-600">
@@ -1118,65 +1153,66 @@ export default function ContasAPagarPage() {
       </div>
 
       {/* BARRA DE AÇÕES */}
-      <div className="p-4 rounded-lg bg-slate-100 border border-slate-300 border-1">
-        <CardContent className="flex flex-wrap gap-3 justify-center">
-          <Button
+      <div className="max-w-[1400px] mx-auto w-full p-4 mb-6 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB]">
+        <div className="flex flex-wrap gap-3 justify-center">
+          {/* <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="gap-2"
             disabled={!hasSelection}
             onClick={handleModificar}
           >
             <Edit className="w-3 h-3" /> Alterar
-          </Button>
+          </Button> */}
+          {currentUser?.userType === "super_admin" && (
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:bg-red-50"
+              disabled={!hasSelection}
+              onClick={handleExcluir}
+            >
+              <Trash2 className="w-3 h-3" /> Excluir
+            </Button>
+          )}
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1 text-red-600 hover:bg-red-50"
-            disabled={!hasSelection}
-            onClick={handleExcluir}
-          >
-            <Trash2 className="w-3 h-3" /> Excluir
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
+            className="gap-2"
             disabled={!hasSelection}
             onClick={handleImprimir}
           >
             <Printer className="w-3 h-3" /> Imprimir
           </Button>
           <Button
-            size="sm"
-            className="h-8 text-xs gap-1 text-white hover:opacity-90"
+            className="gap-2 text-white hover:opacity-90"
             style={{ backgroundColor: "#e78b3a" }}
             onClick={handlePagar}
             disabled={selectedContas.length === 0}
           >
             <DollarSign className="w-3 h-3" /> Baixar
           </Button>
-
-          <div className="w-px h-6 bg-slate-400 mx-1" />
-        </CardContent>
+        </div>
       </div>
       {/* Modal de Pesquisa de Fornecedor */}
       <Dialog
         open={showFornecedorSearch}
         onOpenChange={setShowFornecedorSearch}
       >
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pesquisar Fornecedor</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Pesquisar Fornecedor
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o nome do fornecedor..."
-              value={fornecedorSearchTerm}
-              onChange={(e) => setFornecedorSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Digite o nome do fornecedor..."
+                value={fornecedorSearchTerm}
+                onChange={(e) => setFornecedorSearchTerm(e.target.value)}
+                className="h-9 pl-9"
+                autoFocus
+              />
+            </div>
             <div className="max-h-80 overflow-auto border rounded">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
@@ -1258,18 +1294,23 @@ export default function ContasAPagarPage() {
 
       {/* Modal de Pesquisa de NF */}
       <Dialog open={showNFSearch} onOpenChange={setShowNFSearch}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pesquisar Número da NF</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Pesquisar Número da NF
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o número da NF..."
-              value={nfSearchTerm}
-              onChange={(e) => setNfSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Digite o número da NF..."
+                value={nfSearchTerm}
+                onChange={(e) => setNfSearchTerm(e.target.value)}
+                className="h-9 pl-9"
+                autoFocus
+              />
+            </div>
             <div className="max-h-80 overflow-auto border rounded">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
@@ -1366,7 +1407,9 @@ export default function ContasAPagarPage() {
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Confirmar Exclusão
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-center text-slate-600">
