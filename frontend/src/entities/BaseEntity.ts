@@ -7,6 +7,7 @@ export interface FilterOptions {
 export interface PaginationOptions {
   page?: number;
   limit?: number;
+  q?: string;
   sort?: string;
   order?: "asc" | "desc";
 }
@@ -62,6 +63,7 @@ export class BaseEntity {
       if (pagination) {
         if (pagination.page) params.append("page", String(pagination.page));
         if (pagination.limit) params.append("limit", String(pagination.limit));
+        if (pagination.q) params.append("q", pagination.q);
         if (pagination.sort)
           params.append("sort", pagination.sort.replace("-", ""));
         if (pagination.order || pagination.sort?.startsWith("-"))

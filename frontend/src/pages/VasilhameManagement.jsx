@@ -8,6 +8,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,16 +28,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Edit, Search, X, LogOut, Printer, ArrowRight } from "lucide-react";
+import { Search, X, Printer, PackageCheck } from "lucide-react";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
 import { format, startOfDay, endOfDay, isBefore } from "date-fns";
-import { Link } from "react-router-dom";
-import { createPageUrl, formatDateOnly } from "@/utils";
+import { formatDateOnly } from "@/utils";
+import PersonSelector from "@/components/people/PersonSelector";
 
 export default function VasilhameManagementPage() {
   const { toast } = useToast();
-  const [loans, setLoans] = useState([]);
   const [displayedLoans, setDisplayedLoans] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [people, setPeople] = useState([]);
@@ -46,14 +52,16 @@ export default function VasilhameManagementPage() {
   const [showModificarModal, setShowModificarModal] = useState(false);
   const [showBaixaModal, setShowBaixaModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [qtdeBaixar, setQtdeBaixar] = useState("");
   const [baixaError, setBaixaError] = useState("");
 
   // Filtros
   const [filtrarCliente, setFiltrarCliente] = useState(true);
   const [filtrarPontoVenda, setFiltrarPontoVenda] = useState(true);
-  const [filtroClientePdv, setFiltroClientePdv] = useState("");
-  const [filtroClientePdvNome, setFiltroClientePdvNome] = useState("");
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedSector, setCurrentSector] = useState(null);
 
   const [setorGeral, setSetorGeral] = useState(true);
   const [setorMaster, setSetorMaster] = useState(false);
@@ -73,6 +81,7 @@ export default function VasilhameManagementPage() {
 
   const [filtroProduto, setFiltroProduto] = useState("");
   const [filtroProdutoNome, setFiltroProdutoNome] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Campo ativo para pesquisa
   const [activeSearchField, setActiveSearchField] = useState(null);
@@ -87,24 +96,10 @@ export default function VasilhameManagementPage() {
       const user = await entities.User.me();
       setCurrentUser(user);
 
-      const [loansData, peopleData, vasilhamesData, sectorsData] =
-        await Promise.all([
-          entities.VasilhameLoan.filter(
-            { companyId: user.companyId },
-            { sort: "-createdAt" },
-          ),
-          entities.Person.filter({ companyId: user.companyId }),
-          entities.Product.filter({
-            companyId: user.companyId,
-            category: "vasilhame",
-            active: true,
-          }),
-          entities.Sector.filter({ companyId: user.companyId, active: true }),
-        ]);
-
-      setLoans(loansData);
-      setPeople(peopleData);
-      setVasilhames(vasilhamesData);
+      const sectorsData = await entities.Sector.filter({
+        companyId: user.companyId,
+        active: true,
+      });
       setSectors(sectorsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -122,82 +117,98 @@ export default function VasilhameManagementPage() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (!showClienteSearch && !showProdutoSearch) return;
+
+    const loadSearchOptions = async () => {
+      setIsSearchLoading(true);
+      try {
+        if (showClienteSearch) {
+          const peopleData = await entities.Person.filter(
+            {
+              companyId: currentUser?.companyId,
+              type: ["cliente", "ponto_venda"],
+            },
+            { q: searchTerm, limit: 25, sort: "name", order: "asc" },
+          );
+          setPeople(peopleData);
+        } else {
+          const productsData = await entities.Product.filter(
+            {
+              companyId: currentUser?.companyId,
+              category: "vasilhame",
+              active: true,
+            },
+            { q: searchTerm, limit: 25, sort: "name", order: "asc" },
+          );
+          setVasilhames(productsData);
+        }
+      } catch (error) {
+        console.error("Erro ao pesquisar opções:", error);
+      } finally {
+        setIsSearchLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(loadSearchOptions, 250);
+    return () => clearTimeout(timeoutId);
+  }, [
+    currentUser?.companyId,
+    searchTerm,
+    showClienteSearch,
+    showProdutoSearch,
+  ]);
+
   // Aplicar filtros
-  const applyFiltersAndShow = () => {
-    let filtered = [...loans];
+  const applyFiltersAndShow = async () => {
+    setIsLoading(true);
+    try {
+      const filters = {
+        companyId: currentUser?.companyId,
+        status:
+          periodoTipo === "aDevolver"
+            ? ["pendente", "devolvido_parcial"]
+            : "devolvido_total",
+        ...(selectedCustomer?.id && { personId: selectedCustomer.id }),
+        ...(selectedSector?.id && { sectorId: selectedSector.id }),
+        ...(filtroProduto && { vasilhameId: filtroProduto }),
+        ...(periodoTipo === "devolvidos" && {
+          returnDate_gte: startOfDay(
+            new Date(`${dataInicial}T00:00:00`),
+          ).toISOString(),
+          returnDate_lte: endOfDay(
+            new Date(`${dataFinal}T23:59:59`),
+          ).toISOString(),
+        }),
+      };
 
-    // Filtro por Cliente/Pto.Venda
-    if (filtroClientePdv) {
-      filtered = filtered.filter((loan) => loan.personId === filtroClientePdv);
-    } else {
-      // Filtrar por tipo de pessoa baseado nos checkboxes
-      filtered = filtered.filter((loan) => {
-        const person = people.find((p) => p.id === loan.personId);
-        if (!person) return false;
-
-        const isCliente = person.type === "cliente";
-        const isPontoVenda = person.type === "pontoVenda";
-
-        if (filtrarCliente && filtrarPontoVenda)
-          return isCliente || isPontoVenda;
-        if (filtrarCliente && isCliente) return true;
-        if (filtrarPontoVenda && isPontoVenda) return true;
-
-        return false;
+      const filtered = await entities.VasilhameLoan.filter(filters, {
+        sort: "-loanDate",
+        limit: 100,
       });
-    }
-
-    // Setor Master filter removed
-
-    // Filtro por Setor Estoque Próprio
-    if (setorEstqProprio && setorEstqProprioValue) {
-      filtered = filtered.filter(
-        (loan) => loan.sectorId === setorEstqProprioValue,
-      );
-    }
-
-    // Filtro por Período
-    if (periodoTipo === "aDevolver") {
-      filtered = filtered.filter(
-        (loan) =>
-          loan.status !== "devolvido_total" &&
-          loan.status !== "devolvido_parcial",
-      );
-    } else {
-      // Devolvidos entre datas
-      filtered = filtered.filter((loan) => {
-        if (loan.status !== "devolvido_total") return false;
-        if (!loan.returnDate) return false;
-
-        const returnDate = loan.returnDate;
-        const start = startOfDay(new Date(dataInicial + "T00:00:00"));
-        const end = endOfDay(new Date(dataFinal + "T23:59:59"));
-
-        return returnDate >= start && returnDate <= end;
+      setDisplayedLoans(filtered);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Erro ao pesquisar vasilhames:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível realizar a pesquisa.",
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    // Filtro por Produto
-    if (filtroProduto) {
-      filtered = filtered.filter((loan) => loan.vasilhameId === filtroProduto);
-    }
-
-    // Ordenar por data mais recente
-    filtered.sort(
-      (a, b) => new Date(b.loanDate || 0) - new Date(a.loanDate || 0),
-    );
-
-    setDisplayedLoans(filtered);
-    setShowResults(true);
   };
 
   const handlePesquisar = () => {
     // Se um campo está focado, abre modal de pesquisa
     if (activeSearchField === "cliente") {
+      setSearchTerm(clientSearchTerm);
       setShowClienteSearch(true);
       return;
     }
     if (activeSearchField === "produto") {
+      setSearchTerm(filtroProdutoNome);
       setShowProdutoSearch(true);
       return;
     }
@@ -209,8 +220,8 @@ export default function VasilhameManagementPage() {
     // Limpar todos os filtros
     setFiltrarCliente(true);
     setFiltrarPontoVenda(true);
-    setFiltroClientePdv("");
-    setFiltroClientePdvNome("");
+    setClientSearchTerm("");
+    setSelectedCustomer(null);
     setSetorGeral(true);
     setSetorMaster(false);
     setSetorMasterValue("");
@@ -223,6 +234,7 @@ export default function VasilhameManagementPage() {
     setDataFinal(formatDateOnly(new Date(), "yyyy-MM-dd"));
     setFiltroProduto("");
     setFiltroProdutoNome("");
+    setSelectedProduct(null);
     setDisplayedLoans([]);
     setShowResults(false);
     setSelectedLoan(null);
@@ -377,7 +389,7 @@ export default function VasilhameManagementPage() {
     return "bg-yellow-50";
   };
 
-  const handleRowDoubleClick = (loan) => {
+  const handleRegisterReturn = (loan) => {
     if (loan.status === "devolvido_total") return;
     setSelectedLoan(loan);
     setQtdeBaixar("");
@@ -441,535 +453,458 @@ export default function VasilhameManagementPage() {
     }
   };
 
-  const filteredPeople = people.filter((p) => {
-    const isCliente = p.type === "cliente";
-    const isPontoVenda = p.type === "pontoVenda";
+  const clearCustomer = () => {
+    setSelectedCustomer(null);
+    setClientSearchTerm("");
+  };
 
-    if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
-    if (filtrarCliente) return isCliente;
-    if (filtrarPontoVenda) return isPontoVenda;
-
-    return false;
-  });
+  const clearProduct = () => {
+    setSelectedProduct(null);
+    setFiltroProduto("");
+    setFiltroProdutoNome("");
+  };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold text-slate-800">
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
           Controle de vasilhames emprestados (Venda)
         </h1>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="max-w-full mx-auto space-y-4">
-          {/* SEÇÃO DE FILTROS */}
-          <div className="grid grid-cols-12 gap-4">
-            {/* FILTRAR POR + SETOR (Lado Esquerdo) */}
-            <div className="col-span-5">
-              <Card className="bg-white border-slate-300 h-full">
-                <CardContent className="p-4 space-y-4">
-                  {/* Filtrar por */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                      Filtrar por:
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="fpCliente"
-                          checked={filtrarCliente}
-                          onCheckedChange={setFiltrarCliente}
-                        />
-                        <label htmlFor="fpCliente" className="text-sm">
-                          Cliente
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="fpPdv"
-                          checked={filtrarPontoVenda}
-                          onCheckedChange={setFiltrarPontoVenda}
-                        />
-                        <label htmlFor="fpPdv" className="text-sm">
-                          Pto. Venda
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2">
-                      <Input
-                        value={filtroClientePdvNome}
-                        onChange={(e) => {
-                          setFiltroClientePdvNome(e.target.value);
-                          if (!e.target.value) {
-                            setFiltroClientePdv("");
-                          }
-                        }}
-                        onFocus={() => setActiveSearchField("cliente")}
-                        onBlur={() =>
-                          setTimeout(() => setActiveSearchField(null), 200)
-                        }
-                        placeholder="Todos"
-                        className={`h-8 text-sm flex-1 ${!filtroClientePdvNome ? "placeholder:text-red-500" : ""}`}
-                      />
-                    </div>
+        {/* Main Content */}
+        <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Filtrar por */}
+              <div>
+                <Label className="text-xs font-medium text-gray-700">
+                  Filtrar por:
+                </Label>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Checkbox
+                      id="fpCliente"
+                      checked={filtrarCliente}
+                      onCheckedChange={setFiltrarCliente}
+                    />
+                    <label htmlFor="fpCliente" className="text-xs">
+                      Cliente
+                    </label>
                   </div>
-
-                  {/* Setor */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                      Setor:
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="setorGeral"
-                          checked={setorGeral}
-                          onCheckedChange={setSetorGeral}
-                        />
-                        <label htmlFor="setorGeral" className="text-sm">
-                          Geral
-                        </label>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="setorMaster"
-                          checked={setorMaster}
-                          onCheckedChange={setSetorMaster}
-                        />
-                        <label htmlFor="setorMaster" className="text-sm">
-                          Master
-                        </label>
-                        <Input
-                          value={setorMasterNome}
-                          onChange={(e) => {
-                            setSetorMasterNome(e.target.value);
-                            if (!e.target.value) {
-                              setSetorMasterValue("");
-                            }
-                          }}
-                          disabled={!setorMaster}
-                          className={`h-7 text-xs flex-1 ${!setorMasterNome && setorMaster ? "placeholder:text-red-500" : "placeholder:text-slate-300"}`}
-                          placeholder="Todos"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="setorEstq"
-                          checked={setorEstqProprio}
-                          onCheckedChange={setSetorEstqProprio}
-                        />
-                        <label
-                          htmlFor="setorEstq"
-                          className="text-sm whitespace-nowrap"
-                        >
-                          Setor Estq.Proprio
-                        </label>
-                        <Input
-                          value={setorEstqProprioNome}
-                          onChange={(e) => {
-                            setSetorEstqProprioNome(e.target.value);
-                            if (!e.target.value) {
-                              setSetorEstqProprioValue("");
-                            }
-                          }}
-                          disabled={!setorEstqProprio}
-                          className={`h-7 text-xs flex-1 ${!setorEstqProprioNome && setorEstqProprio ? "placeholder:text-red-500" : "placeholder:text-slate-300"}`}
-                          placeholder="Todos"
-                        />
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Checkbox
+                      id="fpPdv"
+                      checked={filtrarPontoVenda}
+                      onCheckedChange={setFiltrarPontoVenda}
+                    />
+                    <label htmlFor="fpPdv" className="text-xs">
+                      Pto. Venda
+                    </label>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+                <div className="mt-2">
+                  <PersonSelector
+                    options={people}
+                    selectedPerson={selectedCustomer}
+                    open={showClienteSearch}
+                    value={clientSearchTerm}
+                    title={
+                      filtrarCliente && filtrarPontoVenda
+                        ? "Selecionar Cliente/PDV"
+                        : filtrarCliente
+                          ? "Selecionar Cliente"
+                          : "Selecionar Ponto de Venda"
+                    }
+                    inputPlaceholder="Buscar por Nome"
+                    searchPlaceholder="Digite o nome..."
+                    showType
+                    isLoading={isSearchLoading}
+                    onOpenChange={(open) => {
+                      setShowClienteSearch(open);
+                      if (open) setSearchTerm(clientSearchTerm);
+                    }}
+                    onValueChange={(value) => {
+                      setClientSearchTerm(value);
+                      setSearchTerm(value);
+                    }}
+                    onSelect={(person) => {
+                      setSelectedCustomer(person);
+                      setClientSearchTerm(person.name);
+                      setShowClienteSearch(false);
+                      setSearchTerm("");
+                    }}
+                    onClear={clearCustomer}
+                  />
+                </div>
+              </div>
+              {/* Setor */}
+              <div className="">
+                <Label className="text-xs font-medium text-gray-700">
+                  Setor:
+                </Label>
+                <div className="mt-1">
+                  <Select
+                    value={selectedSector?.id || ""}
+                    onValueChange={(value) => {
+                      const sector = sectors.find((s) => s.id === value);
+                      setCurrentSector(sector || null);
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o setor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sectors.map((sector) => (
+                        <SelectItem key={sector.id} value={sector.id}>
+                          {sector.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-            {/* PERÍODO + PRODUTO (Lado Direito) */}
-            <div className="col-span-7">
-              <Card className="bg-white border-slate-300 h-full">
-                <CardContent className="p-4 space-y-4">
-                  {/* Período */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                      Período da venda / devolução:
-                    </h4>
-                    <RadioGroup
-                      value={periodoTipo}
-                      onValueChange={setPeriodoTipo}
-                      className="space-y-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <RadioGroupItem
-                          value="aDevolver"
-                          id="periodoDevolver"
-                        />
-                        <label htmlFor="periodoDevolver" className="text-sm">
-                          A Devolver
-                        </label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <RadioGroupItem
-                          value="devolvidos"
-                          id="periodoDevolvidos"
-                        />
-                        <label htmlFor="periodoDevolvidos" className="text-sm">
-                          Devolvidos entre:
-                        </label>
-                      </div>
-                    </RadioGroup>
-
-                    <div className="flex items-center gap-2 mt-2 ml-6">
-                      <Input
-                        type="date"
-                        value={dataInicial}
-                        onChange={(e) => setDataInicial(e.target.value)}
-                        disabled={periodoTipo !== "devolvidos"}
-                        className="h-8 text-sm w-36"
-                      />
-                      <span className="text-sm text-slate-600">a</span>
-                      <Input
-                        type="date"
-                        value={dataFinal}
-                        onChange={(e) => setDataFinal(e.target.value)}
-                        disabled={periodoTipo !== "devolvidos"}
-                        className="h-8 text-sm w-36"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Produto */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                      Produto:
-                    </h4>
-                    <div className="flex items-center gap-2">
+              {/* Produto */}
+              <div>
+                <Label className="text-xs font-medium text-gray-700">
+                  Produto:
+                </Label>
+                <div className="flex items-center mt-1">
+                  {!selectedProduct ? (
+                    <div className="flex items-center gap-2 w-full">
                       <Input
                         value={filtroProdutoNome}
-                        onChange={(e) => {
-                          setFiltroProdutoNome(e.target.value);
-                          if (!e.target.value) {
-                            setFiltroProduto("");
-                          }
-                        }}
+                        onChange={(e) => setFiltroProdutoNome(e.target.value)}
                         onFocus={() => setActiveSearchField("produto")}
                         onBlur={() =>
                           setTimeout(() => setActiveSearchField(null), 200)
                         }
-                        placeholder="Todos"
-                        className={`h-8 text-sm w-64 ${!filtroProdutoNome ? "placeholder:text-red-500" : ""}`}
+                        placeholder="Buscar produto..."
+                        className="h-8 text-xs w-full"
                       />
-                    </div>
-                  </div>
-
-                  {/* Botão Pesquisar */}
-                  <Button
-                    className="w-32 mt-3 text-white text-xs h-7 gap-1"
-                    style={{ backgroundColor: "#e78b3a" }}
-                    onClick={applyFiltersAndShow}
-                  >
-                    <ArrowRight className="w-3 h-3" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* GRID DE RESULTADOS */}
-          <Card className="bg-white border-slate-300">
-            <CardContent className="p-0">
-              <div className="max-h-[400px] overflow-auto">
-                {!showResults ? (
-                  <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
-                    <div className="text-center">
-                      <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>
-                        Selecione os filtros e clique no botão{" "}
-                        <strong>➔</strong> para pesquisar
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader className="bg-slate-100 sticky top-0">
-                      <TableRow>
-                        <TableHead className="text-xs w-24">Dt Venda</TableHead>
-                        <TableHead className="text-xs w-20">Venda</TableHead>
-                        <TableHead className="text-xs">
-                          Cliente / Pto. Venda
-                        </TableHead>
-                        <TableHead className="text-xs w-32">Produto</TableHead>
-                        <TableHead className="text-xs w-16 text-center">
-                          Qtd
-                        </TableHead>
-                        <TableHead className="text-xs w-20 text-center">
-                          Devolvido
-                        </TableHead>
-                        <TableHead className="text-xs w-24">
-                          Data Dev.
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8">
-                            Carregando...
-                          </TableCell>
-                        </TableRow>
-                      ) : displayedLoans.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={7}
-                            className="text-center py-8 text-slate-500"
-                          >
-                            Nenhum vasilhame encontrado com os filtros
-                            selecionados.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        displayedLoans.map((loan) => (
-                          <TableRow
-                            key={loan.id}
-                            className={`cursor-pointer hover:bg-slate-100 ${getRowColor(loan)} ${selectedLoan?.id === loan.id ? "ring-2 ring-blue-500" : ""}`}
-                            onClick={() => setSelectedLoan(loan)}
-                            onDoubleClick={() => handleRowDoubleClick(loan)}
-                          >
-                            <TableCell className="text-xs">
-                              {loan.loanDate
-                                ? format(loan.loanDate, "dd/MM/yyyy")
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="text-xs font-mono">
-                              {loan.saleId?.slice(-6) || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {loan.personName || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {loan.vasilhameName || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs text-center">
-                              {loan.loanQuantity || 0}
-                            </TableCell>
-                            <TableCell className="text-xs text-center">
-                              {loan.status === "devolvido_total" ? (
-                                <Badge className="bg-green-100 text-green-800 text-xs">
-                                  Sim
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-yellow-100 text-yellow-800 text-xs">
-                                  Não
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {loan.returnDate
-                                ? format(loan.returnDate, "dd/MM/yyyy")
-                                : "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Legenda */}
-          {showResults && displayedLoans.length > 0 && (
-            <div className="flex gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-                <span>Devolvido</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
-                <span>Pendente</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
-                <span>Pendente há mais de 30 dias</span>
-              </div>
-              <div className="ml-auto text-slate-600">
-                Total de registros: {displayedLoans.length}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* BARRA DE AÇÕES */}
-      <div className="bg-slate-200 border-t border-slate-300 p-2">
-        <div className="flex flex-wrap gap-1 items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleModificar}
-            disabled={!selectedLoan}
-          >
-            <Edit className="w-3 h-3" /> Alterar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handlePesquisar}
-          >
-            <Search className="w-3 h-3" /> Pesquisar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleCancelar}
-          >
-            <X className="w-3 h-3" /> Cancelar
-          </Button>
-          <Link to={createPageUrl("Dashboard")}>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
-              <LogOut className="w-3 h-3" /> Sair
-            </Button>
-          </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleImprimir}
-            disabled={!showResults || displayedLoans.length === 0}
-          >
-            <Printer className="w-3 h-3" /> Imprimir
-          </Button>
-        </div>
-      </div>
-
-      {/* Modal Pesquisa Cliente/PDV */}
-      <Dialog open={showClienteSearch} onOpenChange={setShowClienteSearch}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>
-              Pesquisar{" "}
-              {filtrarCliente && filtrarPontoVenda
-                ? "Cliente/PDV"
-                : filtrarCliente
-                  ? "Cliente"
-                  : "Ponto de Venda"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
-            <div className="max-h-80 overflow-auto border rounded">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Nome</TableHead>
-                    <TableHead className="text-xs">Tipo</TableHead>
-                    <TableHead className="text-xs">Telefone</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPeople
-                    .filter((p) => {
-                      if (!searchTerm) return true;
-                      const term = searchTerm.toLowerCase();
-                      return (
-                        p.name?.toLowerCase().includes(term) ||
-                        p.document?.toLowerCase().includes(term)
-                      );
-                    })
-                    .map((p) => (
-                      <TableRow
-                        key={p.id}
-                        className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => {
-                          setFiltroClientePdv(p.id);
-                          setFiltroClientePdvNome(p.name);
-                          setShowClienteSearch(false);
-                          setSearchTerm("");
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => {
+                          setSearchTerm(filtroProdutoNome);
+                          setShowProdutoSearch(true);
                         }}
+                        title="Pesquisar produto"
+                        aria-label="Pesquisar produto"
                       >
-                        <TableCell className="text-xs font-mono">
-                          {p.personNumber || p.id?.slice(-6)}
-                        </TableCell>
-                        <TableCell className="text-xs">{p.name}</TableCell>
-                        <TableCell className="text-xs">
-                          {p.type === "cliente" ? "Cliente" : "Pto. Venda"}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {p.phone?.[0] || "-"}
+                        <Search className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center justify-between p-3 rounded-lg w-full"
+                      style={{
+                        background: "#F0FDF4",
+                        border: "1px solid #BBF7D0",
+                      }}
+                    >
+                      <div>
+                        <p className="font-semibold text-sm text-green-700">
+                          {selectedProduct.name}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {selectedProduct.code || "Sem código"}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={clearProduct}
+                        className="text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            {/* Período */}
+            <div className="flex flex-wrap items-end gap-4">
+              <Label className="w-full text-xs font-medium text-gray-700">
+                Período da venda / devolução:
+              </Label>
+              <RadioGroup
+                value={periodoTipo}
+                onValueChange={setPeriodoTipo}
+                className="flex flex-wrap items-center gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="aDevolver" id="periodoDevolver" />
+                  <label htmlFor="periodoDevolver" className="text-xs">
+                    A Devolver
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="devolvidos" id="periodoDevolvidos" />
+                  <label htmlFor="periodoDevolvidos" className="text-xs">
+                    Devolvidos entre:
+                  </label>
+                </div>
+              </RadioGroup>
+
+              <div className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  value={dataInicial}
+                  onChange={(e) => setDataInicial(e.target.value)}
+                  disabled={periodoTipo !== "devolvidos"}
+                  className="h-8 text-xs w-36"
+                />
+                <span className="text-xs text-slate-600">a</span>
+                <Input
+                  type="date"
+                  value={dataFinal}
+                  onChange={(e) => setDataFinal(e.target.value)}
+                  disabled={periodoTipo !== "devolvidos"}
+                  className="h-8 text-xs w-36"
+                />
+              </div>
+              <Button
+                className="text-white h-8 ms-auto me-0"
+                style={{ backgroundColor: "#e78b3a" }}
+                onClick={applyFiltersAndShow}
+              >
+                <Search className="w-4 h-4" />
+                Pesquisar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* GRID DE RESULTADOS */}
+        <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-0">
+            <div className="max-h-[400px] overflow-auto">
+              {!showResults ? (
+                <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
+                  <div className="text-center">
+                    <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p>
+                      Selecione os filtros e clique no botão <strong>➔</strong>{" "}
+                      para pesquisar
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-xs w-24">Dt Venda</TableHead>
+                      <TableHead className="text-xs w-20">Venda</TableHead>
+                      <TableHead className="text-xs">
+                        Cliente / Pto. Venda
+                      </TableHead>
+                      <TableHead className="text-xs w-32">Produto</TableHead>
+                      <TableHead className="text-xs w-16 text-center">
+                        Qtd
+                      </TableHead>
+                      <TableHead className="text-xs w-20 text-center">
+                        Devolvido
+                      </TableHead>
+                      <TableHead className="text-xs w-24">Data Dev.</TableHead>
+                      <TableHead className="text-xs w-40 text-right">
+                        Ações
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8">
+                          Carregando...
                         </TableCell>
                       </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+                    ) : displayedLoans.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={8}
+                          className="text-center py-8 text-slate-500"
+                        >
+                          Nenhum vasilhame encontrado com os filtros
+                          selecionados.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      displayedLoans.map((loan) => (
+                        <TableRow
+                          key={loan.id}
+                          className={`cursor-pointer hover:bg-slate-100 ${getRowColor(loan)} ${selectedLoan?.id === loan.id ? "ring-2 ring-blue-500" : ""}`}
+                          onClick={() => setSelectedLoan(loan)}
+                        >
+                          <TableCell className="text-xs">
+                            {loan.loanDate
+                              ? format(loan.loanDate, "dd/MM/yyyy")
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {loan.saleId?.slice(-6) || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {loan.personName || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {loan.vasilhameName || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-center">
+                            {loan.loanQuantity || 0}
+                          </TableCell>
+                          <TableCell className="text-xs text-center">
+                            {loan.status === "devolvido_total" ? (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Sim
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                Não
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {loan.returnDate
+                              ? format(loan.returnDate, "dd/MM/yyyy")
+                              : "-"}
+                          </TableCell>
+                          <TableCell
+                            className="text-right"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {loan.status !== "devolvido_total" && (
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs gap-1 text-white"
+                                style={{ backgroundColor: "#e78b3a" }}
+                                onClick={() => handleRegisterReturn(loan)}
+                                title="Registrar devolução"
+                              >
+                                <PackageCheck className="w-3 h-3" />
+                                Registrar devolução
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </div>
-            <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
-            </p>
+          </CardContent>
+        </Card>
+
+        {/* Legenda */}
+        {showResults && displayedLoans.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-4 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+              <span>Devolvido</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
+              <span>Pendente</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
+              <span>Pendente há mais de 30 dias</span>
+            </div>
+            <div className="ml-auto text-slate-600">
+              Total de registros: {displayedLoans.length}
+            </div>
           </div>
-          <DialogFooter>
+        )}
+        {/* BARRA DE AÇÕES */}
+        <div
+          className="p-4 rounded-lg"
+          style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+        >
+          <div className="flex flex-wrap gap-3 justify-center">
+            {/* <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleModificar}
+              disabled={!selectedLoan}
+            >
+              <Edit className="w-3 h-3" /> Alterar
+            </Button> */}
             <Button
               variant="outline"
-              onClick={() => setShowClienteSearch(false)}
+              className="ms-auto me-0 gap-2"
+              onClick={handleImprimir}
+              disabled={!showResults || displayedLoans.length === 0}
             >
-              Fechar
+              <Printer className="w-3 h-3" /> Imprimir
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </div>
 
       {/* Modal Pesquisa Produto */}
       <Dialog open={showProdutoSearch} onOpenChange={setShowProdutoSearch}>
-        <DialogContent className="max-w-xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pesquisar Produto/Vasilhame</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Pesquisar Produto/Vasilhame
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o nome do produto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Digite o código ou nome do produto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9 pl-9"
+                autoFocus
+              />
+            </div>
             <div className="max-h-80 overflow-auto border rounded">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow>
                     <TableHead className="text-xs">Código</TableHead>
                     <TableHead className="text-xs">Nome</TableHead>
+                    <TableHead className="text-xs text-right">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vasilhames
-                    .filter((v) => {
-                      if (!searchTerm) return true;
-                      const term = searchTerm.toLowerCase();
-                      return (
-                        v.name?.toLowerCase().includes(term) ||
-                        v.code?.toLowerCase().includes(term)
-                      );
-                    })
-                    .map((v) => (
+                  {isSearchLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className="text-center py-8 text-slate-500"
+                      >
+                        Pesquisando...
+                      </TableCell>
+                    </TableRow>
+                  ) : vasilhames.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className="text-center py-8 text-slate-500"
+                      >
+                        Nenhum produto encontrado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    vasilhames.map((v) => (
                       <TableRow
                         key={v.id}
                         className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => {
+                        onClick={() => {
                           setFiltroProduto(v.id);
                           setFiltroProdutoNome(v.name);
+                          setSelectedProduct(v);
                           setShowProdutoSearch(false);
                           setSearchTerm("");
                         }}
@@ -978,13 +913,30 @@ export default function VasilhameManagementPage() {
                           {v.code || v.id?.slice(-6)}
                         </TableCell>
                         <TableCell className="text-xs">{v.name}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setFiltroProduto(v.id);
+                              setFiltroProdutoNome(v.name);
+                              setSelectedProduct(v);
+                              setShowProdutoSearch(false);
+                              setSearchTerm("");
+                            }}
+                          >
+                            Selecionar
+                          </Button>
+                        </TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
             <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
+              Clique em um produto para selecionar
             </p>
           </div>
           <DialogFooter>
@@ -1002,7 +954,9 @@ export default function VasilhameManagementPage() {
       <Dialog open={showModificarModal} onOpenChange={setShowModificarModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Modificar Vasilhame Emprestado</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Modificar Vasilhame Emprestado
+            </DialogTitle>
           </DialogHeader>
           {selectedLoan && (
             <div className="space-y-4 py-4">
@@ -1070,7 +1024,9 @@ export default function VasilhameManagementPage() {
       <Dialog open={showBaixaModal} onOpenChange={setShowBaixaModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Baixa de Vasilhame</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Baixa de Vasilhame
+            </DialogTitle>
           </DialogHeader>
           {selectedLoan && (
             <div className="space-y-4 py-4">

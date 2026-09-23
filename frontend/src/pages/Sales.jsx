@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Trash2, Save, X } from "lucide-react";
+import { Plus, Trash2, Save, X } from "lucide-react";
 import * as entities from "@/entities";
 import { useQueryClient } from "@tanstack/react-query";
 import { parseISO } from "date-fns";
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import ProductEntryPanel from "@/components/products/ProductEntryPanel";
 import ProductItemsTable from "@/components/products/ProductItemsTable";
+import PersonSelector from "@/components/people/PersonSelector";
 import { formatDateOnly } from "@/utils";
 
 const initialSaleState = {
@@ -1225,14 +1226,6 @@ export default function SalesPage({ onSaleComplete }) {
     0,
   );
 
-  const filteredClients = people.filter(
-    (p) =>
-      p.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
-      (p.address?.street || "")
-        .toLowerCase()
-        .includes(clientSearchTerm.toLowerCase()),
-  );
-
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="max-w-[1400px] mx-auto p-6">
@@ -1471,99 +1464,19 @@ export default function SalesPage({ onSaleComplete }) {
                 >
                   Venda Para: <span className="text-red-500">*</span>
                 </h3>
-                {!customerSelected ? (
-                  <div className="flex gap-2">
-                    <Input
-                      value={clientSearchTerm}
-                      onChange={(e) => setClientSearchTerm(e.target.value)}
-                      placeholder="Buscar cliente..."
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={() => setShowClientSearch(true)}
-                      style={{ background: "#223f61", color: "white" }}
-                    >
-                      <Search className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    className="flex items-center justify-between p-3 rounded-lg"
-                    style={{
-                      background: "#F0FDF4",
-                      border: "1px solid #BBF7D0",
-                    }}
-                  >
-                    <div>
-                      <p
-                        className="font-semibold text-sm"
-                        style={{ color: "#15803D" }}
-                      >
-                        {customerFound.name}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {customerFound.address?.street},{" "}
-                        {customerFound.address?.number}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={clearCustomer}
-                      className="text-red-500"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-
-                {/* Modal de Busca */}
-                {showClientSearch && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-                      <div
-                        className="p-4 border-b"
-                        style={{ background: "#1E3A8A" }}
-                      >
-                        <h3 className="text-lg font-semibold text-white">
-                          Selecionar Cliente
-                        </h3>
-                      </div>
-                      <div className="p-4">
-                        <Input
-                          value={clientSearchTerm}
-                          onChange={(e) => setClientSearchTerm(e.target.value)}
-                          placeholder="Digite para buscar..."
-                          className="mb-4"
-                        />
-                        <div className="max-h-96 overflow-y-auto">
-                          {filteredClients.map((client) => (
-                            <div
-                              key={client.id}
-                              onClick={() => handleSelectClient(client)}
-                              className="p-3 border-b cursor-pointer hover:bg-gray-50"
-                            >
-                              <p className="font-medium">{client.name}</p>
-                              <p className="text-sm text-gray-600">
-                                {client.address?.street},{" "}
-                                {client.address?.number} -{" "}
-                                {client.address?.neighborhood}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="p-4 border-t flex justify-end">
-                        <Button
-                          onClick={() => setShowClientSearch(false)}
-                          variant="outline"
-                        >
-                          Fechar
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <PersonSelector
+                  options={people}
+                  selectedPerson={customerFound}
+                  open={showClientSearch}
+                  value={clientSearchTerm}
+                  title="Selecionar Cliente"
+                  inputPlaceholder="Buscar cliente..."
+                  searchPlaceholder="Digite para buscar..."
+                  onOpenChange={setShowClientSearch}
+                  onValueChange={setClientSearchTerm}
+                  onSelect={handleSelectClient}
+                  onClear={clearCustomer}
+                />
               </div>
 
               {/* Convênio - só aparece se o cliente tiver conveniada vinculada */}

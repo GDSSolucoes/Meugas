@@ -840,6 +840,7 @@ export default function ContasAPagarPage() {
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label className="text-xs">Status:</Label>
                 <div className="flex items-center gap-4 align-center mt-1">
@@ -869,6 +870,7 @@ export default function ContasAPagarPage() {
                   </div>
                 </div>
               </div>
+
               <div>
                 <Label className="text-xs">Ordenação</Label>
                 <RadioGroup
@@ -905,6 +907,7 @@ export default function ContasAPagarPage() {
                   </div>
                 </RadioGroup>
               </div>
+
               <div>
                 <Button
                   className="w-full mt-3 text-white text-xs h-8 gap-1"
