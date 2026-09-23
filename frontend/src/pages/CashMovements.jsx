@@ -1095,103 +1095,116 @@ export default function CashMovementsPage({ onComplete }) {
     : "bg-white";
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* Header - Filtros */}
-      <div className="bg-white border-b border-slate-300 p-4">
-        <div className="max-w-full mx-auto">
-          <h1 className="text-xl font-bold text-slate-800 mb-4">
-            Lançamentos Financeiros
-          </h1>
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
+          Lançamentos Financeiros
+        </h1>
 
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="w-52">
-              <Label className="text-xs font-medium">Conta</Label>
-              <Select
-                value={selectedAccount}
-                onValueChange={setSelectedAccount}
-              >
-                <SelectTrigger className="h-9 bg-white border-slate-300">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {cashAccounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end gap-2">
-              <div>
-                <Label className="text-xs font-medium">Período</Label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-9 w-36 bg-white border-slate-300"
-                />
+        <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="w-full md:w-52">
+                <Label className="text-xs font-medium text-gray-700">
+                  Conta
+                </Label>
+                <Select
+                  value={selectedAccount}
+                  onValueChange={setSelectedAccount}
+                >
+                  <SelectTrigger className="mt-1 h-9 bg-white border-slate-300">
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cashAccounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <span className="text-slate-500 pb-2">a</span>
-              <div>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="h-9 w-36 bg-white border-slate-300"
-                />
+
+              <div className="flex items-end gap-2">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">
+                    Período
+                  </Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="mt-1 h-9 w-36 bg-white border-slate-300"
+                  />
+                </div>
+                <span className="text-slate-500 pb-2">a</span>
+                <div>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="mt-1 h-9 w-36 bg-white border-slate-300"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-end gap-2">
+                <Button
+                  className="h-9 gap-2 text-white"
+                  style={{ backgroundColor: "#e78b3a" }}
+                  onClick={handleSearch}
+                >
+                  <Search className="w-4 h-4" /> Pesquisar
+                </Button>
+              </div>
+
+              <div className="ml-auto items-end text-right">
+                <Label className="text-xs font-medium text-slate-600">
+                  Saldo Anterior
+                </Label>
+                <p
+                  className={`text-xl font-bold ${openingBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
+                  {formatCurrency(openingBalance)}
+                </p>
               </div>
             </div>
-
-            <div className="flex items-end gap-2">
-              <Button
-                variant="default"
-                size="sm"
-                className="h-9 text-xs gap-1 text-white hover:opacity-90"
-                style={{ backgroundColor: "#223f61" }}
-                onClick={handleSearch}
-              >
-                <Search className="w-4 h-4" /> Pesquisar
-              </Button>
-            </div>
-
-            <div className="ml-auto items-end text-right">
-              <Label className="text-xs font-medium text-slate-600">
-                Saldo Anterior
-              </Label>
-              <p
-                className={`text-xl font-bold ${openingBalance >= 0 ? "text-green-600" : "text-red-600"}`}
-              >
-                {formatCurrency(openingBalance)}
-              </p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content */}
-      <div className="flex p-4 overflow-auto">
-        <div className="min-w-full mx-auto space-y-4">
+      <div className="max-w-[1400px] mx-auto px-6 pb-6">
+        <div className="space-y-4">
           {/* Grid de Transações */}
-          <Card className="bg-white border-slate-300">
+          <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
             <CardContent className="p-0">
               <div className="max-h-72 overflow-auto">
                 <Table>
-                  <TableHeader className="bg-slate-100 sticky top-0">
+                  <TableHeader className="bg-slate-50 sticky top-0">
                     <TableRow>
-                      <TableHead className="w-16 text-xs">Cod</TableHead>
-                      <TableHead className="w-12 text-xs">Parc.</TableHead>
-                      <TableHead className="w-20 text-xs">Data</TableHead>
-                      <TableHead className="w-24 text-xs">Setor</TableHead>
-                      <TableHead className="text-xs">Favorecido</TableHead>
-                      <TableHead className="w-24 text-right text-xs">
+                      <TableHead className="w-16 text-xs font-semibold">
+                        Cod
+                      </TableHead>
+                      <TableHead className="w-12 text-xs font-semibold">
+                        Parc.
+                      </TableHead>
+                      <TableHead className="w-20 text-xs font-semibold">
+                        Data
+                      </TableHead>
+                      <TableHead className="w-24 text-xs font-semibold">
+                        Setor
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold">
+                        Favorecido
+                      </TableHead>
+                      <TableHead className="w-24 text-right text-xs font-semibold">
                         Gastar
                       </TableHead>
-                      <TableHead className="w-24 text-right text-xs">
+                      <TableHead className="w-24 text-right text-xs font-semibold">
                         Receber
                       </TableHead>
-                      <TableHead className="w-28 text-right text-xs">
+                      <TableHead className="w-28 text-right text-xs font-semibold">
                         Saldo
                       </TableHead>
                     </TableRow>
@@ -1298,13 +1311,13 @@ export default function CashMovementsPage({ onComplete }) {
           </Card>
 
           {/* Abas + Formulário unidos */}
-          <Card className="bg-white border-slate-300 overflow-hidden">
+          <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="w-full justify-start rounded-none bg-slate-100 h-10 p-0 border-b-0">
+              <TabsList className="w-full justify-start rounded-none bg-slate-50 h-10 p-0 border-b-0">
                 <TabsTrigger
                   value="gastar"
                   className="rounded-none rounded-t-lg border border-b-0 border-transparent data-[state=active]:border-slate-300 data-[state=active]:bg-white data-[state=active]:border-b-white px-6 h-10 -mb-px"
@@ -1326,7 +1339,7 @@ export default function CashMovementsPage({ onComplete }) {
               </TabsList>
             </Tabs>
 
-            <CardContent className="p-4 border-t border-slate-300">
+            <CardContent className="p-4">
               {detailTab === "transferencia" ? (
                 <div
                   className={`space-y-3 ${isFormDisabled ? "opacity-60" : ""}`}
@@ -2120,7 +2133,7 @@ export default function CashMovementsPage({ onComplete }) {
 
       {/* Barra de Ações */}
       <div
-        className="p-4 rounded-lg"
+        className="max-w-[1400px] mx-auto w-full p-4 rounded-lg mb-6"
         style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
       >
         <div className="flex flex-wrap gap-3 justify-center">
@@ -2172,7 +2185,7 @@ export default function CashMovementsPage({ onComplete }) {
             onClick={handleCancelar}
           >
             <X className="w-4 h-4" />
-            <span className="text-sm">Canceler</span>
+            <span className="text-sm">Cancelar</span>
           </Button>
           <div className="w-px h-6 bg-slate-400 mx-1" />
 
@@ -2199,7 +2212,9 @@ export default function CashMovementsPage({ onComplete }) {
       <Dialog open={showTransferConfirm} onOpenChange={setShowTransferConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Transferência</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Confirmar Transferência
+            </DialogTitle>
           </DialogHeader>
 
           <div className="py-4 text-center">
@@ -2231,7 +2246,7 @@ export default function CashMovementsPage({ onComplete }) {
             </Button>
             <Button
               className="text-white hover:opacity-90"
-              style={{ backgroundColor: "#223f61" }}
+              style={{ backgroundColor: "#e78b3a" }}
               onClick={confirmTransfer}
             >
               Confirmar
@@ -2243,7 +2258,7 @@ export default function CashMovementsPage({ onComplete }) {
       <Dialog open={showSearchModal} onOpenChange={setShowSearchModal}>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
               Pesquisar{" "}
               {activeTab === "gastar"
                 ? "Fornecedor"
@@ -2253,13 +2268,16 @@ export default function CashMovementsPage({ onComplete }) {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <Input
-              placeholder="Buscar por nome, código ou documento..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar por nome, código ou documento..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9 pl-9"
+              />
+            </div>
 
             <div className="max-h-96 overflow-auto border rounded">
               <Table>
@@ -2351,7 +2369,9 @@ export default function CashMovementsPage({ onComplete }) {
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Confirmar Exclusão
+            </DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
@@ -2377,7 +2397,9 @@ export default function CashMovementsPage({ onComplete }) {
       <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cancelar Alterações</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Cancelar Alterações
+            </DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
@@ -2438,7 +2460,9 @@ export default function CashMovementsPage({ onComplete }) {
       >
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Parcelas do Lançamento</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Parcelas do Lançamento
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -2467,7 +2491,7 @@ export default function CashMovementsPage({ onComplete }) {
 
             <div className="max-h-80 overflow-auto border rounded">
               <Table>
-                <TableHeader className="bg-slate-100 sticky top-0">
+                <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow>
                     <TableHead className="w-20 text-xs">Nº</TableHead>
                     <TableHead className="text-xs">Descrição</TableHead>
