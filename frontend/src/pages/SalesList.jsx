@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -346,29 +346,20 @@ export default function SalesListPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">
-              Vendas Realizadas
-            </h1>
-            <p className="text-slate-600">Consulte e emita notas fiscais</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
+          Vendas Realizadas
+        </h1>
 
         {/* Filtros */}
-        <Card className="mb-6 bg-white/90 backdrop-blur-sm border-slate-200/60">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <Label>Data Inicial</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Data Inicial
+                </Label>
                 <Input
                   type="date"
                   value={filters.startDate}
@@ -376,11 +367,13 @@ export default function SalesListPage() {
                   onChange={(e) =>
                     handleFilterChange("startDate", e.target.value)
                   }
-                  className="bg-white"
+                  className="mt-1 bg-white"
                 />
               </div>
               <div>
-                <Label>Data Final</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Data Final
+                </Label>
                 <Input
                   type="date"
                   value={filters.endDate}
@@ -388,23 +381,29 @@ export default function SalesListPage() {
                   onChange={(e) =>
                     handleFilterChange("endDate", e.target.value)
                   }
-                  className="bg-white"
+                  className="mt-1 bg-white"
                 />
               </div>
               <div className="md:col-span-2">
-                <Label>Buscar</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Buscar
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Nº venda ou nome do cliente..."
-                    onBlur={(e) =>
+                    value={filters.searchTerm}
+                    onChange={(e) =>
                       handleFilterChange("searchTerm", e.target.value)
                     }
                     disabled={isLoading}
-                    className="bg-white"
+                    className="mt-1 bg-white"
                   />
                   <Button
                     onClick={applyFilters}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="mt-1 text-white"
+                    style={{ backgroundColor: "#e78b3a" }}
+                    title="Pesquisar vendas"
+                    aria-label="Pesquisar vendas"
                   >
                     <Search className="w-4 h-4" />
                   </Button>
@@ -415,15 +414,17 @@ export default function SalesListPage() {
         </Card>
 
         {isLoading && (
-          <div className="absolute bg-black/50 flex h-full items-center justify-center left-0 top-0 w-full z-10">
-            <p className="text-4xl text-white">Carregando vendas...</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <p className="text-sm font-medium text-white">
+              Carregando vendas...
+            </p>
           </div>
         )}
 
         {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <Card className="mb-0 bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Total de Vendas</p>
@@ -436,8 +437,8 @@ export default function SalesListPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
-            <CardContent className="p-6">
+          <Card className="mb-0 bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Valor Total</p>
@@ -450,42 +451,58 @@ export default function SalesListPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
-            <CardContent className="p-6">
+          <Card className="mb-0 bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Ticket Médio</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-slate-800">
                     R${" "}
                     {filteredSales.length > 0
                       ? (totalSales / filteredSales.length).toFixed(2)
                       : "0.00"}
                   </p>
                 </div>
-                <Calendar className="w-10 h-10 text-purple-500" />
+                <Calendar className="w-10 h-10 text-slate-500" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabela de Vendas */}
-        <Card className="bg-white/90 backdrop-blur-sm border-slate-200/60">
-          <CardHeader>
-            <CardTitle>Lista de Vendas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
+        <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <h2 className="text-sm font-semibold text-blue-900 mb-4">
+              Lista de Vendas
+            </h2>
+            <div className="border rounded-lg overflow-x-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow>
-                    <TableHead>Nº Venda</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Setor</TableHead>
-                    <TableHead>Pagamento</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Status NF</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Nº Venda
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Data
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Cliente
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Setor
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Pagamento
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      Valor
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Status NF
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      Ações
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -496,21 +513,25 @@ export default function SalesListPage() {
                     )
                     .map((sale) => (
                       <TableRow key={sale.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="text-sm font-medium">
                           {sale.saleNumber}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-sm">
                           {formatDateOnly(sale.saleDate || sale.createdAt)}
                         </TableCell>
-                        <TableCell>{sale.personName}</TableCell>
-                        <TableCell>{sale.sectorName || "-"}</TableCell>
+                        <TableCell className="text-sm">
+                          {sale.personName}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sale.sectorName || "-"}
+                        </TableCell>
                         <TableCell className="text-sm">
                           {getPaymentMethodsDisplay(sale.paymentMethods)}
                         </TableCell>
                         <TableCell className="text-right font-semibold text-green-600">
                           R$ {sale.totalAmount?.toFixed(2)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-sm">
                           <div className="flex flex-col gap-1">
                             {sale.nfeNumber && (
                               <Badge
@@ -698,7 +719,7 @@ export default function SalesListPage() {
 
       {/* Modal de Cancelamento */}
       <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-red-600">
               Cancelar {cancelTipoNota === "nfe" ? "NF-e" : "NFC-e"}
@@ -710,7 +731,9 @@ export default function SalesListPage() {
               irreversível e será registrada na SEFAZ.
             </p>
             <div>
-              <Label>Justificativa * (mínimo 15 caracteres)</Label>
+              <Label className="text-xs font-medium text-gray-700">
+                Justificativa * (mínimo 15 caracteres)
+              </Label>
               <Textarea
                 value={cancelJustification}
                 onChange={(e) => setCancelJustification(e.target.value)}
@@ -746,15 +769,17 @@ export default function SalesListPage() {
       <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-800">
+            <DialogTitle className="text-xl font-bold text-blue-900">
               Detalhes da Venda #{selectedSale?.saleNumber}
             </DialogTitle>
           </DialogHeader>
           {selectedSale && (
             <div className="space-y-4">
               {/* Informações do Cliente */}
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <h3 className="font-semibold mb-2">Cliente</h3>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                  Cliente
+                </h3>
                 <p className="text-sm">
                   <strong>Nome:</strong> {selectedSale.personName}
                 </p>
@@ -771,41 +796,57 @@ export default function SalesListPage() {
 
               {/* Itens */}
               <div>
-                <h3 className="font-semibold mb-2">Itens da Venda</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Produto</TableHead>
-                      <TableHead className="text-right">Qtd</TableHead>
-                      <TableHead className="text-right">Valor Un.</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedSale.items?.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.productName}</TableCell>
-                        <TableCell className="text-right">
-                          {item.quantity}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          R$ {item.unitPrice?.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">
-                          R$ {item.total?.toFixed(2)}
-                        </TableCell>
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                  Itens da Venda
+                </h3>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-slate-50">
+                      <TableRow>
+                        <TableHead className="text-xs font-semibold">
+                          Produto
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Qtd
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Valor Un.
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-right">
+                          Total
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedSale.items?.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="text-sm">
+                            {item.productName}
+                          </TableCell>
+                          <TableCell className="text-sm text-right">
+                            {item.quantity}
+                          </TableCell>
+                          <TableCell className="text-sm text-right">
+                            R$ {item.unitPrice?.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-sm text-right font-semibold">
+                            R$ {item.total?.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
               {/* Pagamentos */}
               <div>
-                <h3 className="font-semibold mb-2">Formas de Pagamento</h3>
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                  Formas de Pagamento
+                </h3>
                 <div className="space-y-2">
                   {selectedSale.paymentMethods?.map((pm, index) => (
-                    <div key={index} className="p-3 bg-slate-50 rounded">
+                    <div key={index} className="p-3 bg-slate-50 rounded-lg">
                       <p className="text-sm">
                         <strong>{pm.paymentTypeName}:</strong> R${" "}
                         {pm.amount?.toFixed(2)}
@@ -826,7 +867,9 @@ export default function SalesListPage() {
               {/* Observações */}
               {selectedSale.notes && (
                 <div>
-                  <h3 className="font-semibold mb-2">Observações</h3>
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                    Observações
+                  </h3>
                   <p className="text-sm text-slate-600">{selectedSale.notes}</p>
                 </div>
               )}
