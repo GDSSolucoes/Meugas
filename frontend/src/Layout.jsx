@@ -337,7 +337,7 @@ export default function Layout({ children, currentPageName }) {
   // Verificar permissões de acesso
   const isAtendente = currentUser?.userType === "atendente";
   const isAdmin = currentUser?.userType === "admin";
-  const isSuperAdmin = currentUser?.email === "brasileirosilvia@gmail.com";
+  const isSuperAdmin = currentUser?.userType === "super_admin";
 
   // Se é atendente e está tentando acessar módulo gerencial, redirecionar
   // Only redirect if currentUser data has been loaded
@@ -421,34 +421,39 @@ export default function Layout({ children, currentPageName }) {
                       </SidebarGroupLabel>
                       <SidebarGroupContent>
                         <SidebarMenu>
-                          {group.items.map((item) => (
-                            <SidebarMenuItem key={item.title}>
-                              <SidebarMenuButton
-                                asChild
-                                className={`transition-all duration-200 rounded-lg mb-1 ${styles.buttonHover} ${
-                                  location.pathname ===
-                                    item.url.split("?")[0] &&
-                                  (location.search ===
-                                    (item.url.includes("?")
-                                      ? "?" + item.url.split("?")[1]
-                                      : "") ||
-                                    !item.url.includes("?"))
-                                    ? styles.buttonActive
-                                    : ""
-                                }`}
-                              >
-                                <Link
-                                  to={item.url}
-                                  className="flex items-center gap-3 px-3 py-2.5"
+                          {group.items
+                            .filter(
+                              (item) =>
+                                item.title !== "Estoque" || isSuperAdmin,
+                            )
+                            .map((item) => (
+                              <SidebarMenuItem key={item.title}>
+                                <SidebarMenuButton
+                                  asChild
+                                  className={`transition-all duration-200 rounded-lg mb-1 ${styles.buttonHover} ${
+                                    location.pathname ===
+                                      item.url.split("?")[0] &&
+                                    (location.search ===
+                                      (item.url.includes("?")
+                                        ? "?" + item.url.split("?")[1]
+                                        : "") ||
+                                      !item.url.includes("?"))
+                                      ? styles.buttonActive
+                                      : ""
+                                  }`}
                                 >
-                                  <item.icon className="w-4 h-4" />
-                                  <span className="font-medium">
-                                    {item.title}
-                                  </span>
-                                </Link>
-                              </SidebarMenuButton>
-                            </SidebarMenuItem>
-                          ))}
+                                  <Link
+                                    to={item.url}
+                                    className="flex items-center gap-3 px-3 py-2.5"
+                                  >
+                                    <item.icon className="w-4 h-4" />
+                                    <span className="font-medium">
+                                      {item.title}
+                                    </span>
+                                  </Link>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
                         </SidebarMenu>
                       </SidebarGroupContent>
                     </SidebarGroup>

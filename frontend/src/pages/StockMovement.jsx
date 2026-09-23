@@ -257,7 +257,7 @@ export default function StockMovementPage() {
                   </Button>
                 </Link>
               </div>
-              <div className="w-full md:w-auto">
+              {/* <div className="w-full md:w-auto">
                 <Link to={createPageUrl("StockReport")}>
                   <Button
                     variant="outline"
@@ -267,7 +267,7 @@ export default function StockMovementPage() {
                     Relatório de Estoque
                   </Button>
                 </Link>
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>
