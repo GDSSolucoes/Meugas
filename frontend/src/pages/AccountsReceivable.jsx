@@ -49,7 +49,6 @@ import {
   CheckSquare,
   RefreshCw,
   X,
-  ArrowRight,
 } from "lucide-react";
 import {
   AccountsReceivable,
@@ -64,6 +63,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { format, parseISO, isBefore, startOfDay, startOfMonth } from "date-fns";
 import { createPageUrl, formatDateOnly } from "@/utils";
 import RenegociacaoModal from "@/components/financial/RenegociacaoModal";
+import PersonSelector from "@/components/people/PersonSelector";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -93,9 +93,11 @@ function BaixaDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Baixar Contas a Receber</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-blue-900">
+            Baixar Contas a Receber
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <p>
@@ -111,7 +113,9 @@ function BaixaDialog({
             </span>
           </p>
           <div>
-            <Label>Data do Recebimento</Label>
+            <Label className="text-xs font-medium text-gray-700">
+              Data do Recebimento
+            </Label>
             <Input
               type="date"
               value={paymentDate}
@@ -119,7 +123,9 @@ function BaixaDialog({
             />
           </div>
           <div>
-            <Label>Conta/Caixa de Destino *</Label>
+            <Label className="text-xs font-medium text-gray-700">
+              Conta/Caixa de Destino *
+            </Label>
             <Select
               value={selectedAccountId}
               onValueChange={setSelectedAccountId}
@@ -144,7 +150,8 @@ function BaixaDialog({
           <Button
             onClick={() => onConfirm(selectedAccountId, paymentDate)}
             disabled={!selectedAccountId}
-            className="bg-green-600 hover:bg-green-700"
+            className="text-white hover:opacity-90"
+            style={{ backgroundColor: "#e78b3a" }}
           >
             Confirmar Recebimento
           </Button>
@@ -682,6 +689,13 @@ export default function AccountsReceivablePage({ onComplete }) {
     setShowSacadoSearch(true);
   };
 
+  const handleSelectSacado = (person) => {
+    setSacadoSelecionado(person);
+    setSacadoSearchTerm("");
+    setShowSacadoSearch(false);
+    setTimeout(() => applyFiltersAndShow(), 100);
+  };
+
   const handleSair = () => {
     // Se tem callback de conclusão (modo modal), chama ele
     if (onComplete) {
@@ -765,10 +779,11 @@ export default function AccountsReceivablePage({ onComplete }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold text-slate-800">Contas a Receber</h1>
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
+          Contas a Receber
+        </h1>
       </div>
 
       {/* Dialogs */}
@@ -784,424 +799,353 @@ export default function AccountsReceivablePage({ onComplete }) {
       />
 
       {/* Main Content */}
-      <div className="flex p-4 overflow-auto">
-        <div className="min-w-full mx-auto space-y-4">
-          {/* SEÇÃO DE FILTROS - CAIXA ÚNICA */}
-          <Card className="bg-white border-slate-300">
-            <CardContent className="p-4">
-              <Form {...form}>
-                <div className="grid grid-cols-12 gap-4">
-                  {/* COLUNA 1: PESQUISAR */}
-                  <div className="col-span-4 pr-4 border-r border-slate-200">
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                      Pesquisar
-                    </h4>
+      <div className="max-w-[1400px] mx-auto w-full px-6 space-y-4">
+        <div className="w-full space-y-4">
+          <Form {...form}>
+            <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-gray-700">
+                      Tipo Sacado:
+                    </Label>
+                    <div className="flex flex-wrap gap-3 mt-1 mb-2">
+                      {[
+                        ["cliente", "Cliente"],
+                        ["pontoVenda", "Pto. Venda"],
+                        ["conveniada", "Convênio"],
+                      ].map(([type, label]) => (
+                        <div className="flex items-center gap-1" key={type}>
+                          <Checkbox
+                            id={type}
+                            checked={tipoSacado[type]}
+                            onCheckedChange={(value) =>
+                              setTipoSacado((previous) => ({
+                                ...previous,
+                                [type]: value,
+                              }))
+                            }
+                          />
+                          <label htmlFor={type} className="text-xs">
+                            {label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <PersonSelector
+                      options={filteredPeople}
+                      selectedPerson={sacadoSelecionado}
+                      open={showSacadoSearch}
+                      value={sacadoSearchTerm}
+                      title="Selecionar Cliente/Ponto de Venda"
+                      inputPlaceholder="Buscar cliente..."
+                      searchPlaceholder="Digite o nome para buscar..."
+                      showType
+                      onOpenChange={setShowSacadoSearch}
+                      onValueChange={setSacadoSearchTerm}
+                      onSelect={handleSelectSacado}
+                      onClear={() => setSacadoSelecionado(null)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-700">
+                      Conta:
+                    </Label>
+                    <FormField
+                      control={form.control}
+                      name="cashAccountId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="mt-1 h-9 text-xs">
+                            <SelectValue placeholder="Todas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Todas</SelectItem>
+                            {cashAccounts.map((account) => (
+                              <SelectItem key={account.id} value={account.id}>
+                                {account.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-700">
+                      Setor:
+                    </Label>
+                    <FormField
+                      control={form.control}
+                      name="sectorId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="mt-1 h-9 text-xs">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Todos</SelectItem>
+                            {sectors.map((sector) => (
+                              <SelectItem key={sector.id} value={sector.id}>
+                                {sector.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-                    {/* Tipo Sacado */}
-                    <div className="mb-3">
-                      <Label className="text-xs font-medium">
-                        Tipo Sacado:
-                      </Label>
-                      <div className="flex gap-3 mt-1">
-                        <div className="flex items-center gap-1">
-                          <Checkbox
-                            id="cliente"
-                            checked={tipoSacado.cliente}
-                            onCheckedChange={(v) =>
-                              setTipoSacado((p) => ({ ...p, cliente: v }))
-                            }
-                          />
-                          <label htmlFor="cliente" className="text-xs">
-                            Cliente
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Checkbox
-                            id="pontoVenda"
-                            checked={tipoSacado.pontoVenda}
-                            onCheckedChange={(v) =>
-                              setTipoSacado((p) => ({ ...p, pontoVenda: v }))
-                            }
-                          />
-                          <label htmlFor="pontoVenda" className="text-xs">
-                            Pto. Venda
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Checkbox
-                            id="conveniada"
-                            checked={tipoSacado.conveniada}
-                            onCheckedChange={(v) =>
-                              setTipoSacado((p) => ({ ...p, conveniada: v }))
-                            }
-                          />
-                          <label htmlFor="conveniada" className="text-xs">
-                            Convênio
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Campo de sacado selecionado */}
-                      <div className="flex gap-1 mt-2">
-                        <div className="flex-1 relative">
+            <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-gray-700">
+                      Pesquisar por:
+                    </Label>
+                    <FormField
+                      control={form.control}
+                      name="search_type"
+                      render={({ field }) => (
+                        <RadioGroup
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          className="flex flex-wrap gap-3 mt-2"
+                        >
+                          <div className="flex items-center gap-1">
+                            <RadioGroupItem
+                              value="codigoVenda"
+                              id="codigoVenda"
+                            />
+                            <label htmlFor="codigoVenda" className="text-xs">
+                              Cód. Venda
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <RadioGroupItem
+                              value="notaFiscal"
+                              id="notaFiscal"
+                            />
+                            <label htmlFor="notaFiscal" className="text-xs">
+                              Nota Fiscal
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <RadioGroupItem value="documento" id="documento" />
+                            <label htmlFor="documento" className="text-xs">
+                              Documento
+                            </label>
+                          </div>
+                        </RadioGroup>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="search_value"
+                      render={({ field }) => (
+                        <div className="relative mt-2">
                           <Input
-                            value={sacadoSelecionado?.name || ""}
+                            {...field}
+                            value={field.value || ""}
                             readOnly
-                            placeholder="Use o botão Pesquisar"
-                            className="h-7 text-xs pr-6 bg-slate-50"
+                            placeholder="Use Pesquisar para selecionar"
+                            className="h-9 pr-8 bg-slate-50 text-xs"
                           />
-                          {sacadoSelecionado && (
+                          {field.value && (
                             <button
-                              onClick={() => setSacadoSelecionado(null)}
-                              className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              type="button"
+                              onClick={() => field.onChange("")}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              aria-label="Limpar código pesquisado"
                             >
                               <X className="w-3 h-3" />
                             </button>
                           )}
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Método de Pesquisa por Código */}
-                    <div className="border-t border-slate-200 pt-3">
-                      <Label className="text-xs font-medium mb-2 block">
-                        Pesquisar por:
-                      </Label>
-                      <FormField
-                        control={form.control}
-                        name="search_type"
-                        render={({ field }) => (
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex gap-3 mb-2"
-                          >
-                            <div className="flex items-center gap-1">
-                              <RadioGroupItem
-                                value="codigoVenda"
-                                id="codigoVenda"
-                              />
-                              <label htmlFor="codigoVenda" className="text-xs">
-                                Cód. Venda
-                              </label>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <RadioGroupItem
-                                value="notaFiscal"
-                                id="notaFiscal"
-                              />
-                              <label htmlFor="notaFiscal" className="text-xs">
-                                Nota Fiscal
-                              </label>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <RadioGroupItem
-                                value="documento"
-                                id="documento"
-                              />
-                              <label htmlFor="documento" className="text-xs">
-                                Documento
-                              </label>
-                            </div>
-                          </RadioGroup>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="search_value"
-                        render={({ field }) => (
-                          <div className="flex gap-1">
-                            <div className="flex-1 relative">
-                              <Input
-                                {...field}
-                                value={field.value || ""}
-                                readOnly
-                                placeholder="Use o botão Pesquisar"
-                                className="h-7 text-xs pr-6 bg-slate-50"
-                              />
-                              {field.value && (
-                                <button
-                                  onClick={() => field.onChange("")}
-                                  className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* COLUNA 2: FILTROS */}
-                  <div className="col-span-5 px-4 border-r border-slate-200">
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase mb-3">
-                      Filtros
-                    </h4>
-
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div>
-                        <Label className="text-xs">Conta:</Label>
-                        <FormField
-                          control={form.control}
-                          name="cashAccountId"
-                          render={({ field }) => (
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger className="h-7 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Todas</SelectItem>
-                                {cashAccounts.map((acc) => (
-                                  <SelectItem key={acc.id} value={acc.id}>
-                                    {acc.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Setor:</Label>
-                        <FormField
-                          control={form.control}
-                          name="sectorId"
-                          render={({ field }) => (
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <SelectTrigger className="h-7 text-xs">
-                                <SelectValue placeholder="Todos" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Todos</SelectItem>
-                                {sectors.map((s) => (
-                                  <SelectItem key={s.id} value={s.id}>
-                                    {s.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Tipo Pagto.:</Label>
-                        <FormField
-                          control={form.control}
-                          name="paymentTypeId"
-                          render={({ field }) => (
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <SelectTrigger className="h-7 text-xs">
-                                <SelectValue placeholder="Todos" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Todos</SelectItem>
-                                {paymentTypes.map((pt) => (
-                                  <SelectItem key={pt.id} value={pt.id}>
-                                    {pt.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <div className="flex items-center gap-4 pt-2 border-t border-slate-200">
-                          <div className="flex items-center gap-1">
-                            <Checkbox
-                              id="naoPaga"
-                              checked={field.value?.includes("pendente")}
-                              onCheckedChange={(checked) => {
-                                const newValue = checked
-                                  ? [...(field.value || []), "pendente"]
-                                  : (field.value || []).filter(
-                                      (v) => v !== "pendente",
-                                    );
-                                field.onChange(newValue);
-                              }}
-                            />
-                            <label htmlFor="naoPaga" className="text-xs">
-                              Não Paga
-                            </label>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Checkbox
-                              id="paga"
-                              checked={field.value?.includes("pago")}
-                              onCheckedChange={(checked) => {
-                                const newValue = checked
-                                  ? [...(field.value || []), "pago"]
-                                  : (field.value || []).filter(
-                                      (v) => v !== "pago",
-                                    );
-                                field.onChange(newValue);
-                              }}
-                            />
-                            <label htmlFor="paga" className="text-xs">
-                              Paga
-                            </label>
-                          </div>
-                          {/* <div className="flex items-center gap-1">
-                            <Checkbox
-                              id="emCobranca"
-                              checked={field.value?.includes("emCobranca")}
-                              onCheckedChange={(checked) => {
-                                const newValue = checked
-                                  ? [...(field.value || []), "emCobranca"]
-                                  : (field.value || []).filter(
-                                      (v) => v !== "emCobranca",
-                                    );
-                                field.onChange(newValue);
-                              }}
-                            />
-                            <label htmlFor="emCobranca" className="text-xs">
-                              Em Cobrança
-                            </label>
-                          </div> */}
-                        </div>
                       )}
                     />
-
-                    {/* Período */}
-                    <div className="border-t border-slate-200 pt-3 mt-3">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="usarPeriodo"
-                            checked={usarPeriodo}
-                            onCheckedChange={setUsarPeriodo}
-                          />
-                          <label
-                            htmlFor="usarPeriodo"
-                            className="text-xs font-medium"
-                          >
-                            Período
-                          </label>
-                        </div>
-
-                        <div
-                          className={`flex flex-col gap-1 ${!usarPeriodo ? "opacity-50 pointer-events-none" : ""}`}
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-700">
+                      Tipo de Pagamento:
+                    </Label>
+                    <FormField
+                      control={form.control}
+                      name="paymentTypeId"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
                         >
-                          <div className="flex items-center gap-1">
-                            <Label className="text-xs w-12">Início:</Label>
-                            <FormField
-                              control={form.control}
-                              name="dueDate_gte"
-                              render={({ field }) => (
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  className="h-7 text-xs w-40"
-                                />
-                              )}
-                            />
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Label className="text-xs w-12">Fim:</Label>
-                            <FormField
-                              control={form.control}
-                              name="dueDate_lte"
-                              render={({ field }) => (
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  className="h-7 text-xs w-40"
-                                />
-                              )}
-                            />
-                          </div>
+                          <SelectTrigger className="mt-1 h-9 text-xs">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Todos</SelectItem>
+                            {paymentTypes.map((paymentType) => (
+                              <SelectItem
+                                key={paymentType.id}
+                                value={paymentType.id}
+                              >
+                                {paymentType.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <div>
+                        <Label className="text-xs font-medium text-gray-700">
+                          Situação:
+                        </Label>
+                        <div className="flex flex-wrap items-center gap-4 mt-3">
+                          {[
+                            ["pendente", "Não Paga", "naoPaga"],
+                            ["pago", "Paga", "paga"],
+                          ].map(([status, label, id]) => (
+                            <div
+                              className="flex items-center gap-1"
+                              key={status}
+                            >
+                              <Checkbox
+                                id={id}
+                                checked={field.value?.includes(status)}
+                                onCheckedChange={(checked) => {
+                                  const nextValue = checked
+                                    ? [
+                                        ...new Set([
+                                          ...(field.value || []),
+                                          status,
+                                        ]),
+                                      ]
+                                    : (field.value || []).filter(
+                                        (value) => value !== status,
+                                      );
+                                  field.onChange(nextValue);
+                                }}
+                              />
+                              <label htmlFor={id} className="text-xs">
+                                {label}
+                              </label>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* COLUNA 3: LEGENDA + ORDENAÇÃO */}
-                  <div className="col-span-3 pl-4">
-                    <div className="mb-4">
-                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                        Legenda
-                      </h4>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-400 rounded"></div>
-                          <span className="text-xs">Vencida</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-400 rounded"></div>
-                          <span className="text-xs">Paga</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-blue-400 rounded"></div>
-                          <span className="text-xs">Em cobrança</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-slate-200 pt-3">
-                      <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                        Ordenação
-                      </h4>
-                      <RadioGroup
-                        value={ordenacao}
-                        onValueChange={setOrdenacao}
-                        className="flex flex-col gap-1"
-                      >
-                        <div className="flex items-center gap-1">
-                          <RadioGroupItem
-                            value="vencimento"
-                            id="ordVencimento"
-                          />
-                          <label htmlFor="ordVencimento" className="text-xs">
-                            Vencimento
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <RadioGroupItem value="codigo" id="ordCodigo" />
-                          <label htmlFor="ordCodigo" className="text-xs">
-                            Código
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <RadioGroupItem value="valor" id="ordValor" />
-                          <label htmlFor="ordValor" className="text-xs">
-                            Valor
-                          </label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <Button
-                      className="w-full mt-4 text-white text-xs h-9 gap-1"
-                      style={{ backgroundColor: "#e78b3a" }}
-                      onClick={applyFiltersAndShow}
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
+                    )}
+                  />
                 </div>
-              </Form>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Checkbox
+                        id="usarPeriodo"
+                        checked={usarPeriodo}
+                        onCheckedChange={setUsarPeriodo}
+                      />
+                      <label
+                        htmlFor="usarPeriodo"
+                        className="text-xs font-medium"
+                      >
+                        Filtrar por período
+                      </label>
+                    </div>
+                    <div
+                      className={`grid grid-cols-2 gap-2 ${!usarPeriodo ? "opacity-50 pointer-events-none" : ""}`}
+                    >
+                      <FormField
+                        control={form.control}
+                        name="dueDate_gte"
+                        render={({ field }) => (
+                          <div>
+                            <Label className="text-xs text-gray-700">
+                              Início
+                            </Label>
+                            <Input
+                              type="date"
+                              {...field}
+                              className="mt-1 h-9 text-xs"
+                            />
+                          </div>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="dueDate_lte"
+                        render={({ field }) => (
+                          <div>
+                            <Label className="text-xs text-gray-700">Fim</Label>
+                            <Input
+                              type="date"
+                              {...field}
+                              className="mt-1 h-9 text-xs"
+                            />
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-700">
+                      Ordenação:
+                    </Label>
+                    <RadioGroup
+                      value={ordenacao}
+                      onValueChange={setOrdenacao}
+                      className="flex flex-wrap gap-3 mt-3"
+                    >
+                      <div className="flex items-center gap-1">
+                        <RadioGroupItem value="vencimento" id="ordVencimento" />
+                        <label htmlFor="ordVencimento" className="text-xs">
+                          Vencimento
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <RadioGroupItem value="codigo" id="ordCodigo" />
+                        <label htmlFor="ordCodigo" className="text-xs">
+                          Código
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <RadioGroupItem value="valor" id="ordValor" />
+                        <label htmlFor="ordValor" className="text-xs">
+                          Valor
+                        </label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <Button
+                    className="w-full text-white h-9 gap-2"
+                    style={{ backgroundColor: "#e78b3a" }}
+                    onClick={applyFiltersAndShow}
+                  >
+                    <Search className="w-4 h-4" /> Pesquisar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </Form>
 
           {/* GRID DE CONTAS */}
-          <Card className="bg-white border-slate-300">
+          <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
             <CardContent className="p-0">
               <div className="max-h-[350px] overflow-auto">
                 {!showResults ? (
@@ -1216,28 +1160,44 @@ export default function AccountsReceivablePage({ onComplete }) {
                   </div>
                 ) : (
                   <Table>
-                    <TableHeader className="bg-slate-100 sticky top-0">
+                    <TableHeader className="bg-slate-50 sticky top-0">
                       <TableRow>
-                        <TableHead className="w-8 text-xs">S</TableHead>
-                        <TableHead className="text-xs w-20">Data</TableHead>
-                        <TableHead className="text-xs w-20">Código</TableHead>
-                        <TableHead className="text-xs w-20">N Fiscal</TableHead>
-                        <TableHead className="text-xs w-20">Tp Pagto</TableHead>
-                        <TableHead className="text-xs w-12">Parc</TableHead>
-                        <TableHead className="text-xs w-24">
+                        <TableHead className="w-8 text-xs font-semibold">
+                          S
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold w-20">
+                          Data
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold w-20">
+                          Código
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold w-20">
+                          N Fiscal
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold w-20">
+                          Tp Pagto
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold w-12">
+                          Parc
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold w-24">
                           Dt Vencto
                         </TableHead>
-                        <TableHead className="text-xs w-24 text-right">
+                        <TableHead className="text-xs font-semibold w-24 text-right">
                           Valor
                         </TableHead>
-                        <TableHead className="text-xs w-24">
+                        <TableHead className="text-xs font-semibold w-24">
                           Dt Receb.
                         </TableHead>
-                        <TableHead className="text-xs w-24 text-right">
+                        <TableHead className="text-xs font-semibold w-24 text-right">
                           Vl Receb.
                         </TableHead>
-                        <TableHead className="text-xs w-20">Situação</TableHead>
-                        <TableHead className="text-xs">Sacado</TableHead>
+                        <TableHead className="text-xs font-semibold w-20">
+                          Situação
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold">
+                          Sacado
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1344,8 +1304,27 @@ export default function AccountsReceivablePage({ onComplete }) {
             </CardContent>
           </Card>
 
+          {/* Legenda */}
+          <div className="flex flex-wrap gap-4 mb-4 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-red-100 border border-red-300 rounded" />
+              <span>Vencida</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
+              <span>Paga</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded" />
+              <span>Em cobrança</span>
+            </div>
+            <div className="ml-auto text-slate-600">
+              Total de registros: {filteredContas.length}
+            </div>
+          </div>
+
           {/* TOTAIS */}
-          <div className="grid grid-cols-5 gap-4 p-3 bg-white rounded-lg border border-slate-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 p-4 mb-4 bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="text-center">
               <p className="text-xs text-slate-600">Recebido:</p>
               <p className="text-sm font-bold text-green-600">
@@ -1382,40 +1361,28 @@ export default function AccountsReceivablePage({ onComplete }) {
 
       {/* BARRA DE AÇÕES */}
       <div
-        className="p-4 rounded-lg"
+        className="max-w-[1400px] mx-auto w-full p-4 mb-6 rounded-lg"
         style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
       >
         <div className="flex flex-wrap gap-3 justify-center">
-          <Button
+          {/* <Button
             variant="outline"
             className="flex items-center gap-2"
             disabled={!hasSelection}
             onClick={handleModificar}
           >
             <Edit className="w-4 h-4" /> Alterar
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 text-red-600 hover:bg-red-50"
-            disabled={!hasSelection}
-            onClick={handleExcluir}
-          >
-            <Trash2 className="w-4 h-4" /> Excluir
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handlePesquisarClick}
-          >
-            <Search className="w-4 h-4" /> Pesquisar
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handleSair}
-          >
-            <LogOut className="w-4 h-4" /> Sair
-          </Button>
+          </Button> */}
+          {currentUser?.userType === "super_admin" && (
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 text-red-600 hover:bg-red-50"
+              disabled={!hasSelection}
+              onClick={handleExcluir}
+            >
+              <Trash2 className="w-4 h-4" /> Excluir
+            </Button>
+          )}
           <Button
             variant="outline"
             className="flex items-center gap-2"
@@ -1425,7 +1392,7 @@ export default function AccountsReceivablePage({ onComplete }) {
             <Printer className="w-4 h-4" /> Imprimir
           </Button>
           <Button
-            className="h-8 text-xs gap-1 text-white hover:opacity-90"
+            className="gap-2 text-white hover:opacity-90"
             style={{ backgroundColor: "#e78b3a" }}
             onClick={handleBaixar}
             disabled={selectedContas.length === 0}
@@ -1443,143 +1410,127 @@ export default function AccountsReceivablePage({ onComplete }) {
           >
             <RefreshCw className="w-4 h-4" /> Renegocia
           </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={selectAll}
-          >
-            <CheckSquare className="w-4 h-4" /> Selecionar
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => setSelectedContas([])}
-          >
-            <X className="w-4 h-4" /> Desmarcar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            Agrupar
-          </Button>
         </div>
       </div>
 
-      {/* Modal de Pesquisa de Sacado */}
-      <Dialog open={showSacadoSearch} onOpenChange={setShowSacadoSearch}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>
-              Pesquisar{" "}
-              {[
-                tipoSacado.cliente && "Clientes",
-                tipoSacado.pontoVenda && "Pontos de Venda",
-                tipoSacado.conveniada && "Convênios",
-              ]
-                .filter(Boolean)
-                .join(", ")}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o nome para buscar..."
-              value={sacadoSearchTerm}
-              onChange={(e) => setSacadoSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
-            <div className="max-h-80 overflow-auto border rounded">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Nome</TableHead>
-                    <TableHead className="text-xs">Tipo</TableHead>
-                    <TableHead className="text-xs">Documento</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPeople
-                    .filter((p) => {
+      {/* Modal de Pesquisa de Sacado: renderizado pelo PersonSelector */}
+      {false && (
+        <Dialog open={showSacadoSearch} onOpenChange={setShowSacadoSearch}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-blue-900">
+                Pesquisar{" "}
+                {[
+                  tipoSacado.cliente && "Clientes",
+                  tipoSacado.pontoVenda && "Pontos de Venda",
+                  tipoSacado.conveniada && "Convênios",
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Digite o nome para buscar..."
+                  value={sacadoSearchTerm}
+                  onChange={(e) => setSacadoSearchTerm(e.target.value)}
+                  className="h-9 pl-9"
+                  autoFocus
+                />
+              </div>
+              <div className="max-h-80 overflow-auto border rounded">
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-xs">Código</TableHead>
+                      <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs">Tipo</TableHead>
+                      <TableHead className="text-xs">Documento</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPeople
+                      .filter((p) => {
+                        if (!sacadoSearchTerm) return true;
+                        const term = sacadoSearchTerm.toLowerCase();
+                        return (
+                          p.name?.toLowerCase().includes(term) ||
+                          p.document?.toLowerCase().includes(term)
+                        );
+                      })
+                      .map((p) => (
+                        <TableRow
+                          key={p.id}
+                          className="cursor-pointer hover:bg-blue-50"
+                          onDoubleClick={() => {
+                            setSacadoSelecionado(p);
+                            setShowSacadoSearch(false);
+                            setSacadoSearchTerm("");
+                            // Após selecionar, aplica os filtros automaticamente
+                            setTimeout(() => applyFiltersAndShow(), 100);
+                          }}
+                        >
+                          <TableCell className="text-xs font-mono">
+                            {p.personNumber || p.id?.slice(-6)}
+                          </TableCell>
+                          <TableCell className="text-xs">{p.name}</TableCell>
+                          <TableCell className="text-xs">
+                            <Badge variant="outline" className="text-xs">
+                              {p.type === "cliente"
+                                ? "Cliente"
+                                : p.type === "pontoVenda"
+                                  ? "Pto. Venda"
+                                  : "Convênio"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {p.document || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    {filteredPeople.filter((p) => {
                       if (!sacadoSearchTerm) return true;
                       const term = sacadoSearchTerm.toLowerCase();
                       return (
                         p.name?.toLowerCase().includes(term) ||
                         p.document?.toLowerCase().includes(term)
                       );
-                    })
-                    .map((p) => (
-                      <TableRow
-                        key={p.id}
-                        className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => {
-                          setSacadoSelecionado(p);
-                          setShowSacadoSearch(false);
-                          setSacadoSearchTerm("");
-                          // Após selecionar, aplica os filtros automaticamente
-                          setTimeout(() => applyFiltersAndShow(), 100);
-                        }}
-                      >
-                        <TableCell className="text-xs font-mono">
-                          {p.personNumber || p.id?.slice(-6)}
-                        </TableCell>
-                        <TableCell className="text-xs">{p.name}</TableCell>
-                        <TableCell className="text-xs">
-                          <Badge variant="outline" className="text-xs">
-                            {p.type === "cliente"
-                              ? "Cliente"
-                              : p.type === "pontoVenda"
-                                ? "Pto. Venda"
-                                : "Convênio"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {p.document || "-"}
+                    }).length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center py-8 text-slate-500"
+                        >
+                          Nenhum registro encontrado
                         </TableCell>
                       </TableRow>
-                    ))}
-                  {filteredPeople.filter((p) => {
-                    if (!sacadoSearchTerm) return true;
-                    const term = sacadoSearchTerm.toLowerCase();
-                    return (
-                      p.name?.toLowerCase().includes(term) ||
-                      p.document?.toLowerCase().includes(term)
-                    );
-                  }).length === 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="text-center py-8 text-slate-500"
-                      >
-                        Nenhum registro encontrado
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <p className="text-xs text-slate-500">
+                Dê duplo clique para selecionar
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowSacadoSearch(false)}
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowSacadoSearch(false)}
+              >
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modal de Pesquisa de Código */}
       <Dialog open={showCodigoSearch} onOpenChange={setShowCodigoSearch}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
               Pesquisar{" "}
               {formValues.search_type === "codigoVenda"
                 ? "Código de Venda"
@@ -1588,14 +1539,17 @@ export default function AccountsReceivablePage({ onComplete }) {
                   : "Documento"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Filtrar..."
-              value={formValues.search_value || ""}
-              onChange={(e) => form.setValue("search_value", e.target.value)}
-              className="h-8"
-              autoFocus
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Filtrar..."
+                value={formValues.search_value || ""}
+                onChange={(e) => form.setValue("search_value", e.target.value)}
+                className="h-9 pl-9"
+                autoFocus
+              />
+            </div>
             <div className="max-h-80 overflow-auto border rounded">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
@@ -1702,7 +1656,9 @@ export default function AccountsReceivablePage({ onComplete }) {
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Confirmar Exclusão
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-center text-slate-600">
