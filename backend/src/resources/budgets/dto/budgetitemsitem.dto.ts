@@ -1,35 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional, IsString, IsNumber } from 'class-validator'
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsNumber, IsUUID } from "class-validator";
 
 export class BudgetItemsItemDto {
   @ApiProperty()
-  @IsOptional()
-  @IsString()
-  productId!: string
+  @IsNotEmpty()
+  @IsUUID()
+  productId!: string;
 
   @ApiProperty()
-  @IsOptional()
-  @IsString()
-  productCode!: string
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  productName!: string
-
-  @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
-  quantity!: number
+  quantity!: number;
 
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
-  unitPrice!: number
+  unitPrice!: number;
 
   @ApiProperty()
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
-  total!: number
-
+  total!: number;
 }

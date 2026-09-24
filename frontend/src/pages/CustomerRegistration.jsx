@@ -323,6 +323,14 @@ export default function CustomerRegistrationPage() {
           window.location.href = `${createPageUrl("Purchases")}?supplierId=${newPerson.id}`;
         } else if (returnTo === "cashMovements") {
           window.location.href = `${createPageUrl("CashMovements")}?personId=${newPerson.id}`;
+        } else if (returnTo === "personSelector") {
+          const returnPath = decodeURIComponent(
+            urlParams.get("returnPath") || "",
+          );
+          const safeReturnPath = returnPath.startsWith("/")
+            ? returnPath
+            : createPageUrl("People");
+          window.location.href = `${safeReturnPath}?personId=${newPerson.id}`;
         } else if (isFromGerencial) {
           resetForm(); // For gerencial, reset after creation
         } else {

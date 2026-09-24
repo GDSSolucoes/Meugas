@@ -149,13 +149,13 @@ export default function PeoplePage() {
     const colors = {
       cliente: "bg-blue-100 text-blue-800",
       fornecedor: "bg-green-100 text-green-800",
-      pontoVenda: "bg-purple-100 text-purple-800",
+      ponto_venda: "bg-purple-100 text-purple-800",
       conveniada: "bg-amber-100 text-amber-800",
     };
     const labels = {
       cliente: "Cliente",
       fornecedor: "Fornecedor",
-      pontoVenda: "Ponto de Venda",
+      ponto_venda: "Ponto de Venda",
       conveniada: "Conveniada",
     };
     return <Badge className={colors[type]}>{labels[type]}</Badge>;

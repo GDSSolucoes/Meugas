@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { Search, X } from "lucide-react";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { createPageUrl } from "@/utils";
 import {
   Table,
   TableBody,
@@ -29,11 +30,15 @@ export default function PersonSelector({
   emptyMessage = "Nenhum cliente encontrado",
   isLoading = false,
   showType = false,
+  registrationType = "cliente",
+  registrationLabel = "Cadastrar",
   onOpenChange,
   onValueChange,
   onSelect,
   onClear,
 }) {
+  const processedPersonId = useRef(null);
+
   const filteredOptions = useMemo(() => {
     const normalizedValue = value.trim().toLowerCase();
     if (!normalizedValue) return options;
@@ -55,6 +60,39 @@ export default function PersonSelector({
   const getPersonType = (person) =>
     person.type === "cliente" ? "Cliente" : "Pto. Venda";
 
+  useEffect(() => {
+    const personId = new URLSearchParams(window.location.search).get(
+      "personId",
+    );
+    if (!personId || processedPersonId.current === personId) return;
+
+    const person = options.find((option) => option.id === personId);
+    if (!person) return;
+
+    processedPersonId.current = personId;
+    onSelect?.(person);
+    onOpenChange?.(false);
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete("personId");
+    const nextSearch = params.toString();
+    window.history.replaceState(
+      {},
+      document.title,
+      `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}`,
+    );
+  }, [onOpenChange, onSelect, options]);
+
+  const handleRegister = () => {
+    const params = new URLSearchParams({
+      module: "gerencial",
+      type: registrationType,
+      return: "personSelector",
+      returnPath: window.location.pathname,
+    });
+    window.location.href = `${createPageUrl("CustomerRegistration")}?${params.toString()}`;
+  };
+
   return (
     <>
       {!selectedPerson ? (
@@ -75,6 +113,16 @@ export default function PersonSelector({
             aria-label={title}
           >
             <Search className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 shrink-0 gap-1 text-xs text-blue-900"
+            onClick={handleRegister}
+            title={registrationLabel}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {registrationLabel}
           </Button>
         </div>
       ) : (
@@ -192,6 +240,15 @@ export default function PersonSelector({
             </p>
           </div>
           <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-1 text-blue-900"
+              onClick={handleRegister}
+            >
+              <Plus className="w-4 h-4" />
+              {registrationLabel}
+            </Button>
             <Button variant="outline" onClick={() => onOpenChange?.(false)}>
               Fechar
             </Button>

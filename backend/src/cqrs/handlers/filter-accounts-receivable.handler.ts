@@ -52,13 +52,13 @@ export class FilteraccountsReceivablesHandler implements IQueryHandler<FilterAcc
 
     if (filters.dueDate_gte) {
       filterConditions.push(
-        gte(accountsReceivables.dueDate, parseDateOnly(filters.dueDate_gte)),
+        gte(accountsReceivables.dueDate, parseDateOnly(filters.dueDate_gte)!),
       );
     }
 
     if (filters.dueDate_lte) {
       filterConditions.push(
-        lte(accountsReceivables.dueDate, parseDateOnly(filters.dueDate_lte)),
+        lte(accountsReceivables.dueDate, parseDateOnly(filters.dueDate_lte)!),
       );
     }
 

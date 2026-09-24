@@ -1,6 +1,7 @@
 export * from "./accountsReceivable.schema";
 export * from "./acquirer.schema";
 export * from "./budget.schema";
+export * from "./budgetItem.schema";
 export * from "./cashAccount.schema";
 export * from "./cashMovement.schema";
 export * from "./company.schema";

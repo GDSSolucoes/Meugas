@@ -18,19 +18,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, Trash2, Search, Save, X, LogOut, Printer } from "lucide-react";
+import { Edit, Trash2, Search, Save, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { User } from "@/entities";
 import * as entities from "@/entities";
 import ProductSearchDialog from "@/components/products/ProductSearchDialog";
 import ProductItemsTable from "@/components/products/ProductItemsTable";
 import ProductEntryPanel from "@/components/products/ProductEntryPanel";
+import PersonSelector from "@/components/people/PersonSelector";
 
 export default function BudgetPage() {
   const { toast } = useToast();
-  const nomeInputRef = React.useRef(null);
   const codigoInputRef = React.useRef(null);
   const codigoProdutoInputRef = React.useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -42,17 +40,11 @@ export default function BudgetPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [budgets, setBudgets] = useState([]);
   const [products, setProducts] = useState([]);
+  const [people, setPeople] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [lastFocusedField, setLastFocusedField] = useState("codigo");
-  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
-
-  // Dados do Cliente (não salvos no cadastro)
-  const [nome, setNome] = useState("");
-  const [rua, setRua] = useState("");
-  const [numero, setNumero] = useState("");
-  const [complemento, setComplemento] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [uf, setUf] = useState("PR");
 
   // Produtos
   const [items, setItems] = useState([]);
@@ -75,13 +67,15 @@ export default function BudgetPage() {
       const user = await User.me();
       setCurrentUser(user);
 
-      const [budgetsData, productsData] = await Promise.all([
+      const [budgetsData, productsData, peopleData] = await Promise.all([
         entities.Budget.filter({ companyId: user.companyId }),
         entities.Product.filter({ companyId: user.companyId, active: true }),
+        entities.Person.filter({ companyId: user.companyId }),
       ]);
 
       setBudgets(budgetsData);
       setProducts(productsData);
+      setPeople(peopleData.filter((person) => person.type === "cliente"));
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     }
@@ -89,56 +83,37 @@ export default function BudgetPage() {
 
   const limparCampos = () => {
     setCodigo("");
-    setNome("");
-    setRua("");
-    setNumero("");
-    setComplemento("");
-    setBairro("");
-    setCidade("");
-    setUf("PR");
+    setSelectedCustomer(null);
+    setCustomerSearchTerm("");
+    setShowCustomerSearch(false);
     setItems([]);
     setCodigoProduto("");
     setQuantidade("1");
     setValorUnitario("");
     setSelectedProduct(null);
-    setIsEditingCustomer(false);
   };
 
   const buscarOrcamentoPorCodigo = () => {
     // Se código vazio, novo orçamento
     if (!codigo || codigo.trim() === "") {
-      setNome("");
-      setRua("");
-      setNumero("");
-      setComplemento("");
-      setBairro("");
-      setCidade("");
-      setUf("PR");
+      setSelectedCustomer(null);
       setItems([]);
-      setIsEditingCustomer(true);
       toast({
         title: "Novo Orçamento",
         description: "Preencha os dados para criar um novo orçamento.",
       });
-      // Focar no campo Nome após um pequeno delay
-      setTimeout(() => {
-        nomeInputRef.current?.focus();
-      }, 100);
       return;
     }
 
     const orcamento = budgets.find((b) => b.budgetNumber === codigo);
 
     if (orcamento) {
-      setNome(orcamento.customerData?.name || "");
-      setRua(orcamento.customerData?.street || "");
-      setNumero(orcamento.customerData?.number || "");
-      setComplemento(orcamento.customerData?.complement || "");
-      setBairro(orcamento.customerData?.neighborhood || "");
-      setCidade(orcamento.customerData?.city || "");
-      setUf(orcamento.customerData?.state || "PR");
+      const customer = people.find(
+        (person) => person.id === orcamento.personId,
+      );
+      setSelectedCustomer(customer || null);
+      setCustomerSearchTerm(customer?.name || "");
       setItems(orcamento.items || []);
-      setIsEditingCustomer(false);
       toast({
         title: "Orçamento encontrado",
         description: `Orçamento #${orcamento.budgetNumber} carregado com sucesso.`,
@@ -168,12 +143,13 @@ export default function BudgetPage() {
       });
       return;
     }
-    setIsEditingCustomer(true);
     toast({ title: "Info", description: "Campos liberados para edição." });
-    // Focar no campo Nome após habilitar edição
-    setTimeout(() => {
-      nomeInputRef.current?.focus();
-    }, 100);
+  };
+
+  const handleSelectCustomer = (customer) => {
+    const address = customer.address || {};
+    setSelectedCustomer(customer);
+    setCustomerSearchTerm(customer.name || "");
   };
 
   const handleExcluir = async () => {
@@ -283,10 +259,10 @@ export default function BudgetPage() {
   const handleOk = async () => {
     if (isSaving) return;
 
-    if (!nome) {
+    if (!selectedCustomer?.id) {
       toast({
         title: "Erro",
-        description: "Nome do cliente é obrigatório.",
+        description: "Selecione um cliente cadastrado.",
         variant: "destructive",
       });
       return;
@@ -295,16 +271,6 @@ export default function BudgetPage() {
     setIsSaving(true);
 
     try {
-      const customerData = {
-        name: nome,
-        street: rua,
-        number: numero,
-        complement: complemento,
-        neighborhood: bairro,
-        city: cidade,
-        state: uf,
-      };
-
       const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
 
       // Se tem código, é edição
@@ -312,7 +278,7 @@ export default function BudgetPage() {
         const orcamento = budgets.find((b) => b.budgetNumber === codigo);
         if (orcamento) {
           await entities.Budget.update(orcamento.id, {
-            customerData: customerData,
+            personId: selectedCustomer.id,
             items: items,
             totalAmount: totalAmount,
             companyId: currentUser.companyId,
@@ -338,7 +304,7 @@ export default function BudgetPage() {
 
         await entities.Budget.create({
           budgetNumber: newBudgetNumber,
-          customerData: customerData,
+          personId: selectedCustomer.id,
           items: items,
           totalAmount: totalAmount,
           companyId: currentUser.companyId,
@@ -354,7 +320,6 @@ export default function BudgetPage() {
       }
 
       await loadData();
-      setIsEditingCustomer(false);
     } catch (error) {
       console.error("Erro ao salvar:", error);
       toast({
@@ -460,16 +425,11 @@ export default function BudgetPage() {
   };
 
   const handleSelectBudget = (budget) => {
+    const customer = people.find((person) => person.id === budget.personId);
+    setSelectedCustomer(customer || null);
+    setCustomerSearchTerm(customer?.name || "");
     setCodigo(budget.budgetNumber);
-    setNome(budget.customerData?.name || "");
-    setRua(budget.customerData?.street || "");
-    setNumero(budget.customerData?.number || "");
-    setComplemento(budget.customerData?.complement || "");
-    setBairro(budget.customerData?.neighborhood || "");
-    setCidade(budget.customerData?.city || "");
-    setUf(budget.customerData?.state || "PR");
     setItems(budget.items || []);
-    setIsEditingCustomer(false);
     setShowSearchModal(false);
     setSearchTerm("");
   };
@@ -510,122 +470,80 @@ export default function BudgetPage() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold" style={{ color: "#223f61" }}>
-          Orçamento
-        </h1>
-      </div>
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">Orçamento</h1>
 
-      {/* Main Content */}
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="max-w-5xl mx-auto space-y-4">
+        <div className="space-y-4">
           {/* Código do Orçamento */}
-          <div className="flex items-center gap-2">
-            <Label className="text-sm w-16">Código:</Label>
-            <Input
-              ref={codigoInputRef}
-              value={codigo}
-              onChange={(e) => handleCodigoChange(e.target.value)}
-              onKeyDown={handleCodigoKeyDown}
-              onFocus={() => setLastFocusedField("codigo")}
-              className="w-32 h-8"
-              placeholder=""
-            />
-
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 shrink-0"
-              onClick={handlePesquisar}
-              title="Pesquisar produto"
-              aria-label="Pesquisar produto"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Dados do Cliente */}
-          <Card className="bg-white border-slate-300">
+          <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
             <CardContent className="p-4">
-              <h3 className="text-sm font-semibold mb-4 pb-2 border-b">
-                Dados do Cliente
-              </h3>
+              <div className="flex flex-wrap items-end gap-2">
+                <Label className="text-xs font-medium text-gray-700">
+                  Código:
+                </Label>
+                <Input
+                  ref={codigoInputRef}
+                  value={codigo}
+                  onChange={(e) => handleCodigoChange(e.target.value)}
+                  onKeyDown={handleCodigoKeyDown}
+                  onFocus={() => setLastFocusedField("codigo")}
+                  className="w-40 h-9 mt-1"
+                  placeholder=""
+                />
 
-              <div className="space-y-3">
-                <div className="grid grid-cols-12 gap-3 items-center">
-                  <Label className="text-sm col-span-1">Nome:</Label>
-                  <Input
-                    ref={nomeInputRef}
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    className={`col-span-11 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    readOnly={!isEditingCustomer}
-                  />
-                </div>
-
-                <div className="grid grid-cols-12 gap-2 items-center">
-                  <Label className="text-sm col-span-1">Rua:</Label>
-                  <Input
-                    value={rua}
-                    onChange={(e) => setRua(e.target.value)}
-                    className={`col-span-6 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    readOnly={!isEditingCustomer}
-                  />
-                  <Label className="text-sm">Nº:</Label>
-                  <Input
-                    value={numero}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "");
-                      setNumero(value);
-                    }}
-                    className={`col-span-1 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    readOnly={!isEditingCustomer}
-                  />
-                  <Label className="text-sm">Compl.:</Label>
-                  <Input
-                    value={complemento}
-                    onChange={(e) => setComplemento(e.target.value)}
-                    className={`col-span-2 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    readOnly={!isEditingCustomer}
-                  />
-                </div>
-
-                <div className="grid grid-cols-12 gap-2 items-center">
-                  <Label className="text-sm col-span-1">Bairro:</Label>
-                  <Input
-                    value={bairro}
-                    onChange={(e) => setBairro(e.target.value)}
-                    className={`col-span-4 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    readOnly={!isEditingCustomer}
-                  />
-                  <Label className="text-sm">Cidade:</Label>
-                  <Input
-                    value={cidade}
-                    onChange={(e) => setCidade(e.target.value)}
-                    className={`col-span-4 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    readOnly={!isEditingCustomer}
-                  />
-                  <Label className="text-sm">UF:</Label>
-                  <Input
-                    value={uf}
-                    onChange={(e) => setUf(e.target.value)}
-                    className={`col-span-1 h-8 ${!isEditingCustomer ? "bg-gray-100" : "bg-white"}`}
-                    maxLength={2}
-                    readOnly={!isEditingCustomer}
-                  />
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={handlePesquisar}
+                  title="Pesquisar orçamento"
+                  aria-label="Pesquisar orçamento"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Produtos */}
-          <Card className="bg-white border-slate-300">
+          {/* Dados do Cliente */}
+          <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
             <CardContent className="p-4">
-              <h3 className="text-sm font-semibold mb-4 pb-2 border-b">
+              <h2 className="text-sm font-semibold text-blue-900 mb-3">
+                Cliente: <span className="text-red-500">*</span>
+              </h2>
+              <PersonSelector
+                options={people}
+                selectedPerson={selectedCustomer}
+                open={showCustomerSearch}
+                value={customerSearchTerm}
+                title="Selecionar Cliente"
+                inputPlaceholder="Buscar cliente..."
+                searchPlaceholder="Digite o nome do cliente..."
+                onOpenChange={setShowCustomerSearch}
+                onValueChange={setCustomerSearchTerm}
+                onSelect={handleSelectCustomer}
+                onClear={() => {
+                  setSelectedCustomer(null);
+                  setCustomerSearchTerm("");
+                  setNome("");
+                  setRua("");
+                  setNumero("");
+                  setComplemento("");
+                  setBairro("");
+                  setCidade("");
+                  setUf("PR");
+                }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Produtos */}
+          <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-4">
+              <h2 className="text-sm font-semibold text-blue-900 mb-4">
                 Produtos
-              </h3>
+              </h2>
               <ProductEntryPanel
                 products={products}
                 variant="budget"
@@ -653,9 +571,11 @@ export default function BudgetPage() {
               {/* Total */}
               {items.length > 0 && (
                 <div className="mt-4 flex justify-end">
-                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <p className="text-sm text-slate-600">Total Geral:</p>
-                    <p className="text-2xl font-bold text-slate-800">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <p className="text-xs font-semibold text-green-700">
+                      Total Geral:
+                    </p>
+                    <p className="text-xl font-bold text-green-800">
                       R$ {totalGeral.toFixed(2)}
                     </p>
                   </div>
@@ -664,51 +584,37 @@ export default function BudgetPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Barra de Ações */}
-      <div className="bg-slate-200 border-t border-slate-300 p-2">
-        <div className="flex gap-1 items-center justify-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-12 flex flex-col gap-1 px-4"
-            onClick={handleModificar}
-            disabled={!codigo || isEditingCustomer}
-          >
-            <Edit className="w-4 h-4" />
-            <span className="text-xs">Alterar</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-12 flex flex-col gap-1 px-4 text-red-600 hover:bg-red-50"
-            onClick={handleExcluir}
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="text-xs">Excluir</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-12 flex flex-col gap-1 px-4 text-white"
-            style={{ backgroundColor: "#e78b3a" }}
-            onClick={handleOk}
-            disabled={isSaving || !isEditingCustomer}
-          >
-            <Save className="w-4 h-4" />
-            <span className="text-xs">{isSaving ? "Salvando..." : "Ok"}</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-12 flex flex-col gap-1 px-4"
-            onClick={handleImprimir}
-            disabled={!codigo}
-          >
-            <Printer className="w-4 h-4" />
-            <span className="text-xs">Imprimir</span>
-          </Button>
+        <div className="p-4 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB]">
+          <div className="flex flex-wrap gap-3 items-center justify-center">
+            <Button
+              variant="outline"
+              className="gap-2 text-red-600 hover:bg-red-50"
+              onClick={handleExcluir}
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="text-xs">Excluir</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 text-white"
+              style={{ backgroundColor: "#e78b3a" }}
+              onClick={handleOk}
+              disabled={isSaving}
+            >
+              <Save className="w-4 h-4" />
+              <span className="text-xs">{isSaving ? "Salvando..." : "Ok"}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleImprimir}
+              disabled={!codigo}
+            >
+              <Printer className="w-4 h-4" />
+              <span className="text-xs">Imprimir</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -716,7 +622,9 @@ export default function BudgetPage() {
       <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Código Não Encontrado</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Código Não Encontrado
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-slate-600">
@@ -739,25 +647,39 @@ export default function BudgetPage() {
 
       {/* Modal Pesquisa Orçamento */}
       <Dialog open={showSearchModal} onOpenChange={setShowSearchModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pesquisar Orçamento</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-blue-900">
+              Pesquisar Orçamento
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Buscar por código, nome do cliente..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar por código, nome do cliente..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9 pl-9"
+                autoFocus
+              />
+            </div>
             <div className="max-h-96 overflow-auto border rounded">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Cliente</TableHead>
-                    <TableHead className="text-xs">Data</TableHead>
-                    <TableHead className="text-xs text-right">Total</TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Código
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Cliente
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold">
+                      Data
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      Total
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

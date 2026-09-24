@@ -1,5 +1,4 @@
-import { BaseEntity } from './BaseEntity';
-
+import { BaseEntity } from "./BaseEntity";
 
 export interface BudgetCustomerData {
   name?: string;
@@ -28,6 +27,7 @@ export interface BudgetItemsItem {
  */
 export class Budget extends BaseEntity {
   budgetNumber: string;
+  personId: string;
   customerData: BudgetCustomerData;
   items: BudgetItemsItem[];
   totalAmount: number;
@@ -41,8 +41,13 @@ export class Budget extends BaseEntity {
    * @param pagination Pagination options (page, pageSize, sortBy, sortOrder)
    * @returns Promise<Budget[]>
    */
-  static async filter(filters = {}, pagination = {}) : Promise<Budget[]> {
-    return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Budget[]>;
+  static async filter(filters = {}, pagination = {}): Promise<Budget[]> {
+    return super._filter.call(
+      this,
+      this.baseUrl,
+      filters,
+      pagination,
+    ) as Promise<Budget[]>;
   }
 
   /**
@@ -83,6 +88,10 @@ export class Budget extends BaseEntity {
    * @returns Promise<Budget | null>
    */
   static async findById(id): Promise<Budget | null> {
-    return super._findById.call(this, this.baseUrl, id) as Promise<Budget | null>;
+    return super._findById.call(
+      this,
+      this.baseUrl,
+      id,
+    ) as Promise<Budget | null>;
   }
 }

@@ -8,20 +8,24 @@ import {
   index,
   boolean,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm/sql/sql";
 import { companies } from "./company.schema";
-import { persons } from "./person.schema";
-import { sql } from "drizzle-orm";
+import { budgets } from "./budget.schema";
+import { products } from "./product.schema";
 
-export const budgets = pgTable(
-  "budgets",
+export const budgetItems = pgTable(
+  "budgetItems",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    budgetNumber: text("budget_number").notNull(),
-    personId: uuid("person_id").references(() => persons.id, {
-      onDelete: "restrict",
-    }),
-    totalAmount: numeric("total_amount", { mode: "number" }).default(0),
-    notes: text("notes"),
+    budgetId: uuid("budget_id")
+      .notNull()
+      .references(() => budgets.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "restrict" }),
+    quantity: numeric("quantity", { mode: "number" }).notNull(),
+    unitPrice: numeric("unit_price", { mode: "number" }).notNull(),
+    total: numeric("total", { mode: "number" }).notNull(),
     companyId: uuid("company_id")
       .notNull()
       .references(() => companies.id, { onDelete: "restrict" }),
@@ -34,13 +38,15 @@ export const budgets = pgTable(
     }).defaultNow(),
   },
   (table) => [
-    pgPolicy("budgets_tenant_isolation", {
+    pgPolicy("budgetItems_tenant_isolation", {
       for: "all",
       as: "permissive",
       to: "public",
       using: sql`company_id = current_setting('app.current_company_id', true)::uuid`,
       withCheck: sql`company_id = current_setting('app.current_company_id', true)::uuid`,
     }),
-    index("budgets_company_id_index").on(table.companyId),
+    index("budgetItems_budget_id_index").on(table.budgetId),
+    index("budgetItems_product_id_index").on(table.productId),
+    index("budgetItems_company_id_index").on(table.companyId),
   ],
 );

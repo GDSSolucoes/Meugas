@@ -151,7 +151,7 @@ export class ProductpickupsService extends BaseCrudService<
         quantity: quantityToRemove,
         previousBalance,
         newBalance,
-        movementDate: parseDateOnly(data.collectedDate),
+        movementDate: parseDateOnly(data.collectedDate)!,
         companyId: companyId as any,
         companyName: currentPickup.companyName,
       });
@@ -286,7 +286,7 @@ export class ProductpickupsService extends BaseCrudService<
         quantity: quantityToRemove,
         previousBalance,
         newBalance,
-        movementDate: parseDateOnly(data.collectedDate),
+        movementDate: parseDateOnly(data.collectedDate)!,
         companyId: companyId as any,
         companyName: currentPickup.companyName,
       });

@@ -441,7 +441,7 @@ export default function VasilhameManagementPage() {
       setSelectedLoan(null);
       await loadData();
       if (showResults) {
-        setTimeout(() => applyFiltersAndShow(), 100);
+        await applyFiltersAndShow();
       }
     } catch (error) {
       console.error("Erro ao dar baixa:", error);
