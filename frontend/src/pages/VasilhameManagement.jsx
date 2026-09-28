@@ -609,9 +609,6 @@ export default function VasilhameManagementPage() {
                         <p className="font-semibold text-sm text-green-700">
                           {selectedProduct.name}
                         </p>
-                        <p className="text-xs text-gray-600">
-                          {selectedProduct.code || "Sem código"}
-                        </p>
                       </div>
                       <Button
                         variant="ghost"

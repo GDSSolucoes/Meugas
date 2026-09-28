@@ -30,6 +30,7 @@ export default function PersonSelector({
   emptyMessage = "Nenhum cliente encontrado",
   isLoading = false,
   showType = false,
+  showRegistration = false,
   registrationType = "cliente",
   registrationLabel = "Cadastrar",
   onOpenChange,
@@ -114,16 +115,18 @@ export default function PersonSelector({
           >
             <Search className="w-4 h-4" />
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-8 shrink-0 gap-1 text-xs text-blue-900"
-            onClick={handleRegister}
-            title={registrationLabel}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {registrationLabel}
-          </Button>
+          {showRegistration && (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8 shrink-0 gap-1 text-xs text-blue-900"
+              onClick={handleRegister}
+              title={registrationLabel}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {registrationLabel}
+            </Button>
+          )}
         </div>
       ) : (
         <div
