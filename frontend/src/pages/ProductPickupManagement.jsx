@@ -42,6 +42,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl, formatDateOnly } from "@/utils";
+import PersonSelector from "@/components/people/PersonSelector";
 
 export default function ProductPickupManagementPage() {
   const { toast } = useToast();
@@ -62,10 +63,13 @@ export default function ProductPickupManagementPage() {
   const [filtrarCliente, setFiltrarCliente] = useState(true);
   const [filtrarPontoVenda, setFiltrarPontoVenda] = useState(false);
   const [clienteInput, setClienteInput] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
 
   const [produtoInput, setProdutoInput] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const [tipoProduto, setTipoProduto] = useState("aRetirar"); // 'aRetirar', 'retiradosEntre'
+  const [periodoTipo, setPeriodoTipo] = useState("aRetirar"); // 'aRetirar', 'retiradosEntre'
   const [dataInicial, setDataInicial] = useState(
     formatDateOnly(new Date(), "yyyy-MM-dd"),
   );
@@ -74,6 +78,7 @@ export default function ProductPickupManagementPage() {
   );
 
   const [codigoVendaInput, setCodigoVendaInput] = useState("");
+  const [codigoVendaSearch, setCodigoVendaSearch] = useState("");
   const [codigoVendaLabel, setCodigoVendaLabel] = useState("TODAS");
 
   // Modais
@@ -166,7 +171,7 @@ export default function ProductPickupManagementPage() {
     }
 
     // Filtro por status do produto
-    if (tipoProduto === "aRetirar") {
+    if (periodoTipo === "aRetirar") {
       filtered = filtered.filter(
         (p) =>
           p.status === "pendente" ||
@@ -235,8 +240,10 @@ export default function ProductPickupManagementPage() {
     setFiltrarCliente(true);
     setFiltrarPontoVenda(false);
     setClienteInput("");
+    setSelectedCustomer(null);
+    setClientSearchTerm("");
     setProdutoInput("");
-    setTipoProduto("aRetirar");
+    setPeriodoTipo("aRetirar");
     setDataInicial(formatDateOnly(new Date(), "yyyy-MM-dd"));
     setDataFinal(formatDateOnly(new Date(), "yyyy-MM-dd"));
     setCodigoVendaInput("");
@@ -563,7 +570,7 @@ export default function ProductPickupManagementPage() {
           <strong>Filtros:</strong> 
           Cliente: ${filtrarCliente ? "Sim" : "Não"} | 
           Pto. Venda: ${filtrarPontoVenda ? "Sim" : "Não"} |
-          Status: ${tipoProduto === "aRetirar" ? "A Retirar" : `Retirados de ${format(dataInicial, "dd/MM/yyyy")} a ${format(dataFinal, "dd/MM/yyyy")}`}
+          Status: ${periodoTipo === "aRetirar" ? "A Retirar" : `Retirados de ${format(dataInicial, "dd/MM/yyyy")} a ${format(dataFinal, "dd/MM/yyyy")}`}
         </div>
 
         <table>
@@ -618,712 +625,778 @@ export default function ProductPickupManagementPage() {
     return false;
   });
 
+  const handleSelectCustomer = (person) => {
+    setSelectedCustomer(person);
+    setClienteInput(person.id);
+    setClientSearchTerm(person.name);
+    setShowClienteSearch(false);
+    setSearchTerm("");
+  };
+
+  const clearCustomer = () => {
+    setSelectedCustomer(null);
+    setClienteInput("");
+    setClientSearchTerm("");
+    setSearchTerm("");
+  };
+
+  const clearProduct = () => {
+    setSelectedProduct(null);
+    setProdutoInput("");
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-300 p-4">
-        <h1 className="text-xl font-bold text-slate-800">
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-[1400px] mx-auto p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">
           Produtos vendidos a retirar
         </h1>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-4 overflow-auto">
-        <div className="max-w-full mx-auto space-y-4">
-          {/* SEÇÃO DE FILTROS */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* LADO ESQUERDO - Cliente/PDV */}
-            <Card className="bg-white border-slate-300">
-              <CardContent className="p-4 space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+        <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label className="text-xs font-medium text-gray-700">
+                  Filtrar por:
+                </Label>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <div className="flex items-center gap-2 text-xs">
                     <Checkbox
                       id="filtroCliente"
                       checked={filtrarCliente}
                       onCheckedChange={setFiltrarCliente}
                     />
-                    <Label
-                      htmlFor="filtroCliente"
-                      className="text-sm font-normal"
-                    >
+                    <Label htmlFor="filtroCliente" className="text-xs">
                       Cliente
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2 text-xs">
                     <Checkbox
                       id="filtroPdv"
                       checked={filtrarPontoVenda}
                       onCheckedChange={setFiltrarPontoVenda}
                     />
-                    <Label htmlFor="filtroPdv" className="text-sm font-normal">
+                    <Label htmlFor="filtroPdv" className="text-xs">
                       Pto. Venda
                     </Label>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 mt-3">
-                  <Input
-                    value={
-                      clienteInput
-                        ? people.find((p) => p.id === clienteInput)?.name || ""
-                        : ""
+                <div className="mt-2">
+                  <PersonSelector
+                    options={people}
+                    selectedPerson={selectedCustomer}
+                    value={clientSearchTerm}
+                    title={
+                      filtrarCliente && filtrarPontoVenda
+                        ? "Selecionar Cliente/PDV"
+                        : filtrarCliente
+                          ? "Selecionar Cliente"
+                          : "Selecionar Ponto de Venda"
                     }
-                    onChange={() => {}}
-                    placeholder={!clienteInput ? "Todos" : ""}
-                    className={`h-8 text-sm flex-1 cursor-pointer ${!clienteInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "cliente" ? "ring-2 ring-blue-500" : ""}`}
-                    readOnly
-                    onClick={() => setActiveCaixa("cliente")}
+                    inputPlaceholder="Buscar cliente..."
+                    searchPlaceholder="Digite o nome..."
+                    showType
+                    onOpenChange={(open) => {
+                      setShowClienteSearch(open);
+                      if (open) setSearchTerm(clientSearchTerm);
+                    }}
+                    onValueChange={(value) => {
+                      setClientSearchTerm(value);
+                      setSearchTerm(value);
+                    }}
+                    onSelect={handleSelectCustomer}
+                    onClear={clearCustomer}
                   />
                 </div>
+              </div>
 
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                    Produtos
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={
-                        produtoInput
-                          ? products.find((p) => p.id === produtoInput)?.name ||
-                            ""
-                          : ""
-                      }
-                      onChange={() => {}}
-                      placeholder={!produtoInput ? "Todos" : ""}
-                      className={`h-8 text-sm flex-1 cursor-pointer ${!produtoInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "produto" ? "ring-2 ring-blue-500" : ""}`}
-                      readOnly
-                      onClick={() => setActiveCaixa("produto")}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* LADO DIREITO - Produtos e Código da Venda */}
-            <Card className="bg-white border-slate-300">
-              <CardContent className="p-4 space-y-4">
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                    Produtos
-                  </h4>
-                  <RadioGroup
-                    value={tipoProduto}
-                    onValueChange={setTipoProduto}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="aRetirar" id="prodRetirar" />
-                      <Label
-                        htmlFor="prodRetirar"
-                        className="text-sm font-normal"
-                      >
-                        A retirar
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <RadioGroupItem
-                        value="retiradosEntre"
-                        id="prodRetirados"
+              <div>
+                <Label className="text-xs font-medium text-gray-700">
+                  Produto:
+                </Label>
+                <div className="flex items-center mt-1">
+                  {!selectedProduct ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        className="h-8 text-xs w-full"
+                        value={produtoInput}
+                        onChange={(e) => setProdutoInput(e.target.value)}
+                        placeholder="Buscar produto..."
                       />
-                      <Label
-                        htmlFor="prodRetirados"
-                        className="text-sm font-normal"
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => {
+                          setSearchTerm(produtoInput);
+                          setShowProdutoSearch(true);
+                        }}
+                        title="Pesquisar produto"
+                        aria-label="Pesquisar produto"
                       >
-                        Retirados entre
-                      </Label>
+                        <Search className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </RadioGroup>
-
-                  <div className="flex items-center gap-2 ml-6">
-                    <Input
-                      type="date"
-                      value={dataInicial}
-                      onChange={(e) => setDataInicial(e.target.value)}
-                      disabled={tipoProduto !== "retiradosEntre"}
-                      className="h-8 text-sm w-36"
-                    />
-                    <span className="text-sm text-slate-600">e</span>
-                    <Input
-                      type="date"
-                      value={dataFinal}
-                      onChange={(e) => setDataFinal(e.target.value)}
-                      disabled={tipoProduto !== "retiradosEntre"}
-                      className="h-8 text-sm w-36"
-                    />
-                  </div>
+                  ) : (
+                    <div
+                      className="flex items-center justify-between p-3 rounded-lg w-full"
+                      style={{
+                        background: "#F0FDF4",
+                        border: "1px solid #BBF7D0",
+                      }}
+                    >
+                      <div>
+                        <p className="font-semibold text-sm text-green-700">
+                          {selectedProduct.name}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={clearProduct}
+                        className="text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-700 uppercase mb-2">
-                    Código da Venda
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={
-                        codigoVendaInput
-                          ? sales.find((s) => s.id === codigoVendaInput)
-                              ?.saleNumber || ""
-                          : ""
-                      }
-                      onChange={() => {}}
-                      placeholder={!codigoVendaInput ? "Todas" : ""}
-                      className={`h-8 text-sm flex-1 cursor-pointer ${!codigoVendaInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "venda" ? "ring-2 ring-blue-500" : ""}`}
-                      readOnly
-                      onClick={() => setActiveCaixa("venda")}
-                    />
-                  </div>
-
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-gray-700">
+                  Código da Venda
+                </Label>
+                <div className="flex items-center mt-1">
+                  <Input
+                    value={
+                      codigoVendaInput
+                        ? sales.find((s) => s.id === codigoVendaInput)
+                            ?.saleNumber || ""
+                        : ""
+                    }
+                    onChange={(e) => {
+                      setCodigoVendaInput(e.target.value);
+                    }}
+                    placeholder={!codigoVendaInput ? "Buscar venda..." : ""}
+                    className={`h-8 text-sm flex-1 cursor-pointer ${!codigoVendaInput ? "placeholder:text-red-500" : ""} ${activeCaixa === "venda" ? "ring-2 ring-blue-500" : ""}`}
+                  />
                   <Button
-                    className="h-10 w-full text-white mt-3"
-                    style={{ backgroundColor: "#e78b3a" }}
-                    onClick={applyFiltersAndShow}
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => {
+                      setSearchTerm(codigoVendaSearch);
+                      setShowVendaSearch(true);
+                    }}
+                    title="Pesquisar venda"
+                    aria-label="Pesquisar venda"
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    <Search className="w-4 h-4" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* GRID DE RESULTADOS */}
-          <Card className="bg-white border-slate-300">
-            <CardContent className="p-0">
-              <div className="max-h-[400px] overflow-auto">
-                {!showResults ? (
-                  <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
-                    <div className="text-center">
-                      <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>
-                        Configure os filtros e clique no botão{" "}
-                        <strong>→</strong> para exibir os resultados.
-                      </p>
-                    </div>
+        {/* LADO DIREITO - Produtos e Código da Venda */}
+        <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <Label className="w-full text-xs font-medium text-gray-700">
+                  Período da venda / retirada:
+                </Label>
+                <RadioGroup
+                  value={periodoTipo}
+                  onValueChange={setPeriodoTipo}
+                  className="flex flex-wrap items-center gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="aRetirar" id="prodRetirar" />
+                    <Label htmlFor="prodRetirar" className="text-xs">
+                      A retirar
+                    </Label>
                   </div>
-                ) : (
-                  <Table>
-                    <TableHeader className="bg-slate-100 sticky top-0">
-                      <TableRow>
-                        <TableHead className="text-xs w-24">Dt Venda</TableHead>
-                        <TableHead className="text-xs w-20">Venda</TableHead>
-                        <TableHead className="text-xs">
-                          Cliente / Pto. Venda
-                        </TableHead>
-                        <TableHead className="text-xs w-40">Produto</TableHead>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="retiradosEntre" id="prodRetirados" />
+                    <Label htmlFor="prodRetirados" className="text-xs">
+                      Retirados entre:
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={dataInicial}
+                    onChange={(e) => setDataInicial(e.target.value)}
+                    disabled={periodoTipo !== "retiradosEntre"}
+                    className="h-8 text-xs w-36"
+                  />
+                  <span className="text-xs text-slate-600">e</span>
+                  <Input
+                    type="date"
+                    value={dataFinal}
+                    onChange={(e) => setDataFinal(e.target.value)}
+                    disabled={periodoTipo !== "retiradosEntre"}
+                    className="h-8 text-xs w-36"
+                  />
+                </div>
+              </div>
+
+              <div></div>
+
+              <div>
+                <Button
+                  className="h-10 w-full text-white mt-3"
+                  style={{ backgroundColor: "#e78b3a" }}
+                  onClick={applyFiltersAndShow}
+                >
+                  <Search className="w-4 h-4" /> Pesquisar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* GRID DE RESULTADOS */}
+        <Card className="mb-4 bg-white border border-gray-200 shadow-sm">
+          <CardContent className="p-0">
+            <div className="max-h-[400px] overflow-auto">
+              {!showResults ? (
+                <div className="flex items-center justify-center h-48 text-slate-500 text-sm p-8">
+                  <div className="text-center">
+                    <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p>
+                      Configure os filtros e clique no botão <strong>🔎︎</strong>{" "}
+                      para exibir os resultados.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-xs font-semibold w-24">
+                        Dt Venda
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-20">
+                        Venda
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold">
+                        Cliente / Pto. Venda
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-40">
+                        Produto
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold w-20 text-center">
+                        Vend.
+                      </TableHead>
+                      {periodoTipo === "aRetirar" ? (
                         <TableHead className="text-xs w-20 text-center">
-                          Vend.
+                          A Ret.
                         </TableHead>
-                        {tipoProduto === "aRetirar" ? (
-                          <TableHead className="text-xs w-20 text-center">
-                            A Ret.
-                          </TableHead>
-                        ) : (
-                          <>
-                            <TableHead className="text-xs w-20 text-center">
-                              Ret.
-                            </TableHead>
-                            <TableHead className="text-xs w-24">
-                              Dat Ret.
-                            </TableHead>
-                            <TableHead className="text-xs w-20 text-center">
-                              Saldo
-                            </TableHead>
-                          </>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            Carregando...
-                          </TableCell>
-                        </TableRow>
-                      ) : displayedPickups.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="text-center py-8 text-slate-500"
-                          >
-                            Nenhum produto encontrado com os filtros
-                            selecionados.
-                          </TableCell>
-                        </TableRow>
                       ) : (
-                        displayedPickups.map((pickup) => (
-                          <TableRow
-                            key={pickup.id}
-                            className={`cursor-pointer hover:bg-slate-100 ${selectedPickup?.id === pickup.id ? "bg-blue-100" : ""}`}
-                            onClick={() => setSelectedPickup(pickup)}
-                            onDoubleClick={() => handleBaixar(pickup)}
-                          >
-                            <TableCell className="text-xs">
-                              {pickup.saleDate
-                                ? format(pickup.saleDate, "dd/MM/yyyy")
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="text-xs font-mono">
-                              {pickup.saleId?.slice(-6) || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {pickup.personName || "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              {pickup.productName || "-"}
-                            </TableCell>
+                        <>
+                          <TableHead className="text-xs w-20 text-center">
+                            Ret.
+                          </TableHead>
+                          <TableHead className="text-xs w-24">
+                            Dat Ret.
+                          </TableHead>
+                          <TableHead className="text-xs w-20 text-center">
+                            Saldo
+                          </TableHead>
+                        </>
+                      )}
+                      <TableHead className="text-xs w-20 text-center">
+                        Ações
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          Carregando...
+                        </TableCell>
+                      </TableRow>
+                    ) : displayedPickups.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="text-center py-8 text-slate-500"
+                        >
+                          Nenhum produto encontrado com os filtros selecionados.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      displayedPickups.map((pickup) => (
+                        <TableRow
+                          key={pickup.id}
+                          className={`cursor-pointer hover:bg-slate-100 ${selectedPickup?.id === pickup.id ? "bg-blue-100" : ""}`}
+                          onClick={() => setSelectedPickup(pickup)}
+                        >
+                          <TableCell className="text-xs">
+                            {pickup.saleDate
+                              ? format(pickup.saleDate, "dd/MM/yyyy")
+                              : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {pickup.saleId?.slice(-6) || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {pickup.personName || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {pickup.productName || "-"}
+                          </TableCell>
+                          <TableCell className="text-xs text-center">
+                            {pickup.pickupQuantity || 0}
+                          </TableCell>
+                          {periodoTipo === "aRetirar" ? (
                             <TableCell className="text-xs text-center">
-                              {pickup.pickupQuantity || 0}
+                              {(pickup.pickupQuantity || 0) -
+                                (pickup.collectedQuantity || 0)}
                             </TableCell>
-                            {tipoProduto === "aRetirar" ? (
+                          ) : (
+                            <>
+                              <TableCell className="text-xs text-center">
+                                {pickup.collectedQuantity || 0}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                {pickup.collectedDate
+                                  ? format(pickup.collectedDate, "dd/MM/yyyy")
+                                  : "-"}
+                              </TableCell>
                               <TableCell className="text-xs text-center">
                                 {(pickup.pickupQuantity || 0) -
                                   (pickup.collectedQuantity || 0)}
                               </TableCell>
-                            ) : (
-                              <>
-                                <TableCell className="text-xs text-center">
-                                  {pickup.collectedQuantity || 0}
-                                </TableCell>
-                                <TableCell className="text-xs">
-                                  {pickup.collectedDate
-                                    ? format(pickup.collectedDate, "dd/MM/yyyy")
-                                    : "-"}
-                                </TableCell>
-                                <TableCell className="text-xs text-center">
-                                  {(pickup.pickupQuantity || 0) -
-                                    (pickup.collectedQuantity || 0)}
-                                </TableCell>
-                              </>
+                            </>
+                          )}
+                          <TableCell className="text-right">
+                            {pickup.status !== "retirado_total" && (
+                              <Button
+                                size="sm"
+                                className="h7 text-xs gap-1 text-white"
+                                style={{ background: "#a78b3a" }}
+                                onClick={() => handleBaixar(pickup)}
+                                title="Registrar retirada"
+                              >
+                                <ArrowDown className="w-3 h-3" /> Baixar
+                              </Button>
                             )}
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* TOTAIS */}
-          {showResults && displayedPickups.length > 0 && (
-            <div className="flex justify-end">
-              <div className="bg-white border border-slate-300 rounded p-4 min-w-[150px]">
-                <p className="text-xs text-slate-600 mb-1">Totais...</p>
-                <div className="space-y-2">
+        {/* TOTAIS */}
+        {showResults && displayedPickups.length > 0 && (
+          <Card className="mb-4 bg-white border-gray-200 shadow-sm">
+            <CardContent className="p-4">
+              <div className="">
+                <Label className="w-full text-xs font-medium text-gray-700">
+                  Totais
+                </Label>
+                <div className="grid grid-cols-12">
                   <div>
                     <p className="text-xs text-slate-700">a Retirar</p>
-                    <p className="text-2xl font-bold text-slate-800">
+                    <p className="text-xl font-bold text-slate-800">
                       {totalARetirar}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-700">Retirados</p>
-                    <p className="text-2xl font-bold text-slate-800">
+                    <p className="text-xl font-bold text-slate-800">
                       {totalRetirados}
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* BARRA DE AÇÕES */}
-      <div className="bg-slate-200 border-t border-slate-300 p-2">
-        <div className="flex flex-wrap gap-1 items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleBaixar}
-            disabled={!selectedPickup}
-          >
-            <ArrowDown className="w-3 h-3" /> Baixar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1 text-red-600 hover:bg-red-50"
-            onClick={handleExcluir}
-            disabled={!selectedPickup}
-          >
-            <Trash2 className="w-3 h-3" /> Excluir
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handlePesquisar}
-          >
-            <Search className="w-3 h-3" /> Pesquisar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleCancelar}
-          >
-            <X className="w-3 h-3" /> Cancelar
-          </Button>
-          <Link to={createPageUrl("Dashboard")}>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
-              <LogOut className="w-3 h-3" /> Sair
+        {/* BARRA DE AÇÕES */}
+        <div
+          className="p-4 rounded-lg"
+          style={{ background: "#F9FAFB", border: "1px solid #E5E7EB" }}
+        >
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Button
+              variant="outline"
+              className="ms-auto me-0 gap-2"
+              onClick={handleImprimir}
+              disabled={!showResults || displayedPickups.length === 0}
+            >
+              <Printer className="w-3 h-3" /> Imprimir
             </Button>
-          </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={handleImprimir}
-            disabled={!showResults || displayedPickups.length === 0}
-          >
-            <Printer className="w-3 h-3" /> Imprimir
-          </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Modal Baixa */}
-      <Dialog open={showBaixaModal} onOpenChange={setShowBaixaModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-base">Dar baixa</DialogTitle>
-          </DialogHeader>
-          {selectedPickup && (
-            <div className="space-y-4 py-2">
-              <div>
-                <Label className="text-sm font-medium">Baixar do Setor:</Label>
-                <Select value={sectorBaixa} onValueChange={setSectorBaixa}>
-                  <SelectTrigger className="h-9 mt-1">
-                    <SelectValue placeholder="Selecione o setor..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectors.map((sector) => (
-                      <SelectItem key={sector.id} value={sector.id}>
-                        {sector.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+        {/* Modal Baixa */}
+        <Dialog open={showBaixaModal} onOpenChange={setShowBaixaModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base">Dar baixa</DialogTitle>
+            </DialogHeader>
+            {selectedPickup && (
+              <div className="space-y-4 py-2">
                 <div>
-                  <Label className="text-sm font-medium">Qtde. a Baixar:</Label>
+                  <Label className="text-sm font-medium">
+                    Baixar do Setor:
+                  </Label>
+                  <Select value={sectorBaixa} onValueChange={setSectorBaixa}>
+                    <SelectTrigger className="h-9 mt-1">
+                      <SelectValue placeholder="Selecione o setor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sectors.map((sector) => (
+                        <SelectItem key={sector.id} value={sector.id}>
+                          {sector.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">
+                      Qtde. a Baixar:
+                    </Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max={
+                        (selectedPickup.pickupQuantity || 0) -
+                        (selectedPickup.collectedQuantity || 0)
+                      }
+                      value={qtdeBaixar}
+                      onChange={(e) => setQtdeBaixar(e.target.value)}
+                      className="h-9 mt-1"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Retirado em:</Label>
+                    <Input
+                      type="date"
+                      value={dataBaixa}
+                      onChange={(e) => setDataBaixa(e.target.value)}
+                      className="h-9 mt-1"
+                      max={formatDateOnly(new Date(), "yyyy-MM-dd")}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">Nota Fiscal:</Label>
                   <Input
-                    type="number"
-                    min="1"
-                    max={
-                      (selectedPickup.pickupQuantity || 0) -
-                      (selectedPickup.collectedQuantity || 0)
-                    }
-                    value={qtdeBaixar}
-                    onChange={(e) => setQtdeBaixar(e.target.value)}
+                    type="text"
+                    value={notaFiscal}
+                    onChange={(e) => setNotaFiscal(e.target.value)}
                     className="h-9 mt-1"
-                    autoFocus
+                    placeholder="Número da nota fiscal (opcional)"
                   />
                 </div>
+
                 <div>
-                  <Label className="text-sm font-medium">Retirado em:</Label>
+                  <Label className="text-sm font-medium">Pedido:</Label>
                   <Input
-                    type="date"
-                    value={dataBaixa}
-                    onChange={(e) => setDataBaixa(e.target.value)}
+                    type="text"
+                    value={pedido}
+                    onChange={(e) => setPedido(e.target.value)}
                     className="h-9 mt-1"
-                    max={formatDateOnly(new Date(), "yyyy-MM-dd")}
+                    placeholder="Número do pedido (opcional)"
                   />
                 </div>
               </div>
-
-              <div>
-                <Label className="text-sm font-medium">Nota Fiscal:</Label>
-                <Input
-                  type="text"
-                  value={notaFiscal}
-                  onChange={(e) => setNotaFiscal(e.target.value)}
-                  className="h-9 mt-1"
-                  placeholder="Número da nota fiscal (opcional)"
-                />
+            )}
+            <DialogFooter className="bg-slate-50 -mx-6 -mb-6 px-6 py-3 mt-4 rounded-b-lg">
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  onClick={handleConfirmarBaixa}
+                  className="h-8 w-8 p-0 bg-[#6ac252] hover:bg-[#5cb143]"
+                  title="Confirmar"
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBaixaModal(false)}
+                  className="h-8 w-8 p-0 bg-[#e88d44] hover:bg-[#d97d34] border-[#e88d44] text-white"
+                  title="Cancelar"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-              <div>
-                <Label className="text-sm font-medium">Pedido:</Label>
-                <Input
-                  type="text"
-                  value={pedido}
-                  onChange={(e) => setPedido(e.target.value)}
-                  className="h-9 mt-1"
-                  placeholder="Número do pedido (opcional)"
-                />
+        {/* Modal Pesquisa Cliente/PDV */}
+        <Dialog open={showClienteSearch} onOpenChange={setShowClienteSearch}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Pesquisar Cliente / Pto. Venda</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Digite o nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9"
+                autoFocus
+              />
+              <div className="max-h-80 overflow-auto border rounded">
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-xs">Código</TableHead>
+                      <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs">Tipo</TableHead>
+                      <TableHead className="text-xs">Telefone</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPeople
+                      .filter((p) => {
+                        if (!searchTerm) return true;
+                        const term = searchTerm.toLowerCase();
+                        return (
+                          p.name?.toLowerCase().includes(term) ||
+                          p.document?.toLowerCase().includes(term)
+                        );
+                      })
+                      .map((p) => (
+                        <TableRow
+                          key={p.id}
+                          className="cursor-pointer hover:bg-blue-50"
+                          onDoubleClick={() => {
+                            setClienteInput(p.id);
+                            setShowClienteSearch(false);
+                            setSearchTerm("");
+                          }}
+                        >
+                          <TableCell className="text-xs font-mono">
+                            {p.personNumber || p.id?.slice(-6)}
+                          </TableCell>
+                          <TableCell className="text-xs">{p.name}</TableCell>
+                          <TableCell className="text-xs">
+                            {p.type === "cliente" ? "Cliente" : "Pto. Venda"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {p.phone?.[0] || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
               </div>
+              <p className="text-xs text-slate-500">
+                Dê duplo clique para selecionar
+              </p>
             </div>
-          )}
-          <DialogFooter className="bg-slate-50 -mx-6 -mb-6 px-6 py-3 mt-4 rounded-b-lg">
-            <div className="flex gap-2 ml-auto">
-              <Button
-                onClick={handleConfirmarBaixa}
-                className="h-8 w-8 p-0 bg-[#6ac252] hover:bg-[#5cb143]"
-                title="Confirmar"
-              >
-                <Check className="w-4 h-4" />
-              </Button>
+            <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setShowBaixaModal(false)}
-                className="h-8 w-8 p-0 bg-[#e88d44] hover:bg-[#d97d34] border-[#e88d44] text-white"
-                title="Cancelar"
+                onClick={() => setShowClienteSearch(false)}
               >
-                <X className="w-4 h-4" />
+                Fechar
               </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* Modal Pesquisa Cliente/PDV */}
-      <Dialog open={showClienteSearch} onOpenChange={setShowClienteSearch}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Pesquisar Cliente / Pto. Venda</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
-            <div className="max-h-80 overflow-auto border rounded">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Nome</TableHead>
-                    <TableHead className="text-xs">Tipo</TableHead>
-                    <TableHead className="text-xs">Telefone</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPeople
-                    .filter((p) => {
-                      if (!searchTerm) return true;
-                      const term = searchTerm.toLowerCase();
-                      return (
-                        p.name?.toLowerCase().includes(term) ||
-                        p.document?.toLowerCase().includes(term)
-                      );
-                    })
-                    .map((p) => (
-                      <TableRow
-                        key={p.id}
-                        className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => {
-                          setClienteInput(p.id);
-                          setShowClienteSearch(false);
-                          setSearchTerm("");
-                        }}
-                      >
-                        <TableCell className="text-xs font-mono">
-                          {p.personNumber || p.id?.slice(-6)}
-                        </TableCell>
-                        <TableCell className="text-xs">{p.name}</TableCell>
-                        <TableCell className="text-xs">
-                          {p.type === "cliente" ? "Cliente" : "Pto. Venda"}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {p.phone?.[0] || "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+        {/* Modal Confirmação de Impressão */}
+        <Dialog open={showPrintConfirm} onOpenChange={setShowPrintConfirm}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Imprimir Comprovante</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 text-center">
+              <p className="text-sm text-slate-600 mb-4">
+                Deseja imprimir o comprovante de retirada?
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowClienteSearch(false)}
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowPrintConfirm(false);
+                  setLastBaixaData(null);
+                  setSelectedPickup(null);
+                }}
+              >
+                Não
+              </Button>
+              <Button
+                onClick={handleImprimirComprovante}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Sim, Imprimir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* Modal Confirmação de Impressão */}
-      <Dialog open={showPrintConfirm} onOpenChange={setShowPrintConfirm}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Imprimir Comprovante</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 text-center">
-            <p className="text-sm text-slate-600 mb-4">
-              Deseja imprimir o comprovante de retirada?
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowPrintConfirm(false);
-                setLastBaixaData(null);
-                setSelectedPickup(null);
-              }}
-            >
-              Não
-            </Button>
-            <Button
-              onClick={handleImprimirComprovante}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Sim, Imprimir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Pesquisa Produto */}
-      <Dialog open={showProdutoSearch} onOpenChange={setShowProdutoSearch}>
-        <DialogContent className="max-w-xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Pesquisar Produto</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o nome do produto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
-            <div className="max-h-80 overflow-auto border rounded">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Nome</TableHead>
-                    <TableHead className="text-xs">Categoria</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products
-                    .filter((prod) => {
-                      if (!searchTerm) return true;
-                      const term = searchTerm.toLowerCase();
-                      return (
-                        prod.name?.toLowerCase().includes(term) ||
-                        prod.code?.toLowerCase().includes(term)
-                      );
-                    })
-                    .map((prod) => (
-                      <TableRow
-                        key={prod.id}
-                        className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => {
-                          setProdutoInput(prod.id);
-                          setShowProdutoSearch(false);
-                          setSearchTerm("");
-                        }}
-                      >
-                        <TableCell className="text-xs font-mono">
-                          {prod.code || prod.id?.slice(-6)}
-                        </TableCell>
-                        <TableCell className="text-xs">{prod.name}</TableCell>
-                        <TableCell className="text-xs">
-                          {prod.category || "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+        {/* Modal Pesquisa Produto */}
+        <Dialog open={showProdutoSearch} onOpenChange={setShowProdutoSearch}>
+          <DialogContent className="max-w-xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Pesquisar Produto</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Digite o nome do produto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9"
+                autoFocus
+              />
+              <div className="max-h-80 overflow-auto border rounded">
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-xs">Código</TableHead>
+                      <TableHead className="text-xs">Nome</TableHead>
+                      <TableHead className="text-xs">Categoria</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products
+                      .filter((prod) => {
+                        if (!searchTerm) return true;
+                        const term = searchTerm.toLowerCase();
+                        return (
+                          prod.name?.toLowerCase().includes(term) ||
+                          prod.code?.toLowerCase().includes(term)
+                        );
+                      })
+                      .map((prod) => (
+                        <TableRow
+                          key={prod.id}
+                          className="cursor-pointer hover:bg-blue-50"
+                          onDoubleClick={() => {
+                            setProdutoInput(prod.id);
+                            setShowProdutoSearch(false);
+                            setSearchTerm("");
+                          }}
+                        >
+                          <TableCell className="text-xs font-mono">
+                            {prod.code || prod.id?.slice(-6)}
+                          </TableCell>
+                          <TableCell className="text-xs">{prod.name}</TableCell>
+                          <TableCell className="text-xs">
+                            {prod.category || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <p className="text-xs text-slate-500">
+                Dê duplo clique para selecionar
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowProdutoSearch(false)}
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowProdutoSearch(false)}
+              >
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* Modal Pesquisa Venda */}
-      <Dialog open={showVendaSearch} onOpenChange={setShowVendaSearch}>
-        <DialogContent className="max-w-xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Pesquisar Código de Venda</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Digite o código da venda..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9"
-              autoFocus
-            />
-            <div className="max-h-80 overflow-auto border rounded">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow>
-                    <TableHead className="text-xs">Código</TableHead>
-                    <TableHead className="text-xs">Cliente</TableHead>
-                    <TableHead className="text-xs">Data</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sales
-                    .filter((s) => {
-                      if (!searchTerm) return true;
-                      const term = searchTerm.toLowerCase();
-                      return (
-                        s.saleNumber?.toLowerCase().includes(term) ||
-                        s.personName?.toLowerCase().includes(term)
-                      );
-                    })
-                    .slice(0, 50)
-                    .map((s) => (
-                      <TableRow
-                        key={s.id}
-                        className="cursor-pointer hover:bg-blue-50"
-                        onDoubleClick={() => {
-                          setCodigoVendaInput(s.id);
-                          setShowVendaSearch(false);
-                          setSearchTerm("");
-                        }}
-                      >
-                        <TableCell className="text-xs font-mono">
-                          {s.saleNumber}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {s.personName}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {s.saleDate ? format(s.saleDate, "dd/MM/yyyy") : "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+        {/* Modal Pesquisa Venda */}
+        <Dialog open={showVendaSearch} onOpenChange={setShowVendaSearch}>
+          <DialogContent className="max-w-xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Pesquisar Código de Venda</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Digite o código da venda..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9"
+                autoFocus
+              />
+              <div className="max-h-80 overflow-auto border rounded">
+                <Table>
+                  <TableHeader className="bg-slate-50 sticky top-0">
+                    <TableRow>
+                      <TableHead className="text-xs">Código</TableHead>
+                      <TableHead className="text-xs">Cliente</TableHead>
+                      <TableHead className="text-xs">Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sales
+                      .filter((s) => {
+                        if (!searchTerm) return true;
+                        const term = searchTerm.toLowerCase();
+                        return (
+                          s.saleNumber?.toLowerCase().includes(term) ||
+                          s.personName?.toLowerCase().includes(term)
+                        );
+                      })
+                      .slice(0, 50)
+                      .map((s) => (
+                        <TableRow
+                          key={s.id}
+                          className="cursor-pointer hover:bg-blue-50"
+                          onDoubleClick={() => {
+                            setCodigoVendaInput(s.id);
+                            setShowVendaSearch(false);
+                            setSearchTerm("");
+                          }}
+                        >
+                          <TableCell className="text-xs font-mono">
+                            {s.saleNumber}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {s.personName}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {s.saleDate
+                              ? format(s.saleDate, "dd/MM/yyyy")
+                              : "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <p className="text-xs text-slate-500">
+                Dê duplo clique para selecionar
+              </p>
             </div>
-            <p className="text-xs text-slate-500">
-              Dê duplo clique para selecionar
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowVendaSearch(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowVendaSearch(false)}
+              >
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

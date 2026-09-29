@@ -628,54 +628,59 @@ export default function VasilhameManagementPage() {
         <Card className="mb-4 bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4">
             {/* Período */}
-            <div className="flex flex-wrap items-end gap-4">
-              <Label className="w-full text-xs font-medium text-gray-700">
-                Período da venda / devolução:
-              </Label>
-              <RadioGroup
-                value={periodoTipo}
-                onValueChange={setPeriodoTipo}
-                className="flex flex-wrap items-center gap-4"
-              >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="aDevolver" id="periodoDevolver" />
-                  <label htmlFor="periodoDevolver" className="text-xs">
-                    A Devolver
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="devolvidos" id="periodoDevolvidos" />
-                  <label htmlFor="periodoDevolvidos" className="text-xs">
-                    Devolvidos entre:
-                  </label>
-                </div>
-              </RadioGroup>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <Label className="w-full text-xs font-medium text-gray-700">
+                  Período da venda / devolução:
+                </Label>
+                <RadioGroup
+                  value={periodoTipo}
+                  onValueChange={setPeriodoTipo}
+                  className="flex flex-wrap items-center gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="aDevolver" id="periodoDevolver" />
+                    <label htmlFor="periodoDevolver" className="text-xs">
+                      A Devolver
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="devolvidos" id="periodoDevolvidos" />
+                    <label htmlFor="periodoDevolvidos" className="text-xs">
+                      Devolvidos entre:
+                    </label>
+                  </div>
+                </RadioGroup>
 
-              <div className="flex items-center gap-2">
-                <Input
-                  type="date"
-                  value={dataInicial}
-                  onChange={(e) => setDataInicial(e.target.value)}
-                  disabled={periodoTipo !== "devolvidos"}
-                  className="h-8 text-xs w-36"
-                />
-                <span className="text-xs text-slate-600">a</span>
-                <Input
-                  type="date"
-                  value={dataFinal}
-                  onChange={(e) => setDataFinal(e.target.value)}
-                  disabled={periodoTipo !== "devolvidos"}
-                  className="h-8 text-xs w-36"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={dataInicial}
+                    onChange={(e) => setDataInicial(e.target.value)}
+                    disabled={periodoTipo !== "devolvidos"}
+                    className="h-8 text-xs w-36"
+                  />
+                  <span className="text-xs text-slate-600">a</span>
+                  <Input
+                    type="date"
+                    value={dataFinal}
+                    onChange={(e) => setDataFinal(e.target.value)}
+                    disabled={periodoTipo !== "devolvidos"}
+                    className="h-8 text-xs w-36"
+                  />
+                </div>
               </div>
-              <Button
-                className="text-white h-8 ms-auto me-0"
-                style={{ backgroundColor: "#e78b3a" }}
-                onClick={applyFiltersAndShow}
-              >
-                <Search className="w-4 h-4" />
-                Pesquisar
-              </Button>
+              <div></div>
+              <div>
+                <Button
+                  className="h-10 w-full text-white mt-3"
+                  style={{ backgroundColor: "#e78b3a" }}
+                  onClick={applyFiltersAndShow}
+                >
+                  <Search className="w-4 h-4" />
+                  Pesquisar
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -689,7 +694,7 @@ export default function VasilhameManagementPage() {
                   <div className="text-center">
                     <Search className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>
-                      Selecione os filtros e clique no botão <strong>➔</strong>{" "}
+                      Selecione os filtros e clique no botão <strong>🔎︎</strong>{" "}
                       para pesquisar
                     </p>
                   </div>
