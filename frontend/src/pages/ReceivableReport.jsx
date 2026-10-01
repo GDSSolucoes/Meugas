@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -11,68 +11,35 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   FileText,
   DollarSign,
   AlertTriangle,
   CheckCircle,
   Filter,
+  Search as SearchIcon,
 } from "lucide-react";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
-import { format, startOfDay, endOfDay, isBefore } from "date-fns";
-import { User } from "@/entities/User";
+import { format, isBefore } from "date-fns";
 import { formatDateOnly } from "@/utils";
 
 export default function ReceivableReportPage() {
-  const [allReceivables, setAllReceivables] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [displayedReceivables, setDisplayedReceivables] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [filters, setFilters] = useState({
     dueStartDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     dueEndDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     createdStartDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     createdEndDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   });
-
-  useEffect(() => {
-    loadReceivables();
-  }, []);
-
-  const filteredReceivables = useMemo(() => {
-    if (isLoading) return [];
-
-    const dueStart = startOfDay(new Date(filters.dueStartDate + "T00:00:00"));
-    const dueEnd = endOfDay(new Date(filters.dueEndDate + "T00:00:00"));
-    const createdStart = startOfDay(
-      new Date(filters.createdStartDate + "T00:00:00"),
-    );
-    const createdEnd = endOfDay(new Date(filters.createdEndDate + "T00:00:00"));
-
-    return allReceivables.filter((receivable) => {
-      const dueDate = receivable.dueDate;
-      const createdAt = receivable.createdAt;
-
-      const dueDateMatch = dueDate >= dueStart && dueDate <= dueEnd;
-      const createdAtMatch =
-        createdAt >= createdStart && createdAt <= createdEnd;
-
-      return dueDateMatch && createdAtMatch;
-    });
-  }, [allReceivables, filters, isLoading]);
-
-  const loadReceivables = async () => {
-    try {
-      const user = await User.me();
-      const data = await AccountsReceivable.filter(
-        { companyId: user.companyId },
-        { sort: "-createdAt" },
-      );
-      setAllReceivables(data);
-    } catch (error) {
-      console.error("Erro ao carregar contas a receber:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [totals, setTotals] = useState({
+    totalReceivable: 0,
+    totalPaid: 0,
+    totalPending: 0,
+    totalOverdue: 0,
+  });
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -86,30 +53,50 @@ export default function ReceivableReportPage() {
     const today = new Date();
     const dueDate = receivable.dueDate;
 
-    if (isBefore(dueDate, today)) {
+    if (isBefore(new Date(dueDate), today)) {
       return <Badge className="bg-red-100 text-red-800">Vencido</Badge>;
     }
 
     return <Badge className="bg-yellow-100 text-yellow-800">Pendente</Badge>;
   };
 
-  const totalReceivables = filteredReceivables.reduce(
-    (sum, r) => sum + (r.amount || 0),
-    0,
-  );
-  const totalPaid = filteredReceivables
-    .filter((r) => r.status === "pago")
-    .reduce((sum, r) => sum + (r.paidAmount || 0), 0);
-  const totalPending = filteredReceivables
-    .filter((r) => r.status === "pendente")
-    .reduce((sum, r) => sum + (r.amount || 0), 0);
-  const totalOverdue = filteredReceivables
-    .filter((r) => {
-      const today = new Date();
-      const dueDate = r.dueDate;
-      return r.status === "pendente" && isBefore(dueDate, today);
-    })
-    .reduce((sum, r) => sum + (r.amount || 0), 0);
+  const handleSearch = async () => {
+    setIsLoading(true);
+    try {
+      const result = await AccountsReceivable.searchWithTotals(
+        {
+          dueDate_gte: filters.dueStartDate,
+          dueDate_lte: filters.dueEndDate,
+          createdAt_gte: filters.createdStartDate,
+          createdAt_lte: filters.createdEndDate,
+        },
+        {
+          limit: 1000,
+          sort: "createdAt",
+          order: "desc",
+        },
+      );
+      setDisplayedReceivables(result.data);
+      setTotals({
+        totalReceivable: result.totalReceivable,
+        totalPaid: result.totalPaid,
+        totalPending: result.totalPending,
+        totalOverdue: result.totalOverdue,
+      });
+      setHasSearched(true);
+    } catch (error) {
+      console.error("Erro ao pesquisar contas a receber:", error);
+      setDisplayedReceivables([]);
+      setTotals({
+        totalReceivable: 0,
+        totalPaid: 0,
+        totalPending: 0,
+        totalOverdue: 0,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -174,16 +161,28 @@ export default function ReceivableReportPage() {
                       className="bg-white"
                     />
                   </div>
-                  <div>
-                    <Label>Data Final</Label>
-                    <Input
-                      type="date"
-                      value={filters.createdEndDate}
-                      onChange={(e) =>
-                        handleFilterChange("createdEndDate", e.target.value)
-                      }
-                      className="bg-white"
-                    />
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <Label>Data Final</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={filters.createdEndDate}
+                          onChange={(e) =>
+                            handleFilterChange("createdEndDate", e.target.value)
+                          }
+                          className="bg-white"
+                        />
+                        <Button
+                          onClick={handleSearch}
+                          disabled={isLoading}
+                          className="whitespace-nowrap"
+                        >
+                          <SearchIcon className="w-4 h-4 mr-2" />
+                          {isLoading ? "..." : "Pesquisar"}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -202,7 +201,7 @@ export default function ReceivableReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                R$ {totalReceivables.toFixed(2)}
+                R$ {totals.totalReceivable.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -214,7 +213,7 @@ export default function ReceivableReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                R$ {totalPaid.toFixed(2)}
+                R$ {totals.totalPaid.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -226,7 +225,7 @@ export default function ReceivableReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                R$ {totalPending.toFixed(2)}
+                R$ {totals.totalPending.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -238,7 +237,7 @@ export default function ReceivableReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">
-                R$ {totalOverdue.toFixed(2)}
+                R$ {totals.totalOverdue.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -251,6 +250,12 @@ export default function ReceivableReportPage() {
           <CardContent>
             {isLoading ? (
               <p>Carregando...</p>
+            ) : !hasSearched ? (
+              <p className="text-center py-8 text-slate-500">
+                Utilize os filtros acima e clique em{" "}
+                <strong>Pesquisar</strong> para visualizar o relatório de contas
+                a receber
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -266,17 +271,23 @@ export default function ReceivableReportPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredReceivables.length > 0 ? (
-                      filteredReceivables.map((receivable) => (
+                    {displayedReceivables.length > 0 ? (
+                      displayedReceivables.map((receivable) => (
                         <TableRow key={receivable.id}>
                           <TableCell className="font-medium">
                             {receivable.personName}
                           </TableCell>
                           <TableCell>
-                            {format(receivable.createdAt, "dd/MM/yyyy")}
+                            {format(
+                              new Date(receivable.createdAt),
+                              "dd/MM/yyyy",
+                            )}
                           </TableCell>
                           <TableCell>
-                            {format(receivable.dueDate, "dd/MM/yyyy")}
+                            {format(
+                              new Date(receivable.dueDate),
+                              "dd/MM/yyyy",
+                            )}
                           </TableCell>
                           <TableCell>
                             {receivable.installmentNumber}/1

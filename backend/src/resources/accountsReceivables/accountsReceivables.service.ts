@@ -119,6 +119,22 @@ export class AccountsReceivablesService extends BaseCrudService<
         }
         continue;
       }
+      if (key === "createdAt_gte") {
+        const column = (this.table as any)["createdAt"];
+        if (column) {
+          filterConditions.push(sql`${column} >= ${values[0]}`);
+        }
+        continue;
+      }
+      if (key === "createdAt_lte") {
+        const column = (this.table as any)["createdAt"];
+        if (column) {
+          filterConditions.push(
+            sql`${column} <= (${values[0]} || ' 23:59:59')::timestamp with time zone`,
+          );
+        }
+        continue;
+      }
 
       // Standard filters on accountsReceivables
       if (key.endsWith("_like")) {
@@ -206,12 +222,37 @@ export class AccountsReceivablesService extends BaseCrudService<
       .where(where);
     const total = await totalQuery;
 
+    // Aggregated totals for the report
+    const today = sql`CURRENT_DATE`;
+    const totalsQuery = db
+      .select({
+        totalReceivable:
+          sql<number>`COALESCE(SUM(${accountsReceivables.amount}), 0)`,
+        totalPaid:
+          sql<number>`COALESCE(SUM(CASE WHEN ${accountsReceivables.status} = ${AccountsReceivableStatusEnum.PAGO} THEN ${accountsReceivables.amount} ELSE 0 END), 0)`,
+        totalPending:
+          sql<number>`COALESCE(SUM(CASE WHEN ${accountsReceivables.status} = ${AccountsReceivableStatusEnum.PENDENTE} THEN ${accountsReceivables.amount} ELSE 0 END), 0)`,
+        totalOverdue:
+          sql<number>`COALESCE(SUM(CASE WHEN ${accountsReceivables.status} = ${AccountsReceivableStatusEnum.PENDENTE} AND ${accountsReceivables.dueDate} < ${today} THEN ${accountsReceivables.amount} ELSE 0 END), 0)`,
+      })
+      .from(accountsReceivables)
+      .leftJoin(sales, eq(accountsReceivables.saleId, sales.id))
+      .leftJoin(persons, eq(accountsReceivables.personId, persons.id))
+      .where(where);
+    const totalsResult = await totalsQuery;
+
+    const totalCount = total[0]?.count || 0;
+
     return {
       data: result,
-      total: total[0].count,
+      total: totalCount,
       page,
       limit,
-      totalPages: Math.ceil(total[0].count / limit),
+      totalPages: Math.ceil(totalCount / limit),
+      totalReceivable: Number(totalsResult[0]?.totalReceivable || 0),
+      totalPaid: Number(totalsResult[0]?.totalPaid || 0),
+      totalPending: Number(totalsResult[0]?.totalPending || 0),
+      totalOverdue: Number(totalsResult[0]?.totalOverdue || 0),
     };
   }
 
