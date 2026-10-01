@@ -38,6 +38,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
+import { formatDateOnly } from "@/utils";
 
 const FilterSection = ({ employees, filters, onFilterChange }) => (
   <Card className="mb-8 bg-white/80 backdrop-blur-sm">
