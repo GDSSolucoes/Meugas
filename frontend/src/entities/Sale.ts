@@ -2,6 +2,7 @@ import { api } from '@/api/apiClient';
 import { BaseEntity } from './BaseEntity';
 
 
+
 export enum SaleStatusEnum {
   CONCLUIDA = "concluida",
   CANCELADA = "cancelada",
@@ -138,5 +139,70 @@ export class Sale extends BaseEntity {
    */
   static async findById(id: string): Promise<Sale | null> {
     return super._findById.call(this, this.baseUrl, id) as Promise<Sale | null>;
+  }
+
+  /**
+   * Static method to search Sales with advanced filters and totals
+   *
+   * @param params Search parameters with filters, pagination, etc.
+   * @returns Promise<{ data: Sale[], total: number, page: number, limit: number, totalPages: number, totalRevenue: number, totalSalesCount: number, averageTicket: number }>
+   */
+  static async searchAdvanced(params: {
+    page?: number;
+    limit?: number;
+    personId?: string;
+    personTypes?: string[];
+    sectorId?: string;
+    startDate?: string;
+    endDate?: string;
+    sort?: string;
+    order?: "asc" | "desc";
+    q?: string;
+  }): Promise<{
+    data: Sale[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalRevenue: number;
+    totalSalesCount: number;
+    averageTicket: number;
+  }> {
+    try {
+      const endpoint = `${this.baseUrl}/search/advanced`;
+      const urlParams = new URLSearchParams();
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          if (Array.isArray(value)) {
+            value.forEach((item) => urlParams.append(key, String(item)));
+          } else {
+            urlParams.append(key, String(value));
+          }
+        }
+      });
+
+      const queryString = urlParams.toString();
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await api.get(url);
+      const result = response.data;
+
+      return {
+        data: result.data
+          ? result.data.map((item: any) => new this(item))
+          : [],
+        total: result.total || 0,
+        page: result.page || 1,
+        limit: result.limit || 100,
+        totalPages: result.totalPages || 0,
+        totalRevenue: Number(result.totalRevenue || 0),
+        totalSalesCount: Number(result.totalSalesCount || 0),
+        averageTicket: Number(result.averageTicket || 0),
+      };
+    } catch (error) {
+      console.error(`Erro ao pesquisar vendas:`, error);
+      throw error;
+    }
   }
 }

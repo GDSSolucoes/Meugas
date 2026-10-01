@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -10,61 +10,65 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt, DollarSign, TrendingUp, Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Receipt,
+  DollarSign,
+  TrendingUp,
+  Filter,
+  Search as SearchIcon,
+} from "lucide-react";
 import { Sale } from "@/entities/Sale";
-import { format, startOfDay, endOfDay } from "date-fns";
-import { User } from "@/entities/User";
+import { format } from "date-fns";
 import { formatDateOnly } from "@/utils";
 
 export default function SalesReportPage() {
-  const [allSales, setAllSales] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [displayedSales, setDisplayedSales] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [filters, setFilters] = useState({
     startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
   });
-
-  useEffect(() => {
-    loadSales();
-  }, []);
-
-  const filteredSales = useMemo(() => {
-    if (isLoading) return [];
-
-    const start = startOfDay(new Date(filters.startDate + "T00:00:00"));
-    const end = endOfDay(new Date(filters.endDate + "T00:00:00"));
-
-    return allSales.filter((sale) => {
-      const saleDate = sale.createdAt;
-      return saleDate >= start && saleDate <= end;
-    });
-  }, [allSales, filters, isLoading]);
-
-  const loadSales = async () => {
-    try {
-      const user = await User.me();
-      const data = await Sale.filter(
-        { companyId: user.companyId },
-        { sort: "-createdAt" },
-      );
-      setAllSales(data);
-    } catch (error) {
-      console.error("Erro ao carregar vendas:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [totals, setTotals] = useState({
+    totalRevenue: 0,
+    totalSalesCount: 0,
+    averageTicket: 0,
+  });
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const totalSales = filteredSales.reduce(
-    (sum, sale) => sum + (sale.totalAmount || 0),
-    0,
-  );
-  const averageTicket =
-    filteredSales.length > 0 ? totalSales / filteredSales.length : 0;
+  const handleSearch = async () => {
+    setIsLoading(true);
+    try {
+      const result = await Sale.searchAdvanced({
+        limit: 1000,
+        sort: "createdAt",
+        order: "desc",
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      });
+      setDisplayedSales(result.data);
+      setTotals({
+        totalRevenue: result.totalRevenue,
+        totalSalesCount: result.totalSalesCount,
+        averageTicket: result.averageTicket,
+      });
+      setHasSearched(true);
+    } catch (error) {
+      console.error("Erro ao pesquisar vendas:", error);
+      setDisplayedSales([]);
+      setTotals({
+        totalRevenue: 0,
+        totalSalesCount: 0,
+        averageTicket: 0,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -87,7 +91,7 @@ export default function SalesReportPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div>
                 <Label>Data Inicial</Label>
                 <Input
@@ -110,6 +114,16 @@ export default function SalesReportPage() {
                   className="bg-white"
                 />
               </div>
+              <div>
+                <Button
+                  onClick={handleSearch}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  <SearchIcon className="w-4 h-4 mr-2" />
+                  {isLoading ? "Pesquisando..." : "Pesquisar"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -124,7 +138,9 @@ export default function SalesReportPage() {
               <Receipt className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{filteredSales.length}</div>
+              <div className="text-2xl font-bold">
+                {totals.totalSalesCount}
+              </div>
             </CardContent>
           </Card>
 
@@ -137,7 +153,7 @@ export default function SalesReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                R$ {totalSales.toFixed(2)}
+                R$ {totals.totalRevenue.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -151,7 +167,7 @@ export default function SalesReportPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                R$ {averageTicket.toFixed(2)}
+                R$ {totals.averageTicket.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -164,6 +180,11 @@ export default function SalesReportPage() {
           <CardContent>
             {isLoading ? (
               <p>Carregando...</p>
+            ) : !hasSearched ? (
+              <p className="text-center py-8 text-slate-500">
+                Utilize os filtros acima e clique em <strong>Pesquisar</strong>{" "}
+                para visualizar o relatório de vendas
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -177,14 +198,14 @@ export default function SalesReportPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredSales.length > 0 ? (
-                      filteredSales.map((sale) => (
+                    {displayedSales.length > 0 ? (
+                      displayedSales.map((sale) => (
                         <TableRow key={sale.id}>
                           <TableCell className="font-medium">
                             {sale.saleNumber}
                           </TableCell>
                           <TableCell>
-                            {format(sale.createdAt, "dd/MM/yyyy HH:mm")}
+                            {format(new Date(sale.createdAt), "dd/MM/yyyy HH:mm")}
                           </TableCell>
                           <TableCell>{sale.personName}</TableCell>
                           <TableCell>{sale.items?.length || 0}</TableCell>

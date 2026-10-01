@@ -168,4 +168,107 @@ export class SalesController extends BaseCrudController<typeof sales> {
   async delete(@Param("id") id: string) {
     return super.delete(id);
   }
+
+  @Get("search/advanced")
+  @ApiOperation({
+    summary: `Pesquisa avançada de vendas com filtros e totais agregados`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: `Lista paginada de vendas com totais`,
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: "string",
+    description: "Número da página (default: 1)",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: "string",
+    description: "Itens por página (default: 100)",
+  })
+  @ApiQuery({
+    name: "personId",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "personTypes",
+    required: false,
+    type: "string",
+    isArray: true,
+    description: "Array de tipos de pessoa (cliente, ponto_venda)",
+  })
+  @ApiQuery({
+    name: "sectorId",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "startDate",
+    required: false,
+    type: "string",
+    description: "Data inicial (YYYY-MM-DD)",
+  })
+  @ApiQuery({
+    name: "endDate",
+    required: false,
+    type: "string",
+    description: "Data final (YYYY-MM-DD)",
+  })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "order",
+    required: false,
+    type: "string",
+    description: "asc ou desc",
+  })
+  @ApiQuery({
+    name: "q",
+    required: false,
+    type: "string",
+    description: "Termo de busca",
+  })
+  async search(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("personId") personId?: string,
+    @Query("personTypes") personTypes?: string | string[],
+    @Query("sectorId") sectorId?: string,
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+    @Query("sort") sort?: string,
+    @Query("order") order?: string,
+    @Query("q") q?: string,
+  ) {
+    const personTypesArray: string[] = [];
+    if (personTypes) {
+      if (Array.isArray(personTypes)) {
+        personTypesArray.push(...personTypes);
+      } else {
+        personTypesArray.push(
+          ...personTypes.split(",").map((t) => t.trim()),
+        );
+      }
+    }
+
+    return this.service.search({
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 100,
+      personId,
+      personTypes: personTypesArray.length > 0 ? personTypesArray : undefined,
+      sectorId,
+      startDate,
+      endDate,
+      sort,
+      order: order === "asc" ? "asc" : "desc",
+      q,
+    });
+  }
 }

@@ -24,10 +24,12 @@ import {
   productStockMovements,
   StockMovementTypeEnum,
   sectors,
+  persons,
+  SaleStatusEnum,
 } from "../../database/schemas";
 import { SalesCreateDto } from "./dto/sales.post.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
-import { eq, and, desc, sql, or } from "drizzle-orm";
+import { eq, and, desc, sql, or, asc, ilike } from "drizzle-orm";
 import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
 
 @Injectable()
@@ -690,5 +692,124 @@ export class SalesService extends BaseCrudService<typeof sales> {
     });
 
     return updatedSale;
+  }
+
+  async search(params: {
+    page?: number;
+    limit?: number;
+    sort?: string;
+    order?: "asc" | "desc";
+    personId?: string;
+    personTypes?: string[];
+    sectorId?: string;
+    startDate?: string;
+    endDate?: string;
+    q?: string;
+  }) {
+    const db = this.getDb();
+    const companyId = this.requestContext.getCompanyId();
+
+    if (!companyId) {
+      throw new Error(
+        "Não foi possível encontrar a empresa no contexto da solicitação",
+      );
+    }
+
+    const page = params.page || 1;
+    const limit = params.limit || 100;
+    const offset = (page - 1) * limit;
+    const orderDir = params.order === "asc" ? asc : desc;
+
+    const conditions: any[] = [eq(sales.active, true)];
+
+    if (params.personId) {
+      conditions.push(eq(sales.personId, params.personId));
+    }
+
+    if (params.sectorId) {
+      conditions.push(eq(sales.sectorId, params.sectorId));
+    }
+
+    if (params.personTypes && params.personTypes.length > 0) {
+      const typeConditions = params.personTypes.map((t) =>
+        eq(persons.type, t as any),
+      );
+      conditions.push(or(...typeConditions));
+    }
+
+    if (params.startDate) {
+      conditions.push(sql`${sales.saleDate} >= ${params.startDate}`);
+    }
+
+    if (params.endDate) {
+      conditions.push(sql`${sales.saleDate} <= ${params.endDate}`);
+    }
+
+    if (params.q) {
+      const searchTerm = `%${params.q}%`;
+      conditions.push(
+        or(
+          ilike(sales.personName, searchTerm),
+          ilike(sales.saleNumber, searchTerm),
+          ilike(sales.sectorName, searchTerm),
+        ),
+      );
+    }
+
+    const whereClause = and(...conditions);
+
+    let sortColumn: any = sales.createdAt;
+    if (params.sort) {
+      const col = (sales as any)[params.sort];
+      if (col) sortColumn = col;
+    }
+
+    const baseQuery = db
+      .select()
+      .from(sales)
+      .leftJoin(persons, eq(sales.personId, persons.id))
+      .where(whereClause);
+
+    const dataQuery = baseQuery
+      .orderBy(orderDir(sortColumn))
+      .limit(limit)
+      .offset(offset);
+
+    const countQuery = db
+      .select({ count: sql<number>`count(distinct ${sales.id})` })
+      .from(sales)
+      .leftJoin(persons, eq(sales.personId, persons.id))
+      .where(whereClause);
+
+    const [rows, countResult] = await Promise.all([dataQuery, countQuery]);
+
+    const data = rows.map((row: any) => row.sales);
+    const total = countResult[0]?.count || 0;
+
+    const totalsResult = await db
+      .select({
+        totalRevenue:
+          sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
+        totalSalesCount:
+          sql<number>`COUNT(DISTINCT ${sales.id})`,
+      })
+      .from(sales)
+      .leftJoin(persons, eq(sales.personId, persons.id))
+      .where(whereClause);
+
+    const totalRevenue = Number(totalsResult[0]?.totalRevenue || 0);
+    const totalSalesCount = Number(totalsResult[0]?.totalSalesCount || 0);
+    const averageTicket = totalSalesCount > 0 ? totalRevenue / totalSalesCount : 0;
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      totalRevenue,
+      totalSalesCount,
+      averageTicket,
+    };
   }
 }
