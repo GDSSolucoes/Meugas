@@ -133,4 +133,69 @@ export class ProductPickup extends BaseEntity {
       throw error;
     }
   }
+
+  /**
+   * Static method to search ProductPickup with advanced filters and totals
+   *
+   * @param params Search parameters with filters, pagination, etc.
+   * @returns Promise<{ data: ProductPickup[], total: number, page: number, limit: number, totalPages: number, totalARetirar: number, totalRetirados: number }>
+   */
+  static async searchAdvanced(params: {
+    page?: number;
+    limit?: number;
+    personId?: string;
+    personTypes?: string[];
+    productId?: string;
+    saleId?: string;
+    periodType?: "aRetirar" | "retiradosEntre";
+    startDate?: string;
+    endDate?: string;
+    sort?: string;
+    order?: "asc" | "desc";
+    q?: string;
+  }): Promise<{
+    data: ProductPickup[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalARetirar: number;
+    totalRetirados: number;
+  }> {
+    try {
+      const endpoint = `${this.baseUrl}/search/advanced`;
+      const urlParams = new URLSearchParams();
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          if (Array.isArray(value)) {
+            value.forEach((item) => urlParams.append(key, String(item)));
+          } else {
+            urlParams.append(key, String(value));
+          }
+        }
+      });
+
+      const queryString = urlParams.toString();
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await api.get(url);
+      const result = response.data;
+
+      return {
+        data: result.data
+          ? result.data.map((item: any) => new this(item))
+          : [],
+        total: result.total || 0,
+        page: result.page || 1,
+        limit: result.limit || 100,
+        totalPages: result.totalPages || 0,
+        totalARetirar: result.totalARetirar || 0,
+        totalRetirados: result.totalRetirados || 0,
+      };
+    } catch (error) {
+      console.error(`Erro ao pesquisar ${this.name}:`, error);
+      throw error;
+    }
+  }
 }

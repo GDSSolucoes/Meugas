@@ -153,4 +153,120 @@ export class ProductpickupsController extends BaseCrudController<
   ) {
     return this.service.darBaixa(id, data);
   }
+
+  @Get("search/advanced")
+  @ApiOperation({ summary: `Search Productpickups with advanced filters and totals` })
+  @ApiResponse({
+    status: 200,
+    description: `Filtered list of productPickups with totals`,
+  })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    type: "string",
+    description: "Page number (default: 1)",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: "string",
+    description: "Items per page (default: 100)",
+  })
+  @ApiQuery({
+    name: "personId",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "personTypes",
+    required: false,
+    type: "string",
+    isArray: true,
+    description: "Array of person types (cliente, pontoVenda)",
+  })
+  @ApiQuery({
+    name: "productId",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "saleId",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "periodType",
+    required: false,
+    type: "string",
+    description: "aRetirar or retiradosEntre",
+  })
+  @ApiQuery({
+    name: "startDate",
+    required: false,
+    type: "string",
+    description: "Start date for retiradosEntre (YYYY-MM-DD)",
+  })
+  @ApiQuery({
+    name: "endDate",
+    required: false,
+    type: "string",
+    description: "End date for retiradosEntre (YYYY-MM-DD)",
+  })
+  @ApiQuery({
+    name: "sort",
+    required: false,
+    type: "string",
+  })
+  @ApiQuery({
+    name: "order",
+    required: false,
+    type: "string",
+    description: "asc or desc",
+  })
+  @ApiQuery({
+    name: "q",
+    required: false,
+    type: "string",
+    description: "Search query",
+  })
+  async search(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+    @Query("personId") personId?: string,
+    @Query("personTypes") personTypes?: string | string[],
+    @Query("productId") productId?: string,
+    @Query("saleId") saleId?: string,
+    @Query("periodType") periodType?: "aRetirar" | "retiradosEntre",
+    @Query("startDate") startDate?: string,
+    @Query("endDate") endDate?: string,
+    @Query("sort") sort?: string,
+    @Query("order") order?: string,
+    @Query("q") q?: string,
+  ) {
+    const personTypesArray: string[] = [];
+    if (personTypes) {
+      if (Array.isArray(personTypes)) {
+        personTypesArray.push(...personTypes);
+      } else {
+        personTypesArray.push(
+          ...personTypes.split(",").map((t) => t.trim()),
+        );
+      }
+    }
+
+    return this.service.search({
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 100,
+      personId,
+      personTypes: personTypesArray.length > 0 ? personTypesArray : undefined,
+      productId,
+      saleId,
+      periodType,
+      startDate,
+      endDate,
+      sort,
+      order: order === "asc" ? "asc" : "desc",
+      q,
+    });
+  }
 }

@@ -23,11 +23,8 @@ import {
 import {
   Search,
   X,
-  LogOut,
   Printer,
   ArrowDown,
-  Trash2,
-  ArrowRight,
   Check,
 } from "lucide-react";
 import {
@@ -39,16 +36,14 @@ import {
 } from "@/components/ui/select";
 import * as entities from "@/entities";
 import { useToast } from "@/components/ui/use-toast";
-import { format, startOfDay, endOfDay } from "date-fns";
-import { Link } from "react-router-dom";
-import { createPageUrl, formatDateOnly } from "@/utils";
+import { format } from "date-fns";
+import { formatDateOnly } from "@/utils";
 import PersonSelector from "@/components/people/PersonSelector";
 
 export default function ProductPickupManagementPage() {
   const { toast } = useToast();
 
   // Data states
-  const [pickups, setPickups] = useState([]);
   const [displayedPickups, setDisplayedPickups] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [people, setPeople] = useState([]);
@@ -108,19 +103,14 @@ export default function ProductPickupManagementPage() {
       const user = await entities.User.me();
       setCurrentUser(user);
 
-      const [pickupsData, peopleData, productsData, salesData, sectorsData] =
+      const [peopleData, productsData, salesData, sectorsData] =
         await Promise.all([
-          entities.ProductPickup.filter(
-            { companyId: user.companyId },
-            { sort: "-saleDate" },
-          ),
           entities.Person.filter({ companyId: user.companyId }),
           entities.Product.filter({ companyId: user.companyId, active: true }),
           entities.Sale.filter({ companyId: user.companyId }),
           entities.Sector.filter({ companyId: user.companyId, active: true }),
         ]);
 
-      setPickups(pickupsData);
       setPeople(peopleData);
       setProducts(productsData);
       setSales(salesData);
@@ -141,80 +131,44 @@ export default function ProductPickupManagementPage() {
     loadData();
   }, [loadData]);
 
-  const applyFiltersAndShow = () => {
-    let filtered = [...pickups];
+  const applyFiltersAndShow = async () => {
+    setIsLoading(true);
+    try {
+      const personTypes = [];
+      if (!clienteInput) {
+        if (filtrarCliente) personTypes.push("cliente");
+        if (filtrarPontoVenda) personTypes.push("ponto_venda");
+      }
 
-    // Filtro por cliente específico ou por tipo
-    if (clienteInput) {
-      filtered = filtered.filter((p) => p.personId === clienteInput);
-    } else {
-      // Filtrar por tipo se não há cliente específico
-      filtered = filtered.filter((p) => {
-        const person = people.find((per) => per.id === p.personId);
-        if (!person) return false;
-
-        const isCliente = person.type === "cliente";
-        const isPontoVenda = person.type === "pontoVenda";
-
-        if (filtrarCliente && filtrarPontoVenda)
-          return isCliente || isPontoVenda;
-        if (filtrarCliente) return isCliente;
-        if (filtrarPontoVenda) return isPontoVenda;
-
-        return false;
+      const result = await entities.ProductPickup.searchAdvanced({
+        limit: 1000,
+        sort: "saleDate",
+        order: "desc",
+        ...(clienteInput && { personId: clienteInput }),
+        ...(!clienteInput && personTypes.length > 0 && { personTypes }),
+        ...(produtoInput && { productId: produtoInput }),
+        ...(codigoVendaInput && { saleId: codigoVendaInput }),
+        periodType: periodoTipo,
+        ...(periodoTipo === "retiradosEntre" && {
+          startDate: dataInicial,
+          endDate: dataFinal,
+        }),
       });
-    }
 
-    // Filtro por produto
-    if (produtoInput) {
-      filtered = filtered.filter((p) => p.productId === produtoInput);
-    }
-
-    // Filtro por status do produto
-    if (periodoTipo === "aRetirar") {
-      filtered = filtered.filter(
-        (p) =>
-          p.status === "pendente" ||
-          (p.status === "retirado_parcial" &&
-            (p.pickupQuantity || 0) > (p.collectedQuantity || 0)),
-      );
-    } else {
-      // Retirados entre datas - considera TODAS as retiradas (parciais e totais) com data
-      filtered = filtered.filter((p) => {
-        if (!p.collectedDate) return false;
-        if ((p.collectedQuantity || 0) === 0) return false;
-
-        const collectedDate = p.collectedDate;
-        const start = startOfDay(dataInicial);
-        const end = endOfDay(dataFinal);
-
-        return collectedDate >= start && collectedDate <= end;
+      setDisplayedPickups(result.data);
+      setTotalARetirar(result.totalARetirar);
+      setTotalRetirados(result.totalRetirados);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Erro ao pesquisar produtos a retirar:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível realizar a pesquisa.",
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-
-    // Filtro por código da venda
-    if (codigoVendaInput) {
-      filtered = filtered.filter((p) => p.saleId === codigoVendaInput);
-    }
-
-    // Calcular totais
-    const aRetirar = filtered
-      .filter((p) => p.status !== "retirado_total")
-      .reduce(
-        (sum, p) =>
-          sum + ((p.pickupQuantity || 0) - (p.collectedQuantity || 0)),
-        0,
-      );
-
-    const retirados = filtered
-      .filter((p) => p.status === "retirado_total")
-      .reduce((sum, p) => sum + (p.collectedQuantity || 0), 0);
-
-    setTotalARetirar(aRetirar);
-    setTotalRetirados(retirados);
-
-    setDisplayedPickups(filtered);
-    setShowResults(true);
   };
 
   const handlePesquisar = () => {
@@ -367,7 +321,7 @@ export default function ProductPickupManagementPage() {
 
       await loadData();
       if (showResults) {
-        setTimeout(() => applyFiltersAndShow(), 100);
+        await applyFiltersAndShow();
       }
     } catch (error) {
       console.error("Erro ao dar baixa:", error);
@@ -402,7 +356,7 @@ export default function ProductPickupManagementPage() {
       setSelectedPickup(null);
       await loadData();
       if (showResults) {
-        setTimeout(() => applyFiltersAndShow(), 100);
+        await applyFiltersAndShow();
       }
     } catch (error) {
       console.error("Erro ao excluir:", error);
@@ -616,7 +570,7 @@ export default function ProductPickupManagementPage() {
 
   const filteredPeople = people.filter((p) => {
     const isCliente = p.type === "cliente";
-    const isPontoVenda = p.type === "pontoVenda";
+    const isPontoVenda = p.type === "ponto_venda";
 
     if (filtrarCliente && filtrarPontoVenda) return isCliente || isPontoVenda;
     if (filtrarCliente) return isCliente;

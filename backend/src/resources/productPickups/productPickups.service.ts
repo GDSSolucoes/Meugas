@@ -7,11 +7,12 @@ import {
   productStockMovements,
   StockMovementTypeEnum,
   ProductPickupStatusEnum,
+  persons,
 } from "../../database/schemas";
 import { sectors } from "../../database/schemas";
 import { ProductpickupCreateDto } from "./dto/productpickup.post.dto";
 import { ProductpickupUpdateDto } from "./dto/productpickup.update.dto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or, sql, desc, asc, ilike } from "drizzle-orm";
 import { parseDateOnly } from "../../database/schemas/date-only";
 
 @Injectable()
@@ -306,5 +307,147 @@ export class ProductpickupsService extends BaseCrudService<
     }
 
     return super.update(id, updatedData);
+  }
+
+  async search(params: {
+    page?: number;
+    limit?: number;
+    sort?: string;
+    order?: "asc" | "desc";
+    personId?: string;
+    personTypes?: string[];
+    productId?: string;
+    saleId?: string;
+    periodType?: "aRetirar" | "retiradosEntre";
+    startDate?: string;
+    endDate?: string;
+    q?: string;
+  }) {
+    const db = this.getDb();
+    const companyId = this.requestContext.getCompanyId();
+
+    if (!companyId) {
+      throw new Error(
+        "Não foi possível encontrar a empresa no contexto da solicitação",
+      );
+    }
+
+    const page = params.page || 1;
+    const limit = params.limit || 100;
+    const offset = (page - 1) * limit;
+    const orderDir = params.order === "asc" ? asc : desc;
+
+    const conditions: any[] = [eq(productPickups.active, true)];
+
+    if (params.personId) {
+      conditions.push(eq(productPickups.personId, params.personId));
+    }
+
+    if (params.personTypes && params.personTypes.length > 0) {
+      const typeConditions = params.personTypes.map((t) =>
+        eq(persons.type, t as any),
+      );
+      conditions.push(or(...typeConditions));
+    }
+
+    if (params.productId) {
+      conditions.push(eq(productPickups.productId, params.productId));
+    }
+
+    if (params.saleId) {
+      conditions.push(eq(productPickups.saleId, params.saleId));
+    }
+
+    if (params.periodType === "aRetirar") {
+      conditions.push(
+        or(
+          eq(productPickups.status, ProductPickupStatusEnum.PENDENTE),
+          and(
+            eq(
+              productPickups.status,
+              ProductPickupStatusEnum.RETIRADO_PARCIAL,
+            ),
+            sql`${productPickups.pickupQuantity} > ${productPickups.collectedQuantity}`,
+          ),
+        ),
+      );
+    } else if (params.periodType === "retiradosEntre") {
+      conditions.push(
+        sql`${productPickups.collectedQuantity} > 0`,
+      );
+      if (params.startDate) {
+        conditions.push(
+          sql`${productPickups.collectedDate} >= ${params.startDate}`,
+        );
+      }
+      if (params.endDate) {
+        conditions.push(
+          sql`${productPickups.collectedDate} <= ${params.endDate}`,
+        );
+      }
+    }
+
+    if (params.q) {
+      const searchTerm = `%${params.q}%`;
+      conditions.push(
+        or(
+          ilike(productPickups.personName, searchTerm),
+          ilike(productPickups.productName, searchTerm),
+        ),
+      );
+    }
+
+    const whereClause = and(...conditions);
+
+    let sortColumn: any = productPickups.createdAt;
+    if (params.sort) {
+      const col = (productPickups as any)[params.sort];
+      if (col) sortColumn = col;
+    } else {
+      sortColumn = productPickups.saleDate;
+    }
+
+    const baseQuery = db
+      .select()
+      .from(productPickups)
+      .leftJoin(persons, eq(productPickups.personId, persons.id))
+      .where(whereClause);
+
+    const dataQuery = baseQuery
+      .orderBy(orderDir(sortColumn))
+      .limit(limit)
+      .offset(offset);
+
+    const countQuery = db
+      .select({ count: sql<number>`count(distinct ${productPickups.id})` })
+      .from(productPickups)
+      .leftJoin(persons, eq(productPickups.personId, persons.id))
+      .where(whereClause);
+
+    const [rows, countResult] = await Promise.all([dataQuery, countQuery]);
+
+    const data = rows.map((row: any) => row.productPickups);
+    const total = countResult[0]?.count || 0;
+
+    const totalsResult = await db
+      .select({
+        totalARetirar:
+          sql<number>`sum(CASE WHEN ${productPickups.status} <> ${ProductPickupStatusEnum.RETIRADO_TOTAL} THEN (${productPickups.pickupQuantity} - ${productPickups.collectedQuantity}) ELSE 0 END)`,
+        totalRetirados:
+          sql<number>`sum(CASE WHEN ${productPickups.status} = ${ProductPickupStatusEnum.RETIRADO_TOTAL} THEN ${productPickups.collectedQuantity} ELSE 0 END)`,
+      })
+      .from(productPickups)
+      .leftJoin(persons, eq(productPickups.personId, persons.id))
+      .where(whereClause);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      totalARetirar: totalsResult[0]?.totalARetirar || 0,
+      totalRetirados: totalsResult[0]?.totalRetirados || 0,
+    };
   }
 }
