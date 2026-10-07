@@ -254,7 +254,7 @@ export default function AccountsReceivableFullModal({
 
   const filteredPeople = people.filter((p) => {
     if (tipoSacado.cliente && p.type === "cliente") return true;
-    if (tipoSacado.pontoVenda && p.type === "pontoVenda") return true;
+    if (tipoSacado.pontoVenda && p.type === "ponto_venda") return true;
     if (tipoSacado.conveniada && p.type === "conveniada") return true;
     return false;
   });
@@ -1347,7 +1347,7 @@ export default function AccountsReceivableFullModal({
                             <Badge variant="outline" className="text-xs">
                               {p.type === "cliente"
                                 ? "Cliente"
-                                : p.type === "pontoVenda"
+                                : p.type === "ponto_venda"
                                   ? "Pto. Venda"
                                   : "Convênio"}
                             </Badge>

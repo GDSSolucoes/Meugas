@@ -677,7 +677,11 @@ export default function SalesPage({ onSaleComplete }) {
         ).catch(() => []),
       ]);
 
-      setPeople(allPeople.filter((p) => p.type === "cliente"));
+      setPeople(
+        allPeople.filter(
+          (p) => p.type === "cliente" || p.type === "ponto_venda",
+        ),
+      );
       setConveniadas(
         allPeople.filter((p) => p.type === "conveniada" && p.active),
       );

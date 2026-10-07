@@ -60,7 +60,7 @@ export default function PeopleReportPage() {
 
   const clientes = people.filter((p) => p.type === "cliente");
   const fornecedores = people.filter((p) => p.type === "fornecedor");
-  const pontosVenda = people.filter((p) => p.type === "pontoVenda");
+  const pontosVenda = people.filter((p) => p.type === "ponto_venda");
   const conveniadas = people.filter((p) => p.type === "conveniada");
 
   return (

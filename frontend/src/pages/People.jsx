@@ -172,7 +172,7 @@ export default function PeoplePage() {
   // Contadores por tipo
   const clientes = people.filter((p) => p.type === "cliente").length;
   const fornecedores = people.filter((p) => p.type === "fornecedor").length;
-  const pontosVenda = people.filter((p) => p.type === "pontoVenda").length;
+  const pontosVenda = people.filter((p) => p.type === "ponto_venda").length;
   const conveniadas = people.filter((p) => p.type === "conveniada").length;
 
   return (

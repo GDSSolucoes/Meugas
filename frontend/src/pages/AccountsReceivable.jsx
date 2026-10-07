@@ -360,7 +360,7 @@ export default function AccountsReceivablePage({ onComplete }) {
   // Filtra pessoas pelo tipo de sacado selecionado
   const filteredPeople = people.filter((p) => {
     if (tipoSacado.cliente && p.type === "cliente") return true;
-    if (tipoSacado.pontoVenda && p.type === "pontoVenda") return true;
+    if (tipoSacado.pontoVenda && p.type === "ponto_venda") return true;
     if (tipoSacado.conveniada && p.type === "conveniada") return true;
     return false;
   });
@@ -812,7 +812,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                     <div className="flex flex-wrap gap-3 mt-1 mb-2">
                       {[
                         ["cliente", "Cliente"],
-                        ["pontoVenda", "Pto. Venda"],
+                        ["ponto_venda", "Pto. Venda"],
                         ["conveniada", "Convênio"],
                       ].map(([type, label]) => (
                         <div className="flex items-center gap-1" key={type}>
@@ -1480,7 +1480,7 @@ export default function AccountsReceivablePage({ onComplete }) {
                             <Badge variant="outline" className="text-xs">
                               {p.type === "cliente"
                                 ? "Cliente"
-                                : p.type === "pontoVenda"
+                                : p.type === "ponto_venda"
                                   ? "Pto. Venda"
                                   : "Convênio"}
                             </Badge>

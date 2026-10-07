@@ -1749,7 +1749,7 @@ export default function CashMovementsPage({ onComplete }) {
                             </div>
                             <div className="flex items-center space-x-1">
                               <RadioGroupItem
-                                value="pontoVenda"
+                                value="ponto_venda"
                                 id="sacadoPdv"
                                 disabled={isFormDisabled}
                               />

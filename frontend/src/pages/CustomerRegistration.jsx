@@ -132,7 +132,7 @@ export default function CustomerRegistrationPage() {
       // Se veio com tipo pré-definido, setar o tipo
       if (
         typeParam &&
-        ["cliente", "fornecedor", "pontoVenda", "conveniada"].includes(
+        ["cliente", "fornecedor", "ponto_venda", "conveniada"].includes(
           typeParam,
         )
       ) {

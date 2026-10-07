@@ -106,7 +106,11 @@ export class ProductpickupsController extends BaseCrudController<
     description: `Productpickup updated`,
     type: ProductpickupUpdateDto,
   })
-  async update(@Param("id") id: string, @Body() data: ProductpickupUpdateDto, @CurrentUser() user: any) {
+  async update(
+    @Param("id") id: string,
+    @Body() data: ProductpickupUpdateDto,
+    @CurrentUser() user: any,
+  ) {
     return super.update(id, data, user);
   }
 
@@ -155,7 +159,9 @@ export class ProductpickupsController extends BaseCrudController<
   }
 
   @Get("search/advanced")
-  @ApiOperation({ summary: `Search Productpickups with advanced filters and totals` })
+  @ApiOperation({
+    summary: `Search Productpickups with advanced filters and totals`,
+  })
   @ApiResponse({
     status: 200,
     description: `Filtered list of productPickups with totals`,
@@ -182,7 +188,7 @@ export class ProductpickupsController extends BaseCrudController<
     required: false,
     type: "string",
     isArray: true,
-    description: "Array of person types (cliente, pontoVenda)",
+    description: "Array of person types (cliente, ponto_venda)",
   })
   @ApiQuery({
     name: "productId",
@@ -248,9 +254,7 @@ export class ProductpickupsController extends BaseCrudController<
       if (Array.isArray(personTypes)) {
         personTypesArray.push(...personTypes);
       } else {
-        personTypesArray.push(
-          ...personTypes.split(",").map((t) => t.trim()),
-        );
+        personTypesArray.push(...personTypes.split(",").map((t) => t.trim()));
       }
     }
 
