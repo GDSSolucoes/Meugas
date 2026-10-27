@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Phone,
-  MapPin,
-  User,
-  Package,
-  Calendar,
-  Truck,
-  Plus,
-  Minus,
-  Search,
-  CheckCircle,
-  XCircle,
-  FileText,
-  Edit,
-  Gift, // Add Gift icon for birthday
-} from "lucide-react";
+import { Plus, Minus, XCircle } from "lucide-react";
 import { Order } from "@/entities/Order";
 import { Person } from "@/entities/Person";
 import { Product } from "@/entities/Product";
@@ -26,15 +11,28 @@ import { User as UserEntity } from "@/entities/User";
 import { format, addDays } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { formatDateOnly } from "@/utils";
-
-const normalizeString = (str) => {
-  if (!str) return "";
-  return str
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-};
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ProductEntryPanel from "@/components/products/ProductEntryPanel";
+import ProductItemsTable from "@/components/products/ProductItemsTable";
+import PersonSelector from "@/components/people/PersonSelector";
 
 export default function OrdersPage() {
   const { toast } = useToast();
@@ -43,13 +41,6 @@ export default function OrdersPage() {
   const [employees, setEmployees] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [cashAccounts, setCashAccounts] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  const [searchPhone, setSearchPhone] = useState("");
-  const [searchAddress, setSearchAddress] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
   const [customerFound, setCustomerFound] = useState(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
@@ -60,13 +51,18 @@ export default function OrdersPage() {
 
   const [pedidoItems, setPedidoItems] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [productQuantity, setProductQuantity] = useState("1");
+  const [productPrice, setProductPrice] = useState("");
+  const [showClientSearch, setShowClientSearch] = useState(false);
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentDraft, setPaymentDraft] = useState({
+    paymentTypeId: "",
+    cashAccountId: "",
+  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Add new state to control search flow
-  const [mustSearchByAddress, setMustSearchByAddress] = useState(false);
-  const [phoneToAdd, setPhoneToAdd] = useState(""); // State to hold the new phone number
 
   const initialOrderState = {
     personId: "",
@@ -152,7 +148,7 @@ export default function OrdersPage() {
       }
     } else {
       const paymentType = paymentTypes.find(
-        (pt) => pt.id === currentOrder.paymentTypeId,
+        (pt) => pt.id === order.paymentTypeId,
       );
       if (paymentType && paymentType.type === "aPrazo") {
         await AccountsReceivable.create({
@@ -160,7 +156,7 @@ export default function OrdersPage() {
           personName: order.personName,
           saleId: order.id,
           installmentNumber: 1,
-          description: `Pedido ${order.orderNumber} - ${currentOrder.paymentTypeName}`,
+          description: `Pedido ${order.orderNumber} - ${order.paymentTypeName}`,
           dueDate: format(
             addDays(new Date(order.deliveryDate || new Date()), 0),
             "yyyy-MM-dd",
@@ -279,7 +275,6 @@ export default function OrdersPage() {
     setIsLoading(true);
     try {
       const user = await UserEntity.me();
-      setCurrentUser(user);
       const companyId = user.companyId;
 
       const [
@@ -358,231 +353,7 @@ export default function OrdersPage() {
       personName: person.name,
       personAddress: person.address || {},
     }));
-    // Reset search states
-    setSearchPhone("");
-    setSearchAddress("");
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setMustSearchByAddress(false);
-    setPhoneToAdd(""); // Clear any pending phone to add
-  };
-
-  const addPhoneToCustomer = async (person, newPhone) => {
-    try {
-      const currentPhones = Array.isArray(person.phone)
-        ? person.phone
-        : person.phone
-          ? [person.phone]
-          : [];
-      const updatedPhones = [...new Set([...currentPhones, newPhone])]; // Use Set to avoid duplicates and ensure array
-
-      await Person.update(person.id, { phone: updatedPhones });
-
-      toast({
-        title: "Sucesso",
-        description: `Telefone ${newPhone} adicionado a ${person.name}.`,
-      });
-
-      // Refresh local data to reflect the change
-      const user = await UserEntity.me(); // Need user to get companyId
-      const updatedPeople = await Person.filter({
-        companyId: user.companyId,
-        type: "cliente",
-      }); // Filter by type to get only clients
-      setPeople(updatedPeople);
-      const updatedPerson = updatedPeople.find((p) => p.id === person.id);
-
-      selectCustomer(updatedPerson || person); // Select the updated person, or original if update failed somehow
-    } catch (error) {
-      console.error("Erro ao adicionar telefone ao cliente:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o telefone.",
-        variant: "destructive",
-      });
-      selectCustomer(person); // Select the original person anyway if update failed
-    } finally {
-      setPhoneToAdd("");
-    }
-  };
-
-  const handleSearchCustomer = async () => {
-    if (!searchPhone.trim()) {
-      toast({
-        title: "Atenção",
-        description: "Digite um telefone para buscar.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const foundPerson = people.find((p) =>
-      p.phone?.includes(searchPhone.trim()),
-    );
-
-    if (foundPerson) {
-      selectCustomer(foundPerson);
-      setPhoneToAdd(""); // Clear any pending phone to add
-    } else {
-      // Phone not found - force address search first
-      setMustSearchByAddress(true);
-      setPhoneToAdd(searchPhone.trim()); // Store the phone that was not found
-      toast({
-        title: "Telefone não encontrado",
-        description:
-          "Por favor, tente buscar pelo endereço antes de cadastrar um novo cliente.",
-        variant: "default",
-      });
-    }
-  };
-
-  const handleSearchByAddress = () => {
-    const value = searchAddress.trim();
-    if (!value) {
-      toast({
-        title: "Atenção",
-        description: "Digite um endereço para buscar.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const cepValue = value.replace(/\D/g, "");
-    let filteredSuggestions = [];
-
-    if (cepValue.length === 8) {
-      filteredSuggestions = people.filter(
-        (p) => p.address?.zipcode === cepValue,
-      );
-    } else {
-      const normalizedQuery = normalizeString(value);
-      filteredSuggestions = people.filter((p) => {
-        if (!p.address) return false;
-        const street = normalizeString(p.address.street || "");
-        const number = normalizeString(p.address.number || "");
-        const neighborhood = normalizeString(p.address.neighborhood || "");
-        const addressString = `${street} ${number} ${neighborhood}`.trim();
-        return addressString.includes(normalizedQuery);
-      });
-    }
-
-    if (filteredSuggestions.length === 0) {
-      // No customer found by address either
-      if (mustSearchByAddress) {
-        // Only now allow creating new customer since both phone and address searches failed
-        const parts = value.split(/,?\s+/);
-        let street = "";
-        let number = "";
-
-        // Attempt to parse number from the end if it looks like a number
-        if (parts.length > 0) {
-          const lastPart = parts[parts.length - 1];
-          if (!isNaN(parseInt(lastPart)) && lastPart.length < 6) {
-            number = lastPart;
-            street = parts.slice(0, -1).join(" ");
-          } else {
-            street = parts.join(" ");
-          }
-        }
-
-        setCurrentCustomer((prev) => ({
-          ...initialCustomerState,
-          phone: [searchPhone.trim()], // Use the phone that was searched
-          address: {
-            ...initialCustomerState.address,
-            street: street.trim(),
-            number: number.trim(),
-          },
-        }));
-        setIsEditingCustomer(false);
-        setShowCustomerForm(true);
-        setSearchAddress(""); // Clear search field
-        setMustSearchByAddress(false); // Reset the flag
-      } else {
-        // First time searching by address, just show message
-        toast({
-          title: "Endereço não encontrado",
-          description:
-            "Nenhum cliente encontrado com este endereço. Tente outro endereço ou busque por telefone primeiro.",
-          variant: "default",
-        });
-      }
-    } else if (filteredSuggestions.length === 1) {
-      // Exactly one customer found, select them
-      handleSelectSuggestion(filteredSuggestions[0]);
-      setMustSearchByAddress(false); // Reset the flag
-    } else {
-      // Multiple customers found, show suggestions for user to pick
-      setSuggestions(filteredSuggestions);
-      setShowSuggestions(true);
-      setMustSearchByAddress(false); // Reset the flag since we found options
-    }
-  };
-
-  const handleAddressChange = (e) => {
-    const value = e.target.value.toUpperCase(); // Convert input value to uppercase
-    setSearchAddress(value);
-
-    if (!value || value.length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    try {
-      const cepValue = value.replace(/\D/g, "");
-      let filteredSuggestions = [];
-
-      if (cepValue.length === 8) {
-        filteredSuggestions = people.filter(
-          (p) => p.address?.zipcode === cepValue,
-        );
-      } else {
-        const normalizedQuery = normalizeString(value);
-        filteredSuggestions = people.filter((p) => {
-          if (!p.address) return false;
-
-          const street = normalizeString(p.address.street || "");
-          const number = normalizeString(p.address.number || "");
-          const neighborhood = normalizeString(p.address.neighborhood || "");
-
-          const addressString = `${street} ${number} ${neighborhood}`.trim();
-          return addressString.includes(normalizedQuery);
-        });
-      }
-
-      setSuggestions(filteredSuggestions.slice(0, 10));
-      setShowSuggestions(filteredSuggestions.length > 0);
-    } catch (error) {
-      console.error("Erro na busca por endereço:", error);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSelectSuggestion = (person) => {
-    // Ensure person.phone is an array for consistency
-    const personPhones = Array.isArray(person.phone)
-      ? person.phone
-      : person.phone
-        ? [person.phone]
-        : [];
-
-    if (phoneToAdd && !personPhones.includes(phoneToAdd)) {
-      if (
-        window.confirm(
-          `Deseja incluir o telefone ${phoneToAdd} ao cadastro de ${person.name}?`,
-        )
-      ) {
-        addPhoneToCustomer(person, phoneToAdd); // This function will call selectCustomer internally
-      } else {
-        selectCustomer(person); // Select without adding phone
-        setPhoneToAdd(""); // Clear phoneToAdd if user cancels
-      }
-    } else {
-      selectCustomer(person); // Normal selection
-      setPhoneToAdd(""); // Clear phoneToAdd as it's either not relevant or already processed
-    }
+    setClientSearchTerm("");
   };
 
   const handleEditCustomer = () => {
@@ -706,10 +477,6 @@ export default function OrdersPage() {
       personName: "",
       personAddress: {}, // Clear address when clearing customer
     }));
-    setSearchPhone("");
-    setSearchAddress("");
-    setMustSearchByAddress(false); // Reset the flag
-    setPhoneToAdd("");
   };
 
   const calcularTotal = () => {
@@ -719,66 +486,162 @@ export default function OrdersPage() {
     );
   };
 
-  const adicionarItem = (index) => {
-    const newItems = [...pedidoItems];
-    newItems[index].qtde += 1;
-    setPedidoItems(newItems);
+  const handleProductSelect = (product) => {
+    setSelectedProductId(product?.id || "");
+    setProductPrice(product?.unitPrice?.toString() || "");
   };
 
-  const removerItem = (index) => {
-    const newItems = [...pedidoItems];
-    if (newItems[index].qtde > 0) {
-      newItems[index].qtde -= 1;
-      setPedidoItems(newItems);
-    }
-  };
+  const orderProductColumns = [
+    {
+      key: "codigo",
+      header: "Código",
+    },
+    {
+      key: "produto",
+      header: "Descrição",
+    },
+    {
+      key: "qtde",
+      header: "Qtde",
+      render: (item, index) => (
+        <Input
+          type="number"
+          min="1"
+          step="1"
+          value={item.qtde}
+          onChange={(event) => {
+            const quantity = Math.max(1, Number(event.target.value) || 1);
+            setPedidoItems((previous) =>
+              previous.map((currentItem, itemIndex) =>
+                itemIndex === index
+                  ? { ...currentItem, qtde: quantity }
+                  : currentItem,
+              ),
+            );
+          }}
+          className="w-20"
+        />
+      ),
+    },
+    {
+      key: "preco",
+      header: "Preço Un.",
+      render: (item, index) => (
+        <Input
+          type="number"
+          min="0"
+          step="0.01"
+          value={item.preco}
+          onChange={(event) => {
+            const price = Math.max(0, Number(event.target.value) || 0);
+            setPedidoItems((previous) =>
+              previous.map((currentItem, itemIndex) =>
+                itemIndex === index
+                  ? { ...currentItem, preco: price }
+                  : currentItem,
+              ),
+            );
+          }}
+          className="w-24"
+        />
+      ),
+    },
+    {
+      key: "desconto",
+      header: "Desconto",
+      render: (item, index) => (
+        <Input
+          type="number"
+          min="0"
+          step="0.01"
+          value={item.desconto}
+          onChange={(event) => {
+            const discount = Math.max(0, Number(event.target.value) || 0);
+            setPedidoItems((previous) =>
+              previous.map((currentItem, itemIndex) =>
+                itemIndex === index
+                  ? { ...currentItem, desconto: discount }
+                  : currentItem,
+              ),
+            );
+          }}
+          className="w-24"
+        />
+      ),
+    },
+    {
+      key: "total",
+      header: "Valor Total",
+      render: (item) =>
+        `R$ ${(item.qtde * item.preco - item.desconto).toFixed(2)}`,
+    },
+  ];
 
-  const adicionarProduto = () => {
-    if (!selectedProductId) {
+  const handleAddProduct = () => {
+    const product = products.find((item) => item.id === selectedProductId);
+    const quantity = Number(productQuantity) || 0;
+    const price = Number(productPrice) || 0;
+
+    if (!product || quantity <= 0 || price < 0) {
       toast({
         title: "Atenção",
-        description: "Selecione um produto para adicionar.",
+        description: "Selecione um produto e informe uma quantidade válida.",
         variant: "destructive",
       });
       return;
     }
 
-    const product = products.find((p) => p.id === selectedProductId);
-    if (product) {
-      const itemExists = pedidoItems.find(
-        (item) => item.productId === product.id,
-      );
-      if (itemExists) {
-        toast({
-          title: "Atenção",
-          description: "Este produto já foi adicionado ao pedido.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setPedidoItems((prev) => [
-        ...prev,
-        {
-          productId: product.id,
-          codigo: product.code || product.id.substring(0, 6),
-          produto: product.name,
-          qtde: 1,
-          preco: product.unitPrice || 0,
-          desconto: 0,
-        },
-      ]);
-      setSelectedProductId("");
+    if (pedidoItems.some((item) => item.productId === product.id)) {
+      toast({
+        title: "Atenção",
+        description: "Este produto já foi adicionado ao pedido.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setPedidoItems((previous) => [
+      ...previous,
+      {
+        productId: product.id,
+        codigo: product.code || product.id.substring(0, 6),
+        produto: product.name,
+        qtde: quantity,
+        preco: price,
+        desconto: 0,
+      },
+    ]);
+    setSelectedProductId("");
+    setProductQuantity("1");
+    setProductPrice("");
   };
 
-  const handleSaveOrder = async () => {
+  const handleOpenPaymentModal = () => {
+    if (!validateOrder()) return;
+
+    setPaymentDraft((previous) => ({
+      paymentTypeId: currentOrder.paymentTypeId || previous.paymentTypeId,
+      cashAccountId: currentOrder.cashAccountId || previous.cashAccountId,
+    }));
+    setShowPaymentModal(true);
+  };
+
+  const handleSaveOrder = async (
+    paymentTypeId = currentOrder.paymentTypeId,
+    cashAccountId = currentOrder.cashAccountId,
+  ) => {
     if (!validateOrder()) return;
 
     setIsSaving(true);
     try {
       const user = await UserEntity.me();
       const orderTotal = calcularTotal();
+      const paymentType = paymentTypes.find(
+        (item) => item.id === paymentTypeId,
+      );
+      const cashAccount = cashAccounts.find(
+        (item) => item.id === cashAccountId,
+      );
 
       // Lógica para numeração sequencial
       const companyOrders = await Order.filter({ companyId: user.companyId });
@@ -796,8 +659,10 @@ export default function OrdersPage() {
         personAddress: customerFound?.address || {},
         employeeId: currentOrder.employeeId || "",
         employeeName: currentOrder.employeeName || "",
-        paymentTypeId: currentOrder.paymentTypeId || "",
-        paymentTypeName: currentOrder.paymentTypeName || "",
+        paymentTypeId: paymentTypeId || "",
+        paymentTypeName: paymentType?.name || "",
+        cashAccountId: cashAccountId || null,
+        cashAccountName: cashAccount?.name || "",
         status: "pendente", // Garantir que o status seja definido explicitamente
         deliveryDate: currentOrder.deliveryDate,
         notes: currentOrder.notes || "",
@@ -830,9 +695,8 @@ export default function OrdersPage() {
       setCurrentOrder(initialOrderState);
       setPedidoItems([]);
       setCustomerFound(null);
-      setSearchPhone("");
-      setSearchAddress("");
-      setPhoneToAdd("");
+      setShowPaymentModal(false);
+      setPaymentDraft({ paymentTypeId: "", cashAccountId: "" });
 
       toast({
         title: "Sucesso",
@@ -852,10 +716,7 @@ export default function OrdersPage() {
 
   if (isLoading) {
     return (
-      <div
-        className="h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#f2f1ed" }}
-      >
+      <div className="min-h-screen flex items-center justify-center bg-slate-100">
         <p className="text-xl font-bold" style={{ color: "#223f61" }}>
           Carregando dados...
         </p>
@@ -864,10 +725,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div
-      className="h-screen flex flex-col"
-      style={{ backgroundColor: "#f2f1ed" }}
-    >
+    <div className="min-h-screen bg-slate-100">
       {/* Customer Form Modal */}
       {showCustomerForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1359,731 +1217,412 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Main Content - Dense Layout */}
-      <div className="flex-1 p-2 grid grid-cols-12 gap-2 overflow-hidden">
-        {/* Customer Info - 4 columns */}
-        <div className="col-span-4 bg-white rounded-lg shadow-md p-3 space-y-3">
-          {/* Customer Search */}
-          {!customerFound ? (
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4" style={{ color: "#95b4df" }} />
-                <input
-                  type="text"
-                  placeholder="Digite o telefone do cliente..."
-                  value={searchPhone}
-                  onChange={(e) => setSearchPhone(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearchCustomer()}
-                  className="flex-1 p-2 border-2 rounded-lg text-sm"
-                  style={{ borderColor: "#95b4df" }}
-                  disabled={mustSearchByAddress}
-                />
-                <button
-                  onClick={handleSearchCustomer}
-                  disabled={mustSearchByAddress}
-                  className="px-3 py-2 rounded text-sm text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: "#95b4df" }}
+      <main className="max-w-[1400px] mx-auto w-full p-6">
+        <h1 className="text-3xl font-bold text-slate-800 mb-6">Pedidos</h1>
+        <div className="space-y-4">
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+              <div>
+                <Label>Canal de vendas</Label>
+                <Select
+                  value={currentOrder.canal || ""}
+                  onValueChange={(canal) =>
+                    setCurrentOrder((previous) => ({ ...previous, canal }))
+                  }
                 >
-                  <Search className="w-4 h-4" />
-                </button>
-              </div>
-
-              {mustSearchByAddress && (
-                <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-xs text-yellow-800 font-medium">
-                    Telefone não encontrado. Por favor, tente buscar pelo
-                    endereço antes de cadastrar um novo cliente.
-                  </p>
-                </div>
-              )}
-
-              <div className="text-center text-sm text-gray-400">- ou -</div>
-
-              <div className="relative">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4" style={{ color: "#95b4df" }} />
-                  <input
-                    type="text"
-                    placeholder="Endereço (Rua, Nº) ou CEP"
-                    value={searchAddress}
-                    onChange={handleAddressChange}
-                    onFocus={() => {
-                      if (suggestions.length > 0) setShowSuggestions(true);
-                    }}
-                    onBlur={() =>
-                      setTimeout(() => setShowSuggestions(false), 200)
-                    }
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && handleSearchByAddress()
-                    }
-                    className={`flex-1 p-2 border-2 rounded-lg text-sm ${mustSearchByAddress ? "border-yellow-400 bg-yellow-50" : ""}`}
-                    style={{
-                      borderColor: mustSearchByAddress ? "#fbbf24" : "#95b4df",
-                    }}
-                  />
-                  <button
-                    onClick={handleSearchByAddress}
-                    className="px-3 py-2 rounded text-sm text-white font-medium"
-                    style={{ backgroundColor: "#95b4df" }}
-                  >
-                    <Search className="w-4 h-4" />
-                  </button>
-                </div>
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg max-h-60 overflow-y-auto">
-                    <ul className="divide-y divide-gray-100">
-                      {suggestions.map((person) => (
-                        <li
-                          key={person.id}
-                          className="p-3 cursor-pointer hover:bg-slate-50"
-                          onMouseDown={() => handleSelectSuggestion(person)}
-                        >
-                          <p
-                            className="font-bold text-sm"
-                            style={{ color: "#223f61" }}
-                          >
-                            {person.name || "Nome não informado"}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {`${person.address?.street || ""} ${person.address?.number || ""} - ${person.address?.neighborhood || ""}`.trim() ||
-                              "Endereço não informado"}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Tel:{" "}
-                            {Array.isArray(person.phone)
-                              ? person.phone.join(", ")
-                              : person.phone || "N/A"}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div className="text-center pt-4" style={{ color: "#223f61" }}>
-                <User className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">
-                  Busque o cliente por telefone ou endereço
-                </p>
-                {mustSearchByAddress && (
-                  <p className="text-xs text-yellow-600 mt-1">
-                    Complete a busca por endereço para continuar
-                  </p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Customer Header */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4" style={{ color: "#95b4df" }} />
-                    <span
-                      className="font-bold text-base"
-                      style={{ color: "#223f61" }}
-                    >
-                      {Array.isArray(customerFound.phone)
-                        ? customerFound.phone[0]
-                        : customerFound.phone || "N/A"}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      Cód:{" "}
-                      {customerFound.personNumber ||
-                        customerFound.id.substring(0, 6)}
-                    </span>
-                  </div>
-                  <div className="flex space-x-1">
-                    <button
-                      onClick={handleEditCustomer}
-                      className="px-2 py-1 rounded text-xs text-white font-medium"
-                      style={{ backgroundColor: "#95b4df" }}
-                    >
-                      <Edit className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        window.open(
-                          `https://wa.me/55${(Array.isArray(customerFound.phone) ? customerFound.phone[0] : customerFound.phone)?.replace(/\D/g, "")}`,
-                        )
-                      }
-                      className="px-2 py-1 rounded text-xs text-white font-medium"
-                      style={{ backgroundColor: "#25D366" }}
-                    >
-                      WhatsApp
-                    </button>
-                    <button
-                      onClick={clearCustomer}
-                      className="px-2 py-1 rounded text-xs text-white font-medium"
-                      style={{ backgroundColor: "#dc3545" }}
-                    >
-                      <XCircle className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-
-                <h2 className="text-xl font-bold" style={{ color: "#223f61" }}>
-                  {customerFound.name.toUpperCase()}
-                </h2>
-              </div>
-
-              {/* Address Section */}
-              <div className="space-y-2">
-                <h3
-                  className="text-sm font-semibold flex items-center space-x-1"
-                  style={{ color: "#e78b3a" }}
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>Endereço</span>
-                </h3>
-                <div className="text-sm space-y-1" style={{ color: "#223f61" }}>
-                  <p>
-                    <strong>
-                      {customerFound.address?.street?.toUpperCase() ||
-                        "Rua não informada"}
-                      , {customerFound.address?.number || "S/N"}
-                    </strong>
-                  </p>
-                  {customerFound.address?.complement && (
-                    <p>{customerFound.address.complement}</p>
-                  )}
-                  <p>
-                    {customerFound.address?.neighborhood?.toUpperCase() ||
-                      "Bairro não informado"}{" "}
-                    -{" "}
-                    {customerFound.address?.city?.toUpperCase() ||
-                      "Cidade não informada"}
-                    /{customerFound.address?.state?.toUpperCase() || "UF"}
-                  </p>
-                  {customerFound.address?.referencePoint && (
-                    <p className="text-gray-600">
-                      Ref: {customerFound.address.referencePoint}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Customer Details Grid */}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <p className="text-gray-500">Documento:</p>
-                  <p className="font-medium" style={{ color: "#223f61" }}>
-                    {customerFound.document || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-gray-500">Aniversário:</p>
-                  <p
-                    className="font-medium flex items-center gap-1.5"
-                    style={{ color: "#223f61" }}
-                  >
-                    {customerFound.birthday ? (
-                      <>
-                        <Gift className="w-3.5 h-3.5 text-pink-500" />
-                        {format(customerFound.birthday, "dd/MM/yyyy")}
-                      </>
-                    ) : (
-                      "N/A"
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione o canal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["DISK GAS", "WhatsApp", "Presencial", "Online"].map(
+                      (canal) => (
+                        <SelectItem key={canal} value={canal}>
+                          {canal}
+                        </SelectItem>
+                      ),
                     )}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-gray-500">Status:</p>
-                  <p
-                    className="font-medium"
-                    style={{
-                      color: customerFound.active ? "#28a745" : "#dc3545",
-                    }}
-                  >
-                    {customerFound.active ? "Ativo" : "Inativo"}
-                  </p>
-                </div>
-                {customerFound.glpConsumptionDays && (
-                  <div className="space-y-1">
-                    <p className="text-gray-500">Consumo GLP:</p>
-                    <p className="font-medium" style={{ color: "#223f61" }}>
-                      {customerFound.glpConsumptionDays} dias
-                    </p>
-                  </div>
-                )}
-              </div>
-              {/* History Button */}
-              <div className="pt-3 border-t mt-3">
-                <button
-                  onClick={handleShowHistory}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg text-white font-medium hover:scale-105 transition-transform"
-                  style={{ backgroundColor: "#e78b3a" }}
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Histórico do Cliente</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Order Details - 5 columns */}
-        <div className="col-span-5 bg-white rounded-lg shadow-md p-3 flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <h3
-              className="text-base font-bold flex items-center space-x-2"
-              style={{ color: "#223f61" }}
-            >
-              <Package className="w-5 h-5" />
-              <span>Detalhes do Pedido</span>
-            </h3>
-
-            {/* Add Product */}
-            <div className="flex items-center space-x-2">
-              <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value)}
-                className="p-1 border-2 rounded text-sm"
-                style={{ borderColor: "#95b4df" }}
-              >
-                <option value="">Selecione um produto...</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} - R$ {product.unitPrice?.toFixed(2)}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={adicionarProduto}
-                className="px-2 py-1 rounded text-white font-medium"
-                style={{ backgroundColor: "#e78b3a" }}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Products Table */}
-          <div className="flex-1 overflow-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2" style={{ borderColor: "#95b4df" }}>
-                  <th
-                    className="text-left py-2 font-semibold"
-                    style={{ color: "#223f61" }}
-                  >
-                    Código
-                  </th>
-                  <th
-                    className="text-left py-2 font-semibold"
-                    style={{ color: "#223f61" }}
-                  >
-                    Produto
-                  </th>
-                  <th
-                    className="text-center py-2 font-semibold"
-                    style={{ color: "#223f61" }}
-                  >
-                    Qtde
-                  </th>
-                  <th
-                    className="text-right py-2 font-semibold"
-                    style={{ color: "#223f61" }}
-                  >
-                    Preço
-                  </th>
-                  <th
-                    className="text-right py-2 font-semibold"
-                    style={{ color: "#223f61" }}
-                  >
-                    Desc.
-                  </th>
-                  <th
-                    className="text-right py-2 font-semibold"
-                    style={{ color: "#223f61" }}
-                  >
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pedidoItems.map((item, index) => (
-                  <tr key={index} className="border-b border-gray-100">
-                    <td
-                      className="py-2 font-medium"
-                      style={{ color: "#223f61" }}
-                    >
-                      {item.codigo}
-                    </td>
-                    <td className="py-2" style={{ color: "#223f61" }}>
-                      {item.produto}
-                    </td>
-                    <td className="py-2">
-                      <div className="flex items-center justify-center space-x-1">
-                        <button
-                          onClick={() => removerItem(index)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white"
-                          style={{ backgroundColor: "#e78b3a" }}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span
-                          className="w-8 text-center font-medium"
-                          style={{ color: "#223f61" }}
-                        >
-                          {item.qtde}
-                        </span>
-                        <button
-                          onClick={() => adicionarItem(index)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white"
-                          style={{ backgroundColor: "#e78b3a" }}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-2 text-right">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.preco}
-                        onChange={(e) => {
-                          const newItems = [...pedidoItems];
-                          newItems[index].preco =
-                            parseFloat(e.target.value) || 0;
-                          setPedidoItems(newItems);
-                        }}
-                        className="w-20 p-1 border rounded text-xs text-right"
-                        style={{ borderColor: "#95b4df" }}
-                        min="0"
-                      />
-                    </td>
-                    <td className="py-2 text-right">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.desconto}
-                        onChange={(e) => {
-                          const newItems = [...pedidoItems];
-                          newItems[index].desconto =
-                            parseFloat(e.target.value) || 0;
-                          setPedidoItems(newItems);
-                        }}
-                        className="w-16 p-1 border rounded text-xs text-right"
-                        style={{ borderColor: "#95b4df" }}
-                      />
-                    </td>
-                    <td
-                      className="py-2 text-right font-medium"
-                      style={{ color: "#223f61" }}
-                    >
-                      R$ ${(item.qtde * item.preco - item.desconto).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-                {pedidoItems.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="py-8 text-center text-gray-500">
-                      Nenhum item adicionado ainda
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Order Notes */}
-          <div className="mt-3">
-            <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: "#223f61" }}
-            >
-              Observações do Pedido:
-            </label>
-            <textarea
-              placeholder="Digite observações sobre o pedido..."
-              value={currentOrder.notes}
-              onChange={(e) =>
-                setCurrentOrder((prev) => ({ ...prev, notes: e.target.value }))
-              }
-              className="w-full h-16 p-2 border-2 rounded-lg text-sm resize-none"
-              style={{ borderColor: "#95b4df" }}
-            />
-          </div>
-
-          {/* Totals */}
-          <div
-            className="mt-3 pt-3 border-t-2"
-            style={{ borderColor: "#95b4df" }}
-          >
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-gray-500">Subtotal</p>
-                <p className="text-lg font-bold" style={{ color: "#223f61" }}>
-                  R$ $
-                  {(
-                    calcularTotal() +
-                    pedidoItems.reduce(
-                      (total, item) => total + item.desconto,
-                      0,
-                    )
-                  ).toFixed(2)}
-                </p>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Descontos</p>
-                <p className="text-lg font-bold text-red-600">
-                  R${" "}
-                  {pedidoItems
-                    .reduce((total, item) => total + item.desconto, 0)
-                    .toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Itens:</p>
-                <p className="font-medium">
-                  {pedidoItems.reduce((total, item) => total + item.qtde, 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sales Channel - 3 columns */}
-        <div className="col-span-3 space-y-2 flex flex-col">
-          {/* Canal de Venda */}
-          <div className="bg-white rounded-lg shadow-md p-3">
-            <h3
-              className="text-base font-bold mb-3 flex items-center space-x-2"
-              style={{ color: "#223f61" }}
-            >
-              <FileText className="w-5 h-5" />
-              <span>Canal de Venda</span>
-            </h3>
-
-            <div className="space-y-3">
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: "#223f61" }}
-                >
-                  Canal:
-                </label>
-                <select
-                  value={currentOrder.canal}
-                  onChange={(e) =>
-                    setCurrentOrder((prev) => ({
-                      ...prev,
-                      canal: e.target.value,
+                <Label htmlFor="order-delivery-date">Data do pedido</Label>
+                <Input
+                  id="order-delivery-date"
+                  type="date"
+                  value={currentOrder.deliveryDate}
+                  onChange={(event) =>
+                    setCurrentOrder((previous) => ({
+                      ...previous,
+                      deliveryDate: event.target.value,
                     }))
                   }
-                  className="w-full p-2 border-2 rounded-lg text-sm"
-                  style={{ borderColor: "#95b4df" }}
-                >
-                  <option>DISK GAS</option>
-                  <option>WhatsApp</option>
-                  <option>Presencial</option>
-                  <option>Online</option>
-                </select>
+                  className="mt-1"
+                />
               </div>
-
               <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: "#223f61" }}
-                >
-                  Data do Pedido:
-                </label>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" style={{ color: "#95b4df" }} />
-                  <input
-                    type="date"
-                    value={currentOrder.deliveryDate}
-                    onChange={(e) =>
-                      setCurrentOrder((prev) => ({
-                        ...prev,
-                        deliveryDate: e.target.value,
-                      }))
-                    }
-                    className="flex-1 p-2 border-2 rounded-lg text-sm"
-                    style={{ borderColor: "#95b4df" }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: "#223f61" }}
-                >
-                  Pagamento:
-                </label>
-                <select
-                  value={currentOrder.paymentTypeId}
-                  onChange={(e) => {
-                    const paymentType = paymentTypes.find(
-                      (p) => p.id === e.target.value,
+                <Label>Entregador</Label>
+                <Select
+                  value={currentOrder.employeeId || ""}
+                  onValueChange={(employeeId) => {
+                    const employee = employees.find(
+                      (item) => item.id === employeeId,
                     );
-                    setCurrentOrder((prev) => ({
-                      ...prev,
-                      paymentTypeId: e.target.value,
-                      paymentTypeName: paymentType ? paymentType.name : "",
+                    setCurrentOrder((previous) => ({
+                      ...previous,
+                      employeeId,
+                      employeeName: employee?.name || "",
                     }));
                   }}
-                  className="w-full p-2 border-2 rounded-lg text-sm"
-                  style={{ borderColor: "#95b4df" }}
                 >
-                  <option value="">Selecione...</option>
-                  {paymentTypes.map((pt) => (
-                    <option key={pt.id} value={pt.id}>
-                      {pt.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione o entregador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <label className="flex items-center space-x-2">
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardContent className="space-y-4 p-4">
+              <h2 className="text-sm font-semibold text-slate-800">Produtos</h2>
+              <ProductEntryPanel
+                products={products}
+                variant="sale"
+                draft={{
+                  productId: selectedProductId,
+                  productName:
+                    products.find((item) => item.id === selectedProductId)
+                      ?.name || "",
+                  quantity: productQuantity,
+                  unitPrice: productPrice,
+                  discount: 0,
+                }}
+                onDraftChange={(field, value) => {
+                  if (field === "quantity") setProductQuantity(value);
+                  if (field === "unitPrice") setProductPrice(value);
+                }}
+                onProductSelect={handleProductSelect}
+                onAdd={handleAddProduct}
+              />
+              <ProductItemsTable
+                items={pedidoItems}
+                columns={orderProductColumns}
+                onRemove={(index) =>
+                  setPedidoItems((previous) =>
+                    previous.filter((_, itemIndex) => itemIndex !== index),
+                  )
+                }
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardContent className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 p-4">
+              <div>
+                <Label htmlFor="order-notes">Observações do pedido</Label>
+                <Textarea
+                  id="order-notes"
+                  value={currentOrder.notes}
+                  onChange={(event) =>
+                    setCurrentOrder((previous) => ({
+                      ...previous,
+                      notes: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="mt-1"
+                  placeholder="Digite observações sobre o pedido..."
+                />
+              </div>
+              <div className="flex flex-col justify-center gap-3 md:min-w-40">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
-                    checked={currentOrder.convenio}
-                    onChange={(e) =>
-                      setCurrentOrder((prev) => ({
-                        ...prev,
-                        convenio: e.target.checked,
+                    checked={Boolean(currentOrder.convenio)}
+                    onChange={(event) =>
+                      setCurrentOrder((previous) => ({
+                        ...previous,
+                        convenio: event.target.checked,
                       }))
                     }
                     className="rounded"
                     style={{ accentColor: "#e78b3a" }}
                   />
-                  <span style={{ color: "#223f61" }}>Convênio</span>
+                  Convênio
                 </label>
-                <label className="flex items-center space-x-2">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"
-                    checked={currentOrder.urgente}
-                    onChange={(e) =>
-                      setCurrentOrder((prev) => ({
-                        ...prev,
-                        urgente: e.target.checked,
+                    checked={Boolean(currentOrder.urgente)}
+                    onChange={(event) =>
+                      setCurrentOrder((previous) => ({
+                        ...previous,
+                        urgente: event.target.checked,
                       }))
                     }
                     className="rounded"
                     style={{ accentColor: "#e78b3a" }}
                   />
-                  <span style={{ color: "#223f61" }}>Urgente</span>
+                  Urgente
                 </label>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Entregador */}
-          <div className="bg-white rounded-lg shadow-md p-3">
-            <h3
-              className="text-base font-bold mb-3 flex items-center space-x-2"
-              style={{ color: "#223f61" }}
-            >
-              <Truck className="w-5 h-5" />
-              <span>Entregador</span>
-            </h3>
-            <select
-              value={currentOrder.employeeId}
-              onChange={(e) => {
-                const employee = employees.find(
-                  (emp) => emp.id === e.target.value,
-                );
-                setCurrentOrder((prev) => ({
-                  ...prev,
-                  employeeId: e.target.value,
-                  employeeName: employee ? employee.name : "",
-                }));
-              }}
-              className="w-full p-2 border-2 rounded-lg text-sm"
-              style={{ borderColor: "#95b4df" }}
-            >
-              <option value="">--- Selecionar Entregador ---</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                    Pedido para
+                  </h3>
 
-          {/* Financial Summary */}
-          <div
-            className="rounded-lg p-3 flex-1"
-            style={{ backgroundColor: "#e78b3a" }}
-          >
-            <div className="space-y-2 text-white text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span className="font-medium">
-                  R$ $
-                  {(
-                    calcularTotal() +
-                    pedidoItems.reduce(
+                  <PersonSelector
+                    options={people}
+                    selectedPerson={customerFound}
+                    open={showClientSearch}
+                    value={clientSearchTerm}
+                    title="Selecionar Cliente"
+                    inputPlaceholder="Buscar cliente..."
+                    searchPlaceholder="Digite para buscar..."
+                    onOpenChange={setShowClientSearch}
+                    onValueChange={setClientSearchTerm}
+                    onSelect={selectCustomer}
+                    onClear={clearCustomer}
+                    showRegistration
+                    registrationLabel=""
+                  />
+                </div>
+                {customerFound && (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEditCustomer}
+                    >
+                      Editar cliente
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleShowHistory}
+                    >
+                      Histórico
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  {
+                    label: "Valor Total",
+                    value:
+                      calcularTotal() +
+                      pedidoItems.reduce(
+                        (total, item) => total + item.desconto,
+                        0,
+                      ),
+                  },
+                  {
+                    label: "Vlr Desconto",
+                    value: pedidoItems.reduce(
                       (total, item) => total + item.desconto,
                       0,
-                    )
-                  ).toFixed(2)}
-                </span>
+                    ),
+                  },
+                  { label: "Total a Pagar", value: calcularTotal() },
+                  {
+                    label: "Total de Itens",
+                    value: pedidoItems.reduce(
+                      (total, item) => total + item.qtde,
+                      0,
+                    ),
+                    isCount: true,
+                  },
+                ].map((summary) => (
+                  <div
+                    key={summary.label}
+                    className={`text-center p-4 rounded-lg ${
+                      summary.label === "Total a Pagar"
+                        ? "bg-green-50 border border-green-200"
+                        : "bg-gray-50"
+                    }`}
+                  >
+                    <Label className="text-xs text-gray-600">
+                      {summary.label}
+                    </Label>
+                    <p className="text-lg font-semibold mt-1 text-slate-800">
+                      {summary.isCount
+                        ? summary.value
+                        : `R$ ${summary.value.toFixed(2)}`}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between">
-                <span>Descontos:</span>
-                <span className="font-medium">
-                  R${" "}
-                  {pedidoItems
-                    .reduce((total, item) => total + item.desconto, 0)
-                    .toFixed(2)}
-                </span>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <Button
+                  type="button"
+                  onClick={handleOpenPaymentModal}
+                  disabled={isSaving}
+                  className="text-white"
+                  style={{ background: "#e78b3a" }}
+                >
+                  {isSaving
+                    ? "Salvando..."
+                    : "Selecionar pagamento e finalizar"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSaving}
+                  onClick={() => window.location.reload()}
+                >
+                  Cancelar
+                </Button>
               </div>
-              <div className="flex justify-between">
-                <span>Itens:</span>
-                <span className="font-medium">
-                  {pedidoItems.reduce((total, item) => total + item.qtde, 0)}
-                </span>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Dialog
+          open={showPaymentModal}
+          onOpenChange={(open) => {
+            if (!isSaving) setShowPaymentModal(open);
+          }}
+        >
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-blue-900">
+                Finalizar Pedido
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-gray-700">
+                Cliente:{" "}
+                <span className="font-semibold">{customerFound?.name}</span>
+              </p>
+              <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                <p className="font-semibold text-green-700">
+                  Total do pedido:{" "}
+                  <span className="text-green-900">
+                    R$ {calcularTotal().toFixed(2)}
+                  </span>
+                </p>
               </div>
-              <div className="border-t border-orange-300 pt-2 mt-2">
-                <div className="flex justify-between font-bold text-base">
-                  <span>TOTAL A PAGAR:</span>
-                  <span>R$ {calcularTotal().toFixed(2)}</span>
+              <div>
+                <Label>Forma de pagamento</Label>
+                <Select
+                  value={paymentDraft.paymentTypeId}
+                  onValueChange={(paymentTypeId) => {
+                    const selectedType = paymentTypes.find(
+                      (type) => type.id === paymentTypeId,
+                    );
+                    const requiresCashAccount = [
+                      "dinheiro",
+                      "pix",
+                      "cartao_debito",
+                    ].includes(selectedType?.type);
+                    setPaymentDraft((previous) => ({
+                      ...previous,
+                      paymentTypeId,
+                      cashAccountId: requiresCashAccount
+                        ? previous.cashAccountId || cashAccounts[0]?.id || ""
+                        : "",
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione a forma de pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentTypes.map((paymentType) => (
+                      <SelectItem key={paymentType.id} value={paymentType.id}>
+                        {paymentType.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {["dinheiro", "pix", "cartao_debito"].includes(
+                paymentTypes.find(
+                  (type) => type.id === paymentDraft.paymentTypeId,
+                )?.type,
+              ) && (
+                <div>
+                  <Label>Conta / Caixa</Label>
+                  <Select
+                    value={paymentDraft.cashAccountId}
+                    onValueChange={(cashAccountId) =>
+                      setPaymentDraft((previous) => ({
+                        ...previous,
+                        cashAccountId,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione a conta de movimento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cashAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
+              )}
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-1">
-            <button
-              onClick={() => window.location.reload()}
-              className="w-1/2 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-white font-medium hover:scale-105 transition-transform"
-              style={{ backgroundColor: "#dc3545" }}
-              disabled={isSaving}
-            >
-              <XCircle className="w-5 h-5" />
-              <span>Cancelar</span>
-            </button>
-            <button
-              onClick={handleSaveOrder}
-              disabled={!customerFound || pedidoItems.length === 0 || isSaving}
-              className="w-1/2 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-white font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#28a745" }}
-            >
-              <CheckCircle className="w-5 h-5" />
-              <span>{isSaving ? "Salvando..." : "FINALIZAR"}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer Actions - Full Width */}
-      <div
-        className="bg-white border-t-2 p-3"
-        style={{ borderColor: "#95b4df" }}
-      >
-        <div className="flex justify-center">
-          <p className="text-sm text-gray-500">
-            Sistema MeuGás - Gestão de Pedidos
-          </p>
-        </div>
-      </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowPaymentModal(false)}
+                disabled={isSaving}
+              >
+                Voltar
+              </Button>
+              <Button
+                type="button"
+                onClick={() =>
+                  handleSaveOrder(
+                    paymentDraft.paymentTypeId,
+                    paymentDraft.cashAccountId,
+                  )
+                }
+                disabled={
+                  isSaving ||
+                  !paymentDraft.paymentTypeId ||
+                  (["dinheiro", "pix", "cartao_debito"].includes(
+                    paymentTypes.find(
+                      (type) => type.id === paymentDraft.paymentTypeId,
+                    )?.type,
+                  ) &&
+                    !paymentDraft.cashAccountId)
+                }
+                className="text-white"
+                style={{ background: "#e78b3a" }}
+              >
+                {isSaving ? "Salvando..." : "Confirmar pagamento"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </main>
     </div>
   );
 }

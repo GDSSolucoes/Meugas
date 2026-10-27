@@ -12,6 +12,7 @@ export * from "./financialGroup.schema";
 export * from "./financialSubgroup.schema";
 export * from "./fueling.schema";
 export * from "./order.schema";
+export * from "./orderItem.schema";
 export * from "./paymentType.schema";
 export * from "./person.schema";
 export * from "./product.schema";
