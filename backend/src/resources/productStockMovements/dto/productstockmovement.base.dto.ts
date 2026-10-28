@@ -36,6 +36,21 @@ export class ProductstockmovementBaseDto extends BaseCreateDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsUUID()
+  orderId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  ownerSectorId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  actorSectorId?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
   purchaseId?: string
 
   @ApiProperty({ required: false })

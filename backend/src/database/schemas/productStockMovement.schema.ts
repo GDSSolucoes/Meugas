@@ -17,6 +17,7 @@ import { purchases } from "./purchase.schema";
 import { stockTransfers } from "./stockTransfer.schema";
 import { productPickups } from "./productPickup.schema";
 import { vasilhameLoans } from "./vasilhameLoan.schema";
+import { orders } from "./order.schema";
 
 // Tipos de movimentação de estoque
 export enum StockMovementTypeEnum {
@@ -25,6 +26,7 @@ export enum StockMovementTypeEnum {
   Transfer = "transfer",
   Pickup = "pickup",
   Loan = "loan",
+  Order = "order",
 }
 
 export const StockMovementTypePGEnum = pgEnum(
@@ -62,6 +64,9 @@ export const productStockMovements = pgTable(
 
     // Relacionamento com a fonte da movimentação
     saleId: uuid("sale_id").references(() => sales.id, {
+      onDelete: "restrict",
+    }),
+    orderId: uuid("order_id").references(() => orders.id, {
       onDelete: "restrict",
     }),
     purchaseId: uuid("purchase_id").references(() => purchases.id, {
@@ -130,6 +135,7 @@ export const productStockMovements = pgTable(
       table.actorSectorId,
     ),
     index("productStockMovements_sale_id_index").on(table.saleId),
+    index("productStockMovements_order_id_index").on(table.orderId),
     index("productStockMovements_purchase_id_index").on(table.purchaseId),
     index("productStockMovements_movement_date_index").on(table.movementDate),
     index("productStockMovements_type_index").on(table.type),

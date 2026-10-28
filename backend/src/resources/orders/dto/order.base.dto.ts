@@ -47,6 +47,16 @@ export class OrderBaseDto extends BaseCreateDto {
   @IsString()
   employeeName!: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  sectorId!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  sectorName!: string;
+
   @ApiProperty()
   @IsOptional()
   @IsString()

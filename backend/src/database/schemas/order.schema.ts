@@ -17,6 +17,7 @@ import { persons } from "./person.schema";
 import { employees } from "./employee.schema";
 import { paymentTypes } from "./paymentType.schema";
 import { cashAccounts } from "./cashAccount.schema";
+import { sectors } from "./sector.schema";
 
 export type OrderPersonAddress = {
   street?: string;
@@ -62,6 +63,10 @@ export const orders = pgTable(
       onDelete: "restrict",
     }),
     employeeName: text("employee_name"),
+    sectorId: uuid("sector_id").references(() => sectors.id, {
+      onDelete: "restrict",
+    }),
+    sectorName: text("sector_name"),
     paymentTypeId: uuid("payment_type_id").references(() => paymentTypes.id, {
       onDelete: "restrict",
     }),

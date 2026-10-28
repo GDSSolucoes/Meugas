@@ -4,6 +4,7 @@ import { Order } from "@/entities/Order";
 import { Person } from "@/entities/Person";
 import { Product } from "@/entities/Product";
 import { Employee } from "@/entities/Employee";
+import { Sector } from "@/entities/Sector";
 import { PaymentType } from "@/entities/PaymentType";
 import { CashAccount } from "@/entities/CashAccount";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
@@ -39,6 +40,7 @@ export default function OrdersPage() {
   const [people, setPeople] = useState([]);
   const [products, setProducts] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [sectors, setSectors] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [cashAccounts, setCashAccounts] = useState([]);
   const [customerFound, setCustomerFound] = useState(null);
@@ -70,6 +72,8 @@ export default function OrdersPage() {
     personAddress: {}, // Add personAddress to initial state
     employeeId: "",
     employeeName: "",
+    sectorId: "",
+    sectorName: "",
     paymentTypeId: "",
     paymentTypeName: "",
     cashAccountId: "",
@@ -201,6 +205,14 @@ export default function OrdersPage() {
       });
       return false;
     }
+    if (!currentOrder.sectorId) {
+      toast({
+        title: "Atenção",
+        description: "Selecione o setor de estoque do pedido.",
+        variant: "destructive",
+      });
+      return false;
+    }
     return true;
   };
 
@@ -281,6 +293,7 @@ export default function OrdersPage() {
         allPeople,
         productsData,
         employeesData,
+        sectorsData,
         paymentTypesData,
         cashAccountsData,
       ] = await Promise.all([
@@ -290,6 +303,7 @@ export default function OrdersPage() {
           { companyId: companyId, position: "entregador", active: true },
           { sort: "name" },
         ),
+        Sector.filter({ companyId, active: true }),
         PaymentType.filter({ companyId: companyId, active: true }),
         CashAccount.filter({ companyId: companyId, active: true }),
       ]);
@@ -297,6 +311,7 @@ export default function OrdersPage() {
       setPeople(allPeople.filter((p) => p.type === "cliente"));
       setProducts(productsData);
       setEmployees(employeesData);
+      setSectors(sectorsData);
       setPaymentTypes(paymentTypesData);
       setCashAccounts(cashAccountsData);
     } catch (error) {
@@ -659,6 +674,8 @@ export default function OrdersPage() {
         personAddress: customerFound?.address || {},
         employeeId: currentOrder.employeeId || "",
         employeeName: currentOrder.employeeName || "",
+        sectorId: currentOrder.sectorId,
+        sectorName: currentOrder.sectorName,
         paymentTypeId: paymentTypeId || "",
         paymentTypeName: paymentType?.name || "",
         cashAccountId: cashAccountId || null,
@@ -1221,7 +1238,7 @@ export default function OrdersPage() {
         <h1 className="text-3xl font-bold text-slate-800 mb-6">Pedidos</h1>
         <div className="space-y-4">
           <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
               <div>
                 <Label>Canal de vendas</Label>
                 <Select
@@ -1241,6 +1258,34 @@ export default function OrdersPage() {
                         </SelectItem>
                       ),
                     )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Setor de estoque</Label>
+                <Select
+                  value={currentOrder.sectorId || ""}
+                  onValueChange={(sectorId) => {
+                    const sector = sectors.find((item) => item.id === sectorId);
+                    setCurrentOrder((previous) => ({
+                      ...previous,
+                      sectorId,
+                      sectorName: sector?.name || "",
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecione o setor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sectors.map((sector) => (
+                      <SelectItem key={sector.id} value={sector.id}>
+                        {sector.name}
+                        {!sector.isOwnStock && sector.masterSectorName
+                          ? ` (estoque: ${sector.masterSectorName})`
+                          : ""}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

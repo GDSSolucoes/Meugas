@@ -1,4 +1,5 @@
 import { BaseEntity } from './BaseEntity';
+import { api } from "@/api/apiClient";
 
 export enum OrdersStatusEnum {
   PENDENTE = 'pendente',
@@ -33,6 +34,8 @@ export class Order extends BaseEntity {
   personAddress?: OrderPersonAddress;
   employeeId?: string;
   employeeName?: string;
+  sectorId?: string;
+  sectorName?: string;
   paymentTypeId?: string;
   paymentTypeName?: string;
   cashAccountId?: string;
@@ -161,6 +164,16 @@ export class Order extends BaseEntity {
     return super._update.call(this, this.baseUrl, id, data) as Promise<Order>;
   }
 
+  static async finalize(id: string): Promise<Order> {
+    try {
+      const response = await api.post(`${this.baseUrl}/${id}/finalize`);
+      return new this(response.data);
+    } catch (error) {
+      console.error("Erro ao finalizar pedido:", error);
+      throw error;
+    }
+  }
+
   static async delete(id: string): Promise<void> {
     return super._delete.call(this, this.baseUrl, id) as Promise<void>;
   }
@@ -175,4 +188,3 @@ export class Order extends BaseEntity {
     });
   }
 }
-

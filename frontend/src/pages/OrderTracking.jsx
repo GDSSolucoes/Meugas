@@ -9,8 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Order } from "@/entities/Order";
-import { Product } from "@/entities/Product";
 import { Employee } from "@/entities/Employee";
+import { Sector } from "@/entities/Sector";
 import { PaymentType } from "@/entities/PaymentType";
 import { User } from "@/entities/User";
 import { Separator } from "@/components/ui/separator";
@@ -39,6 +39,11 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 import { formatDateOnly } from "@/utils";
+
+const getOrderCreatedAtDate = (createdAt) => {
+  const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 const FilterSection = ({ employees, filters, onFilterChange }) => (
   <Card className="mb-8 bg-white/80 backdrop-blur-sm">
@@ -114,9 +119,9 @@ export default function OrderTrackingPage() {
   const { toast } = useToast();
   const [allOrders, setAllOrders] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [sectors, setSectors] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
   const [filters, setFilters] = useState({
     startDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     endDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
@@ -128,24 +133,27 @@ export default function OrderTrackingPage() {
     setIsLoading(true);
     try {
       const user = await User.me();
-      setCurrentUser(user);
 
-      const [ordersData, allEmployees, allPaymentTypes] = await Promise.all([
+      const [ordersData, allEmployees, allSectors, allPaymentTypes] = await Promise.all([
         Order.filter({ companyId: user.companyId }, { sort: "-createdAt" }),
         Employee.filter(
           { companyId: user.companyId, position: "entregador", active: true },
           { sort: "name" },
         ),
+        Sector.filter({ companyId: user.companyId, active: true }),
         PaymentType.filter({ companyId: user.companyId, active: true }),
       ]);
 
       // Sort orders by created date (newest first)
-      const sortedOrders = ordersData.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      );
+      const sortedOrders = ordersData.sort((a, b) => {
+        const dateA = getOrderCreatedAtDate(a.createdAt);
+        const dateB = getOrderCreatedAtDate(b.createdAt);
+        return (dateB?.getTime() || 0) - (dateA?.getTime() || 0);
+      });
 
       setAllOrders(sortedOrders);
       setEmployees(allEmployees);
+      setSectors(allSectors);
       setPaymentTypes(allPaymentTypes);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -186,7 +194,9 @@ export default function OrderTrackingPage() {
       const filterEndDate = filters.endDate;
 
       filtered = filtered.filter((order) => {
-        const orderDateString = order.createdAt.split("T")[0];
+        const createdAt = getOrderCreatedAtDate(order.createdAt);
+        if (!createdAt) return false;
+        const orderDateString = format(createdAt, "yyyy-MM-dd");
         return (
           orderDateString >= filterStartDate && orderDateString <= filterEndDate
         );
@@ -296,7 +306,52 @@ export default function OrderTrackingPage() {
     }
   };
 
+  const handleAssignSector = async (orderId, sectorId) => {
+    const sector = sectors.find((item) => item.id === sectorId);
+    if (!sector) {
+      toast({
+        title: "Erro",
+        description: "Setor não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await Order.update(orderId, {
+        sectorId: sector.id,
+        sectorName: sector.name,
+      });
+      setAllOrders((previous) =>
+        previous.map((order) =>
+          order.id === orderId
+            ? { ...order, sectorId: sector.id, sectorName: sector.name }
+            : order,
+        ),
+      );
+      toast({
+        title: "Sucesso",
+        description: `Setor ${sector.name} associado ao pedido.`,
+      });
+    } catch (error) {
+      console.error("Erro ao atribuir setor ao pedido:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao atribuir setor ao pedido. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpdateStatus = async (order, newStatus) => {
+    if (newStatus === "em_atendimento" && !order.sectorId) {
+      toast({
+        title: "Atenção",
+        description: "Selecione um setor antes de enviar o pedido para entrega.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (newStatus === "em_atendimento" && !order.employeeId) {
       toast({
         title: "Atenção",
@@ -342,42 +397,22 @@ export default function OrderTrackingPage() {
   };
 
   const handleFinalizeOrder = async (order) => {
+    if (!order.sectorId) {
+      toast({
+        title: "Atenção",
+        description: "Selecione um setor de estoque antes de finalizar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const updateData = {
-        status: "finalizado",
-        finalizedAt: new Date(),
-      };
-      const updatedOrder = await Order.update(order.id, updateData);
+      const updatedOrder = await Order.finalize(order.id);
       setAllOrders((prev) =>
         prev.map((o) => (o.id === order.id ? updatedOrder : o)),
       );
 
-      const allProducts = await Product.filter({
-        companyId: currentUser.companyId,
-      });
-      for (const item of order.items) {
-        try {
-          const product = allProducts.find((p) => p.id === item.productId);
-          if (product) {
-            const newStock =
-              (product.stockQuantity || 0) - (item.quantity || 0);
-            await Product.update(product.id, {
-              stockQuantity: Math.max(0, newStock),
-            });
-          }
-        } catch (productError) {
-          console.error(
-            `Erro ao atualizar estoque para o produto ID ${item.productId}:`,
-            productError,
-          );
-          toast({
-            title: "Atenção",
-            description: `Falha ao atualizar estoque para o produto ${item.productName}.`,
-            variant: "warning",
-          });
-        }
-      }
       toast({
         title: "Sucesso",
         description: `Pedido ${order.orderNumber} finalizado com sucesso!`,
@@ -428,8 +463,10 @@ export default function OrderTrackingPage() {
     onCancel,
     onAssign,
     onAssignPayment,
+    onAssignSector,
     employeeList,
     paymentTypeList,
+    sectorList,
     isLoading,
   }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -527,9 +564,13 @@ export default function OrderTrackingPage() {
               <div className="space-y-1 mt-2">
                 <p className="text-xs text-slate-500 pt-1">
                   Data:{" "}
-                  {format(order.createdAt, "dd/MM/yyyy HH:mm", {
-                    locale: ptBR,
-                  })}{" "}
+                  {getOrderCreatedAtDate(order.createdAt)
+                    ? format(
+                        getOrderCreatedAtDate(order.createdAt),
+                        "dd/MM/yyyy HH:mm",
+                        { locale: ptBR },
+                      )
+                    : "Data não informada"}{" "}
                   por {order.createdByName || "Sistema"}
                 </p>
                 {order.attendedAt && (
@@ -588,6 +629,40 @@ export default function OrderTrackingPage() {
               </div>
 
               <div className="space-y-2 mt-3 border-t pt-2">
+                {isOrderActionable ? (
+                  <div>
+                    <Label className="text-xs font-medium text-slate-700">
+                      Setor de estoque *
+                    </Label>
+                    <Select
+                      onValueChange={(sectorId) =>
+                        onAssignSector(order.id, sectorId)
+                      }
+                      value={order.sectorId || ""}
+                      disabled={!isOrderActionable}
+                    >
+                      <SelectTrigger className="w-full mt-1 bg-white text-xs h-8">
+                        <SelectValue placeholder="Selecione o setor..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sectorList.map((sector) => (
+                          <SelectItem
+                            key={sector.id}
+                            value={sector.id}
+                            className="text-xs"
+                          >
+                            {sector.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">
+                    Setor: {order.sectorName || "Não definido"}
+                  </p>
+                )}
+
                 {isOrderActionable ? (
                   <div>
                     <Label className="text-xs font-medium text-slate-700">
@@ -735,9 +810,11 @@ export default function OrderTrackingPage() {
     onCancel,
     onAssign,
     onAssignPayment,
+    onAssignSector,
     employeeList,
     paymentTypeList,
     isLoading,
+    sectorList,
   }) => (
     <div>
       <div
@@ -761,8 +838,10 @@ export default function OrderTrackingPage() {
                 onCancel={onCancel}
                 onAssign={onAssign}
                 onAssignPayment={onAssignPayment}
+                onAssignSector={onAssignSector}
                 employeeList={employeeList}
-                paymentTypeList={paymentTypes}
+                paymentTypeList={paymentTypeList}
+                sectorList={sectorList}
                 isLoading={isLoading}
               />
             ))
@@ -814,8 +893,10 @@ export default function OrderTrackingPage() {
             onCancel={handleCancelOrder}
             onAssign={handleAssignEmployee}
             onAssignPayment={handleAssignPaymentType}
+            onAssignSector={handleAssignSector}
             employeeList={employees}
             paymentTypeList={paymentTypes}
+            sectorList={sectors}
             isLoading={isLoading}
           />
           <OrderColumn
@@ -828,8 +909,10 @@ export default function OrderTrackingPage() {
             onCancel={handleCancelOrder}
             onAssign={handleAssignEmployee}
             onAssignPayment={handleAssignPaymentType}
+            onAssignSector={handleAssignSector}
             employeeList={employees}
             paymentTypeList={paymentTypes}
+            sectorList={sectors}
             isLoading={isLoading}
           />
           <OrderColumn
@@ -842,8 +925,10 @@ export default function OrderTrackingPage() {
             onCancel={handleCancelOrder}
             onAssign={handleAssignEmployee}
             onAssignPayment={handleAssignPaymentType}
+            onAssignSector={handleAssignSector}
             employeeList={employees}
             paymentTypeList={paymentTypes}
+            sectorList={sectors}
             isLoading={isLoading}
           />
         </div>

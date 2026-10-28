@@ -96,6 +96,13 @@ export class OrdersController extends BaseCrudController<typeof orders> {
     return super.list(page, limit, search, sort, order, allFilters);
   }
 
+  @Post(":id/finalize")
+  @ApiOperation({ summary: "Finalize an order and deduct its products from stock" })
+  @ApiResponse({ status: 200, description: "Order finalized" })
+  async finalize(@Param("id") id: string) {
+    return this.service.finalize(id);
+  }
+
   @Put(":id")
   @ApiBody({ type: OrderUpdateDto })
   @ApiOperation({ summary: `Update Order` })
