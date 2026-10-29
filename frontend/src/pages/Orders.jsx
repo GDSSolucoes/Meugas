@@ -4,9 +4,7 @@ import { Order } from "@/entities/Order";
 import { Person } from "@/entities/Person";
 import { Product } from "@/entities/Product";
 import { Employee } from "@/entities/Employee";
-import { Sector } from "@/entities/Sector";
 import { PaymentType } from "@/entities/PaymentType";
-import { CashAccount } from "@/entities/CashAccount";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { User as UserEntity } from "@/entities/User";
 import { format, addDays } from "date-fns";
@@ -24,13 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import ProductEntryPanel from "@/components/products/ProductEntryPanel";
 import ProductItemsTable from "@/components/products/ProductItemsTable";
 import PersonSelector from "@/components/people/PersonSelector";
@@ -40,9 +31,7 @@ export default function OrdersPage() {
   const [people, setPeople] = useState([]);
   const [products, setProducts] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [sectors, setSectors] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
-  const [cashAccounts, setCashAccounts] = useState([]);
   const [customerFound, setCustomerFound] = useState(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
@@ -57,11 +46,6 @@ export default function OrdersPage() {
   const [productPrice, setProductPrice] = useState("");
   const [showClientSearch, setShowClientSearch] = useState(false);
   const [clientSearchTerm, setClientSearchTerm] = useState("");
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentDraft, setPaymentDraft] = useState({
-    paymentTypeId: "",
-    cashAccountId: "",
-  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -72,12 +56,8 @@ export default function OrdersPage() {
     personAddress: {}, // Add personAddress to initial state
     employeeId: "",
     employeeName: "",
-    sectorId: "",
-    sectorName: "",
     paymentTypeId: "",
     paymentTypeName: "",
-    cashAccountId: "",
-    cashAccountName: "",
     status: "pendente",
     deliveryDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
     notes: "",
@@ -175,17 +155,6 @@ export default function OrdersPage() {
     }
   };
 
-  // New function: updateStock - Placeholder as implementation is not provided in outline
-  const updateStock = async (items, user) => {
-    console.log(
-      "Updating stock for order items:",
-      items,
-      "for user:",
-      user.name,
-    );
-    // TODO: Implement actual stock update logic (e.g., decrement product quantities)
-  };
-
   // New function: validateOrder - encapsulates existing validation
   const validateOrder = () => {
     if (!customerFound) {
@@ -205,10 +174,10 @@ export default function OrdersPage() {
       });
       return false;
     }
-    if (!currentOrder.sectorId) {
+    if (!currentOrder.paymentTypeId) {
       toast({
         title: "Atenção",
-        description: "Selecione o setor de estoque do pedido.",
+        description: "Selecione a forma de pagamento do pedido.",
         variant: "destructive",
       });
       return false;
@@ -289,31 +258,21 @@ export default function OrdersPage() {
       const user = await UserEntity.me();
       const companyId = user.companyId;
 
-      const [
-        allPeople,
-        productsData,
-        employeesData,
-        sectorsData,
-        paymentTypesData,
-        cashAccountsData,
-      ] = await Promise.all([
-        Person.filter({ companyId: companyId }),
-        Product.filter({ companyId: companyId, active: true }),
-        Employee.filter(
-          { companyId: companyId, position: "entregador", active: true },
-          { sort: "name" },
-        ),
-        Sector.filter({ companyId, active: true }),
-        PaymentType.filter({ companyId: companyId, active: true }),
-        CashAccount.filter({ companyId: companyId, active: true }),
-      ]);
+      const [allPeople, productsData, employeesData, paymentTypesData] =
+        await Promise.all([
+          Person.filter({ companyId: companyId }),
+          Product.filter({ companyId: companyId, active: true }),
+          Employee.filter(
+            { companyId: companyId, position: "entregador", active: true },
+            { sort: "name" },
+          ),
+          PaymentType.filter({ companyId: companyId, active: true }),
+        ]);
 
       setPeople(allPeople.filter((p) => p.type === "cliente"));
       setProducts(productsData);
       setEmployees(employeesData);
-      setSectors(sectorsData);
       setPaymentTypes(paymentTypesData);
-      setCashAccounts(cashAccountsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast({
@@ -631,20 +590,7 @@ export default function OrdersPage() {
     setProductPrice("");
   };
 
-  const handleOpenPaymentModal = () => {
-    if (!validateOrder()) return;
-
-    setPaymentDraft((previous) => ({
-      paymentTypeId: currentOrder.paymentTypeId || previous.paymentTypeId,
-      cashAccountId: currentOrder.cashAccountId || previous.cashAccountId,
-    }));
-    setShowPaymentModal(true);
-  };
-
-  const handleSaveOrder = async (
-    paymentTypeId = currentOrder.paymentTypeId,
-    cashAccountId = currentOrder.cashAccountId,
-  ) => {
+  const handleSaveOrder = async () => {
     if (!validateOrder()) return;
 
     setIsSaving(true);
@@ -652,10 +598,7 @@ export default function OrdersPage() {
       const user = await UserEntity.me();
       const orderTotal = calcularTotal();
       const paymentType = paymentTypes.find(
-        (item) => item.id === paymentTypeId,
-      );
-      const cashAccount = cashAccounts.find(
-        (item) => item.id === cashAccountId,
+        (item) => item.id === currentOrder.paymentTypeId,
       );
 
       // Lógica para numeração sequencial
@@ -674,12 +617,8 @@ export default function OrdersPage() {
         personAddress: customerFound?.address || {},
         employeeId: currentOrder.employeeId || "",
         employeeName: currentOrder.employeeName || "",
-        sectorId: currentOrder.sectorId,
-        sectorName: currentOrder.sectorName,
-        paymentTypeId: paymentTypeId || "",
+        paymentTypeId: currentOrder.paymentTypeId || "",
         paymentTypeName: paymentType?.name || "",
-        cashAccountId: cashAccountId || null,
-        cashAccountName: cashAccount?.name || "",
         status: "pendente", // Garantir que o status seja definido explicitamente
         deliveryDate: currentOrder.deliveryDate,
         notes: currentOrder.notes || "",
@@ -704,16 +643,13 @@ export default function OrdersPage() {
 
       console.log("Pedido criado com sucesso:", newOrder); // Debug log
 
-      // Call functions as per outline
-      await updateStock(newOrder.items, user);
       await generateReceivables(newOrder, user);
 
       // Reset form after successful order creation
       setCurrentOrder(initialOrderState);
       setPedidoItems([]);
       setCustomerFound(null);
-      setShowPaymentModal(false);
-      setPaymentDraft({ paymentTypeId: "", cashAccountId: "" });
+      setClientSearchTerm("");
 
       toast({
         title: "Sucesso",
@@ -1238,7 +1174,64 @@ export default function OrdersPage() {
         <h1 className="text-3xl font-bold text-slate-800 mb-6">Pedidos</h1>
         <div className="space-y-4">
           <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
+              <div className="md:col-span-2">
+                <Label>Cliente</Label>
+                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="flex-1">
+                    <PersonSelector
+                      options={people}
+                      selectedPerson={customerFound}
+                      open={showClientSearch}
+                      value={clientSearchTerm}
+                      title="Selecionar Cliente"
+                      inputPlaceholder="Pesquisar por telefone, nome, endereço..."
+                      searchPlaceholder="Pesquisar por telefone, nome, endereço..."
+                      onOpenChange={setShowClientSearch}
+                      onValueChange={setClientSearchTerm}
+                      onSelect={selectCustomer}
+                      onClear={clearCustomer}
+                      showRegistration
+                      registrationLabel=""
+                    />
+                  </div>
+                  {customerFound && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEditCustomer}
+                      >
+                        Editar cliente
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleShowHistory}
+                      >
+                        Histórico
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="order-delivery-date">Data do pedido</Label>
+                <Input
+                  id="order-delivery-date"
+                  type="date"
+                  value={currentOrder.deliveryDate}
+                  onChange={(event) =>
+                    setCurrentOrder((previous) => ({
+                      ...previous,
+                      deliveryDate: event.target.value,
+                    }))
+                  }
+                  className="mt-1"
+                />
+              </div>
               <div>
                 <Label>Canal de vendas</Label>
                 <Select
@@ -1258,76 +1251,6 @@ export default function OrdersPage() {
                         </SelectItem>
                       ),
                     )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Setor de estoque</Label>
-                <Select
-                  value={currentOrder.sectorId || ""}
-                  onValueChange={(sectorId) => {
-                    const sector = sectors.find((item) => item.id === sectorId);
-                    setCurrentOrder((previous) => ({
-                      ...previous,
-                      sectorId,
-                      sectorName: sector?.name || "",
-                    }));
-                  }}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione o setor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectors.map((sector) => (
-                      <SelectItem key={sector.id} value={sector.id}>
-                        {sector.name}
-                        {!sector.isOwnStock && sector.masterSectorName
-                          ? ` (estoque: ${sector.masterSectorName})`
-                          : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="order-delivery-date">Data do pedido</Label>
-                <Input
-                  id="order-delivery-date"
-                  type="date"
-                  value={currentOrder.deliveryDate}
-                  onChange={(event) =>
-                    setCurrentOrder((previous) => ({
-                      ...previous,
-                      deliveryDate: event.target.value,
-                    }))
-                  }
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Entregador</Label>
-                <Select
-                  value={currentOrder.employeeId || ""}
-                  onValueChange={(employeeId) => {
-                    const employee = employees.find(
-                      (item) => item.id === employeeId,
-                    );
-                    setCurrentOrder((previous) => ({
-                      ...previous,
-                      employeeId,
-                      employeeName: employee?.name || "",
-                    }));
-                  }}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione o entregador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.name}
-                      </SelectItem>
-                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1365,27 +1288,17 @@ export default function OrdersPage() {
                   )
                 }
               />
+              <div className="flex flex-row justify-end gap-4">
+                <Label className="text-lg text-gray-600">Total de Itens</Label>
+                <p className="text-lg font-semibold text-gray-600">
+                  {pedidoItems.reduce((total, item) => total + item.qtde, 0)}
+                </p>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 p-4">
-              <div>
-                <Label htmlFor="order-notes">Observações do pedido</Label>
-                <Textarea
-                  id="order-notes"
-                  value={currentOrder.notes}
-                  onChange={(event) =>
-                    setCurrentOrder((previous) => ({
-                      ...previous,
-                      notes: event.target.value,
-                    }))
-                  }
-                  rows={3}
-                  className="mt-1"
-                  placeholder="Digite observações sobre o pedido..."
-                />
-              </div>
+            <CardContent className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 p-4">
               <div className="flex flex-col justify-center gap-3 md:min-w-40">
                 <label className="flex items-center gap-2 text-sm text-slate-700">
                   <input
@@ -1418,255 +1331,149 @@ export default function OrdersPage() {
                   Urgente
                 </label>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                    Pedido para
-                  </h3>
-
-                  <PersonSelector
-                    options={people}
-                    selectedPerson={customerFound}
-                    open={showClientSearch}
-                    value={clientSearchTerm}
-                    title="Selecionar Cliente"
-                    inputPlaceholder="Buscar cliente..."
-                    searchPlaceholder="Digite para buscar..."
-                    onOpenChange={setShowClientSearch}
-                    onValueChange={setClientSearchTerm}
-                    onSelect={selectCustomer}
-                    onClear={clearCustomer}
-                    showRegistration
-                    registrationLabel=""
-                  />
-                </div>
-                {customerFound && (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEditCustomer}
-                    >
-                      Editar cliente
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleShowHistory}
-                    >
-                      Histórico
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  {
-                    label: "Valor Total",
-                    value:
-                      calcularTotal() +
-                      pedidoItems.reduce(
-                        (total, item) => total + item.desconto,
-                        0,
-                      ),
-                  },
-                  {
-                    label: "Vlr Desconto",
-                    value: pedidoItems.reduce(
-                      (total, item) => total + item.desconto,
-                      0,
-                    ),
-                  },
-                  { label: "Total a Pagar", value: calcularTotal() },
-                  {
-                    label: "Total de Itens",
-                    value: pedidoItems.reduce(
-                      (total, item) => total + item.qtde,
-                      0,
-                    ),
-                    isCount: true,
-                  },
-                ].map((summary) => (
-                  <div
-                    key={summary.label}
-                    className={`text-center p-4 rounded-lg ${
-                      summary.label === "Total a Pagar"
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-gray-50"
-                    }`}
-                  >
-                    <Label className="text-xs text-gray-600">
-                      {summary.label}
-                    </Label>
-                    <p className="text-lg font-semibold mt-1 text-slate-800">
-                      {summary.isCount
-                        ? summary.value
-                        : `R$ ${summary.value.toFixed(2)}`}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-wrap justify-center gap-3">
-                <Button
-                  type="button"
-                  onClick={handleOpenPaymentModal}
-                  disabled={isSaving}
-                  className="text-white"
-                  style={{ background: "#e78b3a" }}
-                >
-                  {isSaving
-                    ? "Salvando..."
-                    : "Selecionar pagamento e finalizar"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isSaving}
-                  onClick={() => window.location.reload()}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Dialog
-          open={showPaymentModal}
-          onOpenChange={(open) => {
-            if (!isSaving) setShowPaymentModal(open);
-          }}
-        >
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-blue-900">
-                Finalizar Pedido
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <p className="text-sm text-gray-700">
-                Cliente:{" "}
-                <span className="font-semibold">{customerFound?.name}</span>
-              </p>
-              <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                <p className="font-semibold text-green-700">
-                  Total do pedido:{" "}
-                  <span className="text-green-900">
-                    R$ {calcularTotal().toFixed(2)}
-                  </span>
-                </p>
-              </div>
               <div>
-                <Label>Forma de pagamento</Label>
-                <Select
-                  value={paymentDraft.paymentTypeId}
-                  onValueChange={(paymentTypeId) => {
-                    const selectedType = paymentTypes.find(
-                      (type) => type.id === paymentTypeId,
-                    );
-                    const requiresCashAccount = [
-                      "dinheiro",
-                      "pix",
-                      "cartao_debito",
-                    ].includes(selectedType?.type);
-                    setPaymentDraft((previous) => ({
+                <Label htmlFor="order-notes">Observações do pedido</Label>
+                <Textarea
+                  id="order-notes"
+                  value={currentOrder.notes}
+                  onChange={(event) =>
+                    setCurrentOrder((previous) => ({
                       ...previous,
-                      paymentTypeId,
-                      cashAccountId: requiresCashAccount
-                        ? previous.cashAccountId || cashAccounts[0]?.id || ""
-                        : "",
-                    }));
-                  }}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione a forma de pagamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentTypes.map((paymentType) => (
-                      <SelectItem key={paymentType.id} value={paymentType.id}>
-                        {paymentType.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      notes: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="mt-1"
+                  placeholder="Digite observações sobre o pedido..."
+                />
               </div>
-              {["dinheiro", "pix", "cartao_debito"].includes(
-                paymentTypes.find(
-                  (type) => type.id === paymentDraft.paymentTypeId,
-                )?.type,
-              ) && (
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,1fr)_3fr] gap-4">
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardContent className="space-y-4 p-4">
                 <div>
-                  <Label>Conta / Caixa</Label>
+                  <Label>Forma de pagamento</Label>
                   <Select
-                    value={paymentDraft.cashAccountId}
-                    onValueChange={(cashAccountId) =>
-                      setPaymentDraft((previous) => ({
+                    value={currentOrder.paymentTypeId || ""}
+                    onValueChange={(paymentTypeId) => {
+                      const paymentType = paymentTypes.find(
+                        (item) => item.id === paymentTypeId,
+                      );
+                      setCurrentOrder((previous) => ({
                         ...previous,
-                        cashAccountId,
-                      }))
-                    }
+                        paymentTypeId,
+                        paymentTypeName: paymentType?.name || "",
+                      }));
+                    }}
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecione a conta de movimento" />
+                      <SelectValue placeholder="Selecione a forma de pagamento" />
                     </SelectTrigger>
                     <SelectContent>
-                      {cashAccounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name}
+                      {paymentTypes.map((paymentType) => (
+                        <SelectItem key={paymentType.id} value={paymentType.id}>
+                          {paymentType.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowPaymentModal(false)}
-                disabled={isSaving}
-              >
-                Voltar
-              </Button>
-              <Button
-                type="button"
-                onClick={() =>
-                  handleSaveOrder(
-                    paymentDraft.paymentTypeId,
-                    paymentDraft.cashAccountId,
-                  )
-                }
-                disabled={
-                  isSaving ||
-                  !paymentDraft.paymentTypeId ||
-                  (["dinheiro", "pix", "cartao_debito"].includes(
-                    paymentTypes.find(
-                      (type) => type.id === paymentDraft.paymentTypeId,
-                    )?.type,
-                  ) &&
-                    !paymentDraft.cashAccountId)
-                }
-                className="text-white"
-                style={{ background: "#e78b3a" }}
-              >
-                {isSaving ? "Salvando..." : "Confirmar pagamento"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                <div>
+                  <Label>Entregador</Label>
+                  <Select
+                    value={currentOrder.employeeId || ""}
+                    onValueChange={(employeeId) => {
+                      const employee = employees.find(
+                        (item) => item.id === employeeId,
+                      );
+                      setCurrentOrder((previous) => ({
+                        ...previous,
+                        employeeId,
+                        employeeName: employee?.name || "",
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o entregador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    {
+                      label: "Valor Total",
+                      value:
+                        calcularTotal() +
+                        pedidoItems.reduce(
+                          (total, item) => total + item.desconto,
+                          0,
+                        ),
+                    },
+                    {
+                      label: "Vlr Desconto",
+                      value: pedidoItems.reduce(
+                        (total, item) => total + item.desconto,
+                        0,
+                      ),
+                    },
+                    { label: "Total a Pagar", value: calcularTotal() },
+                  ].map((summary) => (
+                    <div
+                      key={summary.label}
+                      className={`text-center p-4 rounded-lg ${
+                        summary.label === "Total a Pagar"
+                          ? "bg-green-50 border border-green-200"
+                          : "bg-gray-50"
+                      }`}
+                    >
+                      <Label className="text-xs text-gray-600">
+                        {summary.label}
+                      </Label>
+                      <p className="text-lg font-semibold mt-1 text-slate-800">
+                        {summary.isCount
+                          ? summary.value
+                          : `R$ ${summary.value.toFixed(2)}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex flex-wrap justify-center gap-3">
+                  <Button
+                    type="button"
+                    onClick={handleSaveOrder}
+                    disabled={isSaving}
+                    className="text-white"
+                    style={{ background: "#e78b3a" }}
+                  >
+                    {isSaving ? "Salvando..." : "Finalizar Pedido"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSaving}
+                    onClick={() => window.location.reload()}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -101,6 +101,12 @@ export default function PersonSelector({
           <Input
             value={value}
             onChange={(event) => onValueChange?.(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && value.trim()) {
+                event.preventDefault();
+                onOpenChange?.(true);
+              }
+            }}
             placeholder={inputPlaceholder}
             className="h-8 w-full text-xs"
           />

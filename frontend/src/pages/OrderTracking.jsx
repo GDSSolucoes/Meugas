@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Order } from "@/entities/Order";
 import { Employee } from "@/entities/Employee";
-import { Sector } from "@/entities/Sector";
 import { PaymentType } from "@/entities/PaymentType";
 import { User } from "@/entities/User";
 import { Separator } from "@/components/ui/separator";
@@ -119,7 +118,6 @@ export default function OrderTrackingPage() {
   const { toast } = useToast();
   const [allOrders, setAllOrders] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [sectors, setSectors] = useState([]);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -134,13 +132,12 @@ export default function OrderTrackingPage() {
     try {
       const user = await User.me();
 
-      const [ordersData, allEmployees, allSectors, allPaymentTypes] = await Promise.all([
+      const [ordersData, allEmployees, allPaymentTypes] = await Promise.all([
         Order.filter({ companyId: user.companyId }, { sort: "-createdAt" }),
         Employee.filter(
           { companyId: user.companyId, position: "entregador", active: true },
           { sort: "name" },
         ),
-        Sector.filter({ companyId: user.companyId, active: true }),
         PaymentType.filter({ companyId: user.companyId, active: true }),
       ]);
 
@@ -153,7 +150,6 @@ export default function OrderTrackingPage() {
 
       setAllOrders(sortedOrders);
       setEmployees(allEmployees);
-      setSectors(allSectors);
       setPaymentTypes(allPaymentTypes);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -306,52 +302,7 @@ export default function OrderTrackingPage() {
     }
   };
 
-  const handleAssignSector = async (orderId, sectorId) => {
-    const sector = sectors.find((item) => item.id === sectorId);
-    if (!sector) {
-      toast({
-        title: "Erro",
-        description: "Setor não encontrado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await Order.update(orderId, {
-        sectorId: sector.id,
-        sectorName: sector.name,
-      });
-      setAllOrders((previous) =>
-        previous.map((order) =>
-          order.id === orderId
-            ? { ...order, sectorId: sector.id, sectorName: sector.name }
-            : order,
-        ),
-      );
-      toast({
-        title: "Sucesso",
-        description: `Setor ${sector.name} associado ao pedido.`,
-      });
-    } catch (error) {
-      console.error("Erro ao atribuir setor ao pedido:", error);
-      toast({
-        title: "Erro",
-        description: "Falha ao atribuir setor ao pedido. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleUpdateStatus = async (order, newStatus) => {
-    if (newStatus === "em_atendimento" && !order.sectorId) {
-      toast({
-        title: "Atenção",
-        description: "Selecione um setor antes de enviar o pedido para entrega.",
-        variant: "destructive",
-      });
-      return;
-    }
     if (newStatus === "em_atendimento" && !order.employeeId) {
       toast({
         title: "Atenção",
@@ -397,15 +348,6 @@ export default function OrderTrackingPage() {
   };
 
   const handleFinalizeOrder = async (order) => {
-    if (!order.sectorId) {
-      toast({
-        title: "Atenção",
-        description: "Selecione um setor de estoque antes de finalizar.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       const updatedOrder = await Order.finalize(order.id);
@@ -463,10 +405,8 @@ export default function OrderTrackingPage() {
     onCancel,
     onAssign,
     onAssignPayment,
-    onAssignSector,
     employeeList,
     paymentTypeList,
-    sectorList,
     isLoading,
   }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -632,40 +572,6 @@ export default function OrderTrackingPage() {
                 {isOrderActionable ? (
                   <div>
                     <Label className="text-xs font-medium text-slate-700">
-                      Setor de estoque *
-                    </Label>
-                    <Select
-                      onValueChange={(sectorId) =>
-                        onAssignSector(order.id, sectorId)
-                      }
-                      value={order.sectorId || ""}
-                      disabled={!isOrderActionable}
-                    >
-                      <SelectTrigger className="w-full mt-1 bg-white text-xs h-8">
-                        <SelectValue placeholder="Selecione o setor..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sectorList.map((sector) => (
-                          <SelectItem
-                            key={sector.id}
-                            value={sector.id}
-                            className="text-xs"
-                          >
-                            {sector.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500">
-                    Setor: {order.sectorName || "Não definido"}
-                  </p>
-                )}
-
-                {isOrderActionable ? (
-                  <div>
-                    <Label className="text-xs font-medium text-slate-700">
                       {order.status === "pendente"
                         ? "Atribuir Entregador *"
                         : "Alterar Entregador"}
@@ -810,11 +716,9 @@ export default function OrderTrackingPage() {
     onCancel,
     onAssign,
     onAssignPayment,
-    onAssignSector,
     employeeList,
     paymentTypeList,
     isLoading,
-    sectorList,
   }) => (
     <div>
       <div
@@ -838,10 +742,8 @@ export default function OrderTrackingPage() {
                 onCancel={onCancel}
                 onAssign={onAssign}
                 onAssignPayment={onAssignPayment}
-                onAssignSector={onAssignSector}
                 employeeList={employeeList}
                 paymentTypeList={paymentTypeList}
-                sectorList={sectorList}
                 isLoading={isLoading}
               />
             ))
@@ -893,10 +795,8 @@ export default function OrderTrackingPage() {
             onCancel={handleCancelOrder}
             onAssign={handleAssignEmployee}
             onAssignPayment={handleAssignPaymentType}
-            onAssignSector={handleAssignSector}
             employeeList={employees}
             paymentTypeList={paymentTypes}
-            sectorList={sectors}
             isLoading={isLoading}
           />
           <OrderColumn
@@ -909,10 +809,8 @@ export default function OrderTrackingPage() {
             onCancel={handleCancelOrder}
             onAssign={handleAssignEmployee}
             onAssignPayment={handleAssignPaymentType}
-            onAssignSector={handleAssignSector}
             employeeList={employees}
             paymentTypeList={paymentTypes}
-            sectorList={sectors}
             isLoading={isLoading}
           />
           <OrderColumn
@@ -925,10 +823,8 @@ export default function OrderTrackingPage() {
             onCancel={handleCancelOrder}
             onAssign={handleAssignEmployee}
             onAssignPayment={handleAssignPaymentType}
-            onAssignSector={handleAssignSector}
             employeeList={employees}
             paymentTypeList={paymentTypes}
-            sectorList={sectors}
             isLoading={isLoading}
           />
         </div>
