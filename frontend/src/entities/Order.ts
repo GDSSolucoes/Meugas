@@ -1,5 +1,21 @@
 import { BaseEntity } from './BaseEntity';
-import { api } from "@/api/apiClient";
+import { api, apiEnabled } from "@/api/apiClient";
+
+export interface PaginatedOrders {
+  data: Order[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  totalAmount: number;
+}
+
+interface OrderPaginationOptions {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: "asc" | "desc";
+}
 
 export enum OrdersStatusEnum {
   PENDENTE = 'pendente',
@@ -115,6 +131,47 @@ export class Order extends BaseEntity {
 
   static async filter(filters: Partial<Order> = {}, pagination = {}) : Promise<Order[]> {
     return super._filter.call(this, this.baseUrl, filters, pagination) as Promise<Order[]>;
+  }
+
+  static async filterPaginated(
+    filters: Record<string, string>,
+    pagination: OrderPaginationOptions,
+  ): Promise<PaginatedOrders> {
+    if (!apiEnabled) {
+      throw new Error("API não configurada");
+    }
+
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        params.append(key, value);
+      }
+    });
+
+    if (pagination.page) params.append("page", String(pagination.page));
+    if (pagination.limit) params.append("limit", String(pagination.limit));
+    if (pagination.sort) {
+      params.append("sort", pagination.sort.replace("-", ""));
+      params.append(
+        "order",
+        pagination.sort.startsWith("-") ? "desc" : pagination.order ?? "asc",
+      );
+    }
+
+    const response = await api.get(`${this.baseUrl}?${params.toString()}`);
+    const result = response.data;
+    if (!Array.isArray(result?.data)) {
+      throw new Error("Resposta paginada de pedidos inválida");
+    }
+
+    return {
+      data: result.data.map((item: Partial<Order>) => new this(item)),
+      total: Number(result.total || 0),
+      page: Number(result.page || 1),
+      limit: Number(result.limit || pagination.limit || 50),
+      totalPages: Number(result.totalPages || 0),
+      totalAmount: Number(result.totalAmount || 0),
+    };
   }
 
   static async findById(id: string): Promise<Order | null> {

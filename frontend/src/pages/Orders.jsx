@@ -1192,7 +1192,7 @@ export default function OrdersPage() {
                       onSelect={selectCustomer}
                       onClear={clearCustomer}
                       showRegistration
-                      registrationLabel=""
+                      registrationLabel="Novo"
                     />
                   </div>
                   {customerFound && (

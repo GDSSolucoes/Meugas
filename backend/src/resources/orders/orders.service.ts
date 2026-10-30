@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, isNotNull, or, sql } from "drizzle-orm";
 import { BaseCrudService } from "../../common/base-crud.service";
 import { RequestContextService } from "../../database/request-context.service";
 import { orderItems, orders, OrdersStatusEnum } from "../../database/schemas";
@@ -15,6 +15,94 @@ import { OrderUpdateDto } from "./dto/order.update.dto";
 export class OrdersService extends BaseCrudService<typeof orders> {
   constructor(requestContext: RequestContextService) {
     super(requestContext, orders, true); // hasCompanyId = true
+  }
+
+  async list(
+    page: number = 1,
+    limit: number = 100,
+    filters: Record<string, any> = {},
+    search?: string,
+    sort?: string,
+    order: "asc" | "desc" = "desc",
+    searchFields: string[] = ["name"],
+  ) {
+    const {
+      effectiveDeliveryDate_gte: deliveryDateFrom,
+      effectiveDeliveryDate_lte: deliveryDateTo,
+      effectiveCreatedAt_gte: createdAtFrom,
+      effectiveCreatedAt_lte: createdAtTo,
+      ...otherFilters
+    } = filters;
+
+    if (
+      !deliveryDateFrom &&
+      !deliveryDateTo &&
+      !createdAtFrom &&
+      !createdAtTo
+    ) {
+      return super.list(
+        page,
+        limit,
+        otherFilters,
+        search,
+        sort,
+        order,
+        searchFields,
+      );
+    }
+
+    const dateConditions = [];
+    if (deliveryDateFrom) {
+      dateConditions.push(sql`${orders.deliveryDate} >= ${deliveryDateFrom}`);
+    }
+    if (deliveryDateTo) {
+      dateConditions.push(sql`${orders.deliveryDate} <= ${deliveryDateTo}`);
+    }
+
+    const createdAtConditions = [];
+    if (createdAtFrom) {
+      createdAtConditions.push(sql`${orders.createdAt} >= ${createdAtFrom}`);
+    }
+    if (createdAtTo) {
+      createdAtConditions.push(sql`${orders.createdAt} <= ${createdAtTo}`);
+    }
+
+    const effectiveDateConditions = [];
+    if (dateConditions.length > 0) {
+      effectiveDateConditions.push(
+        and(isNotNull(orders.deliveryDate), ...dateConditions),
+      );
+    }
+    if (createdAtConditions.length > 0) {
+      effectiveDateConditions.push(
+        and(isNull(orders.deliveryDate), ...createdAtConditions),
+      );
+    }
+
+    const effectiveDateFilter = or(...effectiveDateConditions);
+    if (!effectiveDateFilter) {
+      throw new Error("Os filtros de data efetiva dos pedidos são inválidos.");
+    }
+
+    const where = sql`(${this.buildWhere(
+      otherFilters,
+      search,
+      searchFields,
+    )}) AND (${effectiveDateFilter})`;
+    const [result, [totals]] = await Promise.all([
+      this.listWithWhere(where, page, limit, sort, order),
+      this.getDb()
+        .select({
+          totalAmount: sql<number>`coalesce(sum(${orders.totalAmount}), 0)`,
+        })
+        .from(orders)
+        .where(where),
+    ]);
+
+    return {
+      ...result,
+      totalAmount: Number(totals.totalAmount),
+    };
   }
 
   // Override if needed for custom logic

@@ -51,7 +51,7 @@ export default function PersonSelector({
         person.address?.street,
         person.address?.number,
         person.address?.neighborhood,
-        person.phone?.[0],
+        ...(Array.isArray(person.phone) ? [...person.phone] : []),
       ]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(normalizedValue)),
@@ -236,7 +236,7 @@ export default function PersonSelector({
                           </TableCell>
                         )}
                         <TableCell className="text-xs">
-                          {person.phone?.[0] || "-"}
+                          {person.phone?.join(", ") || "-"}
                         </TableCell>
                       </TableRow>
                     ))

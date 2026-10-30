@@ -47,7 +47,6 @@ import AccountsReceivablePage from "./AccountsReceivable";
 
 export default function AcertoSetoresPage() {
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState(null);
   const [setores, setSetores] = useState([]);
   const [showSetorModal, setShowSetorModal] = useState(false);
   const [setorSearchTerm, setSetorSearchTerm] = useState("");
@@ -101,13 +100,15 @@ export default function AcertoSetoresPage() {
   const [convenio, setConvenio] = useState("nao");
   const [selectedTab, setSelectedTab] = useState("venda");
 
-  const [allPedidos, setAllPedidos] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [itensPedido, setItensPedido] = useState([]);
   const [searchExecuted, setSearchExecuted] = useState(false);
-  const [paymentTypes, setPaymentTypes] = useState([]);
-  const [cashAccounts, setCashAccounts] = useState([]);
+  const [isLoadingPedidos, setIsLoadingPedidos] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalPedidos, setTotalPedidos] = useState(0);
+  const pageSize = 50;
 
   // Valores do painel de resumo
   const [resumo, setResumo] = useState({
@@ -151,39 +152,18 @@ export default function AcertoSetoresPage() {
   const loadData = async () => {
     try {
       const user = await entities.User.me();
-      setCurrentUser(user);
 
-      const [ordersData, setoresData, paymentTypesData, cashAccountsData] =
-        await Promise.all([
-          entities.Order.filter(
-            {
-              companyId: user.companyId,
-            },
-            { sort: "-createdAt", limit: 500 },
-          ),
-          entities.Sector.filter({
-            companyId: user.companyId,
-            active: true,
-          }),
-          entities.PaymentType.filter({
-            companyId: user.companyId,
-            active: true,
-          }),
-          entities.CashAccount.filter({
-            companyId: user.companyId,
-            active: true,
-          }),
-        ]);
+      const setoresData = await entities.Sector.filter({
+        companyId: user.companyId,
+        active: true,
+      });
 
-      setAllPedidos(ordersData);
       setSetores(setoresData);
-      setPaymentTypes(paymentTypesData);
-      setCashAccounts(cashAccountsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar os pedidos.",
+        description: "Não foi possível carregar os dados iniciais.",
         variant: "destructive",
       });
     }
@@ -203,76 +183,92 @@ export default function AcertoSetoresPage() {
     setor.name.toLowerCase().includes(setorSearchTerm.toLowerCase()),
   );
 
-  // Aplicar filtros
-  const applyFilters = () => {
-    console.log("Aplicando filtros...");
-    setSearchExecuted(true);
-
-    if (!allPedidos.length) {
-      console.log("Nenhum pedido carregado");
-      setPedidos([]);
-      calcularResumo([]);
+  const loadOrders = async (requestedPage = 1) => {
+    const dataHoraInicio = new Date(`${dataInicial}T${horaInicial}:00`);
+    const dataHoraFim = new Date(`${dataFinal}T${horaFinal}:59`);
+    if (
+      Number.isNaN(dataHoraInicio.getTime()) ||
+      Number.isNaN(dataHoraFim.getTime()) ||
+      dataHoraInicio > dataHoraFim
+    ) {
+      toast({
+        title: "Período inválido",
+        description: "Informe um período válido para pesquisar os pedidos.",
+        variant: "destructive",
+      });
       return;
     }
 
-    console.log("Total de pedidos:", allPedidos.length);
-    let filtered = [...allPedidos];
+    setSearchExecuted(true);
+    setIsLoadingPedidos(true);
 
-    // Filtro por período de data/hora
-    const dataHoraInicio = new Date(`${dataInicial}T${horaInicial}:00`);
-    const dataHoraFim = new Date(`${dataFinal}T${horaFinal}:59`);
-
-    console.log("Período:", dataHoraInicio, "até", dataHoraFim);
-
-    filtered = filtered.filter((pedido) => {
-      const dataParaComparar = pedido.deliveryDate || pedido.createdAt;
-      if (!dataParaComparar) return false;
-
-      const pedidoDate = new Date(dataParaComparar);
-      return pedidoDate >= dataHoraInicio && pedidoDate <= dataHoraFim;
-    });
-
-    console.log("Após filtro de data:", filtered.length);
-
-    // Filtro por tipo de pedido (checkboxes)
     if (!mostrarEntregues && !mostrarNaoEntregues) {
-      // Se nenhum está marcado, não mostra nada
-      filtered = [];
-    } else if (mostrarEntregues && !mostrarNaoEntregues) {
-      // Só entregues
-      filtered = filtered.filter((p) => p.status === "finalizado");
-    } else if (!mostrarEntregues && mostrarNaoEntregues) {
-      // Só não entregues
-      filtered = filtered.filter((p) => p.status !== "finalizado");
-    }
-    // Se ambos estão marcados, mostra todos (não filtra)
-
-    console.log("Após filtro de status:", filtered.length);
-    console.log("Pedidos filtrados:", filtered);
-
-    setPedidos(filtered);
-    calcularResumo(filtered);
-
-    if (filtered.length === 0) {
+      setPedidos([]);
+      setPage(1);
+      setTotalPages(1);
+      setTotalPedidos(0);
+      calcularResumo({ total: 0, totalAmount: 0 });
+      setSelectedPedido(null);
+      setItensPedido([]);
+      setIsLoadingPedidos(false);
       setShowNoResultsModal(true);
+      return;
+    }
+
+    try {
+      const user = await entities.User.me();
+      const filters = {
+        companyId: user.companyId,
+        effectiveDeliveryDate_gte: dataInicial,
+        effectiveDeliveryDate_lte: dataFinal,
+        effectiveCreatedAt_gte: dataHoraInicio.toISOString(),
+        effectiveCreatedAt_lte: dataHoraFim.toISOString(),
+        ...(!mostrarNaoEntregues ? { status: "finalizado" } : {}),
+        ...(!mostrarEntregues ? { status_ne: "finalizado" } : {}),
+      };
+      const result = await entities.Order.filterPaginated(filters, {
+        page: requestedPage,
+        limit: pageSize,
+        sort: "-createdAt",
+      });
+
+      setPedidos(result.data);
+      setPage(result.page);
+      setTotalPages(Math.max(result.totalPages, 1));
+      setTotalPedidos(result.total);
+      calcularResumo(result);
+      setSelectedPedido(null);
+      setItensPedido([]);
+
+      if (result.total === 0) {
+        setShowNoResultsModal(true);
+      }
+    } catch (error) {
+      console.error("Erro ao pesquisar pedidos:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível pesquisar os pedidos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingPedidos(false);
     }
   };
 
-  const calcularResumo = (pedidosFiltrados) => {
-    // Lógica de cálculo do resumo baseada nos pedidos filtrados
+  const applyFilters = () => {
+    setPage(1);
+    loadOrders(1);
+  };
+
+  const calcularResumo = (resultado) => {
     const resumoCalculado = {
       naoLancados: { qtd: 0, valor: 0 },
       vendasVista: { qtd: 0, valor: 0 },
       entradas: { qtd: 0, valor: 0 },
       vendasPrazo: { qtd: 0, valor: 0 },
-      total: { qtd: pedidosFiltrados.length, valor: 0 },
+      total: { qtd: resultado.total, valor: resultado.totalAmount },
       cartoes: { qtd: 0, valor: 0 },
     };
-
-    pedidosFiltrados.forEach((pedido) => {
-      resumoCalculado.total.valor += pedido.totalAmount || 0;
-    });
-
     setResumo(resumoCalculado);
   };
 
@@ -285,127 +281,37 @@ export default function AcertoSetoresPage() {
       });
       return;
     }
+    if (!setorSelecionado) {
+      toast({
+        title: "Atenção",
+        description:
+          "Selecione o setor de estoque antes de converter o pedido.",
+        variant: "destructive",
+      });
+      return;
+    }
     setShowPaymentModal(true);
   };
 
   const handlePaymentConfirm = async (paymentData) => {
     try {
-      const user = await entities.User.me();
-      const {
-        pedido,
-        payments,
-        parcelas,
-        totalVenda,
-        desconto,
-        acrescimo,
-        totalAReceber,
-      } = paymentData;
-
-      // 1. Criar a venda
-      const saleData = {
-        saleNumber: `V-${Date.now()}`,
-        personId: pedido.personId,
-        personName: pedido.personName,
-        sectorId: pedido.sectorId || "",
-        sectorName: pedido.sectorName || "",
-        status: "concluida",
-        saleDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
-        items: pedido.items || [],
-        paymentMethods: payments.map((p) => {
-          const paymentType = paymentTypes.find((pt) => pt.id === p.tipo);
-          return {
-            paymentTypeId: p.tipo,
-            paymentTypeName: paymentType?.name || "",
-            amount: p.valor,
-            installments:
-              parcelas.filter((parc) => parc.paymentId === p.id).length || 1,
-          };
-        }),
-        totalAmount: totalAReceber,
-        notes: pedido.notes || "",
+      const { pedido, payments, parcelas, totalAReceber } = paymentData;
+      await entities.Sale.createFromOrder({
         orderId: pedido.id,
-        orderNumber: pedido.orderNumber,
-        companyId: user.companyId,
-        companyName: user.companyName,
-        createdByName: user.name,
-      };
-
-      const newSale = await entities.Sale.create(saleData);
-
-      // 2. Processar pagamentos
-      for (const payment of payments) {
-        const paymentType = paymentTypes.find((pt) => pt.id === payment.tipo);
-        const isCard = paymentType?.type?.includes("cartao");
-        const isPrazo =
-          parcelas.filter((p) => p.paymentId === payment.id).length > 1 ||
-          isCard;
-
-        if (isCard) {
-          // Cartões: criar em Contas a Receber com dados do cartão
-          const parcelasDoCartao = parcelas.filter(
-            (p) => p.paymentId === payment.id,
-          );
-          for (const parcela of parcelasDoCartao) {
-            await entities.AccountsReceivable.create({
-              personId: pedido.personId,
-              personName: pedido.personName,
-              saleId: newSale.id,
-              installmentNumber: parcela.numero,
-              description: `${paymentType.name} - Parcela ${parcela.numero}/${parcelasDoCartao.length}`,
-              dueDate: parcela.vencimento,
-              amount: parcela.valor,
-              status: "pendente",
-              companyId: user.companyId,
-              companyName: user.companyName,
-              createdByName: user.name,
-            });
-          }
-        } else if (isPrazo) {
-          // A PRAZO (boleto, cheque, etc): criar em Contas a Receber
-          const parcelasDoPayment = parcelas.filter(
-            (p) => p.paymentId === payment.id,
-          );
-          for (const parcela of parcelasDoPayment) {
-            await entities.AccountsReceivable.create({
-              personId: pedido.personId,
-              personName: pedido.personName,
-              saleId: newSale.id,
-              installmentNumber: parcela.numero,
-              description: `${paymentType.name} - Parcela ${parcela.numero}/${parcelasDoPayment.length}`,
-              dueDate: parcela.vencimento,
-              amount: parcela.valor,
-              status: "pendente",
-              companyId: user.companyId,
-              companyName: user.companyName,
-              createdByName: user.name,
-            });
-          }
-        } else {
-          // À VISTA: lançar no caixa
-          const cashAccount = cashAccounts.find(
-            (ca) => ca.id === payment.caixaId,
-          );
-          await entities.CashMovement.create({
-            cashAccountId: payment.caixaId,
-            cashAccountName: cashAccount?.name || "",
-            type: "receita",
-            amount: payment.valor,
-            description: `Venda ${newSale.saleNumber} - ${paymentType.name}`,
-            movementDate: formatDateOnly(new Date(), "yyyy-MM-dd"),
-            personId: pedido.personId,
-            personName: pedido.personName,
-            relatedDocId: newSale.id,
-            companyId: user.companyId,
-            companyName: user.companyName,
-            createdByName: user.name,
-          });
-        }
-      }
-
-      // 3. Atualizar status do pedido para finalizado
-      await entities.Order.update(pedido.id, {
-        status: "finalizado",
-        finalizedAt: new Date(),
+        sectorId: setorSelecionado.id,
+        totalAmount: totalAReceber,
+        paymentMethods: payments.map((payment) => ({
+          paymentTypeId: payment.tipo,
+          amount: payment.valor,
+          cashAccountId: payment.caixaId || undefined,
+          installmentsDetails: parcelas
+            .filter((installment) => installment.paymentId === payment.id)
+            .map((installment) => ({
+              number: installment.numero,
+              dueDate: installment.vencimento,
+              amount: installment.valor,
+            })),
+        })),
       });
 
       toast({
@@ -415,12 +321,16 @@ export default function AcertoSetoresPage() {
 
       setShowPaymentModal(false);
       setSelectedPedido(null);
-      loadData();
+      setItensPedido([]);
+      await loadData();
+      await loadOrders(1);
     } catch (error) {
       console.error("Erro ao processar venda:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar a venda.",
+        description:
+          error?.response?.data?.message ||
+          "Não foi possível processar a venda.",
         variant: "destructive",
       });
     }
@@ -463,7 +373,7 @@ export default function AcertoSetoresPage() {
 
                   <div className="w-full">
                     <Label className="text-sm font-medium mb-1 block">
-                      Setor
+                      Setor de estoque
                     </Label>
                     <div
                       className="border rounded px-3 py-2 bg-white cursor-pointer hover:border-gray-400 transition-colors"
@@ -516,6 +426,24 @@ export default function AcertoSetoresPage() {
                             Clique no botão de pesquisa para visualizar pedidos
                           </TableCell>
                         </TableRow>
+                      ) : isLoadingPedidos ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-gray-400 py-8"
+                          >
+                            Carregando pedidos...
+                          </TableCell>
+                        </TableRow>
+                      ) : pedidos.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="text-center text-gray-400 py-8"
+                          >
+                            Nenhum pedido encontrado
+                          </TableCell>
+                        </TableRow>
                       ) : (
                         pedidos.map((pedido) => (
                           <TableRow
@@ -524,7 +452,16 @@ export default function AcertoSetoresPage() {
                             onClick={() => handleSelectPedido(pedido)}
                             onDoubleClick={() => {
                               handleSelectPedido(pedido);
-                              handleTransformToSale();
+                              if (!setorSelecionado) {
+                                toast({
+                                  title: "Atenção",
+                                  description:
+                                    "Selecione o setor de estoque antes de converter o pedido.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              setShowPaymentModal(true);
                             }}
                           >
                             <TableCell className="text-center">
@@ -532,8 +469,11 @@ export default function AcertoSetoresPage() {
                             </TableCell>
                             <TableCell>{pedido.personName}</TableCell>
                             <TableCell className="text-center">
-                              {pedido.deliveryDate
-                                ? format(pedido.deliveryDate, "dd/MM/yyyy")
+                              {pedido.deliveryDate || pedido.createdAt
+                                ? format(
+                                    pedido.deliveryDate || pedido.createdAt,
+                                    "dd/MM/yyyy",
+                                  )
                                 : "-"}
                             </TableCell>
                             <TableCell className="text-center">-</TableCell>
@@ -549,13 +489,38 @@ export default function AcertoSetoresPage() {
                     </TableBody>
                   </Table>
                 </div>
-                <div className="flex items-center gap-2 p-2 border-t">
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                <div className="flex items-center justify-between gap-2 p-2 border-t">
+                  <span className="text-xs text-gray-500">
+                    {totalPedidos} pedido(s) · Página {page} de {totalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => loadOrders(page - 1)}
+                      disabled={
+                        !searchExecuted || page <= 1 || isLoadingPedidos
+                      }
+                      aria-label="Página anterior"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => loadOrders(page + 1)}
+                      disabled={
+                        !searchExecuted ||
+                        page >= totalPages ||
+                        isLoadingPedidos
+                      }
+                      aria-label="Próxima página"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

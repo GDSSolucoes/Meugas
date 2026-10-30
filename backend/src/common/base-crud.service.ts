@@ -54,12 +54,18 @@ export class BaseCrudService<T extends BasePgTable> {
     order: "asc" | "desc" = "desc",
     searchFields: string[] = ["name"],
   ) {
-    const db = this.getDb();
-    const offset = (page - 1) * limit;
-    let where = this.getBaseWhere();
+    const where = this.buildWhere(filters, search, searchFields);
+    return this.listWithWhere(where, page, limit, sort, order);
+  }
 
-    // Add filters
-    const filterConditions: any[] = [];
+  protected buildWhere(
+    filters: Record<string, any>,
+    search?: string,
+    searchFields: string[] = ["name"],
+  ): SQL {
+    let where = this.getBaseWhere();
+    const filterConditions: SQL[] = [];
+
     for (const [key, value] of Object.entries(filters)) {
       if (key.endsWith("_like")) {
         const field = key.replace("_like", "");
@@ -114,6 +120,17 @@ export class BaseCrudService<T extends BasePgTable> {
         continue;
       }
 
+      if (key.endsWith("_ne")) {
+        const field = key.replace("_ne", "");
+        const column = (this.table as any)[field];
+        if (column) {
+          filterConditions.push(
+            sql`(${column} <> ${value} OR ${column} IS NULL)`,
+          );
+        }
+        continue;
+      }
+
       const column = (this.table as any)[key];
       if (!column) continue;
 
@@ -127,12 +144,16 @@ export class BaseCrudService<T extends BasePgTable> {
       if (values.length === 1) {
         filterConditions.push(eq(column, values[0]));
       } else if (values.length > 1) {
-        filterConditions.push(or(...values.map((item) => eq(column, item))));
+        const alternatives = or(...values.map((item) => eq(column, item)));
+        if (!alternatives) {
+          throw new Error("Não foi possível compor o filtro de valores.");
+        }
+        filterConditions.push(alternatives);
       }
     }
 
     if (filterConditions.length > 0) {
-      where = and(where, ...filterConditions) as SQL<boolean>;
+      where = and(where, ...filterConditions) ?? where;
     }
 
     // Add search
@@ -140,9 +161,21 @@ export class BaseCrudService<T extends BasePgTable> {
       const searchConditions = searchFields.map((field) =>
         ilike((this.table as any)[field], `%${search}%`),
       );
-      where = and(where, or(...searchConditions)) as SQL<boolean>;
+      where = and(where, or(...searchConditions)) ?? where;
     }
 
+    return where;
+  }
+
+  protected async listWithWhere(
+    where: SQL,
+    page: number,
+    limit: number,
+    sort?: string,
+    order: "asc" | "desc" = "desc",
+  ) {
+    const db = this.getDb();
+    const offset = (page - 1) * limit;
     let query: any = db
       .select()
       .from(this.table as any)

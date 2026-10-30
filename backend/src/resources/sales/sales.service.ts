@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { BaseCrudService } from "../../common/base-crud.service";
 import { RequestContextService } from "../../database/request-context.service";
 import {
@@ -28,9 +33,12 @@ import {
   SaleStatusEnum,
 } from "../../database/schemas";
 import { SalesCreateDto } from "./dto/sales.post.dto";
+import { SalesFromOrderDto } from "./dto/sales-from-order.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
 import { eq, and, desc, sql, or, asc, ilike } from "drizzle-orm";
 import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
+
+type SalesDatabase = NonNullable<ReturnType<RequestContextService["getDb"]>>;
 
 @Injectable()
 export class SalesService extends BaseCrudService<typeof sales> {
@@ -48,8 +56,219 @@ export class SalesService extends BaseCrudService<typeof sales> {
     companyId: string,
     companyName: string,
   ) {
+    // The RLS interceptor owns this connection's transaction for the full request.
     const db = this.requestContext.getDb();
     if (!db) throw new Error("DB not available");
+    return this.createCompleteInTransaction(
+      db,
+      data,
+      userId,
+      userName,
+      companyId,
+      companyName,
+    );
+  }
+
+  async createFromOrder(
+    request: SalesFromOrderDto,
+    userId: string,
+    userName: string,
+    companyId: string,
+    companyName: string,
+  ) {
+    const db = this.requestContext.getDb();
+    if (!db) throw new Error("DB not available");
+
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(
+        and(
+          eq(orders.id, request.orderId),
+          eq(orders.companyId, companyId),
+          eq(orders.active, true),
+        ),
+      )
+      .limit(1)
+      .for("update");
+
+    if (!order) throw new NotFoundException("Pedido não encontrado.");
+
+    const [existingSale] = await db
+      .select()
+      .from(sales)
+      .where(
+        and(
+          eq(sales.orderId, order.id),
+          eq(sales.companyId, companyId),
+          eq(sales.active, true),
+        ),
+      )
+      .limit(1);
+    if (existingSale) return existingSale;
+
+    if (order.status === OrdersStatusEnum.FINALIZADO) {
+      throw new ConflictException(
+        "Este pedido já foi finalizado sem uma venda vinculada.",
+      );
+    }
+    if (order.status === OrdersStatusEnum.CANCELADO) {
+      throw new BadRequestException(
+        "Não é possível converter um pedido cancelado.",
+      );
+    }
+
+    const [sector] = await db
+      .select()
+      .from(sectors)
+      .where(
+        and(
+          eq(sectors.id, request.sectorId),
+          eq(sectors.companyId, companyId),
+          eq(sectors.active, true),
+        ),
+      )
+      .limit(1);
+    if (!sector) {
+      throw new NotFoundException("Setor de estoque não encontrado.");
+    }
+    if (!order.items?.length) {
+      throw new BadRequestException("O pedido não possui itens para vender.");
+    }
+    if (
+      order.items.some(
+        (item) => !item.productId || Number(item.quantity || 0) <= 0,
+      )
+    ) {
+      throw new BadRequestException(
+        "O pedido possui itens sem produto ou quantidade válida.",
+      );
+    }
+
+    const requestedPaymentTypeIds = [
+      ...new Set(
+        request.paymentMethods.map((payment) => payment.paymentTypeId),
+      ),
+    ];
+    const existingPaymentTypes = await db
+      .select()
+      .from(paymentTypes)
+      .where(
+        and(
+          or(...requestedPaymentTypeIds.map((id) => eq(paymentTypes.id, id))),
+          eq(paymentTypes.companyId, companyId),
+          eq(paymentTypes.active, true),
+        ),
+      );
+    const paymentMethods = request.paymentMethods.map((payment) => {
+      const paymentType = existingPaymentTypes.find(
+        (type) => type.id === payment.paymentTypeId,
+      );
+      if (!paymentType) {
+        throw new BadRequestException(
+          `Tipo de pagamento não encontrado: ${payment.paymentTypeId}`,
+        );
+      }
+
+      return {
+        paymentTypeId: paymentType.id,
+        paymentTypeName: paymentType.name,
+        paymentTypeType: paymentType.type,
+        amount: payment.amount,
+        installments: payment.installmentsDetails?.length || 1,
+        cashAccountId: payment.cashAccountId || "",
+        installmentsDetails: (payment.installmentsDetails || []).map(
+          (installment) => ({
+            number: installment.number,
+            dueDate: new Date(installment.dueDate),
+            amount: installment.amount,
+          }),
+        ),
+      };
+    });
+
+    const saleData = {
+      saleNumber: "",
+      personId: order.personId,
+      personName: order.personName || "",
+      sectorId: sector.id,
+      sectorName: sector.name,
+      status: SaleStatusEnum.CONCLUIDA,
+      saleDate: order.finalizedAt || order.createdAt || new Date(),
+      items: order.items.map((item) => ({
+        productId: item.productId || "",
+        productName: item.productName || "",
+        quantity: Number(item.quantity || 0),
+        unitPrice: Number(item.unitPrice || 0),
+        discount: Number(item.discount || 0),
+        total:
+          item.total ??
+          Number(item.quantity || 0) * Number(item.unitPrice || 0) -
+            Number(item.discount || 0),
+        quantityToPickup: 0,
+        vasilhameLoanQuantity: 0,
+      })),
+      paymentMethods,
+      totalAmount: request.totalAmount,
+      notes: order.notes || "",
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+    } as SalesCreateDto;
+
+    return this.createCompleteInTransaction(
+      db,
+      saleData,
+      userId,
+      userName,
+      companyId,
+      companyName,
+    );
+  }
+
+  private async createCompleteInTransaction(
+    db: SalesDatabase,
+    data: SalesCreateDto,
+    userId: string,
+    userName: string,
+    companyId: string,
+    companyName: string,
+  ) {
+    if (data.orderId) {
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(
+          and(
+            eq(orders.id, data.orderId),
+            eq(orders.companyId, companyId),
+            eq(orders.active, true),
+          ),
+        )
+        .limit(1)
+        .for("update");
+      if (!order) throw new NotFoundException("Pedido não encontrado.");
+
+      const [existingSale] = await db
+        .select()
+        .from(sales)
+        .where(
+          and(
+            eq(sales.orderId, data.orderId),
+            eq(sales.companyId, companyId),
+            eq(sales.active, true),
+          ),
+        )
+        .limit(1);
+      if (existingSale) return existingSale;
+      if (
+        order.status === OrdersStatusEnum.FINALIZADO ||
+        order.status === OrdersStatusEnum.CANCELADO
+      ) {
+        throw new ConflictException(
+          "Este pedido não pode ser convertido em venda.",
+        );
+      }
+    }
 
     // Validar se o total de pagamentos corresponde ao valor total da venda
     const totalPayment = data.paymentMethods
@@ -57,7 +276,7 @@ export class SalesService extends BaseCrudService<typeof sales> {
       : 0;
 
     if (Math.abs(totalPayment - data.totalAmount) > 0.01) {
-      throw new Error(
+      throw new BadRequestException(
         "O total de pagamentos não corresponde ao valor total da venda",
       );
     }
@@ -67,10 +286,14 @@ export class SalesService extends BaseCrudService<typeof sales> {
       .select()
       .from(paymentTypes)
       .where(
-        or(
-          ...data.paymentMethods.map((pm) =>
-            eq(paymentTypes.id, pm.paymentTypeId),
+        and(
+          or(
+            ...data.paymentMethods.map((pm) =>
+              eq(paymentTypes.id, pm.paymentTypeId),
+            ),
           ),
+          eq(paymentTypes.companyId, companyId),
+          eq(paymentTypes.active, true),
         ),
       );
 
@@ -80,23 +303,29 @@ export class SalesService extends BaseCrudService<typeof sales> {
         (pt) => pt.id === pm.paymentTypeId,
       );
       if (!foundType) {
-        throw new Error(
+        throw new BadRequestException(
           `Tipo de pagamento não encontrado: ${pm.paymentTypeId}`,
         );
       }
       if (ImmediatePaymentTypesType.includes(foundType.type)) {
         if (!pm.cashAccountId) {
-          throw new Error(
+          throw new BadRequestException(
             `Pagamento do tipo ${foundType.type} requer uma conta de caixa (cashAccountId)`,
           );
         }
         const ca = await db
           .select()
           .from(cashAccounts)
-          .where(eq(cashAccounts.id, pm.cashAccountId))
+          .where(
+            and(
+              eq(cashAccounts.id, pm.cashAccountId),
+              eq(cashAccounts.companyId, companyId),
+              eq(cashAccounts.active, true),
+            ),
+          )
           .limit(1);
         if (!ca.length) {
-          throw new Error(
+          throw new BadRequestException(
             `Conta de caixa não encontrada para o pagamento: ${pm.paymentTypeName}`,
           );
         }
@@ -116,10 +345,16 @@ export class SalesService extends BaseCrudService<typeof sales> {
         const ca = await db
           .select()
           .from(cashAccounts)
-          .where(eq(cashAccounts.id, payment.cashAccountId))
+          .where(
+            and(
+              eq(cashAccounts.id, payment.cashAccountId),
+              eq(cashAccounts.companyId, companyId),
+              eq(cashAccounts.active, true),
+            ),
+          )
           .limit(1);
         if (!ca.length) {
-          throw new Error(
+          throw new BadRequestException(
             `Conta de caixa não encontrada para o pagamento: ${payment.paymentTypeName}`,
           );
         }
@@ -133,7 +368,7 @@ export class SalesService extends BaseCrudService<typeof sales> {
           : 0;
 
         if (Math.abs(installmentsTotal - payment.amount) > 0.01) {
-          throw new Error(
+          throw new BadRequestException(
             `O total das parcelas (${installmentsTotal}) não corresponde ao valor do pagamento (${payment.amount}) para o tipo de pagamento ${payment.paymentTypeName}`,
           );
         }
@@ -143,7 +378,16 @@ export class SalesService extends BaseCrudService<typeof sales> {
     const [sector] = await db
       .select()
       .from(sectors)
-      .where(eq(sectors.id, data.sectorId));
+      .where(
+        and(
+          eq(sectors.id, data.sectorId),
+          eq(sectors.companyId, companyId),
+          eq(sectors.active, true),
+        ),
+      );
+    if (!sector) {
+      throw new NotFoundException("Setor de estoque não encontrado.");
+    }
 
     // If the sector has its own stock, it owns the product stocks; otherwise
     // the referenced `masterSectorId` (another sector id) is considered owner.
@@ -153,7 +397,18 @@ export class SalesService extends BaseCrudService<typeof sales> {
     const [ownerSector] = await db
       .select()
       .from(sectors)
-      .where(eq(sectors.id, ownerSectorId));
+      .where(
+        and(
+          eq(sectors.id, ownerSectorId),
+          eq(sectors.companyId, companyId),
+          eq(sectors.active, true),
+        ),
+      );
+    if (!ownerSector) {
+      throw new NotFoundException(
+        "Setor responsável pelo estoque não encontrado.",
+      );
+    }
     const actorSectorId = data.sectorId;
 
     // 1. Gerar numero da venda
@@ -182,10 +437,19 @@ export class SalesService extends BaseCrudService<typeof sales> {
       .returning();
 
     if (data.orderId) {
-      await db.update(orders).set({
-        status: OrdersStatusEnum.FINALIZADO,
-        finalizedAt: new Date(),
-      });
+      await db
+        .update(orders)
+        .set({
+          status: OrdersStatusEnum.FINALIZADO,
+          finalizedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(orders.id, data.orderId),
+            eq(orders.companyId, companyId),
+            eq(orders.active, true),
+          ),
+        );
     }
 
     // Insert into saleItems table
@@ -788,10 +1052,8 @@ export class SalesService extends BaseCrudService<typeof sales> {
 
     const totalsResult = await db
       .select({
-        totalRevenue:
-          sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
-        totalSalesCount:
-          sql<number>`COUNT(DISTINCT ${sales.id})`,
+        totalRevenue: sql<number>`COALESCE(SUM(${sales.totalAmount}), 0)`,
+        totalSalesCount: sql<number>`COUNT(DISTINCT ${sales.id})`,
       })
       .from(sales)
       .leftJoin(persons, eq(sales.personId, persons.id))
@@ -799,7 +1061,8 @@ export class SalesService extends BaseCrudService<typeof sales> {
 
     const totalRevenue = Number(totalsResult[0]?.totalRevenue || 0);
     const totalSalesCount = Number(totalsResult[0]?.totalSalesCount || 0);
-    const averageTicket = totalSalesCount > 0 ? totalRevenue / totalSalesCount : 0;
+    const averageTicket =
+      totalSalesCount > 0 ? totalRevenue / totalSalesCount : 0;
 
     return {
       data,

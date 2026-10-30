@@ -26,12 +26,15 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import { addMonths } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { User } from "@/entities/User";
 import { CashAccount } from "@/entities/CashAccount";
 import { PaymentType } from "@/entities/PaymentType";
 import { Acquirer } from "@/entities/Acquirer";
 import { formatDateOnly } from "@/utils";
+
+const isImmediatePaymentType = (type) =>
+  ["dinheiro", "pix", "cartao_debito"].includes(type);
 
 export default function PaymentModal({
   open,
@@ -61,6 +64,7 @@ export default function PaymentModal({
   const [hasAddedCardPayment, setHasAddedCardPayment] = useState(false);
   const [showCardDataWarning, setShowCardDataWarning] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedPaymentType = paymentTypes.find((t) => t.id === paymentType);
   const isCardPayment =
@@ -101,8 +105,9 @@ export default function PaymentModal({
     if (paymentType && paymentTypes.length > 0) {
       const selectedType = paymentTypes.find((t) => t.id === paymentType);
       if (selectedType) {
-        // Define automaticamente vista ou prazo baseado no maxInstallments
-        setPaymentOption(selectedType.maxInstallments > 1 ? "prazo" : "vista");
+        setPaymentOption(
+          isImmediatePaymentType(selectedType.type) ? "vista" : "prazo",
+        );
       }
     }
   }, [paymentType, paymentTypes]);
@@ -160,7 +165,7 @@ export default function PaymentModal({
     return value.toFixed(2).replace(".", ",");
   };
 
-  const isConfirmEnabled = saldoRestante <= 0;
+  const isConfirmEnabled = Math.abs(saldoRestante) <= 0.01;
 
   const calculateInstallments = () => {
     if (paymentOption !== "prazo" || !firstDueDate || installmentCount <= 0) {
@@ -178,7 +183,7 @@ export default function PaymentModal({
       dueDate.setDate(dueDate.getDate() + i * daysInterval);
       parcelas.push({
         numero: i + 1,
-        vencimento: dueDate.split("T")[0],
+        vencimento: format(dueDate, "yyyy-MM-dd"),
         valor: valorParcela,
       });
     }
@@ -284,8 +289,8 @@ export default function PaymentModal({
     onOpenChange(false);
   };
 
-  const handleConfirm = () => {
-    if (!isConfirmEnabled) return;
+  const handleConfirm = async () => {
+    if (!isConfirmEnabled || isSubmitting) return;
 
     // Validar dados de cartão se houver pagamento em cartão
     if (hasAddedCardPayment && cartoesData.length > 0) {
@@ -299,17 +304,22 @@ export default function PaymentModal({
     }
 
     if (onConfirm) {
-      onConfirm({
-        pedido,
-        payments,
-        parcelas,
-        totalVenda,
-        desconto: descontoValue,
-        acrescimo: acrescimoValue,
-        totalAReceber,
-        totalRecebido,
-        troco,
-      });
+      setIsSubmitting(true);
+      try {
+        await onConfirm({
+          pedido,
+          payments,
+          parcelas,
+          totalVenda,
+          desconto: descontoValue,
+          acrescimo: acrescimoValue,
+          totalAReceber,
+          totalRecebido,
+          troco,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -334,17 +344,11 @@ export default function PaymentModal({
                       (t) => t.id === value,
                     );
                     if (selectedType) {
-                      // Se for cartão, sempre A Prazo
-                      if (
-                        selectedType.type === "cartao_debito" ||
-                        selectedType.type === "cartao_credito"
-                      ) {
-                        setPaymentOption("prazo");
-                      } else {
-                        setPaymentOption(
-                          selectedType.maxInstallments > 1 ? "prazo" : "vista",
-                        );
-                      }
+                      setPaymentOption(
+                        isImmediatePaymentType(selectedType.type)
+                          ? "vista"
+                          : "prazo",
+                      );
                     }
                   }}
                 >
@@ -756,18 +760,20 @@ export default function PaymentModal({
             <Button
               variant="outline"
               onClick={() => setShowCancelConfirm(true)}
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={!isConfirmEnabled}
+              disabled={!isConfirmEnabled || isSubmitting}
               className="text-white"
               style={{
-                backgroundColor: isConfirmEnabled ? "#223f61" : "#94a3b8",
+                backgroundColor:
+                  isConfirmEnabled && !isSubmitting ? "#223f61" : "#94a3b8",
               }}
             >
-              Confirmar
+              {isSubmitting ? "Processando..." : "Confirmar"}
             </Button>
           </div>
         </div>

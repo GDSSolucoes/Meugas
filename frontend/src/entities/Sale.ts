@@ -32,6 +32,17 @@ export interface SalePaymentMethodsItem {
   installmentsDetails?: any[];
 }
 
+export interface SaleFromOrderPayment {
+  paymentTypeId: string;
+  amount: number;
+  cashAccountId?: string;
+  installmentsDetails?: Array<{
+    number: number;
+    dueDate: string;
+    amount: number;
+  }>;
+}
+
 /**
  * Sale Entity
  *
@@ -96,6 +107,21 @@ export class Sale extends BaseEntity {
       return response.data;
     } catch (error) {
       console.error("Error creating complete Sale:", error);
+      throw error;
+    }
+  }
+
+  static async createFromOrder(data: {
+    orderId: string;
+    sectorId: string;
+    totalAmount: number;
+    paymentMethods: SaleFromOrderPayment[];
+  }): Promise<Sale> {
+    try {
+      const response = await api.post(`${this.baseUrl}/from-order`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating Sale from Order:", error);
       throw error;
     }
   }
