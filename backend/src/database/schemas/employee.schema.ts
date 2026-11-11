@@ -8,9 +8,11 @@ import {
   pgEnum,
   pgPolicy,
   index,
+  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { dateOnly } from "./date-only";
 import { companies } from "./company.schema";
+import { sectors } from "./sector.schema";
 import { sql } from "drizzle-orm/sql/sql";
 
 export enum EmployeePositionEnum {
@@ -35,6 +37,9 @@ export const employees = pgTable(
     email: text("email"),
     phone: text("phone"),
     position: EmployeePositionPGEnum("position").notNull(),
+    sectorId: uuid("sector_id").references((): AnyPgColumn => sectors.id, {
+      onDelete: "restrict",
+    }),
     salary: numeric("salary", { mode: "number" }),
     hireDate: dateOnly("hire_date"),
     vacationStart: dateOnly("vacation_start"),
@@ -60,5 +65,6 @@ export const employees = pgTable(
     }),
     index("employees_company_id_index").on(table.companyId),
     index("employees_position_index").on(table.position),
+    index("employees_sector_id_index").on(table.sectorId),
   ],
 );

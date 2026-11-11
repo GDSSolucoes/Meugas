@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, UserCheck, Edit, Trash2 } from "lucide-react";
 import { Employee } from "@/entities/Employee";
+import { Sector } from "@/entities/Sector";
 import { format } from "date-fns";
 import { User } from "@/entities/User";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,6 +30,7 @@ import { formatDateOnly } from "@/utils";
 export default function EmployeesPage() {
   const { toast } = useToast();
   const [employees, setEmployees] = useState([]);
+  const [sectors, setSectors] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +38,7 @@ export default function EmployeesPage() {
   const initialEmployeeState = {
     name: "",
     document: "",
+    sectorId: "",
     email: "",
     phone: "",
     position: "",
@@ -56,14 +59,19 @@ export default function EmployeesPage() {
   const loadData = async () => {
     try {
       const user = await User.me();
-      const employeesData = await Employee.filter(
-        { companyId: user.companyId },
-        { sort: "-createdAt" },
-      );
+      const [employeesData, sectorsData] = await Promise.all([
+        Employee.filter(
+          { companyId: user.companyId },
+          { sort: "-createdAt" },
+        ),
+        Sector.filter({ companyId: user.companyId }),
+      ]);
       setEmployees(employeesData);
+      setSectors(sectorsData);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       setEmployees([]);
+      setSectors([]);
     }
   };
 
@@ -103,6 +111,15 @@ export default function EmployeesPage() {
 
   const handleSaveEmployee = async (e) => {
     e.preventDefault();
+    if (!currentEmployee.sectorId) {
+      toast({
+        title: "Setor obrigatório",
+        description: "Selecione um setor para o funcionário.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const user = await User.me();
@@ -244,6 +261,34 @@ export default function EmployeesPage() {
                       }
                       className="bg-white/80"
                     />
+                  </div>
+                  <div>
+                    <Label>Setor *</Label>
+                    <Select
+                      value={currentEmployee.sectorId}
+                      onValueChange={(value) =>
+                        setCurrentEmployee((prev) => ({
+                          ...prev,
+                          sectorId: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="bg-white/80">
+                        <SelectValue placeholder="Selecione o setor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sectors.map((sector) => (
+                          <SelectItem key={sector.id} value={sector.id}>
+                            {sector.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {sectors.length === 0 && (
+                      <p className="mt-1 text-sm text-red-600">
+                        Cadastre um setor antes de vincular o funcionário.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label>Email</Label>
@@ -422,6 +467,7 @@ export default function EmployeesPage() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>CPF</TableHead>
+                    <TableHead>Setor</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead>Situação</TableHead>
@@ -437,6 +483,10 @@ export default function EmployeesPage() {
                         {employee.name}
                       </TableCell>
                       <TableCell>{employee.document}</TableCell>
+                      <TableCell>
+                        {sectors.find((sector) => sector.id === employee.sectorId)
+                          ?.name || "-"}
+                      </TableCell>
                       <TableCell>
                         {getPositionBadge(employee.position)}
                       </TableCell>

@@ -190,6 +190,13 @@
       "when": 1793232462065,
       "tag": "0026_superb_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794354727587,
+      "tag": "0027_flashy_jackal",
+      "breakpoints": true
     }
   ]
 }

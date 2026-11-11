@@ -31,6 +31,11 @@ export class EmployeEsBaseDto extends BaseCreateDto {
   position!: EmployeePositionEnum;
 
   @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  sectorId!: string;
+
+  @ApiProperty()
   @IsOptional()
   @IsNumber()
   salary!: number;

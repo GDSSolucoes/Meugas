@@ -6,6 +6,7 @@ import {
   uuid,
   index,
   pgPolicy,
+  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { companies } from "./company.schema";
 import { sql } from "drizzle-orm/sql/sql";
@@ -16,7 +17,7 @@ export const sectors = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
-    employeeId: uuid("employee_id").references(() => employees.id, {
+    employeeId: uuid("employee_id").references((): AnyPgColumn => employees.id, {
       onDelete: "restrict",
     }),
     employeeName: text("employee_name"),
