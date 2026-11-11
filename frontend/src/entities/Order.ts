@@ -50,6 +50,7 @@ export class Order extends BaseEntity {
   personAddress?: OrderPersonAddress;
   employeeId?: string;
   employeeName?: string;
+  sectorId?: string | null;
   paymentTypeId?: string;
   paymentTypeName?: string;
   cashAccountId?: string;

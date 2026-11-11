@@ -46,7 +46,10 @@ export class OrdersController extends BaseCrudController<typeof orders> {
     type: OrderCreateDto,
   })
   async create(@Body() data: OrderCreateDto, @CurrentUser() user: any) {
-    return super.create(data, user);
+    data.companyId = user.companyId;
+    data.companyName = user.companyName;
+    data.createdByName = user.name;
+    return this.service.create(data, user);
   }
 
   @Get(":id")

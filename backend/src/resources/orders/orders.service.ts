@@ -7,7 +7,14 @@ import {
 import { and, eq, isNull, isNotNull, or, sql } from "drizzle-orm";
 import { BaseCrudService } from "../../common/base-crud.service";
 import { RequestContextService } from "../../database/request-context.service";
-import { orderItems, orders, OrdersStatusEnum } from "../../database/schemas";
+import {
+  employees,
+  orderItems,
+  orders,
+  OrdersStatusEnum,
+  sectors,
+  UserTypeEnum,
+} from "../../database/schemas";
 import { OrderCreateDto } from "./dto/order.post.dto";
 import { OrderUpdateDto } from "./dto/order.update.dto";
 
@@ -106,8 +113,62 @@ export class OrdersService extends BaseCrudService<typeof orders> {
   }
 
   // Override if needed for custom logic
-  async create(data: OrderCreateDto) {
-    const savedOrder = await super.create(data);
+  async create(
+    data: OrderCreateDto,
+    user?: { companyId: string; email: string; userType: UserTypeEnum },
+  ) {
+    if (!user) {
+      throw new BadRequestException("Usuário autenticado não encontrado.");
+    }
+
+    let sectorId = data.sectorId;
+    const isAdmin =
+      user.userType === UserTypeEnum.ADMIN ||
+      user.userType === UserTypeEnum.SUPER_ADMIN;
+
+    if (isAdmin) {
+      if (!sectorId) {
+        throw new BadRequestException(
+          "Selecione um setor válido da empresa.",
+        );
+      }
+    } else {
+      const normalizedEmail = user.email?.trim().toLowerCase();
+      const [employee] = normalizedEmail
+        ? await this.getDb()
+            .select({ sectorId: employees.sectorId })
+            .from(employees)
+            .where(
+              and(
+                eq(employees.companyId, user.companyId),
+                eq(employees.active, true),
+                sql`lower(${employees.email}) = ${normalizedEmail}`,
+              ),
+            )
+            .limit(1)
+        : [];
+
+      if (!employee?.sectorId) {
+        throw new BadRequestException(
+          "Funcionário não esta vinculado a um setor.",
+        );
+      }
+      sectorId = employee.sectorId;
+    }
+
+    const [sector] = await this.getDb()
+      .select({ id: sectors.id })
+      .from(sectors)
+      .where(
+        and(eq(sectors.id, sectorId), eq(sectors.companyId, user.companyId)),
+      )
+      .limit(1);
+    if (!sector) {
+      throw new BadRequestException("Selecione um setor válido da empresa.");
+    }
+
+    const orderToCreate: OrderCreateDto = { ...data, sectorId };
+    const savedOrder = await super.create(orderToCreate);
     if (savedOrder?.id && data.items?.length) {
       await this.getDb()
         .insert(orderItems)
