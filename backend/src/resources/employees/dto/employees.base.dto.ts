@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  ValidateIf,
+} from "class-validator";
 import { Transform } from "class-transformer";
 import { BaseCreateDto } from "../../../common/dto/base-create.dto";
 import { EmployeePositionEnum } from "../../../database/schemas";
@@ -30,10 +36,13 @@ export class EmployeEsBaseDto extends BaseCreateDto {
   @IsNotEmpty()
   position!: EmployeePositionEnum;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @ValidateIf((employee: EmployeEsBaseDto) =>
+    employee.position === EmployeePositionEnum.ENTREGADOR,
+  )
   @IsNotEmpty()
   @IsString()
-  sectorId!: string;
+  sectorId?: string | null;
 
   @ApiProperty()
   @IsOptional()

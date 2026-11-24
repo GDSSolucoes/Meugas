@@ -111,10 +111,13 @@ export default function EmployeesPage() {
 
   const handleSaveEmployee = async (e) => {
     e.preventDefault();
-    if (!currentEmployee.sectorId) {
+    if (
+      currentEmployee.position === "entregador" &&
+      !currentEmployee.sectorId
+    ) {
       toast({
         title: "Setor obrigatório",
-        description: "Selecione um setor para o funcionário.",
+        description: "Selecione um setor para o entregador.",
         variant: "destructive",
       });
       return;
@@ -126,6 +129,10 @@ export default function EmployeesPage() {
 
       const employeeData = {
         ...currentEmployee,
+        sectorId:
+          currentEmployee.position === "entregador"
+            ? currentEmployee.sectorId
+            : null,
         salary: Number(currentEmployee.salary) || 0,
         companyId: user.companyId,
         companyName: user.companyName,
@@ -263,34 +270,6 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <Label>Setor *</Label>
-                    <Select
-                      value={currentEmployee.sectorId}
-                      onValueChange={(value) =>
-                        setCurrentEmployee((prev) => ({
-                          ...prev,
-                          sectorId: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="bg-white/80">
-                        <SelectValue placeholder="Selecione o setor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sectors.map((sector) => (
-                          <SelectItem key={sector.id} value={sector.id}>
-                            {sector.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {sectors.length === 0 && (
-                      <p className="mt-1 text-sm text-red-600">
-                        Cadastre um setor antes de vincular o funcionário.
-                      </p>
-                    )}
-                  </div>
-                  <div>
                     <Label>Email</Label>
                     <Input
                       type="email"
@@ -325,6 +304,8 @@ export default function EmployeesPage() {
                         setCurrentEmployee((prev) => ({
                           ...prev,
                           position: value,
+                          sectorId:
+                            value === "entregador" ? prev.sectorId : "",
                         }))
                       }
                     >
@@ -342,6 +323,36 @@ export default function EmployeesPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {currentEmployee.position === "entregador" && (
+                    <div>
+                      <Label>Setor *</Label>
+                      <Select
+                        value={currentEmployee.sectorId || ""}
+                        onValueChange={(value) =>
+                          setCurrentEmployee((prev) => ({
+                            ...prev,
+                            sectorId: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="bg-white/80">
+                          <SelectValue placeholder="Selecione o setor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sectors.map((sector) => (
+                            <SelectItem key={sector.id} value={sector.id}>
+                              {sector.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {sectors.length === 0 && (
+                        <p className="mt-1 text-sm text-red-600">
+                          Cadastre um setor antes de cadastrar o entregador.
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <Label>Salário</Label>
                     <Input
@@ -484,8 +495,11 @@ export default function EmployeesPage() {
                       </TableCell>
                       <TableCell>{employee.document}</TableCell>
                       <TableCell>
-                        {sectors.find((sector) => sector.id === employee.sectorId)
-                          ?.name || "-"}
+                        {employee.position === "entregador"
+                          ? sectors.find(
+                              (sector) => sector.id === employee.sectorId,
+                            )?.name || "-"
+                          : "-"}
                       </TableCell>
                       <TableCell>
                         {getPositionBadge(employee.position)}
