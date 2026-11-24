@@ -41,6 +41,7 @@ export default function PaymentModal({
   onOpenChange,
   pedido,
   onConfirm,
+  stepLabel,
 }) {
   const [paymentType, setPaymentType] = useState("");
   const [paymentOption, setPaymentOption] = useState("vista");
@@ -327,7 +328,11 @@ export default function PaymentModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Pagamento</DialogTitle>
+          <DialogTitle>
+            Pagamento
+            {pedido?.orderNumber ? ` - Pedido ${pedido.orderNumber}` : ""}
+            {stepLabel ? ` (${stepLabel})` : ""}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-3 gap-6">

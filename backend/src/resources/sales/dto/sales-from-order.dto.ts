@@ -56,3 +56,11 @@ export class SalesFromOrderDto {
   @Type(() => OrderSalePaymentDto)
   paymentMethods!: OrderSalePaymentDto[];
 }
+
+export class SalesFromOrdersDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => SalesFromOrderDto)
+  orders!: SalesFromOrderDto[];
+}

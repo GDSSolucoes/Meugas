@@ -26,7 +26,10 @@ import { Roles } from "../../auth/roles.decorator";
 import { RolesGuard } from "../../auth/roles.guard";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
 import { CurrentUser } from "../../auth/current-user.decorator";
-import { SalesFromOrderDto } from "./dto/sales-from-order.dto";
+import {
+  SalesFromOrderDto,
+  SalesFromOrdersDto,
+} from "./dto/sales-from-order.dto";
 
 @ApiTags("sales")
 @ApiBearerAuth()
@@ -69,6 +72,25 @@ export class SalesController extends BaseCrudController<typeof sales> {
     @CurrentUser() user: any,
   ) {
     return this.service.createFromOrder(
+      data,
+      user.id,
+      user.name,
+      user.companyId,
+      user.companyName,
+    );
+  }
+
+  @Post("from-orders")
+  @ApiBody({ type: SalesFromOrdersDto })
+  @ApiOperation({
+    summary: "Converter vários pedidos em vendas completas em lote",
+  })
+  @ApiResponse({ status: 201, description: "Vendas dos pedidos criadas" })
+  async createFromOrders(
+    @Body() data: SalesFromOrdersDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.service.createFromOrders(
       data,
       user.id,
       user.name,

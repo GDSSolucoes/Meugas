@@ -43,6 +43,12 @@ export interface SaleFromOrderPayment {
   }>;
 }
 
+export interface SaleFromOrderRequest {
+  orderId: string;
+  totalAmount: number;
+  paymentMethods: SaleFromOrderPayment[];
+}
+
 /**
  * Sale Entity
  *
@@ -111,16 +117,24 @@ export class Sale extends BaseEntity {
     }
   }
 
-  static async createFromOrder(data: {
-    orderId: string;
-    totalAmount: number;
-    paymentMethods: SaleFromOrderPayment[];
-  }): Promise<Sale> {
+  static async createFromOrder(data: SaleFromOrderRequest): Promise<Sale> {
     try {
       const response = await api.post(`${this.baseUrl}/from-order`, data);
       return response.data;
     } catch (error) {
       console.error("Error creating Sale from Order:", error);
+      throw error;
+    }
+  }
+
+  static async createFromOrders(data: {
+    orders: SaleFromOrderRequest[];
+  }): Promise<Sale[]> {
+    try {
+      const response = await api.post(`${this.baseUrl}/from-orders`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating Sales from Orders:", error);
       throw error;
     }
   }

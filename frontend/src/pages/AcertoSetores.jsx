@@ -113,6 +113,10 @@ export default function AcertoSetoresPage() {
 
   const [pedidos, setPedidos] = useState([]);
   const [selectedPedido, setSelectedPedido] = useState(null);
+  const [selectedPedidos, setSelectedPedidos] = useState([]);
+  const [paymentQueue, setPaymentQueue] = useState([]);
+  const [paymentIndex, setPaymentIndex] = useState(0);
+  const [paymentDrafts, setPaymentDrafts] = useState([]);
   const [itensPedido, setItensPedido] = useState([]);
   const [searchExecuted, setSearchExecuted] = useState(false);
   const [isLoadingPedidos, setIsLoadingPedidos] = useState(false);
@@ -220,6 +224,7 @@ export default function AcertoSetoresPage() {
       setTotalPedidos(0);
       calcularResumo({ total: 0, totalAmount: 0 });
       setSelectedPedido(null);
+      setSelectedPedidos([]);
       setItensPedido([]);
       setIsLoadingPedidos(false);
       setShowNoResultsModal(true);
@@ -251,6 +256,7 @@ export default function AcertoSetoresPage() {
       setTotalPedidos(result.total);
       calcularResumo(result);
       setSelectedPedido(null);
+      setSelectedPedidos([]);
       setItensPedido([]);
 
       if (result.total === 0) {
@@ -286,7 +292,7 @@ export default function AcertoSetoresPage() {
   };
 
   const handleTransformToSale = () => {
-    if (!selectedPedido) {
+    if (selectedPedidos.length === 0) {
       toast({
         title: "Atenção",
         description: "Selecione um pedido para transformar em venda.",
@@ -294,13 +300,16 @@ export default function AcertoSetoresPage() {
       });
       return;
     }
+    setPaymentQueue(selectedPedidos);
+    setPaymentIndex(0);
+    setPaymentDrafts([]);
     setShowPaymentModal(true);
   };
 
   const handlePaymentConfirm = async (paymentData) => {
     try {
       const { pedido, payments, parcelas, totalAReceber } = paymentData;
-      await entities.Sale.createFromOrder({
+      const currentPayment = {
         orderId: pedido.id,
         totalAmount: totalAReceber,
         paymentMethods: payments.map((payment) => ({
@@ -315,15 +324,31 @@ export default function AcertoSetoresPage() {
               amount: installment.valor,
             })),
         })),
-      });
+      };
+      const orders = [...paymentDrafts, currentPayment];
+
+      if (paymentIndex < paymentQueue.length - 1) {
+        setPaymentDrafts(orders);
+        setPaymentIndex((index) => index + 1);
+        return;
+      }
+
+      await entities.Sale.createFromOrders({ orders });
 
       toast({
         title: "Sucesso",
-        description: "Venda realizada com sucesso!",
+        description:
+          orders.length === 1
+            ? "Venda realizada com sucesso!"
+            : `${orders.length} vendas realizadas com sucesso!`,
       });
 
       setShowPaymentModal(false);
+      setPaymentQueue([]);
+      setPaymentIndex(0);
+      setPaymentDrafts([]);
       setSelectedPedido(null);
+      setSelectedPedidos([]);
       setItensPedido([]);
       await loadData();
       await loadOrders(1);
@@ -336,6 +361,42 @@ export default function AcertoSetoresPage() {
           "Não foi possível processar a venda.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handlePedidoSelection = (pedido, checked) => {
+    if (checked === true) {
+      setSelectedPedidos((current) =>
+        current.some((selected) => selected.id === pedido.id)
+          ? current
+          : [...current, pedido],
+      );
+      return;
+    }
+
+    setSelectedPedidos((current) =>
+      current.filter((selected) => selected.id !== pedido.id),
+    );
+  };
+
+  const isPedidoSelectionDisabled = (pedido) => {
+    const isSelected = selectedPedidos.some(
+      (selected) => selected.id === pedido.id,
+    );
+    return (
+      !isSelected &&
+      selectedPedidos.length > 0 &&
+      (!selectedPedidos[0].paymentTypeId ||
+        selectedPedidos[0].paymentTypeId !== pedido.paymentTypeId)
+    );
+  };
+
+  const handlePaymentModalOpenChange = (open) => {
+    setShowPaymentModal(open);
+    if (!open) {
+      setPaymentQueue([]);
+      setPaymentIndex(0);
+      setPaymentDrafts([]);
     }
   };
 
@@ -395,12 +456,18 @@ export default function AcertoSetoresPage() {
             <Card className="bg-white/90 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-bold">Pedidos</CardTitle>
+                <span className="text-xs text-gray-500">
+                  Clique duplo para realizar baixa.
+                </span>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto" style={{ height: "300px" }}>
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
+                        <TableHead className="text-center w-24">
+                          Selecionar
+                        </TableHead>
                         <TableHead className="text-center w-20">
                           Código
                         </TableHead>
@@ -411,8 +478,8 @@ export default function AcertoSetoresPage() {
                         <TableHead className="text-center w-20">
                           Setor
                         </TableHead>
-                        <TableHead className="text-center w-20">
-                          Baixa
+                        <TableHead className="text-center w-28">
+                          Pagamento
                         </TableHead>
                         <TableHead className="text-right w-24">
                           Total F
@@ -423,7 +490,7 @@ export default function AcertoSetoresPage() {
                       {!searchExecuted ? (
                         <TableRow>
                           <TableCell
-                            colSpan={6}
+                            colSpan={7}
                             className="text-center text-gray-400 py-8"
                           >
                             Clique no botão de pesquisa para visualizar pedidos
@@ -432,7 +499,7 @@ export default function AcertoSetoresPage() {
                       ) : isLoadingPedidos ? (
                         <TableRow>
                           <TableCell
-                            colSpan={6}
+                            colSpan={7}
                             className="text-center text-gray-400 py-8"
                           >
                             Carregando pedidos...
@@ -441,7 +508,7 @@ export default function AcertoSetoresPage() {
                       ) : pedidos.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={6}
+                            colSpan={7}
                             className="text-center text-gray-400 py-8"
                           >
                             Nenhum pedido encontrado
@@ -455,9 +522,33 @@ export default function AcertoSetoresPage() {
                             onClick={() => handleSelectPedido(pedido)}
                             onDoubleClick={() => {
                               handleSelectPedido(pedido);
+                              setPaymentQueue([pedido]);
+                              setPaymentIndex(0);
+                              setPaymentDrafts([]);
                               setShowPaymentModal(true);
                             }}
                           >
+                            <TableCell className="text-center">
+                              <Checkbox
+                                checked={selectedPedidos.some(
+                                  (selected) => selected.ids === pedido.id,
+                                )}
+                                disabled={isPedidoSelectionDisabled(pedido)}
+                                title={
+                                  isPedidoSelectionDisabled(pedido)
+                                    ? "Selecione pedidos do mesmo tipo de pagamento"
+                                    : undefined
+                                }
+                                onClick={(event) => event.stopPropagation()}
+                                onDoubleClick={(event) =>
+                                  event.stopPropagation()
+                                }
+                                onCheckedChange={(checked) =>
+                                  handlePedidoSelection(pedido, checked)
+                                }
+                                aria-label={`Selecionar pedido ${pedido.orderNumber}`}
+                              />
+                            </TableCell>
                             <TableCell className="text-center">
                               {pedido.orderNumber}
                             </TableCell>
@@ -475,7 +566,7 @@ export default function AcertoSetoresPage() {
                                 ?.name || "-"}
                             </TableCell>
                             <TableCell className="text-center">
-                              {pedido.status === "finalizado" ? "✓" : "-"}
+                              {pedido.paymentTypeName || "-"}
                             </TableCell>
                             <TableCell className="text-right">
                               R$ {pedido.totalAmount?.toFixed(2) || "0,00"}
@@ -663,7 +754,11 @@ export default function AcertoSetoresPage() {
                       onChange={(e) => setHoraInicial(e.target.value)}
                       className="w-24"
                     />
-                    <span className="text-sm">a</span>
+                  </div>
+                  <div className="flex justify-end">
+                    <span className="text-sm text-end w-full">a</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     <Input
                       type="date"
                       value={dataFinal}
@@ -676,6 +771,9 @@ export default function AcertoSetoresPage() {
                       onChange={(e) => setHoraFinal(e.target.value)}
                       className="w-24"
                     />
+                  </div>
+
+                  <div className="flex flex-wrap justify-end gap-2">
                     <Button
                       size="icon"
                       className="h-8 w-8 text-white"
@@ -692,20 +790,6 @@ export default function AcertoSetoresPage() {
             {/* QUADRANTE CENTRAL DIREITO - Painel de Resumo */}
             <Card className="bg-white/90 backdrop-blur-sm">
               <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Checkbox
-                    id="mostrar-lancados"
-                    checked={mostrarLancados}
-                    onCheckedChange={setMostrarLancados}
-                  />
-                  <Label
-                    htmlFor="mostrar-lancados"
-                    className="text-sm cursor-pointer"
-                  >
-                    Mostrar ped. lançados
-                  </Label>
-                </div>
-
                 <div className="space-y-4">
                   {/* Não lançados */}
                   <div>
@@ -827,7 +911,7 @@ export default function AcertoSetoresPage() {
                           className="text-white"
                           style={{ backgroundColor: "#e78b3a" }}
                           onClick={handleTransformToSale}
-                          disabled={!selectedPedido}
+                          disabled={selectedPedidos.length === 0}
                         >
                           <Check className="w-5 h-5" />
                         </Button>
@@ -1082,8 +1166,13 @@ export default function AcertoSetoresPage() {
         {/* Modal de Pagamento */}
         <PaymentModal
           open={showPaymentModal}
-          onOpenChange={setShowPaymentModal}
-          pedido={selectedPedido}
+          onOpenChange={handlePaymentModalOpenChange}
+          pedido={paymentQueue[paymentIndex] || null}
+          stepLabel={
+            paymentQueue.length > 1
+              ? `${paymentIndex + 1} de ${paymentQueue.length}`
+              : null
+          }
           onConfirm={handlePaymentConfirm}
         />
       </div>

@@ -33,7 +33,10 @@ import {
   SaleStatusEnum,
 } from "../../database/schemas";
 import { SalesCreateDto } from "./dto/sales.post.dto";
-import { SalesFromOrderDto } from "./dto/sales-from-order.dto";
+import {
+  SalesFromOrderDto,
+  SalesFromOrdersDto,
+} from "./dto/sales-from-order.dto";
 import { SalesUpdateDto } from "./dto/sales.update.dto";
 import { eq, and, desc, sql, or, asc, ilike } from "drizzle-orm";
 import { StockMovementRebuildService } from "../../database/stock-movement-rebuild.service";
@@ -229,6 +232,70 @@ export class SalesService extends BaseCrudService<typeof sales> {
       companyId,
       companyName,
     );
+  }
+
+  async createFromOrders(
+    request: SalesFromOrdersDto,
+    userId: string,
+    userName: string,
+    companyId: string,
+    companyName: string,
+  ) {
+    const db = this.requestContext.getDb();
+    if (!db) throw new Error("DB not available");
+
+    const orderIds = request.orders.map((order) => order.orderId);
+    if (new Set(orderIds).size !== orderIds.length) {
+      throw new BadRequestException(
+        "O mesmo pedido não pode ser incluído mais de uma vez.",
+      );
+    }
+
+    const selectedOrders: Array<typeof orders.$inferSelect> = [];
+    for (const orderId of [...orderIds].sort()) {
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(
+          and(
+            eq(orders.id, orderId),
+            eq(orders.companyId, companyId),
+            eq(orders.active, true),
+          ),
+        )
+        .limit(1)
+        .for("update");
+
+      if (!order) throw new NotFoundException("Pedido não encontrado.");
+      selectedOrders.push(order);
+    }
+
+    const paymentTypeId = selectedOrders[0].paymentTypeId;
+    if (selectedOrders.length > 1 && !paymentTypeId) {
+      throw new BadRequestException(
+        "Todos os pedidos devem ter um tipo de pagamento definido para a baixa em lote.",
+      );
+    }
+    if (selectedOrders.some((order) => order.paymentTypeId !== paymentTypeId)) {
+      throw new BadRequestException(
+        "Todos os pedidos devem ter o mesmo tipo de pagamento.",
+      );
+    }
+
+    const createdSales: Array<typeof sales.$inferSelect> = [];
+    for (const orderRequest of request.orders) {
+      createdSales.push(
+        await this.createFromOrder(
+          orderRequest,
+          userId,
+          userName,
+          companyId,
+          companyName,
+        ),
+      );
+    }
+
+    return createdSales;
   }
 
   private async createCompleteInTransaction(
