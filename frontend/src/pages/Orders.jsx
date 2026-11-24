@@ -4,7 +4,6 @@ import { Order } from "@/entities/Order";
 import { Person } from "@/entities/Person";
 import { Product } from "@/entities/Product";
 import { Employee } from "@/entities/Employee";
-import { Sector } from "@/entities/Sector";
 import { PaymentType } from "@/entities/PaymentType";
 import { AccountsReceivable } from "@/entities/AccountsReceivable";
 import { User as UserEntity } from "@/entities/User";
@@ -32,10 +31,6 @@ export default function OrdersPage() {
   const [people, setPeople] = useState([]);
   const [products, setProducts] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [sectors, setSectors] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [assignedSectorId, setAssignedSectorId] = useState("");
-  const [sectorAccessReady, setSectorAccessReady] = useState(false);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [customerFound, setCustomerFound] = useState(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
@@ -76,12 +71,6 @@ export default function OrdersPage() {
   };
 
   const [currentOrder, setCurrentOrder] = useState(initialOrderState);
-  const isAdminUser =
-    currentUser?.userType === "admin" ||
-    currentUser?.userType === "super_admin";
-  const orderSectorId = isAdminUser
-    ? currentOrder.sectorId
-    : assignedSectorId;
 
   const initialCustomerState = {
     name: "",
@@ -169,10 +158,22 @@ export default function OrdersPage() {
 
   // New function: validateOrder - encapsulates existing validation
   const validateOrder = () => {
-    if (!orderSectorId) {
+    const selectedEmployee = employees.find(
+      (employee) => employee.id === currentOrder.employeeId,
+    );
+    if (!selectedEmployee) {
       toast({
         title: "Atenção",
-        description: "Selecione um setor para o pedido.",
+        description: "Selecione um entregador para o pedido.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!selectedEmployee.sectorId) {
+      toast({
+        title: "Entregador sem setor",
+        description:
+          "Vincule um setor ao entregador selecionado antes de finalizar o pedido.",
         variant: "destructive",
       });
       return false;
@@ -275,53 +276,35 @@ export default function OrdersPage() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
-    setSectorAccessReady(false);
     try {
       const user = await UserEntity.me();
       const companyId = user.companyId;
-      const isAdmin =
-        user.userType === "admin" || user.userType === "super_admin";
 
-      const [
-        allPeople,
-        productsData,
-        employeesData,
-        paymentTypesData,
-        allEmployees,
-        sectorsData,
-      ] = await Promise.all([
-        Person.filter({ companyId }),
-        Product.filter({ companyId, active: true }),
-        Employee.filter(
-          { companyId, position: "entregador", active: true },
-          { sort: "name" },
-        ),
-        PaymentType.filter({ companyId, active: true }),
-        Employee.filter({ companyId, active: true }),
-        Sector.filter({ companyId, active: true }),
-      ]);
+      const [allPeople, productsData, employeesData, paymentTypesData] =
+        await Promise.all([
+          Person.filter({ companyId }),
+          Product.filter({ companyId, active: true }),
+          Employee.filter(
+            { companyId, position: "entregador", active: true },
+            { sort: "name" },
+          ),
+          PaymentType.filter({ companyId, active: true }),
+        ]);
 
-      setCurrentUser(user);
       setPeople(allPeople.filter((p) => p.type === "cliente"));
       setProducts(productsData);
       setEmployees(employeesData);
       setPaymentTypes(paymentTypesData);
-      setSectors(sectorsData);
 
-      if (!isAdmin) {
-        const normalizedUserEmail = user.email?.trim().toLowerCase();
-        const employee = normalizedUserEmail
-          ? allEmployees.find(
-              (item) =>
-                item.email?.trim().toLowerCase() === normalizedUserEmail,
-            )
-          : undefined;
-        const sectorId = employee?.sectorId || "";
-        setAssignedSectorId(sectorId);
-        setCurrentOrder((previous) => ({ ...previous, sectorId }));
-      }
-
-      setSectorAccessReady(true);
+      const defaultPaymentType = paymentTypesData.find(
+        (paymentType) => paymentType.type === "dinheiro",
+      );
+      setCurrentOrder((previous) => ({
+        ...previous,
+        paymentTypeId: previous.paymentTypeId || defaultPaymentType?.id || "",
+        paymentTypeName:
+          previous.paymentTypeName || defaultPaymentType?.name || "",
+      }));
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast({
@@ -492,6 +475,12 @@ export default function OrdersPage() {
     setIsEditingCustomer(false);
   };
 
+  const handleRegisterCustomer = () => {
+    setShowClientSearch(false);
+    resetCustomerForm();
+    setShowCustomerForm(true);
+  };
+
   const clearCustomer = () => {
     setCustomerFound(null);
     setCurrentOrder((prev) => ({
@@ -660,7 +649,7 @@ export default function OrdersPage() {
 
       const orderToSave = {
         orderNumber: String(newOrderNumber),
-        sectorId: orderSectorId,
+        sectorId: currentOrder.sectorId,
         personId: currentOrder.personId,
         personName: currentOrder.personName,
         // Garante que o endereço do cliente selecionado seja salvo no pedido
@@ -693,12 +682,15 @@ export default function OrdersPage() {
 
       console.log("Pedido criado com sucesso:", newOrder); // Debug log
 
-      await generateReceivables(newOrder, user);
-
       // Reset form after successful order creation
       setCurrentOrder({
         ...initialOrderState,
-        sectorId: assignedSectorId,
+        paymentTypeId:
+          paymentTypes.find((paymentType) => paymentType.type === "dinheiro")
+            ?.id || "",
+        paymentTypeName:
+          paymentTypes.find((paymentType) => paymentType.type === "dinheiro")
+            ?.name || "",
       });
       setPedidoItems([]);
       setCustomerFound(null);
@@ -726,31 +718,6 @@ export default function OrdersPage() {
         <p className="text-xl font-bold" style={{ color: "#223f61" }}>
           Carregando dados...
         </p>
-      </div>
-    );
-  }
-
-  if (!sectorAccessReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
-        <Card className="w-full max-w-xl border-red-200 bg-white">
-          <CardContent className="p-6 text-center text-red-700">
-            Não foi possível validar o vínculo do usuário com um setor.
-            Recarregue a tela ou tente novamente mais tarde.
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!isAdminUser && !assignedSectorId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
-        <Card className="w-full max-w-xl border-amber-300 bg-white">
-          <CardContent className="p-6 text-center font-semibold text-amber-800">
-            Funcionário não esta vinculado a um setor
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -1269,6 +1236,7 @@ export default function OrdersPage() {
                       onValueChange={setClientSearchTerm}
                       onSelect={selectCustomer}
                       onClear={clearCustomer}
+                      onRegister={handleRegisterCustomer}
                       showRegistration
                       registrationLabel="Novo"
                     />
@@ -1295,36 +1263,6 @@ export default function OrdersPage() {
                   )}
                 </div>
               </div>
-              {isAdminUser && (
-                <div>
-                  <Label htmlFor="order-sector">Setor *</Label>
-                  <Select
-                    value={currentOrder.sectorId || ""}
-                    onValueChange={(sectorId) =>
-                      setCurrentOrder((previous) => ({
-                        ...previous,
-                        sectorId,
-                      }))
-                    }
-                  >
-                    <SelectTrigger id="order-sector" className="mt-1">
-                      <SelectValue placeholder="Selecione o setor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sectors.map((sector) => (
-                        <SelectItem key={sector.id} value={sector.id}>
-                          {sector.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {sectors.length === 0 && (
-                    <p className="mt-1 text-sm text-red-600">
-                      Cadastre um setor antes de fazer pedidos.
-                    </p>
-                  )}
-                </div>
-              )}
               <div>
                 <Label htmlFor="order-delivery-date">Data do pedido</Label>
                 <Input
@@ -1500,6 +1438,7 @@ export default function OrdersPage() {
                         ...previous,
                         employeeId,
                         employeeName: employee?.name || "",
+                        sectorId: employee?.sectorId || "",
                       }));
                     }}
                   >
@@ -1514,6 +1453,11 @@ export default function OrdersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {currentOrder.employeeId && !currentOrder.sectorId && (
+                    <p className="mt-1 text-sm text-red-600">
+                      O entregador selecionado não está vinculado a um setor.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

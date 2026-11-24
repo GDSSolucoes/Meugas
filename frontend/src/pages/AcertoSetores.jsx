@@ -71,9 +71,20 @@ export default function AcertoSetoresPage() {
   };
 
   const storedFilters = getStoredFilters();
+  const currentDate = new Date();
+  const currentMonthStart = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    1,
+  );
+  const currentMonthEnd = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0,
+  );
 
   const [lancamento, setLancamento] = useState(
-    storedFilters?.lancamento || formatDateOnly(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(currentDate, "yyyy-MM-dd"),
   );
   const [setorSelecionado, setSetorSelecionado] = useState(null);
   const [mostrarEntregues, setMostrarEntregues] = useState(
@@ -83,13 +94,13 @@ export default function AcertoSetoresPage() {
     storedFilters?.mostrarNaoEntregues ?? true,
   );
   const [dataInicial, setDataInicial] = useState(
-    storedFilters?.dataInicial || formatDateOnly(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(currentMonthStart, "yyyy-MM-dd"),
   );
   const [horaInicial, setHoraInicial] = useState(
     storedFilters?.horaInicial || "00:00",
   );
   const [dataFinal, setDataFinal] = useState(
-    storedFilters?.dataFinal || formatDateOnly(new Date(), "yyyy-MM-dd"),
+    formatDateOnly(currentMonthEnd, "yyyy-MM-dd"),
   );
   const [horaFinal, setHoraFinal] = useState(
     storedFilters?.horaFinal || "23:59",
@@ -223,6 +234,8 @@ export default function AcertoSetoresPage() {
         effectiveDeliveryDate_lte: dataFinal,
         effectiveCreatedAt_gte: dataHoraInicio.toISOString(),
         effectiveCreatedAt_lte: dataHoraFim.toISOString(),
+        ...(setorSelecionado ? { sectorId: setorSelecionado.id } : {}),
+        excludeSold: true,
         ...(!mostrarNaoEntregues ? { status: "finalizado" } : {}),
         ...(!mostrarEntregues ? { status_ne: "finalizado" } : {}),
       };
@@ -281,15 +294,6 @@ export default function AcertoSetoresPage() {
       });
       return;
     }
-    if (!setorSelecionado) {
-      toast({
-        title: "Atenção",
-        description:
-          "Selecione o setor de estoque antes de converter o pedido.",
-        variant: "destructive",
-      });
-      return;
-    }
     setShowPaymentModal(true);
   };
 
@@ -298,7 +302,6 @@ export default function AcertoSetoresPage() {
       const { pedido, payments, parcelas, totalAReceber } = paymentData;
       await entities.Sale.createFromOrder({
         orderId: pedido.id,
-        sectorId: setorSelecionado.id,
         totalAmount: totalAReceber,
         paymentMethods: payments.map((payment) => ({
           paymentTypeId: payment.tipo,
@@ -452,15 +455,6 @@ export default function AcertoSetoresPage() {
                             onClick={() => handleSelectPedido(pedido)}
                             onDoubleClick={() => {
                               handleSelectPedido(pedido);
-                              if (!setorSelecionado) {
-                                toast({
-                                  title: "Atenção",
-                                  description:
-                                    "Selecione o setor de estoque antes de converter o pedido.",
-                                  variant: "destructive",
-                                });
-                                return;
-                              }
                               setShowPaymentModal(true);
                             }}
                           >
@@ -476,7 +470,10 @@ export default function AcertoSetoresPage() {
                                   )
                                 : "-"}
                             </TableCell>
-                            <TableCell className="text-center">-</TableCell>
+                            <TableCell className="text-center">
+                              {setores.find((s) => s.id === pedido.sectorId)
+                                ?.name || "-"}
+                            </TableCell>
                             <TableCell className="text-center">
                               {pedido.status === "finalizado" ? "✓" : "-"}
                             </TableCell>

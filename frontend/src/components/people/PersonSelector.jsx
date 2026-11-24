@@ -37,6 +37,7 @@ export default function PersonSelector({
   onValueChange,
   onSelect,
   onClear,
+  onRegister,
 }) {
   const processedPersonId = useRef(null);
 
@@ -85,6 +86,11 @@ export default function PersonSelector({
   }, [onOpenChange, onSelect, options]);
 
   const handleRegister = () => {
+    if (onRegister) {
+      onRegister();
+      return;
+    }
+
     const params = new URLSearchParams({
       module: "gerencial",
       type: registrationType,

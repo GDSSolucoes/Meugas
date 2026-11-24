@@ -118,12 +118,18 @@ export class SalesService extends BaseCrudService<typeof sales> {
       );
     }
 
+    if (!order.sectorId) {
+      throw new BadRequestException(
+        "O pedido não está vinculado a um setor de estoque.",
+      );
+    }
+
     const [sector] = await db
       .select()
       .from(sectors)
       .where(
         and(
-          eq(sectors.id, request.sectorId),
+          eq(sectors.id, order.sectorId),
           eq(sectors.companyId, companyId),
           eq(sectors.active, true),
         ),

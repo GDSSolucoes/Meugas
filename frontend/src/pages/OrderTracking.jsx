@@ -234,6 +234,15 @@ export default function OrderTrackingPage() {
       });
       return;
     }
+    if (!employee.sectorId) {
+      toast({
+        title: "Entregador sem setor",
+        description:
+          "Vincule um setor ao entregador antes de atribuí-lo ao pedido.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       await Order.update(orderId, {
@@ -243,7 +252,12 @@ export default function OrderTrackingPage() {
       setAllOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === orderId
-            ? { ...order, employeeId: employee.id, employeeName: employee.name }
+            ? {
+                ...order,
+                employeeId: employee.id,
+                employeeName: employee.name,
+                sectorId: employee.sectorId,
+              }
             : order,
         ),
       );

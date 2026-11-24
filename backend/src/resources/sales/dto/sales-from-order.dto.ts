@@ -46,9 +46,6 @@ export class SalesFromOrderDto {
   @IsUUID()
   orderId!: string;
 
-  @IsUUID()
-  sectorId!: string;
-
   @IsNumber()
   @Min(0.01)
   totalAmount!: number;

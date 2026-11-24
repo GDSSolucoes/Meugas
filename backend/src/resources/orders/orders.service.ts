@@ -9,11 +9,12 @@ import { BaseCrudService } from "../../common/base-crud.service";
 import { RequestContextService } from "../../database/request-context.service";
 import {
   employees,
+  EmployeePositionEnum,
   orderItems,
   orders,
   OrdersStatusEnum,
   sectors,
-  UserTypeEnum,
+  sales,
 } from "../../database/schemas";
 import { OrderCreateDto } from "./dto/order.post.dto";
 import { OrderUpdateDto } from "./dto/order.update.dto";
@@ -38,14 +39,17 @@ export class OrdersService extends BaseCrudService<typeof orders> {
       effectiveDeliveryDate_lte: deliveryDateTo,
       effectiveCreatedAt_gte: createdAtFrom,
       effectiveCreatedAt_lte: createdAtTo,
+      excludeSold,
       ...otherFilters
     } = filters;
 
+    const shouldExcludeSold = excludeSold === true || excludeSold === "true";
+    const hasEffectiveDateFilters =
+      deliveryDateFrom || deliveryDateTo || createdAtFrom || createdAtTo;
+
     if (
-      !deliveryDateFrom &&
-      !deliveryDateTo &&
-      !createdAtFrom &&
-      !createdAtTo
+      !hasEffectiveDateFilters &&
+      !shouldExcludeSold
     ) {
       return super.list(
         page,
@@ -86,16 +90,28 @@ export class OrdersService extends BaseCrudService<typeof orders> {
       );
     }
 
-    const effectiveDateFilter = or(...effectiveDateConditions);
-    if (!effectiveDateFilter) {
+    const effectiveDateFilter = hasEffectiveDateFilters
+      ? or(...effectiveDateConditions)
+      : undefined;
+    if (hasEffectiveDateFilters && !effectiveDateFilter) {
       throw new Error("Os filtros de data efetiva dos pedidos são inválidos.");
     }
 
-    const where = sql`(${this.buildWhere(
-      otherFilters,
-      search,
-      searchFields,
-    )}) AND (${effectiveDateFilter})`;
+    const baseWhere = this.buildWhere(otherFilters, search, searchFields);
+    const where =
+      and(
+        baseWhere,
+        shouldExcludeSold
+          ? sql`NOT EXISTS (
+              SELECT 1
+              FROM ${sales}
+              WHERE ${sales.orderId} = ${orders.id}
+                AND ${sales.companyId} = ${orders.companyId}
+                AND ${sales.active} = true
+            )`
+          : undefined,
+        effectiveDateFilter,
+      ) ?? baseWhere;
     const [result, [totals]] = await Promise.all([
       this.listWithWhere(where, page, limit, sort, order),
       this.getDb()
@@ -115,45 +131,37 @@ export class OrdersService extends BaseCrudService<typeof orders> {
   // Override if needed for custom logic
   async create(
     data: OrderCreateDto,
-    user?: { companyId: string; email: string; userType: UserTypeEnum },
+    user?: { companyId: string },
   ) {
     if (!user) {
       throw new BadRequestException("Usuário autenticado não encontrado.");
     }
 
-    let sectorId = data.sectorId;
-    const isAdmin =
-      user.userType === UserTypeEnum.ADMIN ||
-      user.userType === UserTypeEnum.SUPER_ADMIN;
+    if (!data.employeeId) {
+      throw new BadRequestException("Selecione um entregador para o pedido.");
+    }
 
-    if (isAdmin) {
-      if (!sectorId) {
-        throw new BadRequestException(
-          "Selecione um setor válido da empresa.",
-        );
-      }
-    } else {
-      const normalizedEmail = user.email?.trim().toLowerCase();
-      const [employee] = normalizedEmail
-        ? await this.getDb()
-            .select({ sectorId: employees.sectorId })
-            .from(employees)
-            .where(
-              and(
-                eq(employees.companyId, user.companyId),
-                eq(employees.active, true),
-                sql`lower(${employees.email}) = ${normalizedEmail}`,
-              ),
-            )
-            .limit(1)
-        : [];
+    const [employee] = await this.getDb()
+      .select({ id: employees.id, sectorId: employees.sectorId })
+      .from(employees)
+      .where(
+        and(
+          eq(employees.id, data.employeeId),
+          eq(employees.companyId, user.companyId),
+          eq(employees.active, true),
+          eq(employees.position, EmployeePositionEnum.ENTREGADOR),
+        ),
+      )
+      .limit(1);
+    if (!employee) {
+      throw new BadRequestException("Selecione um entregador válido.");
+    }
 
-      if (!employee?.sectorId) {
-        throw new BadRequestException(
-          "Funcionário não esta vinculado a um setor.",
-        );
-      }
-      sectorId = employee.sectorId;
+    const sectorId = employee.sectorId;
+    if (!sectorId) {
+      throw new BadRequestException(
+        "O entregador selecionado não está vinculado a um setor.",
+      );
     }
 
     const [sector] = await this.getDb()
@@ -164,7 +172,9 @@ export class OrdersService extends BaseCrudService<typeof orders> {
       )
       .limit(1);
     if (!sector) {
-      throw new BadRequestException("Selecione um setor válido da empresa.");
+      throw new BadRequestException(
+        "O setor do entregador não pertence à empresa.",
+      );
     }
 
     const orderToCreate: OrderCreateDto = { ...data, sectorId };
@@ -191,7 +201,77 @@ export class OrdersService extends BaseCrudService<typeof orders> {
   }
 
   async update(id: string, data: Partial<OrderUpdateDto>) {
-    const updatedOrder = await super.update(id, data);
+    let updateData = data;
+    if (data.employeeId !== undefined || data.sectorId !== undefined) {
+      const companyId = this.requestContext.getCompanyId();
+      const [existingOrder] = await this.getDb()
+        .select({ employeeId: orders.employeeId })
+        .from(orders)
+        .where(eq(orders.id, id))
+        .limit(1);
+
+      if (!existingOrder) {
+        throw new NotFoundException("Pedido não encontrado.");
+      }
+
+      const employeeId = data.employeeId ?? existingOrder.employeeId;
+      if (!employeeId) {
+        throw new BadRequestException(
+          "Selecione um entregador para o pedido.",
+        );
+      }
+
+      const [employee] = await this.getDb()
+        .select({
+          id: employees.id,
+          name: employees.name,
+          sectorId: employees.sectorId,
+        })
+        .from(employees)
+        .where(
+          and(
+            eq(employees.id, employeeId),
+            eq(employees.active, true),
+            eq(employees.position, EmployeePositionEnum.ENTREGADOR),
+            ...(companyId ? [eq(employees.companyId, companyId)] : []),
+          ),
+        )
+        .limit(1);
+
+      if (!employee) {
+        throw new BadRequestException("Selecione um entregador válido.");
+      }
+      if (!employee.sectorId) {
+        throw new BadRequestException(
+          "O entregador selecionado não está vinculado a um setor.",
+        );
+      }
+
+      const [sector] = await this.getDb()
+        .select({ id: sectors.id })
+        .from(sectors)
+        .where(
+          and(
+            eq(sectors.id, employee.sectorId),
+            ...(companyId ? [eq(sectors.companyId, companyId)] : []),
+          ),
+        )
+        .limit(1);
+      if (!sector) {
+        throw new BadRequestException(
+          "O setor do entregador não pertence à empresa.",
+        );
+      }
+
+      updateData = {
+        ...data,
+        employeeId: employee.id,
+        employeeName: employee.name,
+        sectorId: employee.sectorId,
+      };
+    }
+
+    const updatedOrder = await super.update(id, updateData);
 
     if (updatedOrder?.id && data.items !== undefined) {
       const db = this.getDb();

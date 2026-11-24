@@ -1,7 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsNotEmpty,
-  IsDefined,
   IsOptional,
   IsString,
   IsNumber,
@@ -49,10 +48,9 @@ export class OrderBaseDto extends BaseCreateDto {
   employeeName!: string;
 
   @ApiProperty()
-  @IsDefined()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  sectorId!: string;
+  sectorId?: string;
 
   @ApiProperty()
   @IsOptional()

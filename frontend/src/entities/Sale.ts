@@ -113,7 +113,6 @@ export class Sale extends BaseEntity {
 
   static async createFromOrder(data: {
     orderId: string;
-    sectorId: string;
     totalAmount: number;
     paymentMethods: SaleFromOrderPayment[];
   }): Promise<Sale> {

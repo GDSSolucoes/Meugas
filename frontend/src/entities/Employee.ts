@@ -21,7 +21,7 @@ export class Employee extends BaseEntity {
   email: string;
   phone: string;
   position: EmployeePositionEnum;
-  sectorId: string;
+  sectorId?: string | null;
   salary: number;
   hireDate: Date;
   vacationStart: Date;
